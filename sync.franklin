@@ -1,0 +1,2 @@
+#/bin/bash
+rsync -avz --exclude '*.mod' --exclude '*.o' --exclude '*.ps' --exclude '*.eps' --exclude 'xaorsa*' ~/code/AORSA2D/AORSA-17-DLG/ greendl1@franklin.nersc.gov:~/AORSA2D/AORSA-17-DLG 

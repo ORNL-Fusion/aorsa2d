@@ -1,0 +1,22 @@
+
+#PBS -N AORSA-15-dlg
+#PBS -A m77
+#PBS -m e
+#PBS -j oe
+#PBS -q debug
+#PBS -l walltime=0:30:00
+#PBS -l mppwidth=256
+
+cd $PBS_O_WORKDIR
+
+cp $HOME/AORSA2D/ZTABLE.TXT .
+cp $HOME/AORSA2D/grfont.dat .
+
+aprun -n 256 $HOME/AORSA2D/AORSA-17-DLG/xaorsa2d.franklin > running.log 2>&1
+
+rm eqdsk.out
+rm out38 out138
+rm cql3d.out
+rm out_cql3d.coef*
+rm du0u0_input
+rm core
