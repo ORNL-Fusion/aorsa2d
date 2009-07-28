@@ -3600,7 +3600,7 @@ end do
             if (psi(i,j) .gt. psimask) mask(i,j) = 0
 
             eqdsk_box_mask: &
-            if ( is_inside_bbbs ( capR(i), y(j) ) ) then
+            if ( is_inside_lim ( capR(i), y(j) ) ) then
                 mask(i,j) = 1
             else
                 mask(i,j) = 0
@@ -4699,7 +4699,7 @@ end do
 !                 ----------------------
 !                 interior plasma region:
 !                 ----------------------
-                  if(psi(i,j) .le. psilim .and. nboundary .eq. 1) then
+                  if( mask(i,j) .eq. 1 .and. nboundary .ge. 1) then
 
                      if (isigma .eq. 1)then
 
@@ -5186,7 +5186,7 @@ end do
 !                 --------------------------
 !                 metal boundary edge region:
 !                 --------------------------
-                  if(psi(i,j) .gt. psilim .and. nboundary .eq. 1) then
+                  if( mask(i,j) .eq. 0 .and. nboundary .ge. 1) then
                      fdk = cexpkxky
                      fek = 0.0
                      ffk = 0.0
@@ -5861,7 +5861,7 @@ end do
       do i = 1, nnodex
          do j = 1, nnodey
 
-            if(psi(i,j) .le. psilim .and. nboundary .eq. 1)then
+            if( mask(i,j) .eq. 1 .and. nboundary .ge. 1)then
 
                do n = nkx1, nkx2
                   do m = nky1, nky2

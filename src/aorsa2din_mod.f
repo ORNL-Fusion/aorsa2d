@@ -242,8 +242,10 @@
                                           !-----           if (iprofile .eq. 2) generic profiles (parabolas)
                                           !-----           if (iprofile .eq. 3) fits of form (1 - rho**beta)**alpha (default)
                                           !-----           if (iprofile .eq. 5) numerical profiles from namelist
-      integer :: nboundary = 1            !-----nboundary: if(nboundary .eq. 1)flux surface boundary (default)
-                                          !-----           if(nboundary .eq. 0)square boundary
+      integer :: nboundary = 1            !-----nboundary: if(nboundary .eq. 1) flux surface boundary (default)
+                                          !-----           if(nboundary .eq. 0) square boundary
+                                          !-----           if(nboundary .eq. 2) bbbs boundary from eqdsk
+                                          
       integer :: nprow = 8
       integer :: npcol = 8
 

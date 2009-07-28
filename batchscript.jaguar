@@ -1,10 +1,11 @@
 
-#PBS -N AORSA-15-dlg
+#PBS -N AORSA-17-dlg
 #PBS -A FUS016
 #PBS -m e
 #PBS -j oe
 #PBS -q debug
 #PBS -l walltime=1:00:00,size=256
+#PBS -V
 
 cd $PBS_O_WORKDIR
 
