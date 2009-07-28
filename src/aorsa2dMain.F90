@@ -2939,188 +2939,193 @@
 !    ----------------
 !    plasma profiles:
 !    ----------------
-      do i = 1, nnodex
-         do j = 1, nnodey
 
 
-            if(psimol .eq. 1.0)flimiter = 1.0
-            if(psimol .ne. 1.0) &
-               flimiter = 1.0 / (1.0 + (psi(i,j) / psimol)**16)
 
-            if (iprofile .eq. 3) then
-
-               shapen = 0.0
-               shapen2 = 0.0
-               shapen3 = 0.0
-               shapen4 = 0.0
-               shapen5 = 0.0
-               shapen6 = 0.0
-               shapen_slo = 0.0
-
-               shapete = 0.0
-               shapeti = 0.0
-               shapeti2 = 0.0
-               shapeti3 = 0.0
-               shapeti4 = 0.0
-               shapeti5 = 0.0
-               shapeti6 = 0.0
+do i = 1, nnodex
+   do j = 1, nnodey
 
 
-               if(rho(i,j) .le. 1.0)then
+    if(psimol .eq. 1.0) flimiter = 1.0
+    if(psimol .ne. 1.0) flimiter = 1.0 / (1.0 + (psi(i,j) / psimol)**16)
+   
+    iprofile_eq_3: & 
+    if (iprofile .eq. 3) then
+    
+        shapen = 0.0
+        shapen2 = 0.0
+        shapen3 = 0.0
+        shapen4 = 0.0
+        shapen5 = 0.0
+        shapen6 = 0.0
+        shapen_slo = 0.0
+        
+        shapete = 0.0
+        shapeti = 0.0
+        shapeti2 = 0.0
+        shapeti3 = 0.0
+        shapeti4 = 0.0
+        shapeti5 = 0.0
+        shapeti6 = 0.0
+        
+        if ( rho(i,j) .le. 1.0 ) then
+        
+            shapen  = 1.0 - rho(i,j)**betan
+            shapen2 = 1.0 - rho(i,j)**betan2
+            shapen3 = 1.0 - rho(i,j)**betan3
+            shapen4 = 1.0 - rho(i,j)**betan4
+            shapen5 = 1.0 - rho(i,j)**betan5
+            shapen6 = 1.0 - rho(i,j)**betan6
+            shapen_slo =  1.0 - rho(i,j)**betan_slo
+            
+            shapete  = 1.0 - rho(i,j)**betate
+            shapeti  = 1.0 - rho(i,j)**betati
+            shapeti2 = 1.0 - rho(i,j)**betati2
+            shapeti3 = 1.0 - rho(i,j)**betati3
+            shapeti4 = 1.0 - rho(i,j)**betati4
+            shapeti5 = 1.0 - rho(i,j)**betati5
+            shapeti6 = 1.0 - rho(i,j)**betati6
+            
+            xnea(i,j) = xnlim  + (xn0 - xnlim)  * shapen**alphan   * flimiter
+            xn2a(i,j) = xn2lim + (xn2 - xn2lim) * shapen2**alphan2 * flimiter
+            xn3a(i,j) = xn3lim + (xn3 - xn3lim) * shapen3**alphan3 * flimiter
+            xn4a(i,j) = xn4lim + (xn4 - xn4lim) * shapen4**alphan4 * flimiter
+            xn5a(i,j) = xn5lim + (xn5 - xn5lim) * shapen5**alphan5 * flimiter
+            xn6a(i,j) = xn6lim + (xn6 - xn6lim) * shapen6**alphan6 * flimiter
+            xna_slo(i,j) = xnslolim + (xnslo - xnslolim) * shapen_slo**alphan_slo 
 
-                  shapen  = 1.0 - rho(i,j)**betan
-                  shapen2 = 1.0 - rho(i,j)**betan2
-                  shapen3 = 1.0 - rho(i,j)**betan3
-                  shapen4 = 1.0 - rho(i,j)**betan4
-                  shapen5 = 1.0 - rho(i,j)**betan5
-                  shapen6 = 1.0 - rho(i,j)**betan6
-                  shapen_slo =  1.0 - rho(i,j)**betan_slo
-
-                  shapete  = 1.0 - rho(i,j)**betate
-                  shapeti  = 1.0 - rho(i,j)**betati
-                  shapeti2 = 1.0 - rho(i,j)**betati2
-                  shapeti3 = 1.0 - rho(i,j)**betati3
-                  shapeti4 = 1.0 - rho(i,j)**betati4
-                  shapeti5 = 1.0 - rho(i,j)**betati5
-                  shapeti6 = 1.0 - rho(i,j)**betati6
-
-
-               end if
-
-               xnea(i,j) = &
-                  xnlim  + (xn0 - xnlim)  * shapen**alphan   * flimiter
-               xn2a(i,j) = &
-                  xn2lim + (xn2 - xn2lim) * shapen2**alphan2 * flimiter
-               xn3a(i,j) = &
-                  xn3lim + (xn3 - xn3lim) * shapen3**alphan3 * flimiter
-               xn4a(i,j) = &
-                  xn4lim + (xn4 - xn4lim) * shapen4**alphan4 * flimiter
-               xn5a(i,j) = &
-                  xn5lim + (xn5 - xn5lim) * shapen5**alphan5 * flimiter
-               xn6a(i,j) = &
-                  xn6lim + (xn6 - xn6lim) * shapen6**alphan6 * flimiter
-               xna_slo(i,j) = &
-                  xnslolim + (xnslo - xnslolim) * shapen_slo**alphan_slo &
-                                                              * flimiter
-
-!----------------------------------------
-!DLG:  Read density from particle data (change this to profile option!)
-
-        if (nDisti2 .eq. 2 .and. particleDensity) then
-
-            xn2a(i,j) = dlg_getDensity ( capR(i), y(j) )
-            xn2 = dlg_getDensity ( rmaxis, zmaxis )
+        else
+                
+            xnea(i,j) = xnlim
+            xn2a(i,j) = xn2lim
+            xn3a(i,j) = xn3lim
+            xn4a(i,j) = xn4lim
+            xn5a(i,j) = xn5lim
+            xn6a(i,j) = xn6lim
 
         endif
 
-!
-!----------------------------------------
+        !-----------------------------------
+        ! DLG: Read density from particle data
+        ! (change this to profile option!)
+        
+          if (nDisti2 .eq. 2 .and. particleDensity) then
+        
+              xn2a(i,j) = dlg_getDensity ( capR(i), y(j) )
+              xn2 = dlg_getDensity ( rmaxis, zmaxis )
+        
+          endif
+        
+        !-----------------------------------
 
-              xn1a(i, j) = (xnea(i, j) - z2 * xn2a(i, j) &
-                                        - z3 * xn3a(i, j) &
-                                        - z4 * xn4a(i, j) &
-                                        - z5 * xn5a(i, j) &
-                                        - z6 * xn6a(i, j) &
-                                     - z_slo * xna_slo(i, j)   ) / z1
+        xn1a(i, j) = (xnea(i, j) - z2 * xn2a(i, j) &
+                                  - z3 * xn3a(i, j) &
+                                  - z4 * xn4a(i, j) &
+                                  - z5 * xn5a(i, j) &
+                                  - z6 * xn6a(i, j) &
+                               - z_slo * xna_slo(i, j)   ) / z1
 
-               if (xn1a(i, j) .le. 0.0) xn1a(i, j) = 1.0e-10
+        if (xn1a(i, j) .le. 0.0) xn1a(i, j) = 1.0e-10
 
-               eta2 = xn2 / xn0
-               eta3 = xn3 / xn0
-               eta4 = xn4 / xn0
-               eta5 = xn5 / xn0
-               eta6 = xn6 / xn0
-               eta_slo = xnslo / xn0
+        eta2 = xn2 / xn0
+        eta3 = xn3 / xn0
+        eta4 = xn4 / xn0
+        eta5 = xn5 / xn0
+        eta6 = xn6 / xn0
+        eta_slo = xnslo / xn0
 
-               eta1 = 1.0 / z1 * (1.0 - z2 * eta2 - z3 * eta3 &
-                          - z4 * eta4 - z5 * eta5 - z6 * eta6 &
-                                                  - z_slo * eta_slo)
-               xn1 = eta1 * xn0
+        eta1 = 1.0 / z1 * (1.0 - z2 * eta2 - z3 * eta3 &
+                   - z4 * eta4 - z5 * eta5 - z6 * eta6 &
+                                           - z_slo * eta_slo)
+        xn1 = eta1 * xn0
 
-               xkte(i,j) = &
-                  telimj + (t0e - telimj) * shapete**alphate * flimiter
-               xkti(i,j) = &
-                  tilimj + (t0i - tilimj) * shapeti**alphati * flimiter
-               xkti2(i,j) = &
-                  ti2limj + (t0i2 - ti2limj) * shapeti2**alphati2 &
-                                                            * flimiter
-               xkti3(i,j) = &
-                  ti3limj + (t0i3 - ti3limj) * shapeti3**alphati3 &
-                                                            * flimiter
-               xkti4(i,j) = &
-                  ti4limj + (t0i4 - ti4limj) * shapeti4**alphati4 &
-                                                            * flimiter
-               xkti5(i,j) = &
-                  ti5limj + (t0i5 - ti5limj) * shapeti5**alphati5 &
-                                                            * flimiter
-               xkti6(i,j) = &
-                  ti6limj + (t0i6 - ti6limj) * shapeti6**alphati6 &
-                                                            * flimiter
-            end if
+        if ( rho(i,j) .le. 1.0 ) then
 
-            if (iprofile .eq. 1 .or. iprofile .eq. 2) then
+            xkte(i,j) = telimj + (t0e - telimj) * shapete**alphate * flimiter
+            xkti(i,j) = tilimj + (t0i - tilimj) * shapeti**alphati * flimiter
+            xkti2(i,j) = ti2limj + (t0i2 - ti2limj) * shapeti2**alphati2 * flimiter
+            xkti3(i,j) = ti3limj + (t0i3 - ti3limj) * shapeti3**alphati3 * flimiter
+            xkti4(i,j) = ti4limj + (t0i4 - ti4limj) * shapeti4**alphati4 * flimiter
+            xkti5(i,j) = ti5limj + (t0i5 - ti5limj) * shapeti5**alphati5 * flimiter
+            xkti6(i,j) = ti6limj + (t0i6 - ti6limj) * shapeti6**alphati6 * flimiter
 
+        else
 
-               xn1 = xn0 / z1 * (1.0 - z2 * eta  - z3 * eta3 &
-                         - z4 * eta4 - z5 * eta5 - z6 * eta6 &
-                                                   - z_slo * eta_slo)
-               eta1 = xn1 / xn0
-               xn2 = xn0 * eta
-               eta2 = xn2 / xn0
-               xn3 = xn0 * eta3
-               xn4 = xn0 * eta4
-               xn5 = xn0 * eta5
-               xn6 = xn0 * eta6
+            xkte(i,j)   =    telimj
+            xkti(i,j)   =    tilimj
+            xkti2(i,j)  =   ti2limj
+            xkti3(i,j)  =   ti3limj
+            xkti4(i,j)  =   ti4limj
+            xkti5(i,j)  =   ti5limj
+            xkti6(i,j)  =   ti6limj
 
-               xn_slo = xn0 * eta_slo
+        endif
 
-               gaussian_ne  = exp(-psi(i,j) / psipne)
-               gaussian_te  = exp(-psi(i,j) / psipte)
-               gaussian_ti1 = exp(-psi(i,j) / psipti1)
-               gaussian_ti2 = exp(-psi(i,j) / psipti2)
-               gaussian_ti3 = exp(-psi(i,j) / psipti3)
-               gaussian_ti4 = exp(-psi(i,j) / psipti4)
-               gaussian_ti5 = exp(-psi(i,j) / psipti5)
-               gaussian_ti6 = exp(-psi(i,j) / psipti6)
-
-               parabola = (1. - psi(i,j) / psilim)
-               if (parabola .le. 0.0) parabola = 0.0
+    end if iprofile_eq_3
 
 
-               if(iprofile .eq. 1) shape = gaussian_ne
-               if(iprofile .eq. 2) shape = parabola * flimiter
+    if (iprofile .eq. 1 .or. iprofile .eq. 2) then
+    
+        xn1 = xn0 / z1 * (1.0 - z2 * eta  - z3 * eta3 &
+                  - z4 * eta4 - z5 * eta5 - z6 * eta6 &
+                                            - z_slo * eta_slo)
+        eta1 = xn1 / xn0
+        xn2 = xn0 * eta
+        eta2 = xn2 / xn0
+        xn3 = xn0 * eta3
+        xn4 = xn0 * eta4
+        xn5 = xn0 * eta5
+        xn6 = xn0 * eta6
+        
+        xn_slo = xn0 * eta_slo
+        
+        gaussian_ne  = exp(-psi(i,j) / psipne)
+        gaussian_te  = exp(-psi(i,j) / psipte)
+        gaussian_ti1 = exp(-psi(i,j) / psipti1)
+        gaussian_ti2 = exp(-psi(i,j) / psipti2)
+        gaussian_ti3 = exp(-psi(i,j) / psipti3)
+        gaussian_ti4 = exp(-psi(i,j) / psipti4)
+        gaussian_ti5 = exp(-psi(i,j) / psipti5)
+        gaussian_ti6 = exp(-psi(i,j) / psipti6)
+        
+        parabola = (1. - psi(i,j) / psilim)
+        if (parabola .le. 0.0) parabola = 0.0
+        
+        
+        if(iprofile .eq. 1) shape = gaussian_ne
+        if(iprofile .eq. 2) shape = parabola * flimiter
+        
+        
+        xnea(i,j)  = xnlim +  (xn0 - xnlim) * shape**alphan
+        xn2a(i, j) = xnea(i, j) * eta2
+        xn3a(i, j) = xnea(i, j) * eta3
+        xn4a(i, j) = xnea(i, j) * eta4
+        xn5a(i, j) = xnea(i, j) * eta5
+        xn6a(i, j) = xnea(i, j) * eta6
+        xna_slo(i, j) = xnea(i,j) * eta_slo
+        
+        xn1a(i, j) = (xnea(i, j) - z2 * xn2a(i, j) &
+                                 - z3 * xn3a(i, j) &
+                                 - z4 * xn4a(i, j) &
+                                 - z5 * xn5a(i, j) &
+                                 - z6 * xn6a(i, j) &
+                              - z_slo * xna_slo(i, j)   ) / z1
+        
+        if (xn1a(i, j) .le. 0.0) xn1a(i, j) = 1.0e-10
+        
+        
+        xkte(i,j)  = telimj +  (t0e - telimj) * shape**alphate
+        xkti(i,j)  = tilimj +  (t0i - tilimj) * shape**alphati
+        xkti2(i,j) = ti2limj + (t0i2 - ti2limj) * shape**alphati
+        xkti3(i,j) = ti3limj + (t0i3 - ti3limj) * shape**alphati
+        xkti4(i,j) = ti4limj + (t0i4 - ti4limj) * shape**alphati
+        xkti5(i,j) = ti5limj + (t0i5 - ti5limj) * shape**alphati
+        xkti6(i,j) = ti6limj + (t0i6 - ti6limj) * shape**alphati
+    
+    end if
 
-
-               xnea(i,j)  = xnlim +  (xn0 - xnlim) * shape**alphan
-               xn2a(i, j) = xnea(i, j) * eta2
-               xn3a(i, j) = xnea(i, j) * eta3
-               xn4a(i, j) = xnea(i, j) * eta4
-               xn5a(i, j) = xnea(i, j) * eta5
-               xn6a(i, j) = xnea(i, j) * eta6
-               xna_slo(i, j) = xnea(i,j) * eta_slo
-
-               xn1a(i, j) = (xnea(i, j) - z2 * xn2a(i, j) &
-                                        - z3 * xn3a(i, j) &
-                                        - z4 * xn4a(i, j) &
-                                        - z5 * xn5a(i, j) &
-                                        - z6 * xn6a(i, j) &
-                                     - z_slo * xna_slo(i, j)   ) / z1
-
-               if (xn1a(i, j) .le. 0.0) xn1a(i, j) = 1.0e-10
-
-
-               xkte(i,j)  = telimj +  (t0e - telimj) * shape**alphate
-               xkti(i,j)  = tilimj +  (t0i - tilimj) * shape**alphati
-               xkti2(i,j) = ti2limj + (t0i2 - ti2limj) * shape**alphati
-               xkti3(i,j) = ti3limj + (t0i3 - ti3limj) * shape**alphati
-               xkti4(i,j) = ti4limj + (t0i4 - ti4limj) * shape**alphati
-               xkti5(i,j) = ti5limj + (t0i5 - ti5limj) * shape**alphati
-               xkti6(i,j) = ti6limj + (t0i6 - ti6limj) * shape**alphati
-
-            end if
-
-         end do
-      end do
+   end do
+end do
 
 
 !     ---------------------------------------
@@ -3558,16 +3563,11 @@
 
 !!DLG:   Read eqdsk dlg style
 !
-      write(*,*) 'dlg stuff'
       call read_geqdsk ( eqdsk, plot = .false. )
-      write(*,*) 'dlg bCurvature'
       call bCurvature ()
-      write(*,*) 'dlg bGradient'
       call bGradient ()
-      write(*,*) 'dlg init_interp'
       call init_interp ()
       if ( ndisti2 .eq. 2 ) call init_particleFile ( myId )
-      write(*,*) 'dlg stuff done'
 
 !     write (6, *) "b0 = ", b0
 !     write (6, *) "xmu0 = ", xmu0
@@ -9259,7 +9259,6 @@
 !efd-end
 
 
-    write(*,*) 'blacs_barrier ...'
     call blacs_barrier(icontxt, 'All')
       close(5)
 
