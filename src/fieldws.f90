@@ -20,7 +20,10 @@
        capR_id, y_id, nRho_id, rho_id, &
        wdote_id, wdoti1_id, wdoti2_id, &
        wdote_rz_id, wdoti1_rz_id, wdoti2_rz_id, &
-       pscale_id, ePlus_real_id, ePlus_imag_id
+       pscale_id, ePlus_real_id, ePlus_imag_id, &
+       eMinu_real_id, eMinu_imag_id, &
+       bx_wave_real_id, bx_wave_imag_id, &
+       bz_wave_real_id, bz_wave_imag_id
 
       real logmax, ycut, dy, xmax, ymax, xmi, E_eV, vperp_mks, &
        vpara_mks, vperp_cgs, uperp_1kev, duperp, dz, dx
@@ -846,6 +849,19 @@
        (/ nR_id, nz_id /), ePlus_real_id ) )
        call check ( nf90_def_var ( nc_id, "ePlus_imag", NF90_REAL, &
        (/ nR_id, nz_id /), ePlus_imag_id ) )
+       call check ( nf90_def_var ( nc_id, "eMinu_real", NF90_REAL, &
+       (/ nR_id, nz_id /), eMinu_real_id ) )
+       call check ( nf90_def_var ( nc_id, "eMinu_imag", NF90_REAL, &
+       (/ nR_id, nz_id /), eMinu_imag_id ) )
+ 
+       call check ( nf90_def_var ( nc_id, "bx_wave_real", NF90_REAL, &
+       (/ nR_id, nz_id /), bx_wave_real_id ) )
+       call check ( nf90_def_var ( nc_id, "bx_wave_imag", NF90_REAL, &
+       (/ nR_id, nz_id /), bx_wave_imag_id ) )
+       call check ( nf90_def_var ( nc_id, "bz_wave_real", NF90_REAL, &
+       (/ nR_id, nz_id /), bz_wave_real_id ) )
+       call check ( nf90_def_var ( nc_id, "bz_wave_imag", NF90_REAL, &
+       (/ nR_id, nz_id /), bz_wave_imag_id ) )
  
             call check ( &
        nf90_def_var ( nc_id, "pscale", NF90_REAL, &
@@ -2599,7 +2615,7 @@
       freal(1:nnodex,1:nnodey) ) )
       call check ( nf90_put_var ( nc_id, ePlus_imag_id, &
       fimag(1:nnodex,1:nnodey) ) )
- 
+
       title = 'real(E_plus)'
       call ezconc(capr, y, freal, ff, nnodex, nnodey, numb, &
          nxmx, nymx, nlevmax, title, titx, tity, iflag)
@@ -2630,6 +2646,11 @@
          end do
       end do
 
+      call check ( nf90_put_var ( nc_id, eMinu_real_id, &
+      freal(1:nnodex,1:nnodey) ) )
+      call check ( nf90_put_var ( nc_id, eMinu_imag_id, &
+      fimag(1:nnodex,1:nnodey) ) )
+ 
       title = 'Real(E_minus)'
       call ezconc(capr, y, freal, ff, nnodex, nnodey, numb, &
          nxmx, nymx, nlevmax, title, titx, tity, iflag)
@@ -3712,6 +3733,11 @@
          end do
       end do
 
+      call check ( nf90_put_var ( nc_id, bx_wave_real_id, &
+      freal(1:nnodex,1:nnodey) ) )
+      call check ( nf90_put_var ( nc_id, bx_wave_imag_id, &
+      fimag(1:nnodex,1:nnodey) ) )
+ 
       titx = 'R (m)'
       tity = 'Z (m)'
 
@@ -3731,7 +3757,11 @@
          end do
       end do
 
-
+      call check ( nf90_put_var ( nc_id, bz_wave_real_id, &
+      freal(1:nnodex,1:nnodey) ) )
+      call check ( nf90_put_var ( nc_id, bz_wave_imag_id, &
+      fimag(1:nnodex,1:nnodey) ) )
+ 
       title = 'Real Bz_wave'
       call ezconc(capr, y, freal, ff, nnodex, nnodey, numb, &
          nxmx, nymx, nlevmax, title, titx, tity, iflag)
