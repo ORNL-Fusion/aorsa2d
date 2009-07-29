@@ -12,6 +12,7 @@
       use gc_terms
       use interp
       use write_pf
+      use plot_aorsa2dps
 
 !------------------------------------------------------------------------------
 !     This version (4/01/03: newlab3) does not solve equations for the points
@@ -8957,7 +8958,7 @@ end do
       if (myid.eq.0) then
          t1 = second1(dummy)
 
-       call fieldws(prfin)
+       call fieldws(prfin,mask)
 
        tmin = (second1(dummy) - t1) / 60.
        write(6 , 2846) tmin

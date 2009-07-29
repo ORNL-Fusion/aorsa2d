@@ -404,9 +404,9 @@ $(OBJ_DIR)/orbit.o:          $(SRC_DIR)/orbit.f
 	                     $(COMPILE90_2_NOSAVE) -o $(OBJ_DIR)/orbit.o \
                              $(SRC_DIR)/orbit.f			     
 			     			     			     			     
-$(OBJ_DIR)/eqdsk_plot.o:     $(SRC_DIR)/eqdsk_plot.f 
-	                     $(COMPILE_r4) -o $(OBJ_DIR)/eqdsk_plot.o \
-                             $(SRC_DIR)/eqdsk_plot.f ${BOUNDS}				     
+$(OBJ_DIR)/eqdsk_plot.o:     $(SRC_DIR)/eqdsk_plot.f90 ${OBJ_DIR}/fieldws.o
+	                     $(COMPILE_DLG_R4) -o $(OBJ_DIR)/eqdsk_plot.o \
+                             $(SRC_DIR)/eqdsk_plot.f90 ${BOUNDS}				     
 			     			     
 $(OBJ_DIR)/fieldws.o:        $(SRC_DIR)/fieldws.f90
 	                     $(COMPILE_DLG_R4) -o $(OBJ_DIR)/fieldws.o \

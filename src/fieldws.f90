@@ -1,11 +1,14 @@
+module plot_aorsa2dps
 
+contains
 
-      subroutine fieldws(prfin)
+      subroutine fieldws(prfin, mask)
       use netcdf
       use size_mod
 
       implicit none
 
+      integer, intent(in) :: mask(:,:)
       character*32 title
       character*32 titll
       character*32 titlr
@@ -27,7 +30,9 @@
 
       real logmax, ycut, dy, xmax, ymax, xmi, E_eV, vperp_mks, &
        vpara_mks, vperp_cgs, uperp_1kev, duperp, dz, dx
-      real exkmin, exkmax, prfin
+      real exkmin, exkmax 
+      integer, parameter :: DBL = selected_real_kind ( 13, 300 )
+      real(kind=DBL) :: prfin
 
       integer pgopen, pgbeg, ier, nmid, mmid
       integer n_theta_max, n_u_max, n_psi_max
@@ -3534,7 +3539,6 @@
 
          title = 'Energy kick (eV)'
          titz='Energy kick (eV)'
-         numb = 15
 
          i_psi = i_psi1
          do  i_upara = 1, nupar
@@ -4090,7 +4094,7 @@
    10 format(i10,1p4e10.3,i10,1pe10.3)
 
       return
-      end
+      end subroutine fieldws
 !
 !********************************************************************
 !
@@ -4116,7 +4120,7 @@
 
       return
  2201 format(2i5,1p8e12.4)
-      end
+      end subroutine a1mnmx
 
 !
 !********************************************************************
@@ -4145,7 +4149,7 @@
 
       return
 
-      end
+      end subroutine a2mnmx
 
 !
 !********************************************************************
@@ -4176,7 +4180,7 @@
 
       return
  2201 format(2i5,1p8e12.4)
-      end
+      end subroutine a2dmnmx_r4
 !
 !********************************************************************
 !
@@ -4302,7 +4306,7 @@
 !     call plcol(ncollab)
 !     call pllab(titx,tity,title)
       return
-      end
+      end subroutine ezconc_new
 
 !
 !********************************************************************
@@ -4463,7 +4467,7 @@
 
 
       return
-      end
+      end subroutine ezconc
 !
 !*********************************************************************
 !
@@ -4609,7 +4613,7 @@
 !     call plcol(ncollab)
 !     call pllab(titx,tity,title)
       return
-      end
+      end subroutine ezconz
 !
 !*********************************************************************
 !
@@ -4673,7 +4677,7 @@
 !     call plcol(ncollab)
 !     call plmtex('t',1.0,0.5,0.5,title)
       return
-      end
+      end subroutine ezcon3d
 
 !
 !********************************************************************
@@ -4795,7 +4799,7 @@
       endif
 
       return
-      end
+      end subroutine boundary
 !
 !*********************************************************************
 !
@@ -4859,7 +4863,7 @@
 !     call plcol(ncollab)
 !     call plmtex('t',1.0,0.5,0.5,title)
       return
-      end
+      end subroutine ezcon3dv
 
 !
 !********************************************************************
@@ -4956,7 +4960,7 @@
 !     call plmtex('r',5.0,0.5,0.5,titlr)
   300 format (1p9e11.3)
       return
-      end
+      end subroutine ezplot3
 
 !
 !***************************************************************************
@@ -5058,7 +5062,7 @@
 !     call plmtex('r',5.0,0.5,0.5,titlr)
   300 format (1p9e11.3)
       return
-      end
+      end subroutine ezplot5p
 
 !
 !***************************************************************************
@@ -5160,7 +5164,7 @@
   300 format (1p9e11.3)
 
       return
-      end
+      end subroutine ezplot7
 
 !
 !***************************************************************************
@@ -5261,7 +5265,7 @@
   300 format (1p9e11.3)
 
       return
-      end
+      end subroutine ezplot70
 
 !
 !***************************************************************************
@@ -5345,7 +5349,7 @@
 
   300 format (1p9e11.3)
       return
-      end
+      end subroutine ezplot2
 !
 !***************************************************************************
 !
@@ -5415,7 +5419,7 @@
 
   300 format (1p9e11.3)
       return
-      end
+      end subroutine ezplot2p
 !
 !***************************************************************************
 !
@@ -5486,7 +5490,7 @@
 
   300 format (1p9e11.3)
       return
-      end
+      end subroutine ezplot2q
 !
 !***************************************************************************
 !
@@ -5580,7 +5584,7 @@
 !     call plmtex('r',5.0,0.5,0.5,titlr)
   300 format (1p9e11.3)
       return
-      end
+      end subroutine ezplot4
 !
 !***************************************************************************
 !
@@ -5689,7 +5693,7 @@
 !     call plmtex('r',5.0,0.5,0.5,titlr)
   300 format (1p9e11.3)
       return
-      end
+      end subroutine ezplot5
 
 !
 !***************************************************************************
@@ -5754,7 +5758,7 @@
   300 format (1p9e11.3)
 
       return
-      end
+      end subroutine ezplot1
 !
 !***************************************************************************
 !
@@ -5821,7 +5825,7 @@
   300 format (1p9e11.3)
 
       return
-      end
+      end subroutine ezplot0
 !
 !***************************************************************************
 !
@@ -5887,7 +5891,7 @@
   300 format (1p9e11.3)
 
       return
-      end
+      end subroutine ezplot1q
 !
 !***************************************************************************
 !
@@ -5961,7 +5965,7 @@
 
   300 format (1p9e11.3)
       return
-      end
+      end subroutine ezplot1p
 !
 !***************************************************************************
 !
@@ -6156,7 +6160,7 @@
 
 
       return
-      end
+      end subroutine ezconcx
 !
 !*********************************************************************
 !
@@ -6224,7 +6228,7 @@
 
   300 format (1p9e11.3)
       return
-      end
+      end subroutine ezlog1
 
 !
 !***************************************************************************
@@ -6303,7 +6307,7 @@
 
   300 format (1p9e11.3)
       return
-      end
+      end subroutine ezlog1_f
 
 !
 !***************************************************************************
@@ -6485,7 +6489,9 @@
   311 format(10i10)
 
       return
-      end
+      end subroutine ezconpx
 !
 !*********************************************************************
 !
+
+end module plot_aorsa2dps
