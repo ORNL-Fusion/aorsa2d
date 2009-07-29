@@ -1028,11 +1028,13 @@
       if(rwleft .eq. 0.0)  rwleft = rwleft_auto
       if(rwright .eq. 0.0) rwright = rwright_auto
 
+      ! DLG
+      ! use entire vertial eqdsk box range instead
+      ytop  = zmax
+      ybottom   = zmin
 
       xmax = rwright - rwleft
       ymax = ytop - ybottom
-
-
 
       do i = 1, nxeqd
          do j = 1, nyeqd
