@@ -204,9 +204,9 @@ contains
         real, intent(in) :: rIn, zIn
         integer :: q1, q2, q3, q4
 
-        q1  = count ( rIn - rLim__ > 0 .and. zIn - zLim > 0 )
-        q2  = count ( rIn - rLim__ > 0 .and. zIn - zLim .le. 0 )
-        q3  = count ( rIn - rLim__ .le. 0 .and. zIn - zLim > 0 )
+        q1  = count ( rIn - rLim__ .ge. 0 .and. zIn - zLim .ge. 0 )
+        q2  = count ( rIn - rLim__ .ge. 0 .and. zIn - zLim .le. 0 )
+        q3  = count ( rIn - rLim__ .le. 0 .and. zIn - zLim .ge. 0 )
         q4  = count ( rIn - rLim__ .le. 0 .and. zIn - zLim .le. 0 )
 
         if ( q1 > 0 .and. q2 > 0 .and. q3 > 0 .and. q4 > 0 ) then

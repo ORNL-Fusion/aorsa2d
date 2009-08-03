@@ -22,6 +22,7 @@ pro plot_aorsa
 	nCdf_varGet, cdfId, 'bx_wave_imag', bx_wave_imag
 	nCdf_varGet, cdfId, 'bz_wave_real', bz_wave_real
 	nCdf_varGet, cdfId, 'bz_wave_imag', bz_wave_imag
+	nCdf_varGet, cdfId, 'mask', mask
 
 	ncdf_close, cdfId
 
