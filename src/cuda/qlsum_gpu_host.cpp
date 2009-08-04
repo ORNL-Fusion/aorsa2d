@@ -41,8 +41,7 @@ extern "C" void qlsum_gpu_(INT *nkx1_, INT *nkx2_,
 
   int i = 0, n = 0, m = 0, iharm = 0, ires = 0, iresmax = 0, nm_ind, irestotal = 0;
 
-  double time = 0.0, copyin_time = 0.0, copyout_time = 0.0, worklist_time = 0.0, gpu_setup_time = 0.0, gpu_acc_time = 0.0, gpu_finish_time = 0.0, zbeta_time = 0.0,
-    mean = 0.0, stddev = 0.0, sumsqs = 0.0;
+  double time = 0.0, copyin_time = 0.0, copyout_time = 0.0, worklist_time = 0.0, gpu_setup_time = 0.0, gpu_acc_time = 0.0, gpu_finish_time = 0.0, zbeta_time = 0.0;
 
   std::vector<std::vector<INT> > nres_vecs;
   std::vector<std::vector<INT> > mres_vecs;
@@ -98,23 +97,26 @@ extern "C" void qlsum_gpu_(INT *nkx1_, INT *nkx2_,
 
     worklist_time += (omp_get_wtime() - time);
 
+    INT numblocks = 0, usedblocks = 0;
+
     if(iresmax > 0) {
       time = omp_get_wtime();
       qlsum_cpu_iharm_setup();
       gpu_setup_time += (omp_get_wtime() - time);
 
       for(i = 0; i < nupar; i++) {
+	INT worklength = nres_vecs[i].size();
+	numblocks = std::min(worklength / 16 + 1, MAXBLOCKS);
+	usedblocks = std::max(numblocks, usedblocks);
+
 	time = omp_get_wtime();
-	qlsum_cpu_iharm_accumulate(iharm, nres_vecs[i].size(),
+	qlsum_cpu_iharm_accumulate(numblocks, iharm, nres_vecs[i].size(),
 				   &nres_vecs[i].front(), &mres_vecs[i].front());
 	gpu_acc_time += (omp_get_wtime() - time);
-
-	mean += (double)nres_vecs[i].size();
-	sumsqs += (double)(nres_vecs[i].size() * nres_vecs[i].size());
       }
 
       time = omp_get_wtime();
-      qlsum_cpu_iharm_finish();
+      qlsum_cpu_iharm_finish(usedblocks);
       gpu_finish_time += (omp_get_wtime() - time);
     }
 
@@ -131,9 +133,6 @@ extern "C" void qlsum_gpu_(INT *nkx1_, INT *nkx2_,
 			 b_sum, c_sum, e_sum, f_sum);
   copyout_time = omp_get_wtime() - time;
 
-  mean = mean / (nupar * (2.0 * *nharm + 1));
-  stddev = sumsqs / (nupar * (2.0 * *nharm + 1)) - mean * mean;
-
-  printf("%d %f %f %f %f %f %f %f %f %f\n", irestotal, mean, stddev, copyin_time, copyout_time, worklist_time, gpu_setup_time, gpu_acc_time, gpu_finish_time, zbeta_time);
+  printf("%d %f %f %f %f %f %f %f\n", irestotal, copyin_time, copyout_time, worklist_time, gpu_setup_time, gpu_acc_time, gpu_finish_time, zbeta_time);
 }
 

@@ -21,8 +21,6 @@
 //This includes must follow the type declaration. I apologize, but this is the easiest way
 #include "qlsum_gpu_kernels.cuh"
 
-#define NUMBLOCKS 60
-
 //Dimension constants
 INT nkx1, nkx2,
   nky1, nky2,
@@ -137,7 +135,7 @@ extern "C" void qlsum_gpu_initialize_(INT *nuper_, INT *nupar_, INT *nzeta_,
   lmaxdim = *lmaxdim_;
 
   //Exercise the cudaMalloc function
-  cudaMalloc((void **)&sum_p, 8 * sizeof(CMPLX) * nuper * nupar * NUMBLOCKS);
+  cudaMalloc((void **)&sum_p, 8 * sizeof(CMPLX) * nuper * nupar * MAXBLOCKS);
 
   cudaMalloc((void **)&xx_p, sizeof(CMPLX) * (nkdim2 - nkdim1 + 1));
   cudaMalloc((void **)&yy_p, sizeof(CMPLX) * (mkdim2 - mkdim1 + 1));
@@ -145,14 +143,14 @@ extern "C" void qlsum_gpu_initialize_(INT *nuper_, INT *nupar_, INT *nzeta_,
   cudaMalloc((void **)&ebetak_p, sizeof(CMPLX) * (nkdim2 - nkdim1 + 1) * (mkdim2 - mkdim1 + 1));
   cudaMalloc((void **)&ebk_p, sizeof(CMPLX) * (nkdim2 - nkdim1 + 1) * (mkdim2 - mkdim1 + 1));
 
-  cudaMalloc((void **)&sum_wdot_p, sizeof(CMPLX) * nuper * NUMBLOCKS);
-  cudaMalloc((void **)&sum_fx0_p, sizeof(CMPLX) * nuper * NUMBLOCKS);
-  cudaMalloc((void **)&sum_fy0_p, sizeof(CMPLX) * nuper * NUMBLOCKS);
+  cudaMalloc((void **)&sum_wdot_p, sizeof(CMPLX) * nuper * MAXBLOCKS);
+  cudaMalloc((void **)&sum_fx0_p, sizeof(CMPLX) * nuper * MAXBLOCKS);
+  cudaMalloc((void **)&sum_fy0_p, sizeof(CMPLX) * nuper * MAXBLOCKS);
 
-  cudaMalloc((void **)&b_sum_p, sizeof(CMPLX) * nuper * nupar * NUMBLOCKS);
-  cudaMalloc((void **)&c_sum_p, sizeof(CMPLX) * nuper * nupar * NUMBLOCKS);
-  cudaMalloc((void **)&e_sum_p, sizeof(CMPLX) * nuper * nupar * NUMBLOCKS);
-  cudaMalloc((void **)&f_sum_p, sizeof(CMPLX) * nuper * nupar * NUMBLOCKS);
+  cudaMalloc((void **)&b_sum_p, sizeof(CMPLX) * nuper * nupar * MAXBLOCKS);
+  cudaMalloc((void **)&c_sum_p, sizeof(CMPLX) * nuper * nupar * MAXBLOCKS);
+  cudaMalloc((void **)&e_sum_p, sizeof(CMPLX) * nuper * nupar * MAXBLOCKS);
+  cudaMalloc((void **)&f_sum_p, sizeof(CMPLX) * nuper * nupar * MAXBLOCKS);
 
   cudaMalloc((void **)&nres_p, sizeof(INT) * (nkx2 - nkx1 + 1) * (nky2 - nky1 + 1));
   cudaMalloc((void **)&mres_p, sizeof(INT) * (nkx2 - nkx1 + 1) * (nky2 - nky1 + 1));
@@ -167,12 +165,12 @@ extern "C" void qlsum_gpu_initialize_(INT *nuper_, INT *nupar_, INT *nzeta_,
   cudaMalloc((void **)&dfdupar_p, sizeof(REAL) * (nuper * nupar));
   cudaMalloc((void **)&npara_sav_p, sizeof(REAL) * (nkx2 - nkx1 + 1) * (nky2 - nky1 + 1));
 
-  cudaMalloc((void **)&sum2_p, 3 * sizeof(CMPLX) * nuper * NUMBLOCKS);
-  cudaMalloc((void **)&sumkx2_p, 3 * sizeof(CMPLX) * nuper * NUMBLOCKS);
-  cudaMalloc((void **)&sumky2_p, 3 * sizeof(CMPLX) * nuper * NUMBLOCKS);
-  cudaMalloc((void **)&sumwdot_p, 2 * sizeof(CMPLX) * nuper * NUMBLOCKS);
-  cudaMalloc((void **)&sumwdotkx_p, 2 * sizeof(CMPLX) * nuper * NUMBLOCKS);
-  cudaMalloc((void **)&sumwdotky_p, 2 * sizeof(CMPLX) * nuper * NUMBLOCKS);
+  cudaMalloc((void **)&sum2_p, 3 * sizeof(CMPLX) * nuper * MAXBLOCKS);
+  cudaMalloc((void **)&sumkx2_p, 3 * sizeof(CMPLX) * nuper * MAXBLOCKS);
+  cudaMalloc((void **)&sumky2_p, 3 * sizeof(CMPLX) * nuper * MAXBLOCKS);
+  cudaMalloc((void **)&sumwdot_p, 2 * sizeof(CMPLX) * nuper * MAXBLOCKS);
+  cudaMalloc((void **)&sumwdotkx_p, 2 * sizeof(CMPLX) * nuper * MAXBLOCKS);
+  cudaMalloc((void **)&sumwdotky_p, 2 * sizeof(CMPLX) * nuper * MAXBLOCKS);
 
   cudaMalloc((void **)&xkperpn_tmp_p, sizeof(REAL) * (nkx2 - nkx1 + 1) * (nky2 - nky1 + 1));
   cudaMalloc((void **)&zetai_p, sizeof(REAL) * (nzeta + 1));
@@ -287,8 +285,8 @@ __global__ void qlsum_gpu_iharm_shared(INT nkx1, INT nkx2,
   CMPLX epsx, epsy, epsz,
     cexp1, cexp2, cexp0;
 
-  iresstart = min((iresmax + NUMBLOCKS - 1) / NUMBLOCKS * block, iresmax);
-  iresfinish = min(((iresmax + NUMBLOCKS - 1) / NUMBLOCKS) * (block + 1), iresmax);
+  iresstart = min((iresmax + gridDim.x - 1) / gridDim.x * block, iresmax);
+  iresfinish = min(((iresmax + gridDim.x - 1) / gridDim.x) * (block + 1), iresmax);
 
   for(ires = iresstart + k_uper; ires < iresfinish; ires += blockDim.x) {
     n = nres[ires];
@@ -320,7 +318,7 @@ __global__ void qlsum_gpu_iharm_shared(INT nkx1, INT nkx2,
   Multiple arrays are stored within one array pointer to save argument space
   sum2 expands to sum2_1, sum2_2, and sum2_3 in the Fortran code
   sumkx2 and sumky2 are similar
-  sum2_2 is accessed nuper * NUMBLOCKS elements from &sum[0]
+  sum2_2 is accessed nuper * MAXBLOCKS elements from &sum[0]
 
   Output:
   sumb_11_nm_t, sumb_31_nm_t
@@ -373,8 +371,8 @@ __global__ void qlsum_gpu_iharm_first(INT nkx1, INT nkx2,
 
   __syncthreads(); //Every thread calls the __shared__ CMPLX constructor
 
-  iresstart = min((iresmax + NUMBLOCKS - 1) / NUMBLOCKS * block, iresmax);
-  iresfinish = min(((iresmax + NUMBLOCKS - 1) / NUMBLOCKS) * (block + 1), iresmax);
+  iresstart = min((iresmax + gridDim.x - 1) / gridDim.x * block, iresmax);
+  iresfinish = min(((iresmax + gridDim.x - 1) / gridDim.x) * (block + 1), iresmax);
 
   uper_kuper = uper[k_uper];
   zetamin = zetamin_tmp[k_uper];
@@ -432,9 +430,9 @@ __global__ void qlsum_gpu_iharm_first(INT nkx1, INT nkx2,
     __syncthreads();
   }
 
-  sum2[k_uper + block * nuper + 0 * nuper * NUMBLOCKS] += sum2_1; sum2[k_uper + block * nuper + 1 * nuper * NUMBLOCKS] += sum2_2; sum2[k_uper + block * nuper + 2 * nuper * NUMBLOCKS] += sum2_3;
-  sumkx2[k_uper + block * nuper + 0 * nuper * NUMBLOCKS] += sumkx2_1; sumkx2[k_uper + block * nuper + 1 * nuper * NUMBLOCKS] += sumkx2_2; sumkx2[k_uper + block * nuper + 2 * nuper * NUMBLOCKS] += sumkx2_3;
-  sumky2[k_uper + block * nuper + 0 * nuper * NUMBLOCKS] += sumky2_1; sumky2[k_uper + block * nuper + 1 * nuper * NUMBLOCKS] += sumky2_2; sumky2[k_uper + block * nuper + 2 * nuper * NUMBLOCKS] += sumky2_3;
+  sum2[k_uper + block * nuper + 0 * nuper * MAXBLOCKS] += sum2_1; sum2[k_uper + block * nuper + 1 * nuper * MAXBLOCKS] += sum2_2; sum2[k_uper + block * nuper + 2 * nuper * MAXBLOCKS] += sum2_3;
+  sumkx2[k_uper + block * nuper + 0 * nuper * MAXBLOCKS] += sumkx2_1; sumkx2[k_uper + block * nuper + 1 * nuper * MAXBLOCKS] += sumkx2_2; sumkx2[k_uper + block * nuper + 2 * nuper * MAXBLOCKS] += sumkx2_3;
+  sumky2[k_uper + block * nuper + 0 * nuper * MAXBLOCKS] += sumky2_1; sumky2[k_uper + block * nuper + 1 * nuper * MAXBLOCKS] += sumky2_2; sumky2[k_uper + block * nuper + 2 * nuper * MAXBLOCKS] += sumky2_3;
 }
 
 /*
@@ -444,12 +442,12 @@ __global__ void qlsum_gpu_iharm_first(INT nkx1, INT nkx2,
   Multiple arrays are stored within one array pointer to save argument space
   sum expands to sumb_11, sumb_31, sumc_11, sumc_31, sume_11, sume_31,
   sumf_11, and sumf_31 in the Fortran code
-  The '31' elements are offset from the '11' elements by nuper * nupar * NUMBLOCKS
-  The letters are offset from the base pointer by [B, C, E, or F] * nuper * nupar * NUMBLOCKS
+  The '31' elements are offset from the '11' elements by nuper * nupar * MAXBLOCKS
+  The letters are offset from the base pointer by [B, C, E, or F] * nuper * nupar * MAXBLOCKS
 
   sumwdot expands to sumwdot_11, and sumwdot_31 in the Fortran code
   sumwdotkx and sumwdotky are similar
-  The '31' elements are offset from the '11' elements by nuper * NUMBLOCKS
+  The '31' elements are offset from the '11' elements by nuper * MAXBLOCKS
 
   Output:
   sum, sumwdot, sumwdotkx, sumwdotky
@@ -503,8 +501,8 @@ __global__ void qlsum_gpu_iharm_second(INT nkx1, INT nkx2,
 
   __syncthreads(); //Every thread calls the __shared__ CMPLX constructor
 
-  iresstart = min((iresmax + NUMBLOCKS - 1) / NUMBLOCKS * block, iresmax);
-  iresfinish = min(((iresmax + NUMBLOCKS - 1) / NUMBLOCKS) * (block + 1), iresmax);
+  iresstart = min((iresmax + gridDim.x - 1) / gridDim.x * block, iresmax);
+  iresfinish = min(((iresmax + gridDim.x - 1) / gridDim.x) * (block + 1), iresmax);
 
   uper_kuper = uper[k_uper];
 
@@ -585,26 +583,26 @@ __global__ void qlsum_gpu_iharm_second(INT nkx1, INT nkx2,
     __syncthreads();
   }
 
-  sum[k_uper + i * nuper + block * nuper * nupar + (F + 0) * nuper * nupar * NUMBLOCKS] += sumf_11_t;
-  sum[k_uper + i * nuper + block * nuper * nupar + (F + 1) * nuper * nupar * NUMBLOCKS] += sumf_31_t;
+  sum[k_uper + i * nuper + block * nuper * nupar + (F + 0) * nuper * nupar * MAXBLOCKS] += sumf_11_t;
+  sum[k_uper + i * nuper + block * nuper * nupar + (F + 1) * nuper * nupar * MAXBLOCKS] += sumf_31_t;
 
-  sum[k_uper + i * nuper + block * nuper * nupar + (E + 0) * nuper * nupar * NUMBLOCKS] += sume_11_t;
-  sum[k_uper + i * nuper + block * nuper * nupar + (E + 1) * nuper * nupar * NUMBLOCKS] += sume_31_t;
+  sum[k_uper + i * nuper + block * nuper * nupar + (E + 0) * nuper * nupar * MAXBLOCKS] += sume_11_t;
+  sum[k_uper + i * nuper + block * nuper * nupar + (E + 1) * nuper * nupar * MAXBLOCKS] += sume_31_t;
 
-  sum[k_uper + i * nuper + block * nuper * nupar + (C + 0) * nuper * nupar * NUMBLOCKS] += sumc_11_t;
-  sum[k_uper + i * nuper + block * nuper * nupar + (C + 1) * nuper * nupar * NUMBLOCKS] += sumc_31_t;
+  sum[k_uper + i * nuper + block * nuper * nupar + (C + 0) * nuper * nupar * MAXBLOCKS] += sumc_11_t;
+  sum[k_uper + i * nuper + block * nuper * nupar + (C + 1) * nuper * nupar * MAXBLOCKS] += sumc_31_t;
 
-  sum[k_uper + i * nuper + block * nuper * nupar + (B + 0) * nuper * nupar * NUMBLOCKS] += sumb_11_t;
-  sum[k_uper + i * nuper + block * nuper * nupar + (B + 1) * nuper * nupar * NUMBLOCKS] += sumb_31_t;
+  sum[k_uper + i * nuper + block * nuper * nupar + (B + 0) * nuper * nupar * MAXBLOCKS] += sumb_11_t;
+  sum[k_uper + i * nuper + block * nuper * nupar + (B + 1) * nuper * nupar * MAXBLOCKS] += sumb_31_t;
 
-  sumwdot[k_uper + block * nuper + 0 * nuper * NUMBLOCKS] += sumwdot_11;
-  sumwdot[k_uper + block * nuper + 1 * nuper * NUMBLOCKS] += sumwdot_31;
+  sumwdot[k_uper + block * nuper + 0 * nuper * MAXBLOCKS] += sumwdot_11;
+  sumwdot[k_uper + block * nuper + 1 * nuper * MAXBLOCKS] += sumwdot_31;
 
-  sumwdotkx[k_uper + block * nuper + 0 * nuper * NUMBLOCKS] += sumwdotkx_11;
-  sumwdotkx[k_uper + block * nuper + 1 * nuper * NUMBLOCKS] += sumwdotkx_31;
+  sumwdotkx[k_uper + block * nuper + 0 * nuper * MAXBLOCKS] += sumwdotkx_11;
+  sumwdotkx[k_uper + block * nuper + 1 * nuper * MAXBLOCKS] += sumwdotkx_31;
 
-  sumwdotky[k_uper + block * nuper + 0 * nuper * NUMBLOCKS] += sumwdotky_11;
-  sumwdotky[k_uper + block * nuper + 1 * nuper * NUMBLOCKS] += sumwdotky_31;
+  sumwdotky[k_uper + block * nuper + 0 * nuper * MAXBLOCKS] += sumwdotky_11;
+  sumwdotky[k_uper + block * nuper + 1 * nuper * MAXBLOCKS] += sumwdotky_31;
 }
 
 __device__ CMPLX reduceCMPLX(CMPLX *array, int stride, int n) {
@@ -631,7 +629,8 @@ __device__ CMPLX reduceCMPLX(CMPLX *array, int stride, int n) {
 
   This code only uses one multiprocessor
 */
-__global__ void qlsum_gpu_iharm_reduction(INT nuper, INT nupar,
+__global__ void qlsum_gpu_iharm_reduction(INT numblocks,
+					  INT nuper, INT nupar,
 					  CMPLX *sum_wdot, CMPLX *sum_fx0, CMPLX *sum_fy0,
 					  CMPLX *b_sum, CMPLX *c_sum, CMPLX *e_sum, CMPLX *f_sum,
 					  CMPLX *sum,
@@ -647,26 +646,26 @@ __global__ void qlsum_gpu_iharm_reduction(INT nuper, INT nupar,
     sumky2_1 = 0.0, sumky2_2 = 0.0, sumky2_3 = 0.0;
   
   //Perform reduction
-  sumwdot_11 = reduceCMPLX(&sumwdot[k_uper + 0 * nuper * NUMBLOCKS], nuper, NUMBLOCKS);
-  sumwdot_31 = reduceCMPLX(&sumwdot[k_uper + 1 * nuper * NUMBLOCKS], nuper, NUMBLOCKS);
+  sumwdot_11 = reduceCMPLX(&sumwdot[k_uper + 0 * nuper * MAXBLOCKS], nuper, numblocks);
+  sumwdot_31 = reduceCMPLX(&sumwdot[k_uper + 1 * nuper * MAXBLOCKS], nuper, numblocks);
 
-  sumwdotkx_11 = reduceCMPLX(&sumwdotkx[k_uper + 0 * nuper * NUMBLOCKS], nuper, NUMBLOCKS);
-  sumwdotky_31 = reduceCMPLX(&sumwdotkx[k_uper + 1 * nuper * NUMBLOCKS], nuper, NUMBLOCKS);
+  sumwdotkx_11 = reduceCMPLX(&sumwdotkx[k_uper + 0 * nuper * MAXBLOCKS], nuper, numblocks);
+  sumwdotky_31 = reduceCMPLX(&sumwdotkx[k_uper + 1 * nuper * MAXBLOCKS], nuper, numblocks);
 
-  sumwdotky_11 = reduceCMPLX(&sumwdotky[k_uper + 0 * nuper * NUMBLOCKS], nuper, NUMBLOCKS);
-  sumwdotky_31 = reduceCMPLX(&sumwdotky[k_uper + 1 * nuper * NUMBLOCKS], nuper, NUMBLOCKS);
+  sumwdotky_11 = reduceCMPLX(&sumwdotky[k_uper + 0 * nuper * MAXBLOCKS], nuper, numblocks);
+  sumwdotky_31 = reduceCMPLX(&sumwdotky[k_uper + 1 * nuper * MAXBLOCKS], nuper, numblocks);
 
-  sum2_1 = reduceCMPLX(&sum2[k_uper + 0 * nuper * NUMBLOCKS], nuper, NUMBLOCKS);
-  sum2_2 = reduceCMPLX(&sum2[k_uper + 1 * nuper * NUMBLOCKS], nuper, NUMBLOCKS);
-  sum2_3 = reduceCMPLX(&sum2[k_uper + 2 * nuper * NUMBLOCKS], nuper, NUMBLOCKS);
+  sum2_1 = reduceCMPLX(&sum2[k_uper + 0 * nuper * MAXBLOCKS], nuper, numblocks);
+  sum2_2 = reduceCMPLX(&sum2[k_uper + 1 * nuper * MAXBLOCKS], nuper, numblocks);
+  sum2_3 = reduceCMPLX(&sum2[k_uper + 2 * nuper * MAXBLOCKS], nuper, numblocks);
 
-  sumkx2_1 = reduceCMPLX(&sumkx2[k_uper + 0 * nuper * NUMBLOCKS], nuper, NUMBLOCKS);
-  sumkx2_2 = reduceCMPLX(&sumkx2[k_uper + 1 * nuper * NUMBLOCKS], nuper, NUMBLOCKS);
-  sumkx2_3 = reduceCMPLX(&sumkx2[k_uper + 2 * nuper * NUMBLOCKS], nuper, NUMBLOCKS);
+  sumkx2_1 = reduceCMPLX(&sumkx2[k_uper + 0 * nuper * MAXBLOCKS], nuper, numblocks);
+  sumkx2_2 = reduceCMPLX(&sumkx2[k_uper + 1 * nuper * MAXBLOCKS], nuper, numblocks);
+  sumkx2_3 = reduceCMPLX(&sumkx2[k_uper + 2 * nuper * MAXBLOCKS], nuper, numblocks);
 
-  sumky2_1 = reduceCMPLX(&sumky2[k_uper + 0 * nuper * NUMBLOCKS], nuper, NUMBLOCKS);
-  sumky2_2 = reduceCMPLX(&sumky2[k_uper + 1 * nuper * NUMBLOCKS], nuper, NUMBLOCKS);
-  sumky2_3 = reduceCMPLX(&sumky2[k_uper + 2 * nuper * NUMBLOCKS], nuper, NUMBLOCKS);
+  sumky2_1 = reduceCMPLX(&sumky2[k_uper + 0 * nuper * MAXBLOCKS], nuper, numblocks);
+  sumky2_2 = reduceCMPLX(&sumky2[k_uper + 1 * nuper * MAXBLOCKS], nuper, numblocks);
+  sumky2_3 = reduceCMPLX(&sumky2[k_uper + 2 * nuper * MAXBLOCKS], nuper, numblocks);
   
   //Calculate output
   sum_wdot[k_uper] +=
@@ -692,40 +691,40 @@ __global__ void qlsum_gpu_iharm_reduction(INT nuper, INT nupar,
 
   //Perform reduction
   for(j = 0; j < nupar; j++) {
-    sum[k_uper + j * nuper + (B + 0) * nuper * nupar * NUMBLOCKS] = reduceCMPLX(&sum[k_uper + j * nuper + (B + 0) * nuper * nupar * NUMBLOCKS], nupar * nuper, NUMBLOCKS);
-    sum[k_uper + j * nuper + (B + 1) * nuper * nupar * NUMBLOCKS] = reduceCMPLX(&sum[k_uper + j * nuper + (B + 1) * nuper * nupar * NUMBLOCKS], nupar * nuper, NUMBLOCKS);
+    sum[k_uper + j * nuper + (B + 0) * nuper * nupar * MAXBLOCKS] = reduceCMPLX(&sum[k_uper + j * nuper + (B + 0) * nuper * nupar * MAXBLOCKS], nupar * nuper, numblocks);
+    sum[k_uper + j * nuper + (B + 1) * nuper * nupar * MAXBLOCKS] = reduceCMPLX(&sum[k_uper + j * nuper + (B + 1) * nuper * nupar * MAXBLOCKS], nupar * nuper, numblocks);
       
-    sum[k_uper + j * nuper + (C + 0) * nuper * nupar * NUMBLOCKS] = reduceCMPLX(&sum[k_uper + j * nuper + (C + 0) * nuper * nupar * NUMBLOCKS], nupar * nuper, NUMBLOCKS);
-    sum[k_uper + j * nuper + (C + 1) * nuper * nupar * NUMBLOCKS] = reduceCMPLX(&sum[k_uper + j * nuper + (C + 1) * nuper * nupar * NUMBLOCKS], nupar * nuper, NUMBLOCKS);
+    sum[k_uper + j * nuper + (C + 0) * nuper * nupar * MAXBLOCKS] = reduceCMPLX(&sum[k_uper + j * nuper + (C + 0) * nuper * nupar * MAXBLOCKS], nupar * nuper, numblocks);
+    sum[k_uper + j * nuper + (C + 1) * nuper * nupar * MAXBLOCKS] = reduceCMPLX(&sum[k_uper + j * nuper + (C + 1) * nuper * nupar * MAXBLOCKS], nupar * nuper, numblocks);
       
-    sum[k_uper + j * nuper + (E + 0) * nuper * nupar * NUMBLOCKS] = reduceCMPLX(&sum[k_uper + j * nuper + (E + 0) * nuper * nupar * NUMBLOCKS], nupar * nuper, NUMBLOCKS);
-    sum[k_uper + j * nuper + (E + 1) * nuper * nupar * NUMBLOCKS] = reduceCMPLX(&sum[k_uper + j * nuper + (E + 1) * nuper * nupar * NUMBLOCKS], nupar * nuper, NUMBLOCKS);
+    sum[k_uper + j * nuper + (E + 0) * nuper * nupar * MAXBLOCKS] = reduceCMPLX(&sum[k_uper + j * nuper + (E + 0) * nuper * nupar * MAXBLOCKS], nupar * nuper, numblocks);
+    sum[k_uper + j * nuper + (E + 1) * nuper * nupar * MAXBLOCKS] = reduceCMPLX(&sum[k_uper + j * nuper + (E + 1) * nuper * nupar * MAXBLOCKS], nupar * nuper, numblocks);
       
-    sum[k_uper + j * nuper + (F + 0) * nuper * nupar * NUMBLOCKS] = reduceCMPLX(&sum[k_uper + j * nuper + (F + 0) * nuper * nupar * NUMBLOCKS], nupar * nuper, NUMBLOCKS);
-    sum[k_uper + j * nuper + (F + 1) * nuper * nupar * NUMBLOCKS] = reduceCMPLX(&sum[k_uper + j * nuper + (F + 1) * nuper * nupar * NUMBLOCKS], nupar * nuper, NUMBLOCKS);
+    sum[k_uper + j * nuper + (F + 0) * nuper * nupar * MAXBLOCKS] = reduceCMPLX(&sum[k_uper + j * nuper + (F + 0) * nuper * nupar * MAXBLOCKS], nupar * nuper, numblocks);
+    sum[k_uper + j * nuper + (F + 1) * nuper * nupar * MAXBLOCKS] = reduceCMPLX(&sum[k_uper + j * nuper + (F + 1) * nuper * nupar * MAXBLOCKS], nupar * nuper, numblocks);
   }
 
   //Calculate output
   for(i_uprl = 0; i_uprl < nupar; i_uprl++) {
     b_sum[k_uper + i_uprl * nuper] +=
-      sum2_1 * sum[k_uper + i_uprl * nuper + (B + 0) * nuper * nupar * NUMBLOCKS] +
-      sum2_2 * sum[k_uper + i_uprl * nuper + (B + 0) * nuper * nupar * NUMBLOCKS] +
-      sum2_3 * sum[k_uper + i_uprl * nuper + (B + 1) * nuper * nupar * NUMBLOCKS];
+      sum2_1 * sum[k_uper + i_uprl * nuper + (B + 0) * nuper * nupar * MAXBLOCKS] +
+      sum2_2 * sum[k_uper + i_uprl * nuper + (B + 0) * nuper * nupar * MAXBLOCKS] +
+      sum2_3 * sum[k_uper + i_uprl * nuper + (B + 1) * nuper * nupar * MAXBLOCKS];
 
     c_sum[k_uper + i_uprl * nuper] +=
-      sum2_1 * sum[k_uper + i_uprl * nuper + (C + 0) * nuper * nupar * NUMBLOCKS] +
-      sum2_2 * sum[k_uper + i_uprl * nuper + (C + 0) * nuper * nupar * NUMBLOCKS] +
-      sum2_3 * sum[k_uper + i_uprl * nuper + (C + 1) * nuper * nupar * NUMBLOCKS];
+      sum2_1 * sum[k_uper + i_uprl * nuper + (C + 0) * nuper * nupar * MAXBLOCKS] +
+      sum2_2 * sum[k_uper + i_uprl * nuper + (C + 0) * nuper * nupar * MAXBLOCKS] +
+      sum2_3 * sum[k_uper + i_uprl * nuper + (C + 1) * nuper * nupar * MAXBLOCKS];
 
     e_sum[k_uper + i_uprl * nuper] +=
-      sum2_1 * sum[k_uper + i_uprl * nuper + (E + 0) * nuper * nupar * NUMBLOCKS] +
-      sum2_2 * sum[k_uper + i_uprl * nuper + (E + 0) * nuper * nupar * NUMBLOCKS] +
-      sum2_3 * sum[k_uper + i_uprl * nuper + (E + 1) * nuper * nupar * NUMBLOCKS];
+      sum2_1 * sum[k_uper + i_uprl * nuper + (E + 0) * nuper * nupar * MAXBLOCKS] +
+      sum2_2 * sum[k_uper + i_uprl * nuper + (E + 0) * nuper * nupar * MAXBLOCKS] +
+      sum2_3 * sum[k_uper + i_uprl * nuper + (E + 1) * nuper * nupar * MAXBLOCKS];
 
     f_sum[k_uper + i_uprl * nuper] +=
-      sum2_1 * sum[k_uper + i_uprl * nuper + (F + 0) * nuper * nupar * NUMBLOCKS] +
-      sum2_2 * sum[k_uper + i_uprl * nuper + (F + 0) * nuper * nupar * NUMBLOCKS] +
-      sum2_3 * sum[k_uper + i_uprl * nuper + (F + 1) * nuper * nupar * NUMBLOCKS];
+      sum2_1 * sum[k_uper + i_uprl * nuper + (F + 0) * nuper * nupar * MAXBLOCKS] +
+      sum2_2 * sum[k_uper + i_uprl * nuper + (F + 0) * nuper * nupar * MAXBLOCKS] +
+      sum2_3 * sum[k_uper + i_uprl * nuper + (F + 1) * nuper * nupar * MAXBLOCKS];
 
   }
 }
@@ -749,8 +748,8 @@ __global__ void qlsum_gpu_iharm_reduction(INT nuper, INT nupar,
 __global__ void qlsum_gpu_iharm_zbeta_update(INT n, CMPLX *zbeta, CMPLX *zbeta_iharm) {
   INT thread = threadIdx.x, block = blockIdx.x, numthreads = blockDim.x, start, finish, i;
 
-  start = min((n + NUMBLOCKS - 1) / NUMBLOCKS * block, n);
-  finish = min(((n + NUMBLOCKS - 1) / NUMBLOCKS) * (block + 1), n);
+  start = min((n + gridDim.x - 1) / gridDim.x * block, n);
+  finish = min(((n + gridDim.x - 1) / gridDim.x) * (block + 1), n);
 
   for(i = start + thread; i < finish; i += numthreads) {
     zbeta_iharm[i] *= zbeta[i];
@@ -760,22 +759,22 @@ __global__ void qlsum_gpu_iharm_zbeta_update(INT n, CMPLX *zbeta, CMPLX *zbeta_i
 //Description:
 //Initializes all the reduction temporaries
 void qlsum_cpu_iharm_setup() {
-  cudaMemset(sum_p, 0, 8 * sizeof(CMPLX) * nuper * nupar * NUMBLOCKS);
-  cudaMemset(sum2_p, 0, 3 * sizeof(CMPLX) * nuper * NUMBLOCKS);
-  cudaMemset(sumkx2_p, 0, 3 * sizeof(CMPLX) * nuper * NUMBLOCKS);
-  cudaMemset(sumky2_p, 0, 3 * sizeof(CMPLX) * nuper * NUMBLOCKS);
-  cudaMemset(sumwdot_p, 0, 2 * sizeof(CMPLX) * nuper * NUMBLOCKS);
-  cudaMemset(sumwdotkx_p, 0, 2 * sizeof(CMPLX) * nuper * NUMBLOCKS);
-  cudaMemset(sumwdotky_p, 0, 2 * sizeof(CMPLX) * nuper * NUMBLOCKS);
+  cudaMemset(sum_p, 0, 8 * sizeof(CMPLX) * nuper * nupar * MAXBLOCKS);
+  cudaMemset(sum2_p, 0, 3 * sizeof(CMPLX) * nuper * MAXBLOCKS);
+  cudaMemset(sumkx2_p, 0, 3 * sizeof(CMPLX) * nuper * MAXBLOCKS);
+  cudaMemset(sumky2_p, 0, 3 * sizeof(CMPLX) * nuper * MAXBLOCKS);
+  cudaMemset(sumwdot_p, 0, 2 * sizeof(CMPLX) * nuper * MAXBLOCKS);
+  cudaMemset(sumwdotkx_p, 0, 2 * sizeof(CMPLX) * nuper * MAXBLOCKS);
+  cudaMemset(sumwdotky_p, 0, 2 * sizeof(CMPLX) * nuper * MAXBLOCKS);
 }
 
 //Description:
 //Provides a wrapper around the GPU grunt work kernel calls which process
 // a worklist for a given iharm number
-void qlsum_cpu_iharm_accumulate(INT iharm, INT iresmax,
+void qlsum_cpu_iharm_accumulate(INT numblocks, INT iharm, INT iresmax,
 				INT *nres, INT *mres) {
   dim3 threads(nuper);
-  dim3 blocks(NUMBLOCKS);
+  dim3 blocks(numblocks);
 
   if(iresmax > 0) {
     cudaMemcpy(nres_p, nres, sizeof(INT) * iresmax, cudaMemcpyHostToDevice);
@@ -836,10 +835,11 @@ void qlsum_cpu_iharm_accumulate(INT iharm, INT iresmax,
 
 //Description:
 //Provides a wrapper around the GPU reduction
-void qlsum_cpu_iharm_finish() {
+void qlsum_cpu_iharm_finish(INT usedblocks) {
   dim3 threads(nuper);
 
-  qlsum_gpu_iharm_reduction<<<1, threads>>>(nuper, nupar,
+  qlsum_gpu_iharm_reduction<<<1, threads>>>(usedblocks,
+					    nuper, nupar,
 					    sum_wdot_p, sum_fx0_p, sum_fy0_p,
 					    b_sum_p, c_sum_p, e_sum_p, f_sum_p,
 					    sum_p,
@@ -852,7 +852,7 @@ void qlsum_cpu_iharm_finish() {
 //Description:
 //Provides a wrapper around the GPU zbeta update
 void qlsum_cpu_iharm_zbeta_update() {
-  dim3 blocks(NUMBLOCKS);
+  dim3 blocks(MAXBLOCKS / 2);
 
   qlsum_gpu_iharm_zbeta_update<<<blocks, 64>>>((nkx2 - nkx1 + 1) * (nky2 - nky1 + 1), zbeta_p, zbeta_iharm_p);
 
@@ -871,14 +871,14 @@ void qlsum_cpu_nharm_setup(REAL_H *uper_, REAL_H *upar_,
 			   CMPLX_H *xx_, CMPLX_H *yy_,
 			   CMPLX_H *zbeta, CMPLX_H *zbeta_iharm) {
   //Zero accumulators
-  cudaMemset(sum_wdot_p, 0, sizeof(CMPLX) * nuper * NUMBLOCKS);
-  cudaMemset(sum_fx0_p, 0, sizeof(CMPLX) * nuper * NUMBLOCKS);
-  cudaMemset(sum_fy0_p, 0, sizeof(CMPLX) * nuper * NUMBLOCKS);
+  cudaMemset(sum_wdot_p, 0, sizeof(CMPLX) * nuper * MAXBLOCKS);
+  cudaMemset(sum_fx0_p, 0, sizeof(CMPLX) * nuper * MAXBLOCKS);
+  cudaMemset(sum_fy0_p, 0, sizeof(CMPLX) * nuper * MAXBLOCKS);
 
-  cudaMemset(b_sum_p, 0, sizeof(CMPLX) * nuper * nupar * NUMBLOCKS);
-  cudaMemset(c_sum_p, 0, sizeof(CMPLX) * nuper * nupar * NUMBLOCKS);
-  cudaMemset(e_sum_p, 0, sizeof(CMPLX) * nuper * nupar * NUMBLOCKS);
-  cudaMemset(f_sum_p, 0, sizeof(CMPLX) * nuper * nupar * NUMBLOCKS);
+  cudaMemset(b_sum_p, 0, sizeof(CMPLX) * nuper * nupar * MAXBLOCKS);
+  cudaMemset(c_sum_p, 0, sizeof(CMPLX) * nuper * nupar * MAXBLOCKS);
+  cudaMemset(e_sum_p, 0, sizeof(CMPLX) * nuper * nupar * MAXBLOCKS);
+  cudaMemset(f_sum_p, 0, sizeof(CMPLX) * nuper * nupar * MAXBLOCKS);
 
   //Copy over useful arrays
   cudaMemcpyD2SH2D(xx_p, xx_, 2 * (nkx2 - nkx1 + 1));

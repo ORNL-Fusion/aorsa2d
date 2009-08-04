@@ -1,12 +1,14 @@
 #ifndef QLSUM_GPU_KERNELS_CUH_
 #define QLSUM_GPU_KERNELS_CUH_
 
+#define MAXBLOCKS 60
+
 extern "C" void qlsum_cpu_iharm_setup();
 
-extern "C" void qlsum_cpu_iharm_accumulate(INT iharm, INT iresmax,
+extern "C" void qlsum_cpu_iharm_accumulate(INT numblocks, INT iharm, INT iresmax,
 					   INT *nres, INT *mres);
 
-extern "C" void qlsum_cpu_iharm_finish();
+extern "C" void qlsum_cpu_iharm_finish(INT usedblocks);
 
 extern "C" void qlsum_cpu_iharm_zbeta_update();
 
