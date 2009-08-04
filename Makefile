@@ -165,11 +165,12 @@ ifeq ($(CRAYXT4),1)
 	WARN =
 
 	INC_DIR = 	
-	BOUNDS = -Mbounds
+	BOUNDS = # turning -Mbounds on causes PBLAS to crash
 	WARN = -Minform=warn
 	DEBUG = -g -traceback
 	FFLAGS = ${WARN} ${DEBUG} 
 	F90FLAGS = ${WARN} ${DEBUG}
+	FFTFLAGS = -Msave
 
 endif
 
@@ -506,7 +507,7 @@ $(OBJ_DIR)/fieldws.o:        $(SRC_DIR)/fieldws.f90
 # ---------
 
 ${OBJ_DIR}/%.o: ${FFT_DIR}/%.f
-	${F77} -c ${FFLAGS} $< -o $@  
+	${F77} -c ${FFLAGS} $< -o $@ ${FFTFLAGS} 
 				
 # SRC files
 # ---------
