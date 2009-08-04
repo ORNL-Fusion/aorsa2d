@@ -1,6 +1,5 @@
 module read_particle_f
 implicit none
-save
 
 real, allocatable :: f_rzvv ( :,:,:,: ), &
             vPerp_binCenters ( : ), &

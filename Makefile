@@ -16,7 +16,7 @@
 
 ifeq ($(MACHINE),dlghp)
 	HOME = /home/dg6/code
-	USEGPU=yes
+	USEGPU=no
 	ifeq ($(USEGPU),yes)
 		CU = /home/dg6/code/cuda/bin/nvcc
 		CUFLAGS = -g -O3 -arch=sm_11 --ptxas-options=-v --compiler-bindir /home/dg6/code/gcc43/usr/bin -I /usr/include/c++/4.4.0/x86_64-redhat-linux/ -I /usr/include/c++/4.4.0/
@@ -45,17 +45,17 @@ ifeq ($(MACHINE),$(filter $(MACHINE),franklin jaguar))
 	CRAYXT4=1
 endif
 
-EXEC = xaorsa2d.$(MACHINE)
+EXEC = ${PWD}/xaorsa2d.$(MACHINE)
 
-SRC_DIR = src
+SRC_DIR = ${PWD}/src
 
-OBJ_DIR = obj/$(MACHINE)
+OBJ_DIR = ${PWD}/obj
 
-MOD_DIR = mod/$(MACHINE)
+MOD_DIR = ${PWD}/mod
 
 FFT_DIR = $(SRC_DIR)/fftpack
 
-CQL3D_SETUP_DIR = $(SRC_DIR)/cql3d
+CQL_DIR = $(SRC_DIR)/cql3d
 
 INCLUDE_DIR = $(SRC_DIR)/cql3d
 
@@ -195,8 +195,8 @@ ifeq ($(MACHINE),dlghp)
 	BOUNDS = -fbounds-check
 	WARN = -Wall
 	DEBUG = -g -fbacktrace
-	FFLAGS = ${BOUNDS} ${WARN} ${DEBUG} 
-	F90FLAGS = ${BOUNDS} ${WARN} ${DEBUG}
+	FFLAGS = ${WARN} ${DEBUG} 
+	F90FLAGS = ${WARN} ${DEBUG}
 
 endif
 	
@@ -274,7 +274,7 @@ ifeq ($(MACHINE),dlghp)
 	PNETCDF_DIR = $(HOME)/pNetCdf/pnetcdf_gnu64
 	PNETCDF = -I ${PNETCDF_DIR}/include ${PNETCDF_DIR}/lib/libpnetcdf.a
 	NETCDF_DIR = $(HOME)/netcdf/netcdf_gnu64
-	NETCDF = -I ${NETCDF_DIR}/lib
+	NETCDF = -I ${NETCDF_DIR}/include
 	LIBS = -L$(HOME)/netcdf/netcdf_gnu64/lib -lnetcdf $(HOME)/pgplot/pgplot_gnu64/libpgplot.a $(SCALAPACK) $(HPL) $(BLACS) $(BLAS) $(X11) $(FFT_LIB) ${PNETCDF}
 	INC_DIR = -I ${NETCDF_DIR}/include -I ${DISLIN_DIR}/gf -I ${PNETCDF_DIR}/include
 endif
@@ -332,10 +332,10 @@ LOAD = $(F90) $(OPTIMIZATION) $(LOADFLAGS)
 
 ifeq ($(MACHINE),dlghp)
 $(EXEC): $(OBJ_FILES) $(OBJ_FFT) $(OBJ_CQL3D_SETUP) $(OBJ_DLG) ${OBJ_CUDA}
-	$(LOAD) -o ./$(EXEC) $(OBJ_FILES) $(OBJ_FFT) $(OBJ_CQL3D_SETUP) $(OBJ_DLG) $(LIBS) $(DISLIN) ${OBJ_CUDA} ${CUDA_LIB} 
+	$(LOAD) -o $(EXEC) $(OBJ_FILES) $(OBJ_FFT) $(OBJ_CQL3D_SETUP) $(OBJ_DLG) $(LIBS) $(DISLIN) ${OBJ_CUDA} ${CUDA_LIB} 
 else
 $(EXEC): load_modules $(OBJ_FILES) $(OBJ_FFT) $(OBJ_CQL3D_SETUP) $(OBJ_DLG) ${OBJ_CUDA}
-	$(LOAD) -o ./$(EXEC) $(OBJ_FILES) $(OBJ_FFT) $(OBJ_CQL3D_SETUP) $(OBJ_DLG) $(LIBS) ${OBJ_CUDA} ${CUDA_LIB}
+	$(LOAD) -o $(EXEC) $(OBJ_FILES) $(OBJ_FFT) $(OBJ_CQL3D_SETUP) $(OBJ_DLG) $(LIBS) ${OBJ_CUDA} ${CUDA_LIB}
 endif
 
 load_modules:
@@ -491,119 +491,30 @@ $(OBJ_DIR)/fieldws.o:        $(SRC_DIR)/fieldws.f90
 	                     $(COMPILE_DLG_R4) -o $(OBJ_DIR)/fieldws.o \
                              $(SRC_DIR)/fieldws.f90 $(NETCDF) ${BOUNDS}
 
-		     			     
-			     
 			    		    		     		   			     			     				
-### FFTPACK files:
+# FFT files
+# ---------
 
-$(OBJ_DIR)/cfftb1.o :      $(FFT_DIR)/cfftb1.f
-			   $(COMPILE_FFT) -o $(OBJ_DIR)/cfftb1.o \
-			   $(FFT_DIR)/cfftb1.f ${BOUNDS}
-
-$(OBJ_DIR)/cfftf1.o :      $(FFT_DIR)/cfftf1.f
-			   $(COMPILE_FFT) -o $(OBJ_DIR)/cfftf1.o \
-			   $(FFT_DIR)/cfftf1.f ${BOUNDS}
-
-$(OBJ_DIR)/cffti1.o:       $(FFT_DIR)/cffti1.f
-			   $(COMPILE_FFT) -o $(OBJ_DIR)/cffti1.o \
-			   $(FFT_DIR)/cffti1.f ${BOUNDS}
-
-$(OBJ_DIR)/passb.o :       $(FFT_DIR)/passb.f
-			   $(COMPILE_FFT) -o $(OBJ_DIR)/passb.o \
-			   $(FFT_DIR)/passb.f ${BOUNDS}
-
-$(OBJ_DIR)/passb2.o :      $(FFT_DIR)/passb2.f
-			   $(COMPILE_FFT) -o $(OBJ_DIR)/passb2.o \
-			   $(FFT_DIR)/passb2.f 
-
-$(OBJ_DIR)/passb3.o :      $(FFT_DIR)/passb3.f
-			   $(COMPILE_FFT) -o $(OBJ_DIR)/passb3.o \
-			   $(FFT_DIR)/passb3.f ${BOUNDS}
-
-$(OBJ_DIR)/passb4.o :      $(FFT_DIR)/passb4.f
-			   $(COMPILE_FFT) -o $(OBJ_DIR)/passb4.o \
-			   $(FFT_DIR)/passb4.f 
-
-$(OBJ_DIR)/passb5.o :      $(FFT_DIR)/passb5.f
-			   $(COMPILE_FFT) -o $(OBJ_DIR)/passb5.o \
-			   $(FFT_DIR)/passb5.f ${BOUNDS}
-			    
-$(OBJ_DIR)/passf.o :       $(FFT_DIR)/passf.f
-			   $(COMPILE_FFT) -o $(OBJ_DIR)/passf.o \
-			   $(FFT_DIR)/passf.f ${BOUNDS}
-
-$(OBJ_DIR)/passf2.o :      $(FFT_DIR)/passf2.f
-			   $(COMPILE_FFT) -o $(OBJ_DIR)/passf2.o \
-			   $(FFT_DIR)/passf2.f 
-
-$(OBJ_DIR)/passf3.o :      $(FFT_DIR)/passf3.f
-			   $(COMPILE_FFT) -o $(OBJ_DIR)/passf3.o \
-			   $(FFT_DIR)/passf3.f ${BOUNDS}
-
-$(OBJ_DIR)/passf4.o :      $(FFT_DIR)/passf4.f
-			   $(COMPILE_FFT) -o $(OBJ_DIR)/passf4.o \
-			   $(FFT_DIR)/passf4.f 
-
-$(OBJ_DIR)/passf5.o :      $(FFT_DIR)/passf5.f
-			   $(COMPILE_FFT) -o $(OBJ_DIR)/passf5.o \
-			   $(FFT_DIR)/passf5.f ${BOUNDS}
-
-$(OBJ_DIR)/zfftb.o :       $(FFT_DIR)/zfftb.f
-			   $(COMPILE_FFT) -o $(OBJ_DIR)/zfftb.o \
-			   $(FFT_DIR)/zfftb.f 
-
-$(OBJ_DIR)/zfftf.o :       $(FFT_DIR)/zfftf.f
-			   $(COMPILE_FFT) -o $(OBJ_DIR)/zfftf.o \
-			   $(FFT_DIR)/zfftf.f
-
-$(OBJ_DIR)/zffti.o:        $(FFT_DIR)/zffti.f
-			   $(COMPILE_FFT) -o $(OBJ_DIR)/zffti.o \
-			   $(FFT_DIR)/zffti.f 
-			   
+${OBJ_DIR}/%.o: ${FFT_DIR}/%.f
+	${F77} -c ${FFLAGS} $< -o $@  
 				
-### CQL3D_SETUP files:
+# SRC files
+# ---------
 
-$(OBJ_DIR)/basis_functions_m.o: $(CQL3D_SETUP_DIR)/basis_functions_m.f 
-	                        $(COMPILE_CQL) -o $(OBJ_DIR)/basis_functions_m.o \
-                                $(CQL3D_SETUP_DIR)/basis_functions_m.f ${BOUNDS}
+${OBJ_DIR}/%.o: ${SRC_DIR}/%.f
+	${F77} -c ${FFLAGS} $< -o $@ ${BOUNDS} ${NETCDF}
 
-$(OBJ_DIR)/f_expanded_m.o:    $(CQL3D_SETUP_DIR)/f_expanded_m.f 
-	                      $(COMPILE90_NOSAVE) -o $(OBJ_DIR)/f_expanded_m.o \
-                              $(CQL3D_SETUP_DIR)/f_expanded_m.f ${BOUNDS}
+# CQL files
+# ---------
 
-$(OBJ_DIR)/global_data_m.o:   $(CQL3D_SETUP_DIR)/global_data_m.f 
-	                      $(COMPILE90_NOSAVE) -o $(OBJ_DIR)/global_data_m.o \
-                              $(CQL3D_SETUP_DIR)/global_data_m.f ${BOUNDS}
+${OBJ_DIR}/%.o: ${CQL_DIR}/%.f90
+	${F90} -c ${F90FLAGS} $< -o $@ ${BOUNDS} ${NETCDF}
 
-$(OBJ_DIR)/CQL_kinds_m.o:     $(CQL3D_SETUP_DIR)/CQL_kinds_m.f 
-	                      $(COMPILE90_NOSAVE) -o $(OBJ_DIR)/CQL_kinds_m.o \
-                              $(CQL3D_SETUP_DIR)/CQL_kinds_m.f ${BOUNDS}
+${OBJ_DIR}/%.o: ${CQL_DIR}/%.f
+	${F77} -c ${FFLAGS} $< -o $@ ${BOUNDS} ${NETCDF}
 
-$(OBJ_DIR)/vector_write_m.o:  $(CQL3D_SETUP_DIR)/vector_write_m.f 
-	                      $(COMPILE90_NOSAVE) -o $(OBJ_DIR)/vector_write_m.o \
-                              $(CQL3D_SETUP_DIR)/vector_write_m.f ${BOUNDS}
-
-$(OBJ_DIR)/read_cql3d.o:      $(CQL3D_SETUP_DIR)/read_cql3d.f 
-	                      $(COMPILE90_NOSAVE) -o $(OBJ_DIR)/read_cql3d.o \
-                              $(CQL3D_SETUP_DIR)/read_cql3d.f ${BOUNDS} ${NETCDF}
-			
-#$(OBJ_DIR)/ceez.o:            $(CQL3D_SETUP_DIR)/ceez.f 
-#	                      $(COMPILE_NOSAVE) -o $(OBJ_DIR)/ceez.o \
-#                              $(CQL3D_SETUP_DIR)/ceez.f ${BOUNDS}
-$(OBJ_DIR)/fitpack.o:            $(SRC_DIR)/fitpack.f 
-	                      $(COMPILE_DLG) -o $(OBJ_DIR)/fitpack.o \
-                              $(SRC_DIR)/fitpack.f 
-
-
-$(OBJ_DIR)/cubic_B_splines_v.o: $(CQL3D_SETUP_DIR)/cubic_B_splines_v.f 
-	                        $(COMPILE90_NOSAVE) -o $(OBJ_DIR)/cubic_B_splines_v.o \
-                                $(CQL3D_SETUP_DIR)/cubic_B_splines_v.f ${BOUNDS}		
-		
-$(OBJ_DIR)/cql3d_setup.o:     $(CQL3D_SETUP_DIR)/cql3d_setup.f $(OBJ_DIR)/read_particle_f.o 
-	                      $(COMPILE90_NOSAVE) -o $(OBJ_DIR)/cql3d_setup.o \
-                              $(CQL3D_SETUP_DIR)/cql3d_setup.f $(NETCDF) ${BOUNDS}
-		
-### DLG files:
+# DLG files
+# ---------
 		
 ${OBJ_DIR}/%.o: ${DLG_DIR}/%.F
 	${F77} -c ${FFLAGS} $< -o $@ ${INC_DIR} ${CPP_DIRECTIVES}
@@ -620,7 +531,20 @@ ${OBJ_DIR}/%.o: ${DLG_DIR}/%.f
 clean:
 	rm $(EXEC) $(OBJ_DIR)/*.o $(MOD_DIR)/*.mod
 
-depend: 
-	./sfmakedepend --objdir ${OBJ_DIR} --moddir ${OBJ_DIR} ${DLG_DIR}/*.f90 
+MAKEFILE_INC=Makefile.deps
+SRCDIRS=${DLG_DIR} ${CQL_DIR} ${SRC_DIR}
+FSRCS0:=$(foreach DIR, . $(SRCDIRS),$(wildcard $(DIR)/*.f90 $(DIR)/*.F ${DIR}/*.f ${DIR}/*.F90))
+FSRCS:=$(sort $(notdir $(FSRCS0)))
+Includes=#-I${PNETCDF_DIR}/include
+
+F_makedepend=./sfmakedepend --file - $(addprefix --srcdir ,$(SRCDIRS)) $(subst -I,-I ,$(Includes)) --objdir ${OBJ_DIR} --moddir ${OBJ_DIR} --depend=obj
+depend $(MAKEFILE_INC): 
+	$(F_makedepend) $(FSRCS) > $(MAKEFILE_INC)
+
+include $(MAKEFILE_INC)
+
+#depend: 
+#	./sfmakedepend --depend=obj --objdir ${OBJ_DIR} --moddir ${OBJ_DIR} ${DLG_DIR}/*.f90 
+
 
 
