@@ -163,6 +163,14 @@ ifeq ($(CRAYXT4),1)
 	F77FLAGS= -c $(OPTIMIZATION)  -I $(INCLUDE_DIR) 
 	BOUNDS = 
 	WARN =
+
+	INC_DIR = 	
+	BOUNDS = -Mbounds
+	WARN = -Minform=warn
+	DEBUG = -g -traceback
+	FFLAGS = ${WARN} ${DEBUG} 
+	F90FLAGS = ${WARN} ${DEBUG}
+
 endif
 
 ifeq ($(MACHINE),dlghp)
@@ -303,6 +311,8 @@ ifeq ($(MACHINE),jaguar)
 	  $(FFT_LIB) \
 	  ${PNETCDF} \
 	  ${NETCDF_FLIB} $(PGPLOT_LIB) 
+	INC_DIR = -I ${NETCDF_DIR}/include -I ${PNETCDF_DIR}/include
+
 endif
 
 ifeq ($(MACHINE),lens)
