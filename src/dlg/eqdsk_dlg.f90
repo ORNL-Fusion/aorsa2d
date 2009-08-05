@@ -203,11 +203,62 @@ contains
         logical :: is_inside_lim
         real, intent(in) :: rIn, zIn
         integer :: q1, q2, q3, q4
+        real, allocatable :: newR(:), newZ(:)
+        integer :: nInterp, nLim, i, j, cnt
+        real :: m, b, d, dStep
 
-        q1  = count ( rIn - rLim__ .ge. 0 .and. zIn - zLim .ge. 0 )
-        q2  = count ( rIn - rLim__ .ge. 0 .and. zIn - zLim .le. 0 )
-        q3  = count ( rIn - rLim__ .le. 0 .and. zIn - zLim .ge. 0 )
-        q4  = count ( rIn - rLim__ .le. 0 .and. zIn - zLim .le. 0 )
+        ! create an interpolated limiter boundary
+
+        nInterp = 10
+        nLim    = size ( rLim__ )
+        cnt = 1
+
+        allocate ( newR(nInterp*nLim+nLim), &
+            newZ(nInterp*nLim+nLim) )
+    
+        newR(1:nLim)    = rLim__
+        newZ(1:nLim)    = zLim
+
+        do i=1,nLim-1
+
+            !   get slope
+
+            m   = ( zLim(i+1)-zLim(i) ) &
+                    / ( rLim__(i+1) - rLim__(i) )
+            b   = zLim(i) - m * rLim__(i)
+
+            !   distance
+
+            d   = sqrt ( ( rLim__(i+1) - rLim__(i) )**2 &
+                    + ( zLim(i+1) - zLim(i) )**2 )
+
+            dStep   = (rLim__(i+1) - rLim__(i)) / nInterp
+
+            do j = 1, nInterp
+
+                if (abs(dStep) .gt. 0 ) then 
+                    newR(nLim+cnt)  = rLim__(i) + dStep*j
+                    newZ(nLim+cnt)  = m * (rLim__(i) + dStep*j) + b 
+                    cnt = cnt + 1
+                endif
+
+            enddo
+
+        enddo
+
+        !   interpolated eqdsk limite boundary
+
+        q1  = count ( rIn - newR(1:nLim+cnt-1) .ge. 0 .and. zIn - newZ(1:nLim+cnt-1) .ge. 0 )
+        q2  = count ( rIn - newR(1:nLim+cnt-1) .ge. 0 .and. zIn - newZ(1:nLim+cnt-1) .le. 0 )
+        q3  = count ( rIn - newR(1:nLim+cnt-1) .le. 0 .and. zIn - newZ(1:nLim+cnt-1) .ge. 0 )
+        q4  = count ( rIn - newR(1:nLim+cnt-1) .le. 0 .and. zIn - newZ(1:nLim+cnt-1) .le. 0 )
+
+        !!   coarse eqdsk limiter boundary
+
+        !q1  = count ( rIn - rLim__ .ge. 0 .and. zIn - zLim .ge. 0 )
+        !q2  = count ( rIn - rLim__ .ge. 0 .and. zIn - zLim .le. 0 )
+        !q3  = count ( rIn - rLim__ .le. 0 .and. zIn - zLim .ge. 0 )
+        !q4  = count ( rIn - rLim__ .le. 0 .and. zIn - zLim .le. 0 )
 
         if ( q1 > 0 .and. q2 > 0 .and. q3 > 0 .and. q4 > 0 ) then
 
@@ -218,7 +269,9 @@ contains
            is_inside_lim   = .false.
 
         endif
-       
+      
+        deallocate ( newR, newZ )
+
         return
 
     end function is_inside_lim
