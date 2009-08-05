@@ -3600,7 +3600,7 @@ end do
          do j = 1, nnodey
 
             mask(i,j) = 1
-            if (psi(i,j) .gt. psimask) mask(i,j) = 0
+            if (psi(i,j) .gt. psilim) mask(i,j) = 0
 
             if (limiter_boundary) then
                 eqdsk_box_mask: &
