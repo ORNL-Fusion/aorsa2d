@@ -1,7 +1,7 @@
 pro plot_aorsa
 
 	eqDskFileName	= 'g123435.00400'
-	eqDskFileName	= 'eqdsk.122993'
+	;eqDskFileName	= 'eqdsk.122993'
 
 	eqdsk	= readGEQDSK ( eqDskFileName )
 	cdfId = ncdf_open ( 'output/plotData.nc', /noWrite ) 
@@ -28,13 +28,58 @@ pro plot_aorsa
 
 	ncdf_close, cdfId
 
+	;	create an interpolated limiter boundary
+
+	newR	= (eqdsk.rLim)[0]
+	newZ	= (eqdsk.zLim)[0]
+
+	for i=0,n_elements(eqdsk.rLim)-2 do begin
+
+		;	get slope
+
+		m	= ( (eqdsk.zLim)[i+1]-(eqdsk.zLim)[i] ) $
+				/ ( (eqdsk.rLim)[i+1] - (eqdsk.rLim)[i] )
+		b	= (eqdsk.zLim)[i] - m * (eqdsk.rLim)[i]
+
+		;	distance
+
+		d	= sqrt ( ( (eqdsk.rLim)[i+1] - (eqdsk.rLim)[i] )^2 $
+				+ ( (eqdsk.zLim)[i+1] - (eqdsk.zLim)[i] )^2 )
+
+		;dMin	= ( capR[0] - capR[1] ) / 2.0
+
+		;if d gt abs(dMin) then begin
+
+			nExtra	= 10;fix ( d / abs(dMin) )
+			dStep	= ((eqdsk.rLim)[i+1] - (eqdsk.rLim)[i]) / nExtra
+
+			for j = 0, nExtra - 1 do begin
+
+				if dStep ne 0 then begin
+					newR	= [ newR, (eqdsk.rLim)[i] + dStep*j ]
+					newZ	= [ newZ, m * ((eqdsk.rLim)[i] + dStep*j) + b ]
+				endif
+
+			endfor
+
+		;endif
+
+	endfor
 
 	loadct, 13, file = 'davect.tbl', /silent
-	device, decomposed = 0
 
-	window, 0, xSize = 1200, ySize = 600
+	set_plot, 'ps'
+	device, fileName = 'output/aorsa_dlg.ps', $
+			/color, $
+			/preview, $
+			bits_per_pixel = 8, $
+			ySize = 8.5, $
+			xSize = 11.0, $
+			/inches, $
+			/landScape
+
 	!p.multi = [0,3,2]
-	!p.charSize = 2.6
+	!p.charSize = 1.6
 
 	nLevs	= 21
 
@@ -136,7 +181,7 @@ pro plot_aorsa
 		   color = 0 
 
    	loadct, 13, file = 'davect.tbl', /silent
-   	window, 1, xSize = 1200, ySize = 600
+   	;window, 1, xSize = 1200, ySize = 600
 
 	contour, (bx_wave_real<brange)>(-brange), capR, zLoc, $
 			color = 255, $
@@ -219,6 +264,29 @@ pro plot_aorsa
 		   thick = 2, $
 		   color = 0 
 
+	!p.multi = 0   
+	loadct, 0, /silent
+   	contour, mask, capR, zLoc, $
+			title = 'mask', $
+			/fill
+	oPlot, eqdsk.rbbbs, eqdsk.zbbbs, $
+		   thick = 2, $
+		   color = 0 
+   	loadct, 12, /silent
+	oPlot, eqdsk.rLim, eqdsk.zLim, $
+		   thick = 2, $
+		   psym = -4, $
+		   symSize = 2.0, $
+		   color = 8*16-1
+   	loadct, 0, /silent
+	plots, rebin ( capR, n_elements ( capR ), n_elements ( zLoc ) ), $
+			transpose ( rebin ( zLoc, n_elements ( zLoc ), n_elements ( capR ) ) ), $
+			psym = 1, $
+			symSize = 0.5
+	loadct, 12, /silent
+	plots, newR, newZ, psym = 5, color = 12*16-1
+	
+   device, /close_file
 stop
 
 end 
