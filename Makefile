@@ -317,17 +317,21 @@ ifeq ($(MACHINE),jaguar)
 endif
 
 ifeq ($(MACHINE),lens)
-	SCI_LIB = -L bbales/lib/ -lscalapack -lblacs -lblacsC -lblacsF77 -lblacs 
+	#SCI_LIB = -L bbales/lib/ -lscalapack -lblacs -lblacsC -lblacsF77 -lblacs 
 	FFT_LIB = /ccs/home/jaegeref/AORSA2D/libdfftpack_pgf90.a
 	LOADFLAGS =
 
 	PNETCDF = 
 	NETCDF = ${NETCDF_FLIB}
 	LIBS = \
-	  $(SCI_LIB) \
-	  $(FFT_LIB) \
-	  ${PNETCDF_LIB} \
-	  ${NETCDF_FLIB} $(PGPLOT_LIB) ${BLASGOTO_LIB} #${ACML_LIB}
+	  	$(SCI_LIB) \
+	  	$(FFT_LIB) \
+	  	${PNETCDF_LIB} \
+	  	${NETCDF_FLIB} \
+		$(PGPLOT_LIB) \
+		${SCALAPACK_LIB} \
+		${BLACS_LIB} \
+		${BLASGOTO_LIB} 
 	INC_DIR = -I ${NETCDF_DIR}/include -I ${PNETCDF_DIR}/include
 endif
 
