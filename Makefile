@@ -16,7 +16,7 @@
 
 ifeq ($(MACHINE),dlghp)
 	HOME = /home/dg6/code
-	USEGPU=no
+	USEGPU=yes
 	ifeq ($(USEGPU),yes)
 		CU = /home/dg6/code/cuda/bin/nvcc
 		CUFLAGS = -g -O3 -arch=sm_11 --ptxas-options=-v --compiler-bindir /home/dg6/code/gcc43/usr/bin -I /usr/include/c++/4.4.0/x86_64-redhat-linux/ -I /usr/include/c++/4.4.0/

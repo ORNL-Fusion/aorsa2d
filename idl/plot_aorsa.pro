@@ -1,6 +1,8 @@
 pro plot_aorsa
 
 	eqDskFileName	= 'g123435.00400'
+	eqDskFileName	= 'eqdsk.122993'
+
 	eqdsk	= readGEQDSK ( eqDskFileName )
 	cdfId = ncdf_open ( 'output/plotData.nc', /noWrite ) 
 	
