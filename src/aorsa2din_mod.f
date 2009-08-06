@@ -51,6 +51,7 @@
       real :: dpsiant0 = .05
       real :: antlen = 1.0
       real :: antlc = .0001            !-----antlc = propagation constant along the antenna = c / vphase
+      logical :: limiter_boundary = .false. ! use the rLim/zLim boundary from the eqdsk file
       real :: psilim = .99
       real :: psimask = 1.05
       real :: psiant = 0.95
@@ -356,7 +357,8 @@
      &    enorm_factor, version_number, enorm_factor_e, &
      &    enorm_factor_i1, enorm_factor_i2, enorm_factor_i3, &
      &    enorm_factor_i4, enorm_factor_i5, enorm_factor_i6, &
-     &    write_f_file, particleDensity, ana_maxwellian
+     &    write_f_file, particleDensity, ana_maxwellian, &
+     &    limiter_boundary
                 
 
       end module aorsa2din_mod

@@ -3602,13 +3602,14 @@ end do
             mask(i,j) = 1
             if (psi(i,j) .gt. psilim) mask(i,j) = 0
 
-            !eqdsk_box_mask: &
-            !if ( is_inside_lim ( capR(i), y(j) ) ) then
-            !    mask(i,j) = 1
-            !else
-            !    mask(i,j) = 0
-            !endif eqdsk_box_mask
-
+            if (limiter_boundary) then
+                eqdsk_box_mask: &
+                if ( is_inside_lim ( capR(i), y(j) ) ) then
+                    mask(i,j) = 1
+                else
+                    mask(i,j) = 0
+                endif eqdsk_box_mask
+            endif
 
          end do
       end do
@@ -6448,7 +6449,7 @@ end do
          zeffcd, clight, x, y, rt, b0, ftrap, omgrf, &
          nkperp, lmaxdim, nzeta_wdot, theta_, &
          n_theta_max, n_psi_max, i_psi_eq, n_theta_, dldbavg, &
-         n_bin, upshift, 1, xk_cutoff, y, eNorm_factor_i2)
+         n_bin, upshift, i_write, xk_cutoff, y, eNorm_factor_i2)
       end if
 
       ! --------------------- !
@@ -6929,7 +6930,7 @@ end do
 
 !DLG:   Append ql file with pScale
 
-        if ( myId .eq. 0 ) then
+        if ( myId .eq. 0 .and. i_write .ne. 0 ) then
 
             write (*,*) 'APPENDING output/p_ql.nc ...'
             ncFileName = 'output/p_ql.nc'
