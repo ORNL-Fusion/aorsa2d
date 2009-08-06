@@ -330,7 +330,6 @@ ifeq ($(MACHINE),lens)
 	  	${NETCDF_FLIB} \
 		$(PGPLOT_LIB) \
 		${SCALAPACK_LIB} \
-		${LAPACK_LIB} \
 		${BLACS_LIB} \
 		${BLASGOTO_LIB} 
 	INC_DIR = -I ${NETCDF_DIR}/include -I ${PNETCDF_DIR}/include
