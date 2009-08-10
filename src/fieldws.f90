@@ -27,7 +27,7 @@ contains
        eMinu_real_id, eMinu_imag_id, &
        bx_wave_real_id, bx_wave_imag_id, &
        bz_wave_real_id, bz_wave_imag_id, &
-       mask_id
+       mask_id, density_id
 
       real logmax, ycut, dy, xmax, ymax, xmi, E_eV, vperp_mks, &
        vpara_mks, vperp_cgs, uperp_1kev, duperp, dz, dx
@@ -869,6 +869,9 @@ contains
        call check ( nf90_def_var ( nc_id, "bz_wave_imag", NF90_REAL, &
        (/ nR_id, nz_id /), bz_wave_imag_id ) )
  
+       call check ( nf90_def_var ( nc_id, "density", NF90_REAL, &
+       (/ nR_id, nz_id /), density_id ) )
+ 
        call check ( nf90_def_var ( nc_id, "mask", NF90_INT, &
        (/ nR_id, nz_id /), mask_id ) )
  
@@ -1092,6 +1095,9 @@ contains
          nnodey, numb, &
          nxmx, nymx, nlevmax, title, titx, tity)
 
+      call check ( nf90_put_var ( nc_id, density_id, &
+      xn(1:nnodex,1:nnodey) ) )
+  
       title= 'Flux surface average redotj'
       titll= 'redotj (watts/m3)'
       titlr= '       '
