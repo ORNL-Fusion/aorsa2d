@@ -24,6 +24,7 @@ pro plot_aorsa
 	nCdf_varGet, cdfId, 'bx_wave_imag', bx_wave_imag
 	nCdf_varGet, cdfId, 'bz_wave_real', bz_wave_real
 	nCdf_varGet, cdfId, 'bz_wave_imag', bz_wave_imag
+	nCdf_varGet, cdfId, 'density', density 
 	nCdf_varGet, cdfId, 'mask', mask
 
 	ncdf_close, cdfId
@@ -76,7 +77,8 @@ pro plot_aorsa
 			ySize = 8.5, $
 			xSize = 11.0, $
 			/inches, $
-			/landScape
+			xOffset = 1.0, $
+			yOffset = 1.0
 
 	!p.multi = [0,3,2]
 	!p.charSize = 1.6
@@ -144,7 +146,7 @@ pro plot_aorsa
 			color = 255, $
 			levels = levels, $
 			c_colors = colors, $
-			title = 'ePlus_real', $
+			title = 'eMinu_real', $
 			/fill
 	oPlot, eqdsk.rbbbs, eqdsk.zbbbs, $
 		   thick = 2, $
@@ -157,7 +159,7 @@ pro plot_aorsa
 			color = 255, $
 			levels = levels, $
 			c_colors = colors, $
-			title = 'ePlus_imag', $
+			title = 'eMinu_imag', $
 			/fill
 	oPlot, eqdsk.rbbbs, eqdsk.zbbbs, $
 		   thick = 2, $
@@ -285,7 +287,35 @@ pro plot_aorsa
 			symSize = 0.5
 	loadct, 12, /silent
 	plots, newR, newZ, psym = 5, color = 12*16-1
-	
+
+	!p.multi = [0,2,2]
+	contour, density, capR, zLoc, $
+		   nlev = 20, $
+		   title = 'density'
+	oPlot, eqdsk.rbbbs, eqdsk.zbbbs, $
+		   thick = 2, $
+		   color = 0 
+   	loadct, 12, /silent
+	oPlot, eqdsk.rLim, eqdsk.zLim, $
+		   color = 8*16-1
+
+   	surface, density, capR, zLoc, $
+			title = 'density', $
+			charSize = 1.0, $
+			ax = 70, $
+			az = -15, font=0
+   	surface, density, capR, zLoc, $
+			ax = 70, $
+			az = -15, $
+			/zLog, $
+			title = 'density [log]', $
+			font = 0, $
+			charSize = 1.0
+	plots, eqdsk.rbbbs, eqdsk.zbbbs, eqdsk.rbbbs*0+10^17, $
+		   thick = 2, $
+		   color = 0 
+   	
+   	
    device, /close_file
 stop
 
