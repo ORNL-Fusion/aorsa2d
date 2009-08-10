@@ -122,6 +122,15 @@
       real :: xn4lim = 0.0
       real :: xn5lim = 0.0
       real :: xn6lim = 0.0
+
+      ! if limiter_boundary=.true.
+      real :: xn_rho2lim  = 0.0              !-----xn_rho2lim=electron density outside lcfs up to the limiter
+      real :: xn2_rho2lim = 0.0
+      real :: xn3_rho2lim = 0.0
+      real :: xn4_rho2lim = 0.0
+      real :: xn5_rho2lim = 0.0
+      real :: xn6_rho2lim = 0.0
+ 
       real :: xnslolim = 0.0
       real :: telim  = 0.0000E+00       !-----telim = electron temperature in scrape-off region (x>aplasm)
       real :: tilim  = 0.0000E+00       !-----tilim = ion temperature in scrape-off region (x>aplasm)
@@ -130,6 +139,16 @@
       real :: ti4lim  = 0.0000E+00
       real :: ti5lim = 0.0000E+00
       real :: ti6lim = 0.0000E+00      
+
+      ! if limiter_boundary=.true.
+      real :: te_rho2lim  = 0.0000E+00       !-----te_rho2lim = electron temperature from lcfs to limiter 
+      real :: ti_rho2lim  = 0.0000E+00       !-----ti_rho2lim = ion temperature from lcfs to limiter 
+      real :: ti2_rho2lim = 0.0000E+00
+      real :: ti3_rho2lim = 0.0000E+00
+      real :: ti4_rho2lim  = 0.0000E+00
+      real :: ti5_rho2lim = 0.0000E+00
+      real :: ti6_rho2lim = 0.0000E+00      
+ 
       real :: dfreq = 0.0000E+00        !-----dfreq not used   
       real :: dkz = 0.0000E+00          !-----dkz not used
       real :: xnudip = 2.5000E+00       !-----xnudip is not used
@@ -358,7 +377,10 @@
      &    enorm_factor_i1, enorm_factor_i2, enorm_factor_i3, &
      &    enorm_factor_i4, enorm_factor_i5, enorm_factor_i6, &
      &    write_f_file, particleDensity, ana_maxwellian, &
-     &    limiter_boundary
+     &    limiter_boundary, xn_rho2lim, xn2_rho2lim, &
+     &    xn3_rho2lim, xn4_rho2lim, xn5_rho2lim, xn6_rho2lim, &
+     &    te_rho2lim, ti_rho2lim, ti2_rho2lim, ti3_rho2lim, &
+     &    ti4_rho2lim, ti5_rho2lim, ti6_rho2lim
                 
 
       end module aorsa2din_mod
