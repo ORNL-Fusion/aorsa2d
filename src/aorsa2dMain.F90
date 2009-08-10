@@ -2998,13 +2998,15 @@ do i = 1, nnodex
             xna_slo(i,j) = xnslolim + (xnslo - xnslolim) * shapen_slo**alphan_slo 
 
         else
-                
-            xnea(i,j) = xnlim
-            xn2a(i,j) = xn2lim
-            xn3a(i,j) = xn3lim
-            xn4a(i,j) = xn4lim
-            xn5a(i,j) = xn5lim
-            xn6a(i,j) = xn6lim
+            
+            if (limiter_boundary) then   
+                xnea(i,j) = xn_rho2lim
+                xn2a(i,j) = xn2_rho2lim
+                xn3a(i,j) = xn3_rho2lim
+                xn4a(i,j) = xn4_rho2lim
+                xn5a(i,j) = xn5_rho2lim
+                xn6a(i,j) = xn6_rho2lim
+            endif
 
         endif
 
@@ -3054,13 +3056,15 @@ do i = 1, nnodex
 
         else
 
-            xkte(i,j)   =    telimj
-            xkti(i,j)   =    tilimj
-            xkti2(i,j)  =   ti2limj
-            xkti3(i,j)  =   ti3limj
-            xkti4(i,j)  =   ti4limj
-            xkti5(i,j)  =   ti5limj
-            xkti6(i,j)  =   ti6limj
+            if (limiter_boundary) then
+                xkte(i,j)   =    te_rho2lim*q
+                xkti(i,j)   =    ti_rho2lim*q
+                xkti2(i,j)  =   ti2_rho2lim*q
+                xkti3(i,j)  =   ti3_rho2lim*q
+                xkti4(i,j)  =   ti4_rho2lim*q
+                xkti5(i,j)  =   ti5_rho2lim*q
+                xkti6(i,j)  =   ti6_rho2lim*q
+            endif
 
         endif
 
