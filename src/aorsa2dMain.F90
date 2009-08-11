@@ -1515,7 +1515,7 @@
             rmaxis, zmaxis, b0, psio, psimag, psi_tor_max, &
             bxn, byn, bzn, bmod, psi_pol2d, rho_pol2d, qsafety, &
             bmod_mid,  capr_bpol_mid2,  capr_bpol_mid, rho_tor2d, &
-            i_psi_eq, dldb_tot12, dldbavg, n_prof_flux)
+            i_psi_eq, dldb_tot12, dldbavg, n_prof_flux,dlg_yRange)
 
        call blacs_barrier(icontxt, 'All')
 

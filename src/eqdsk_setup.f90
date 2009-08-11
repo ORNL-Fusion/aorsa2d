@@ -7,7 +7,7 @@
          rmaxis, zmaxis, b0, psio, psimag, psi_tor_max, &
          bxn_eq, byn_eq, bzn_eq, bmod_eq, psi, rho_pol2d, qsafety, &
          bmod_mid, capr_bpol_mid2, capr_bpol_mid, rho_tor2d, &
-         i_psi, dldb_tot12, dldbavg, n_prof_flux)
+         i_psi, dldb_tot12, dldbavg, n_prof_flux, dlg_yRange)
 
       use size_mod
 
@@ -25,7 +25,7 @@
 
       common/errcom/eps, s_err(100), y_phi(100), nmax
 
-
+      integer dlg_yRange
       integer jmid
       integer nmax, mmax, fcount, nxdim, nydim, n_phi, n_phi_max
       integer icell, jcell, icell_prev, jcell_prev, ncell, i_stop
@@ -1030,8 +1030,10 @@
 
       ! DLG
       ! use entire vertial eqdsk box range instead
-      ytop  = zmax
-      ybottom   = zmin
+      if (dlg_yRange .eq. 1 ) then 
+        ytop  = zmax
+        ybottom   = zmin
+      endif
 
       xmax = rwright - rwleft
       ymax = ytop - ybottom
