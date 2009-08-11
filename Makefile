@@ -25,7 +25,7 @@ ifeq ($(MACHINE),dlghp)
 		CPPFLAGS = -g -fbacktrace
 		CUDA_DIR = src/cuda
 	endif
-	CPP_DIRECTIVES = -DUSE_DISLIN=1 -DLGHP
+	CPP_DIRECTIVES = -DUSE_DISLIN=1 -DDLGHP=1
 endif
 
 ifeq ($(MACHINE),lens)
@@ -38,7 +38,7 @@ ifeq ($(MACHINE),lens)
 		CPPFLAGS = -g 
 		CUDA_DIR = src/cuda
 	endif
-	CPP_DIRECTIVES = -DUSE_DISLIN=0 -DLGHP
+	CPP_DIRECTIVES = -DUSE_DISLIN=0 -DDLGHP=0
 endif
 
 ifeq ($(MACHINE),$(filter $(MACHINE),franklin jaguar))
@@ -202,7 +202,7 @@ ifeq ($(MACHINE),dlghp)
 
 	INC_DIR = 	
 	BOUNDS = -fbounds-check
-	WARN = -Wall
+	WARN = #-Wall
 	DEBUG = -g -fbacktrace
 	FFLAGS = ${WARN} ${DEBUG} 
 	F90FLAGS = ${WARN} ${DEBUG}
@@ -370,14 +370,6 @@ $(OBJ_DIR)/%.o : $(CUDA_DIR)/%.cpp
 
 endif
 
-$(OBJ_DIR)/mets2aorsa.o:     $(SRC_DIR)/mets2aorsa.f 
-	                     $(COMPILE90) -o $(OBJ_DIR)/mets2aorsa.o \
-                             $(SRC_DIR)/mets2aorsa.f ${BOUNDS}
-				
-$(OBJ_DIR)/mets2aorsa_myra.o: $(SRC_DIR)/mets2aorsa_myra.f 
-	                      $(COMPILE90) -o $(OBJ_DIR)/mets2aorsa_myra.o \
-                              $(SRC_DIR)/mets2aorsa_myra.f ${BOUNDS}
-
 ifeq ($(USEGPU),yes)
 $(OBJ_DIR)/qlsum.o:  $(CUDA_DIR)/qlsum_gpu.f90
 	$(COMPILE_DLG) -o $(OBJ_DIR)/qlsum.o $(CUDA_DIR)/qlsum_gpu.f90 $(NETCDF) ${BOUNDS} ${WARN}
@@ -385,45 +377,6 @@ else
 $(OBJ_DIR)/qlsum.o:  $(SRC_DIR)/qlsum.f90 
 	$(COMPILE_DLG) -o $(OBJ_DIR)/qlsum.o $(SRC_DIR)/qlsum.f90 $(NETCDF) ${BOUNDS} ${WARN}
 endif			
-
-$(OBJ_DIR)/cauchy_ppart.o:   $(SRC_DIR)/cauchy_ppart.f 
-	                     $(COMPILE90) -o $(OBJ_DIR)/cauchy_ppart.o \
-                             $(SRC_DIR)/cauchy_ppart.f ${BOUNDS}	
-
-$(OBJ_DIR)/vlog.o:           $(SRC_DIR)/vlog.f 
-		             $(COMPILE) -o $(OBJ_DIR)/vlog.o \
-			     $(SRC_DIR)/vlog.f ${BOUNDS}
-			     
-$(OBJ_DIR)/aorsa2dMain.o:	$(SRC_DIR)/aorsa2dMain.F90 $(OBJ_DIR)/interp.o ${OBJ_DIR}/write_pf.o 
-	$(COMPILE_DLG) ${CPP_DIRECTIVES} -o $(OBJ_DIR)/aorsa2dMain.o $(SRC_DIR)/aorsa2dMain.F90 $(NETCDF) ${BOUNDS}			     
-
-$(OBJ_DIR)/dshell.o:         $(SRC_DIR)/dshell.f 
-	                     $(COMPILE90_2) -o $(OBJ_DIR)/dshell.o \
-                             $(SRC_DIR)/dshell.f ${BOUNDS}
-
-$(OBJ_DIR)/aorsaSubs.o:      $(SRC_DIR)/aorsaSubs.f 
-	                     $(COMPILE90_2) -o $(OBJ_DIR)/aorsaSubs.o \
-                             $(SRC_DIR)/aorsaSubs.f ${BOUNDS}
-
-$(OBJ_DIR)/sigma.o:          $(SRC_DIR)/sigma.f  $(OBJ_DIR)/read_particle_f.o ${OBJ_DIR}/write_pf.o
-	                     $(COMPILE90_2) -o $(OBJ_DIR)/sigma.o \
-                             $(SRC_DIR)/sigma.f ${NETCDF} ${BOUNDS}
-                                
-$(OBJ_DIR)/zfunction.o:      $(SRC_DIR)/zfunction.f 
-	                     $(COMPILE90_2) -o $(OBJ_DIR)/zfunction.o \
-                             $(SRC_DIR)/zfunction.f ${BOUNDS}
-                                
-$(OBJ_DIR)/ztable.o:         $(SRC_DIR)/ztable.f 
-	                     $(COMPILE90) -o $(OBJ_DIR)/ztable.o \
-                             $(SRC_DIR)/ztable.f ${BOUNDS}							                                 
-                                 
-$(OBJ_DIR)/bessel.o:         $(SRC_DIR)/bessel.f 
-	                     $(COMPILE) -o $(OBJ_DIR)/bessel.o \
-                             $(SRC_DIR)/bessel.f ${BOUNDS}                                
-                                                              
-$(OBJ_DIR)/current.o:        $(SRC_DIR)/current.f 
-	                     $(COMPILE90_2) -o $(OBJ_DIR)/current.o \
-                             $(SRC_DIR)/current.f ${BOUNDS}
 
 ifeq ($(USEGPU),yes)
 $(OBJ_DIR)/ql_myra.o:	$(CUDA_DIR)/ql_myra_gpu.f $(OBJ_DIR)/read_particle_f.o $(OBJ_DIR)/gc_integrate.o ${OBJ_DIR}/write_pql.o 
@@ -433,71 +386,7 @@ $(OBJ_DIR)/ql_myra.o:	$(SRC_DIR)/ql_myra.F $(OBJ_DIR)/read_particle_f.o $(OBJ_DI
 	$(COMPILE_NOSAVE) ${CPP_DIRECTIVES} -o $(OBJ_DIR)/ql_myra.o $(SRC_DIR)/ql_myra.F $(NETCDF) ${BOUNDS} ${PNETCDF}
 endif
 
-$(OBJ_DIR)/slowDown.o:       $(SRC_DIR)/slowDown.f 
-	                     $(COMPILE) -o $(OBJ_DIR)/slowDown.o \
-                             $(SRC_DIR)/slowDown.f ${BOUNDS}                                                                           
 
-$(OBJ_DIR)/fourier.o:        $(SRC_DIR)/fourier.f 
-	                     $(COMPILE90_2) -o $(OBJ_DIR)/fourier.o \
-                             $(SRC_DIR)/fourier.f ${BOUNDS}
-                                
-$(OBJ_DIR)/assert.o:         $(SRC_DIR)/assert.f 
-	                     $(COMPILE) -o $(OBJ_DIR)/assert.o \
-                             $(SRC_DIR)/assert.f ${BOUNDS}                            
-                                
-$(OBJ_DIR)/setupblacs.o:     $(SRC_DIR)/setupblacs.f 
-	                     $(COMPILE) -o $(OBJ_DIR)/setupblacs.o \
-                             $(SRC_DIR)/setupblacs.f ${BOUNDS}                                                                                                
-
-$(OBJ_DIR)/check.o:          $(SRC_DIR)/check.f 
-	                     $(COMPILE) -o $(OBJ_DIR)/check.o \
-                             $(SRC_DIR)/check.f ${BOUNDS}
-			     
-$(OBJ_DIR)/cauchy_mod.o:    $(SRC_DIR)/cauchy_mod.f 
-	                     $(COMPILE) -o $(OBJ_DIR)/cauchy_mod.o \
-                             $(SRC_DIR)/cauchy_mod.f ${BOUNDS}			     
-				
-$(OBJ_DIR)/precision_mod.o:  $(SRC_DIR)/precision_mod.f 
-	                     $(COMPILE90) -o $(OBJ_DIR)/precision_mod.o \
-                             $(SRC_DIR)/precision_mod.f ${BOUNDS}
-ifeq ($(MACHINE),dlghp)			     
-$(OBJ_DIR)/size_mod.o:       $(SRC_DIR)/size_mod.F 
-	                     $(COMPILE90) -DDLGHP=1 -o $(OBJ_DIR)/size_mod.o \
-                             $(SRC_DIR)/size_mod.F ${BOUNDS}			     			     
-else
-$(OBJ_DIR)/size_mod.o:       $(SRC_DIR)/size_mod.F 
-	                     $(COMPILE90) -DDLGHP=0 -o $(OBJ_DIR)/size_mod.o \
-                             $(SRC_DIR)/size_mod.F ${BOUNDS}			     			     
-endif
-		
-$(OBJ_DIR)/aorsa2din_mod.o:  $(SRC_DIR)/aorsa2din_mod.f $(INC_FILES)
-	                     $(COMPILE90) -o $(OBJ_DIR)/aorsa2din_mod.o \
-                             $(SRC_DIR)/aorsa2din_mod.f ${BOUNDS}					 
-
-$(OBJ_DIR)/profile_mod.o:    $(SRC_DIR)/profile_mod.f 
-	                     $(COMPILE90) -o $(OBJ_DIR)/profile_mod.o \
-                             $(SRC_DIR)/profile_mod.f ${BOUNDS}
-			     
-$(OBJ_DIR)/swim_global_data_mod.o: $(SRC_DIR)/swim_global_data_mod.f 
-	                           $(COMPILE90) -o $(OBJ_DIR)/swim_global_data_mod.o \
-                                   $(SRC_DIR)/swim_global_data_mod.f ${BOUNDS}
-		
-$(OBJ_DIR)/rf2x_setup2.o:    $(SRC_DIR)/rf2x_setup2.f 
-	                     $(COMPILE90_2_NOSAVE) -o $(OBJ_DIR)/rf2x_setup2.o \
-                             $(SRC_DIR)/rf2x_setup2.f ${BOUNDS}
-			     
-$(OBJ_DIR)/profile_setup.o:  $(SRC_DIR)/profile_setup.f 
-	                     $(COMPILE90_2_NOSAVE) -o $(OBJ_DIR)/profile_setup.o \
-                             $(SRC_DIR)/profile_setup.f 
-			     
-$(OBJ_DIR)/eqdsk_setup.o:    $(SRC_DIR)/eqdsk_setup.f90 
-	                     $(COMPILE_DLG) -o $(OBJ_DIR)/eqdsk_setup.o \
-                             $(SRC_DIR)/eqdsk_setup.f90 ${BOUNDS}
-				
-$(OBJ_DIR)/orbit.o:          $(SRC_DIR)/orbit.f 
-	                     $(COMPILE90_2_NOSAVE) -o $(OBJ_DIR)/orbit.o \
-                             $(SRC_DIR)/orbit.f			     
-			     			     			     			     
 $(OBJ_DIR)/eqdsk_plot.o:     $(SRC_DIR)/eqdsk_plot.f90 ${OBJ_DIR}/fieldws.o
 	                     $(COMPILE_DLG_R4) -o $(OBJ_DIR)/eqdsk_plot.o \
                              $(SRC_DIR)/eqdsk_plot.f90 ${BOUNDS}				     
@@ -516,8 +405,18 @@ ${OBJ_DIR}/%.o: ${FFT_DIR}/%.f
 # SRC files
 # ---------
 
+${OBJ_DIR}/%.o: ${SRC_DIR}/%.F
+	${F77} -c ${FFLAGS} $< -o $@ ${BOUNDS} ${NETCDF} ${CPP_DIRECTIVES}
+
+${OBJ_DIR}/%.o: ${SRC_DIR}/%.F90
+	${F90} -c ${F90FLAGS} $< -o $@ ${BOUNDS} ${NETCDF} ${CPP_DIRECTIVES}
+
 ${OBJ_DIR}/%.o: ${SRC_DIR}/%.f
-	${F77} -c ${FFLAGS} $< -o $@ ${BOUNDS} ${NETCDF}
+	${F77} -c ${FFLAGS} $< -o $@ ${NETCDF} 
+
+${OBJ_DIR}/%.o: ${SRC_DIR}/%.f90
+	${F90} -c ${F90FLAGS} $< -o $@ ${BOUNDS} ${NETCDF}
+
 
 # CQL files
 # ---------
