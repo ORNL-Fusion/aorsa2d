@@ -124,12 +124,12 @@
       real :: xn6lim = 0.0
 
       ! if limiter_boundary=.true.
-      real :: xn_rho2lim  = 0.0              !-----xn_rho2lim=electron density outside lcfs up to the limiter
-      real :: xn2_rho2lim = 0.0
-      real :: xn3_rho2lim = 0.0
-      real :: xn4_rho2lim = 0.0
-      real :: xn5_rho2lim = 0.0
-      real :: xn6_rho2lim = 0.0
+      real :: xn_rho2lim  = 1.0e-10              !-----xn_rho2lim=electron density outside lcfs up to the limiter
+      real :: xn2_rho2lim = 1.0e-10 
+      real :: xn3_rho2lim = 1.0e-10 
+      real :: xn4_rho2lim = 1.0e-10 
+      real :: xn5_rho2lim = 1.0e-10 
+      real :: xn6_rho2lim = 1.0e-10 
  
       real :: xnslolim = 0.0
       real :: telim  = 0.0000E+00       !-----telim = electron temperature in scrape-off region (x>aplasm)
@@ -141,13 +141,13 @@
       real :: ti6lim = 0.0000E+00      
 
       ! if limiter_boundary=.true.
-      real :: te_rho2lim  = 0.0000E+00       !-----te_rho2lim = electron temperature from lcfs to limiter 
-      real :: ti_rho2lim  = 0.0000E+00       !-----ti_rho2lim = ion temperature from lcfs to limiter 
-      real :: ti2_rho2lim = 0.0000E+00
-      real :: ti3_rho2lim = 0.0000E+00
-      real :: ti4_rho2lim  = 0.0000E+00
-      real :: ti5_rho2lim = 0.0000E+00
-      real :: ti6_rho2lim = 0.0000E+00      
+      real :: te_rho2lim  = 10E+00       !-----te_rho2lim = electron temperature from lcfs to limiter 
+      real :: ti_rho2lim  = 10E+00       !-----ti_rho2lim = ion temperature from lcfs to limiter 
+      real :: ti2_rho2lim = 10E+00
+      real :: ti3_rho2lim = 10E+00
+      real :: ti4_rho2lim  = 10E+00
+      real :: ti5_rho2lim = 10E+00
+      real :: ti6_rho2lim = 10E+00      
  
       real :: dfreq = 0.0000E+00        !-----dfreq not used   
       real :: dkz = 0.0000E+00          !-----dkz not used
