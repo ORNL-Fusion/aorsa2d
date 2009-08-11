@@ -348,6 +348,7 @@ contains
    
         endif cartesian
 
+
         !   Create flux surface averaged dfdu & dfdTh
 
         flux_surf_avg: &
@@ -603,6 +604,16 @@ contains
        
         endif flux_surf_avg
 
+        deallocate ( uPerp_binCenters, &
+            uPar_binCenters, &
+            uPerp_2D, &
+            uPar_2D, &
+            uPerp_binEdges, &
+            uPar_binEdges, &
+            dfduPer, &
+            dfduPar )
+
+
         !   Write a diagnostic f file to check magnitude etc
 
         if ( capR > 1.6 .and. capR < 1.7 .and. abs ( y ) < 0.2 ) then
@@ -700,6 +711,12 @@ contains
             dlg_getDensity = 0.0
 
         end if
+
+        deallocate (density, &
+            R_binCenters, &
+            z_binCenters, &
+            R_binEdges, &
+            z_binEdges)
 
         return
 
