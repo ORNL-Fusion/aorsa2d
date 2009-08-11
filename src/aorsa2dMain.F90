@@ -3003,25 +3003,24 @@ do i = 1, nnodex
             shapeti5 = 1.0 - rho(i,j)**betati5
             shapeti6 = 1.0 - rho(i,j)**betati6
             
-            xnea(i,j) = xnlim  + (xn0 - xnlim)  * shapen**alphan   * flimiter
-            xn2a(i,j) = xn2lim + (xn2 - xn2lim) * shapen2**alphan2 * flimiter
-            xn3a(i,j) = xn3lim + (xn3 - xn3lim) * shapen3**alphan3 * flimiter
-            xn4a(i,j) = xn4lim + (xn4 - xn4lim) * shapen4**alphan4 * flimiter
-            xn5a(i,j) = xn5lim + (xn5 - xn5lim) * shapen5**alphan5 * flimiter
-            xn6a(i,j) = xn6lim + (xn6 - xn6lim) * shapen6**alphan6 * flimiter
-            xna_slo(i,j) = xnslolim + (xnslo - xnslolim) * shapen_slo**alphan_slo 
+        endif 
 
-        else
-            
-            if (limiter_boundary) then   
-                xnea(i,j) = xn_rho2lim
-                xn2a(i,j) = xn2_rho2lim
-                xn3a(i,j) = xn3_rho2lim
-                xn4a(i,j) = xn4_rho2lim
-                xn5a(i,j) = xn5_rho2lim
-                xn6a(i,j) = xn6_rho2lim
-            endif
+        xnea(i,j) = xnlim  + (xn0 - xnlim)  * shapen**alphan   * flimiter
+        xn2a(i,j) = xn2lim + (xn2 - xn2lim) * shapen2**alphan2 * flimiter
+        xn3a(i,j) = xn3lim + (xn3 - xn3lim) * shapen3**alphan3 * flimiter
+        xn4a(i,j) = xn4lim + (xn4 - xn4lim) * shapen4**alphan4 * flimiter
+        xn5a(i,j) = xn5lim + (xn5 - xn5lim) * shapen5**alphan5 * flimiter
+        xn6a(i,j) = xn6lim + (xn6 - xn6lim) * shapen6**alphan6 * flimiter
+        xna_slo(i,j) = xnslolim + (xnslo - xnslolim) * shapen_slo**alphan_slo 
 
+   
+        if (limiter_boundary .and. rho(i,j) .gt. 1.0) then   
+            xnea(i,j) = xn_rho2lim
+            xn2a(i,j) = xn2_rho2lim
+            xn3a(i,j) = xn3_rho2lim
+            xn4a(i,j) = xn4_rho2lim
+            xn5a(i,j) = xn5_rho2lim
+            xn6a(i,j) = xn6_rho2lim
         endif
 
         !-----------------------------------
@@ -3058,28 +3057,22 @@ do i = 1, nnodex
                                            - z_slo * eta_slo)
         xn1 = eta1 * xn0
 
-        if ( rho(i,j) .le. 1.0 ) then
+        xkte(i,j) = telimj + (t0e - telimj) * shapete**alphate * flimiter
+        xkti(i,j) = tilimj + (t0i - tilimj) * shapeti**alphati * flimiter
+        xkti2(i,j) = ti2limj + (t0i2 - ti2limj) * shapeti2**alphati2 * flimiter
+        xkti3(i,j) = ti3limj + (t0i3 - ti3limj) * shapeti3**alphati3 * flimiter
+        xkti4(i,j) = ti4limj + (t0i4 - ti4limj) * shapeti4**alphati4 * flimiter
+        xkti5(i,j) = ti5limj + (t0i5 - ti5limj) * shapeti5**alphati5 * flimiter
+        xkti6(i,j) = ti6limj + (t0i6 - ti6limj) * shapeti6**alphati6 * flimiter
 
-            xkte(i,j) = telimj + (t0e - telimj) * shapete**alphate * flimiter
-            xkti(i,j) = tilimj + (t0i - tilimj) * shapeti**alphati * flimiter
-            xkti2(i,j) = ti2limj + (t0i2 - ti2limj) * shapeti2**alphati2 * flimiter
-            xkti3(i,j) = ti3limj + (t0i3 - ti3limj) * shapeti3**alphati3 * flimiter
-            xkti4(i,j) = ti4limj + (t0i4 - ti4limj) * shapeti4**alphati4 * flimiter
-            xkti5(i,j) = ti5limj + (t0i5 - ti5limj) * shapeti5**alphati5 * flimiter
-            xkti6(i,j) = ti6limj + (t0i6 - ti6limj) * shapeti6**alphati6 * flimiter
-
-        else
-
-            if (limiter_boundary) then
-                xkte(i,j)   =    te_rho2lim*q
-                xkti(i,j)   =    ti_rho2lim*q
-                xkti2(i,j)  =   ti2_rho2lim*q
-                xkti3(i,j)  =   ti3_rho2lim*q
-                xkti4(i,j)  =   ti4_rho2lim*q
-                xkti5(i,j)  =   ti5_rho2lim*q
-                xkti6(i,j)  =   ti6_rho2lim*q
-            endif
-
+        if (limiter_boundary .and. rho(i,j) .gt. 1.0) then
+            xkte(i,j)   =    te_rho2lim*q
+            xkti(i,j)   =    ti_rho2lim*q
+            xkti2(i,j)  =   ti2_rho2lim*q
+            xkti3(i,j)  =   ti3_rho2lim*q
+            xkti4(i,j)  =   ti4_rho2lim*q
+            xkti5(i,j)  =   ti5_rho2lim*q
+            xkti6(i,j)  =   ti6_rho2lim*q
         endif
 
     end if iprofile_eq_3
