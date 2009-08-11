@@ -386,14 +386,40 @@ $(OBJ_DIR)/ql_myra.o:	$(SRC_DIR)/ql_myra.F $(OBJ_DIR)/read_particle_f.o $(OBJ_DI
 	$(COMPILE_NOSAVE) ${CPP_DIRECTIVES} -o $(OBJ_DIR)/ql_myra.o $(SRC_DIR)/ql_myra.F $(NETCDF) ${BOUNDS} ${PNETCDF}
 endif
 
+ifeq ($(MACHINE),dlghp)
+$(OBJ_DIR)/size_mod.o: $(SRC_DIR)/size_mod.F
+	$(COMPILE90) -DDLGHP=1 -o $(OBJ_DIR)/size_mod.o $(SRC_DIR)/size_mod.F ${BOUNDS} 
+else
+$(OBJ_DIR)/size_mod.o: $(SRC_DIR)/size_mod.F
+	$(COMPILE90) -DDLGHP=0 -o $(OBJ_DIR)/size_mod.o $(SRC_DIR)/size_mod.F ${BOUNDS} 
+endif
 
-$(OBJ_DIR)/eqdsk_plot.o:     $(SRC_DIR)/eqdsk_plot.f90 ${OBJ_DIR}/fieldws.o
-	                     $(COMPILE_DLG_R4) -o $(OBJ_DIR)/eqdsk_plot.o \
-                             $(SRC_DIR)/eqdsk_plot.f90 ${BOUNDS}				     
+$(OBJ_DIR)/aorsa2din_mod.o: $(SRC_DIR)/aorsa2din_mod.f90 $(INC_FILES)
+	$(COMPILE90) -o $(OBJ_DIR)/aorsa2din_mod.o $(SRC_DIR)/aorsa2din_mod.f90 ${BOUNDS}                    
+
+$(OBJ_DIR)/profile_mod.o: $(SRC_DIR)/profile_mod.f90
+	$(COMPILE90) -o $(OBJ_DIR)/profile_mod.o $(SRC_DIR)/profile_mod.f90 ${BOUNDS}
+                 
+$(OBJ_DIR)/swim_global_data_mod.o: $(SRC_DIR)/swim_global_data_mod.f90
+	$(COMPILE90) -o $(OBJ_DIR)/swim_global_data_mod.o $(SRC_DIR)/swim_global_data_mod.f90 ${BOUNDS}
+        
+$(OBJ_DIR)/rf2x_setup2.o: $(SRC_DIR)/rf2x_setup2.f
+	$(COMPILE90_2_NOSAVE) -o $(OBJ_DIR)/rf2x_setup2.o $(SRC_DIR)/rf2x_setup2.f ${BOUNDS}
+                 
+$(OBJ_DIR)/profile_setup.o: $(SRC_DIR)/profile_setup.f
+	$(COMPILE90_2_NOSAVE) -o $(OBJ_DIR)/profile_setup.o $(SRC_DIR)/profile_setup.f 
+                 
+$(OBJ_DIR)/orbit.o: $(SRC_DIR)/orbit.f
+	$(COMPILE90_2_NOSAVE) -o $(OBJ_DIR)/orbit.o $(SRC_DIR)/orbit.f         
+
+$(OBJ_DIR)/eqdsk_setup.o: $(SRC_DIR)/eqdsk_setup.f90
+	$(COMPILE_DLG) -o $(OBJ_DIR)/eqdsk_setup.o $(SRC_DIR)/eqdsk_setup.f90 ${BOUNDS}
+
+$(OBJ_DIR)/eqdsk_plot.o: $(SRC_DIR)/eqdsk_plot.f90 ${OBJ_DIR}/fieldws.o
+	$(COMPILE_DLG_R4) -o $(OBJ_DIR)/eqdsk_plot.o $(SRC_DIR)/eqdsk_plot.f90 ${BOUNDS}				     
 			     			     
-$(OBJ_DIR)/fieldws.o:        $(SRC_DIR)/fieldws.f90
-	                     $(COMPILE_DLG_R4) -o $(OBJ_DIR)/fieldws.o \
-                             $(SRC_DIR)/fieldws.f90 $(NETCDF) ${BOUNDS}
+$(OBJ_DIR)/fieldws.o: $(SRC_DIR)/fieldws.f90
+	$(COMPILE_DLG_R4) -o $(OBJ_DIR)/fieldws.o $(SRC_DIR)/fieldws.f90 $(NETCDF) ${BOUNDS}
 
 			    		    		     		   			     			     				
 # FFT files
