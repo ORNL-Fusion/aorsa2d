@@ -865,6 +865,7 @@
        nrho_id, f_vvp_id, uper_id, upar_id, rho_id, &
        vc_mks_id, pScale_id
 
+    logical :: sane
          integer :: nR_id, nz_id, &
              ePlus_id, eMinu_id, &
              ePlus_img_id, eMinu_img_id, &
@@ -1875,6 +1876,13 @@
 !DLG:   Adjust if statement for ndisti1 >= 1
          if (ndisti1 .ge. 1) then
 
+    sanity_check1: &
+    if ( enorm_factor_i1 .lt. 0 .and. ndisti1 .eq. 2) then 
+        write(*,*) 'FAILED SANITY CHECK: plese set enorm_factor_i1'
+        stop
+    endif sanity_check1
+
+
           if(myid .eq. 0) call cql3d_setup(netcdf_file1, nuper, nupar, &
                              xmi1, enorm_factor_i1, vc1_mks_cql3d)
 
@@ -1919,6 +1927,12 @@
 !DLG:   Adjust if statement for ndisti2 >= 1
 
          if (ndisti2 .ge. 1) then
+
+    sanity_check2: &
+    if ( enorm_factor_i2 .lt. 0 .and. ndisti2 .eq. 2) then 
+        write(*,*) 'FAILED SANITY CHECK: plese set enorm_factor_i2'
+        stop
+    endif sanity_check2
 
           if(myid .eq. 0) call cql3d_setup(netcdf_file2, nuper, nupar, &
                               xmi2, eNorm_factor_i2, vc2_mks_cql3d)
@@ -3613,6 +3627,28 @@ end do
                 else
                     mask(i,j) = 0
                 endif eqdsk_box_mask
+
+                ! sanity check for edge values
+                if ( xn_rho2lim .le. 0.0 ) sane = .false. 
+                if (eta .ne. 0.0 .and. xn2_rho2lim .le. 0.0 ) sane = .false.
+                if (eta3 .ne. 0.0 .and. xn3_rho2lim .le. 0.0 ) sane = .false.
+                if (eta4 .ne. 0.0 .and. xn4_rho2lim .le. 0.0 ) sane = .false.
+                if (eta5 .ne. 0.0 .and. xn5_rho2lim .le. 0.0 ) sane = .false.
+                if (eta6 .ne. 0.0 .and. xn6_rho2lim .le. 0.0 ) sane = .false.
+
+                if ( te_rho2lim .le. 0.0 ) sane = .false. 
+                if ( ti_rho2lim .le. 0.0 ) sane = .false. 
+                if (eta .ne. 0.0 .and. ti2_rho2lim .le. 0.0 ) sane = .false.
+                if (eta3 .ne. 0.0 .and. ti3_rho2lim .le. 0.0 ) sane = .false.
+                if (eta4 .ne. 0.0 .and. ti4_rho2lim .le. 0.0 ) sane = .false.
+                if (eta5 .ne. 0.0 .and. ti5_rho2lim .le. 0.0 ) sane = .false.
+                if (eta6 .ne. 0.0 .and. ti6_rho2lim .le. 0.0 ) sane = .false.
+
+                if (.not. sane) then
+                    write(*,*) 'ERROR in namelist, need xn?_rho2lim and ti?_rho2lim'
+                    stop
+                endif 
+
             endif
 
          end do
