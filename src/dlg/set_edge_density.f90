@@ -68,8 +68,6 @@ contains
         if (density_by_gradient .lt. limit) &
             density_by_gradient = limit
 
-        write(*,*) '***********', dist, density_by_gradient, gradient, offset
-    
     end function density_by_gradient
 
 end module set_edge_density
