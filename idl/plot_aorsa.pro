@@ -27,6 +27,8 @@ pro plot_aorsa
 	nCdf_varGet, cdfId, 'bz_wave_imag', bz_wave_imag
 	nCdf_varGet, cdfId, 'density', density 
 	nCdf_varGet, cdfId, 'mask', mask
+	nCdf_varGet, cdfId, 'janty', janty 
+	nCdf_varGet, cdfId, 'jantx', jantx
 
 	ncdf_close, cdfId
 
@@ -300,21 +302,52 @@ pro plot_aorsa
 	oPlot, eqdsk.rLim, eqdsk.zLim, $
 		   color = 8*16-1
 
+   contour, janty, capR, zLoc, $
+		   nlev = 10, $
+		   title = 'janty', $
+		   c_color = 12*16-1
+	oPlot, eqdsk.rbbbs, eqdsk.zbbbs, $
+		   thick = 2, $
+		   color = 0 
+   	loadct, 12, /silent
+	oPlot, eqdsk.rLim, eqdsk.zLim, $
+		   color = 8*16-1
+
+
    	surface, density, capR, zLoc, $
 			title = 'density', $
 			charSize = 1.0, $
-			ax = 70, $
-			az = -15, font=0
+			ax = 80, $
+			az = -15, font=0, /save
+	plots, eqdsk.rbbbs, eqdsk.zbbbs, eqdsk.rbbbs*0+2e18, $
+			color = 12*16-1, $
+		   	/t3d, $
+			thick = 3
+	plots, eqdsk.rlim, eqdsk.zlim, eqdsk.rbbbs*0+2e18, $
+			color = 8*16-1, $
+		   	/t3d, $
+			thick = 3
+   	
    	surface, density, capR, zLoc, $
-			ax = 70, $
-			az = -15, $
-			/zLog, $
+			ax = 40, $
+			az = -80, $
 			title = 'density [log]', $
 			font = 0, $
-			charSize = 1.0
-	plots, eqdsk.rbbbs, eqdsk.zbbbs, eqdsk.rbbbs*0+10^17, $
-		   thick = 2, $
-		   color = 0 
+			charSize = 1.0, $
+			zRange = [1.0e16,100.0e17], $
+			zStyle = 1, $
+			min_val = 1.0e12, $
+			max_val = 100e17, $
+		   	/zlog, $
+			/save
+	plots, eqdsk.rbbbs, eqdsk.zbbbs, eqdsk.rbbbs*0+2e18, $
+			color = 12*16-1, $
+		   	/t3d, $
+			thick = 3
+	plots, eqdsk.rlim, eqdsk.zlim, eqdsk.rbbbs*0+2e18, $
+			color = 8*16-1, $
+		   	/t3d, $
+			thick = 3
    	
    	
    device, /close_file
