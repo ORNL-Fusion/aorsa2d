@@ -27,7 +27,7 @@ contains
        eMinu_real_id, eMinu_imag_id, &
        bx_wave_real_id, bx_wave_imag_id, &
        bz_wave_real_id, bz_wave_imag_id, &
-       mask_id, density_id
+       mask_id, density_id, janty_id, jantx_id
 
       real logmax, ycut, dy, xmax, ymax, xmi, E_eV, vperp_mks, &
        vpara_mks, vperp_cgs, uperp_1kev, duperp, dz, dx
@@ -871,6 +871,10 @@ contains
  
        call check ( nf90_def_var ( nc_id, "density", NF90_REAL, &
        (/ nR_id, nz_id /), density_id ) )
+       call check ( nf90_def_var ( nc_id, "janty", NF90_REAL, &
+       (/ nR_id, nz_id /), janty_id ) )
+       call check ( nf90_def_var ( nc_id, "jantx", NF90_REAL, &
+       (/ nR_id, nz_id /), jantx_id ) )
  
        call check ( nf90_def_var ( nc_id, "mask", NF90_INT, &
        (/ nR_id, nz_id /), mask_id ) )
@@ -1760,6 +1764,13 @@ contains
        if (iflag .eq. 0) call boundary(capr, y, rho, ff, nnodex, &
           nnodey, numb, &
          nxmx, nymx, nlevmax, title, titx, tity)
+
+    !DLG: write antenna current
+
+    call check ( nf90_put_var ( nc_id, janty_id, &
+        xjy(1:nnodex,1:nnodey) ) )
+    call check ( nf90_put_var ( nc_id, jantx_id, &
+        xjx(1:nnodex,1:nnodey) ) )
 
       do i = 1, nnodex
          do j = 1, nnodey
