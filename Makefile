@@ -45,13 +45,13 @@ ifeq ($(MACHINE),$(filter $(MACHINE),franklin jaguar))
 	CRAYXT4=1
 endif
 
-EXEC = ${PWD}/xaorsa2d.$(MACHINE)
+EXEC = xaorsa2d.$(MACHINE)
 
-SRC_DIR = ${PWD}/src
+SRC_DIR = src
 
-OBJ_DIR = ${PWD}/obj
+OBJ_DIR = obj
 
-MOD_DIR = ${PWD}/mod
+MOD_DIR = mod
 
 FFT_DIR = $(SRC_DIR)/fftpack
 
@@ -91,7 +91,6 @@ OBJ_FILES = \
  $(OBJ_DIR)/orbit.o \
  $(OBJ_DIR)/eqdsk_plot.o \
  $(OBJ_DIR)/fieldws.o \
- $(OBJ_DIR)/ranlib.o \
  $(OBJ_DIR)/dshell.o \
  $(OBJ_DIR)/aorsa2dMain.o 
 
@@ -130,17 +129,7 @@ OBJ_CQL3D_SETUP = \
  $(OBJ_DIR)/cubic_B_splines_v.o \
  $(OBJ_DIR)/cql3d_setup.o
 
-OBJ_DLG = \
- $(OBJ_DIR)/read_particle_f.o \
- $(OBJ_DIR)/gc_integrate.o \
- $(OBJ_DIR)/interp.o \
- $(OBJ_DIR)/eqdsk_dlg.o \
- $(OBJ_DIR)/gc_terms.o \
- $(OBJ_DIR)/constants.o \
- $(OBJ_DIR)/dlg.o \
- ${OBJ_DIR}/write_pql.o \
- ${OBJ_DIR}/write_pf.o
-
+OBJ_DLG := $(patsubst src/dlg/%,obj/%.o,$(basename $(wildcard src/dlg/*)))
 
 ifeq ($(CRAYXT4),1)
 	OPT_FLAGS = #-fast -tp barcelona-64 -traceback #-Minfo -mp#-Mlist #-Mconcur=nonuma
@@ -175,7 +164,6 @@ ifeq ($(CRAYXT4),1)
 endif
 
 ifeq ($(MACHINE),dlghp)
-
 	MPI_INCLUDE_DIR = $(HOME)/openmpi/gnu_64/include
 
 	MPIF90 = $(HOME)/openmpi/gnu_64/bin/mpif90
@@ -347,6 +335,7 @@ LOAD = $(F90) $(OPTIMIZATION) $(LOADFLAGS)
 
 ifeq ($(MACHINE),dlghp)
 $(EXEC): $(OBJ_FILES) $(OBJ_FFT) $(OBJ_CQL3D_SETUP) $(OBJ_DLG) ${OBJ_CUDA}
+	@echo ${OBJ_DLG}
 	$(LOAD) -o $(EXEC) $(OBJ_FILES) $(OBJ_FFT) $(OBJ_CQL3D_SETUP) $(OBJ_DLG) $(LIBS) $(DISLIN) ${OBJ_CUDA} ${CUDA_LIB} 
 else
 $(EXEC): load_modules $(OBJ_FILES) $(OBJ_FFT) $(OBJ_CQL3D_SETUP) $(OBJ_DLG) ${OBJ_CUDA}
