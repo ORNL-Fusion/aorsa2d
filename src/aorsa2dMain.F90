@@ -15,6 +15,7 @@
       use plot_aorsa2dps
       use netcdf
       use read_particle_f
+      use set_edge_density
 
 !------------------------------------------------------------------------------
 !     This version (4/01/03: newlab3) does not solve equations for the points
@@ -249,6 +250,7 @@
 
       integer ilayer,nlayer
       integer mask(nxmx, nymx), mask2(nxmx,nymx)
+      integer mask_bbbs(nxmx,nymx)
 
       complex ealphak(nkdim1 : nkdim2, mkdim1 : mkdim2), &
               ebetak(nkdim1 : nkdim2, mkdim1 : mkdim2), &
@@ -2951,11 +2953,47 @@
          end do
       end do
 
+!DLG: read eqdsk dlg style
+
+    call read_geqdsk ( eqdsk, plot = .false. )
+    call bCurvature ()
+    call bGradient ()
+    call init_interp ()
+    if ( ndisti2 .eq. 2 ) call init_particleFile ( myId )
+
+!     -----------
+!     Mask array:
+!     -----------
+      do i = 1, nnodex
+         do j = 1, nnodey
+
+            mask(i,j) = 1
+            if (psi(i,j) .gt. psilim) mask(i,j) = 0
+
+            if (limiter_boundary) then
+
+                eqdsk_box_mask: &
+                if ( is_inside_lim ( capR(i), y(j) ) ) then
+                    mask(i,j) = 1
+                else
+                    mask(i,j) = 0
+                endif eqdsk_box_mask
+
+                eqdsk_bbbs_mask: &
+                if ( is_inside_bbbs ( capR(i), y(j) ) ) then
+                    mask_bbbs(i,j) = 1
+                else
+                    mask_bbbs(i,j) = 0
+                endif eqdsk_bbbs_mask
+
+            endif
+
+         end do
+      end do
+
 !    ----------------
 !    plasma profiles:
 !    ----------------
-
-
 
 do i = 1, nnodex
    do j = 1, nnodey
@@ -3012,14 +3050,28 @@ do i = 1, nnodex
         xna_slo(i,j) = xnslolim + (xnslo - xnslolim) * shapen_slo**alphan_slo 
 
    
-        if (limiter_boundary .and. rho(i,j) .gt. 1.0) then   
-            xnea(i,j) = xn_rho2lim
-            xn2a(i,j) = xn2_rho2lim
-            xn3a(i,j) = xn3_rho2lim
-            xn4a(i,j) = xn4_rho2lim
-            xn5a(i,j) = xn5_rho2lim
-            xn6a(i,j) = xn6_rho2lim
+        if (limiter_boundary) then   
+            if (mask(i,j) .lt. 1) then 
+
+                xnea(i,j) = 1e10 
+                xn2a(i,j) = 1e10
+                xn3a(i,j) = 1e10 
+                xn4a(i,j) = 1e10 
+                xn5a(i,j) = 1e10 
+                xn6a(i,j) = 1e10 
+
+            else
+                if ( mask_bbbs(i,j) .lt. 1 ) then 
+                    xnea(i,j) = density_by_gradient ( capR(i), y(j), xnlim*0.9, -500.0e16, 1e10) 
+                    xn2a(i,j) = xn2_rho2lim
+                    xn3a(i,j) = xn3_rho2lim
+                    xn4a(i,j) = xn4_rho2lim
+                    xn5a(i,j) = xn5_rho2lim
+                    xn6a(i,j) = xn6_rho2lim
+                endif
+            endif
         endif
+
 
         !-----------------------------------
         ! DLG: Read density from particle data
@@ -3573,14 +3625,6 @@ end do
 !     End of iprofile = 5 option
 !     --------------------------
 
-!!DLG:   Read eqdsk dlg style
-!
-      call read_geqdsk ( eqdsk, plot = .false. )
-      call bCurvature ()
-      call bGradient ()
-      call init_interp ()
-      if ( ndisti2 .eq. 2 ) call init_particleFile ( myId )
-
 !     write (6, *) "b0 = ", b0
 !     write (6, *) "xmu0 = ", xmu0
 !     write (6, *) "xn1 = ", xn1
@@ -3601,28 +3645,6 @@ end do
       if (eta4 .ne. 0.0) kperprhoi4 = kalfven * rhoi40
       if (eta5 .ne. 0.0) kperprhoi5 = kalfven * rhoi50
 
-
-!     -----------
-!     Mask array:
-!     -----------
-      do i = 1, nnodex
-         do j = 1, nnodey
-
-            mask(i,j) = 1
-            if (psi(i,j) .gt. psilim) mask(i,j) = 0
-
-            if (limiter_boundary) then
-                eqdsk_box_mask: &
-                if ( is_inside_lim ( capR(i), y(j) ) ) then
-                    mask(i,j) = 1
-                else
-                    mask(i,j) = 0
-                endif eqdsk_box_mask
-
-            endif
-
-         end do
-      end do
 
 !     ----------------------------------------------
 !     Calculate the differential volume on half mesh:
