@@ -3062,7 +3062,7 @@ do i = 1, nnodex
 
             else
                 if ( mask_bbbs(i,j) .lt. 1 ) then 
-                    xnea(i,j) = density_by_gradient ( capR(i), y(j), xnlim*0.9, -500.0e16, 1e10) 
+                    xnea(i,j) = density_by_gradient ( capR(i), y(j), xn_rho2lim, gradient, 1e10) 
                     xn2a(i,j) = xn2_rho2lim
                     xn3a(i,j) = xn3_rho2lim
                     xn4a(i,j) = xn4_rho2lim
@@ -3116,14 +3116,31 @@ do i = 1, nnodex
         xkti6(i,j) = ti6limj + (t0i6 - ti6limj) * shapeti6**alphati6 * flimiter
 
         if (limiter_boundary .and. rho(i,j) .gt. 1.0) then
-            xkte(i,j)   =    te_rho2lim*q
-            xkti(i,j)   =    ti_rho2lim*q
-            xkti2(i,j)  =   ti2_rho2lim*q
-            xkti3(i,j)  =   ti3_rho2lim*q
-            xkti4(i,j)  =   ti4_rho2lim*q
-            xkti5(i,j)  =   ti5_rho2lim*q
-            xkti6(i,j)  =   ti6_rho2lim*q
-        endif
+
+            if (mask(i,j) .lt. 1) then 
+
+                xkte(i,j)   =    te_rho2lim*q
+                xkti(i,j)   =    ti_rho2lim*q
+                xkti2(i,j)  =   ti2_rho2lim*q
+                xkti3(i,j)  =   ti3_rho2lim*q
+                xkti4(i,j)  =   ti4_rho2lim*q
+                xkti5(i,j)  =   ti5_rho2lim*q
+                xkti6(i,j)  =   ti6_rho2lim*q
+ 
+            else
+                if ( mask_bbbs(i,j) .lt. 1 ) then 
+
+                    xkte(i,j)   =    te_rho2lim*q
+                    xkti(i,j)   =    ti_rho2lim*q
+                    xkti2(i,j)  =   ti2_rho2lim*q
+                    xkti3(i,j)  =   ti3_rho2lim*q
+                    xkti4(i,j)  =   ti4_rho2lim*q
+                    xkti5(i,j)  =   ti5_rho2lim*q
+                    xkti6(i,j)  =   ti6_rho2lim*q
+ 
+                endif
+            endif
+       endif
 
     end if iprofile_eq_3
 

@@ -294,25 +294,47 @@ pro plot_aorsa
 	!p.multi = [0,2,2]
 	contour, density, capR, zLoc, $
 		   nlev = 20, $
-		   title = 'density'
+		   title = 'density + janty'
+   	contour, janty, capR, zLoc, $
+		   c_color = 8*16-1, $
+		   /overplot, $ 
+   			levels = fIndGen(10)*10
 	oPlot, eqdsk.rbbbs, eqdsk.zbbbs, $
 		   thick = 2, $
 		   color = 0 
-   	loadct, 12, /silent
 	oPlot, eqdsk.rLim, eqdsk.zLim, $
 		   color = 8*16-1
 
-   contour, janty, capR, zLoc, $
-		   nlev = 10, $
-		   title = 'janty', $
-		   c_color = 12*16-1
-	oPlot, eqdsk.rbbbs, eqdsk.zbbbs, $
-		   thick = 2, $
-		   color = 0 
-   	loadct, 12, /silent
-	oPlot, eqdsk.rLim, eqdsk.zLim, $
-		   color = 8*16-1
-
+   	!p.multi=[7,2,4]
+	plot, capR, density[*,n_elements(density[0,*])/2], $
+			xTitle = 'R[m]', $
+			charSize = 2, $
+			xCharSize = 1.0
+	axis, xaxis=1, $
+			xrange=[-2,2], $
+		   	/save, $
+			xTitle = 'z[m]', $
+			color = 8*16-1, $
+			charSize = 1.5
+	oplot, zloc, density[n_elements(density[*,0])/2,*], $
+			color = 8*16-1
+   	!p.multi=[5,2,4]
+	plot, capR, density[*,n_elements(density[0,*])/2], $
+			xTitle = 'R[m]', $
+			charSize = 2, /yLog, $
+			yRange = [1e16,1e20], $
+			yStyle = 1, $
+			min_val = 1e12
+	axis, xaxis=1, $
+			xrange=[-2,2], $
+		   	/save, $
+			xTitle = 'z[m]', $
+			color = 8*16-1, $
+			charSize = 1.5 
+	oplot, zloc, density[n_elements(density[*,0])/2,*], $
+			color = 8*16-1
+	
+	!p.multi = [2,2,2]
 
    	surface, density, capR, zLoc, $
 			title = 'density', $
@@ -334,10 +356,9 @@ pro plot_aorsa
 			title = 'density [log]', $
 			font = 0, $
 			charSize = 1.0, $
-			zRange = [1.0e16,100.0e17], $
+			zRange = [1.0e16,1000.0e17], $
 			zStyle = 1, $
 			min_val = 1.0e12, $
-			max_val = 100e17, $
 		   	/zlog, $
 			/save
 	plots, eqdsk.rbbbs, eqdsk.zbbbs, eqdsk.rbbbs*0+2e18, $
