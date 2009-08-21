@@ -191,7 +191,7 @@ ifeq ($(MACHINE),dlghp)
 	INC_DIR = 	
 	BOUNDS = -fbounds-check
 	WARN = #-Wall
-	DEBUG = -g -fbacktrace
+	DEBUG = -g -fbacktrace -fsignaling-nans -ffpe-trap=zero,invalid,overflow#,underflow
 	FFLAGS = ${WARN} ${DEBUG} 
 	F90FLAGS = ${WARN} ${DEBUG}
 

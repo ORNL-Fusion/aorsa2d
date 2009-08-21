@@ -223,26 +223,28 @@ contains
 
             !   get slope
 
-            m   = ( zLim(i+1)-zLim(i) ) &
-                    / ( rLim__(i+1) - rLim__(i) )
-            b   = zLim(i) - m * rLim__(i)
-
-            !   distance
-
-            d   = sqrt ( ( rLim__(i+1) - rLim__(i) )**2 &
-                    + ( zLim(i+1) - zLim(i) )**2 )
-
             dStep   = (rLim__(i+1) - rLim__(i)) / nInterp
 
-            do j = 1, nInterp
+            if (abs(dStep) .gt. 0 ) then 
 
-                if (abs(dStep) .gt. 0 ) then 
-                    newR(nLim+cnt)  = rLim__(i) + dStep*j
-                    newZ(nLim+cnt)  = m * (rLim__(i) + dStep*j) + b 
-                    cnt = cnt + 1
-                endif
+                m   = ( zLim(i+1)-zLim(i) ) &
+                        / ( rLim__(i+1) - rLim__(i) )
+                b   = zLim(i) - m * rLim__(i)
 
-            enddo
+                !   distance
+
+                d   = sqrt ( ( rLim__(i+1) - rLim__(i) )**2 &
+                        + ( zLim(i+1) - zLim(i) )**2 )
+
+                do j = 1, nInterp
+
+                        newR(nLim+cnt)  = rLim__(i) + dStep*j
+                        newZ(nLim+cnt)  = m * (rLim__(i) + dStep*j) + b 
+                        cnt = cnt + 1
+
+                enddo
+
+            endif
 
         enddo
 

@@ -2144,13 +2144,13 @@
          xkphi(i) = nphi / capr(i)
 
       end do
-      dxc = xmax / nnodecx
-      do i = 1, nnodecx
-         xprimec(i) = (i-1) * dxc + dxc / 2.0
-         xcourse(i) = xprimec(i) + xwleft
-         caprc(i) = rt + xcourse(i)
+      !dxc = xmax / nnodecx
+      !do i = 1, nnodecx
+      !   xprimec(i) = (i-1) * dxc + dxc / 2.0
+      !   xcourse(i) = xprimec(i) + xwleft
+      !   caprc(i) = rt + xcourse(i)
 
-      end do
+      !end do
 
       if(rzoom1 .eq. 0.0)rzoom1 = capr(1)
       if(rzoom2 .eq. 0.0)rzoom2 = capr(nnodex)
@@ -2177,12 +2177,12 @@
 !         write(6, 1312)j, y(j), yprime(j)
       end do
 
-      dyc = ymax / nnodecy
-      do j = 1, nnodecy
-         yprimec(j) = (j-1) * dyc + dyc / 2.0
-         ycourse(j) = yprimec(j) + ybottom
-!         write(6, 1312)j, caprc(j)
-      end do
+      !dyc = ymax / nnodecy
+      !do j = 1, nnodecy
+      !   yprimec(j) = (j-1) * dyc + dyc / 2.0
+      !   ycourse(j) = yprimec(j) + ybottom
+!     !    write(6, 1312)j, caprc(j)
+      !end do
 
 
       if(yzoom1 .eq. 0.0)yzoom1 = ybottom
@@ -3562,6 +3562,8 @@ end do
                                      - z_slo * xna_slo(i, j)   ) / z1
 
                   if (xn1a(i, j) .le. 0.0) xn1a(i, j) = 1.0e-10
+                  if (xn2a(i, j) .le. 0.0) xn2a(i, j) = 1.0e-10
+
                end do
             end do
 
@@ -6911,6 +6913,7 @@ end do
                          - fx0i2(i, j) * rhohaty(i, j)
 
 
+            if ( eta2 /= 0.0 ) & 
             fpsi1(i,j) = 1.0 / (qi2 * xn2a(i, j) ) &
                        * fpsi0(i, j) / (capr(i) * bpol(i, j))
 
@@ -8107,7 +8110,7 @@ end do
 !     ----------------------------------------
 
       do n = 1, nnoderho
-         if (rhom1avg(n) .gt. 1.0e-10)then
+         if (rhom1avg(n) .gt. 1.0e-15)then
           gamma_avg(n) = muhat_avg(n) &
                          * bmod2_avg(n) / (ipsi_avg(n) / rt)**2
          endif
