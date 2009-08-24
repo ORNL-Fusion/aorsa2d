@@ -639,7 +639,7 @@ contains
             R_binEdges_id, z_binEdges_id, &
             density_id
         integer ::  nR, nz, k, l
-        character(len=100), intent(in), optional :: ncFileNameIn
+        character(len=*), intent(in), optional :: ncFileNameIn
         character(len=100) ::  ncFileName
         real, intent(IN) :: capR, y
         real, allocatable :: density(:,:), &
