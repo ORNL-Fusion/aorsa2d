@@ -1620,6 +1620,7 @@
             i_stop = 0
           i_box  = 1
 
+            n_phi_loop: &
             do n_phi = 1, norb_dim
 
              fcount = 0
@@ -2007,12 +2008,16 @@
                  if (delta_b .lt. -1.0e-05 .and. i_stop .eq. 1)go to 201
               end if
 
-           end do       ! end of n_phi loop along orbit !
+           enddo n_phi_loop       ! end of n_phi loop along orbit !
 !          -----------------------
 !          End of field line trace
 !          -----------------------
 
   201      continue
+
+            !DLG
+            if ( n_phi > norb_dim ) n_phi = norb_dim
+
                   nphi_exit = n_phi
 
 !                  write(6, *)"nphi_enter = ", nphi_enter
