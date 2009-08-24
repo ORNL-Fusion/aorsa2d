@@ -1,55 +1,55 @@
-	subroutine sft_inv_t_right( n,nseq, A, lda,
+        subroutine sft_inv_t_right( n,nseq, A, lda,
      &          nkx1,nkx2, nnodex, xx_save )
-	implicit none
+        implicit none
 
-	integer n,nseq,lda
-	complex A(lda,*)
-	integer nkx1,nkx2,nnodex
-	complex xx_save(1:(nkx2-nkx1+1))
-!	
-	integer i,j, mshift
-	complex cvec(n)
-!	-------------------------------------
-!	compute inv_xx_t(i,n) * A(1:n,1:nseq)
+        integer n,nseq,lda
+        complex A(lda,*)
+        integer nkx1,nkx2,nnodex
+        complex xx_save(1:(nkx2-nkx1+1))
+!       
+        integer i,j, mshift
+        complex cvec(n)
+!       -------------------------------------
+!       compute inv_xx_t(i,n) * A(1:n,1:nseq)
 !
-! 	inv_xx_t is (1/n) * inv(xx)
-!	inv(xx) = inv( D * inv(S) * B * S )
-!	        = inv(S) * inv(B) * S * inv(D)
-!	        = inv(S) * F * S * inv(D)
+!       inv_xx_t is (1/n) * inv(xx)
+!       inv(xx) = inv( D * inv(S) * B * S )
+!               = inv(S) * inv(B) * S * inv(D)
+!               = inv(S) * F * S * inv(D)
 !
 !       where S is cshift, F is forward fourier transform
-!	D is twiddle factors
-!	-------------------------------------
+!       D is twiddle factors
+!       -------------------------------------
 
-	mshift = -nkx1
-	do j=1,nseq
-	  do i=1,n
-	    cvec(i) = A(i,j) * xx_save(i)
-	  enddo
-	  cvec = cshift( cvec, mshift )
-	  do i=1,n
-	    A(i,j) = cvec(i)
-	  enddo
-	enddo
+        mshift = -nkx1
+        do j=1,nseq
+          do i=1,n
+            cvec(i) = A(i,j) * xx_save(i)
+          enddo
+          cvec = cshift( cvec, mshift )
+          do i=1,n
+            A(i,j) = cvec(i)
+          enddo
+        enddo
 
-	call vzfftf( n,nseq, A, lda )
+        call vzfftf( n,nseq, A, lda )
 
-	do j=1,nseq
-	   do i=1,n
-	    cvec(i) = A(i,j)
-	   enddo
-	   cvec = cshift(cvec, -mshift )
-	   do i=1,n
-	    A(i,j) = cvec(i)
-	   enddo
-	enddo
+        do j=1,nseq
+           do i=1,n
+            cvec(i) = A(i,j)
+           enddo
+           cvec = cshift(cvec, -mshift )
+           do i=1,n
+            A(i,j) = cvec(i)
+           enddo
+        enddo
 
-	return
-	end subroutine sft_inv_t_right
+        return
+        end subroutine sft_inv_t_right
 
-	subroutine sft_inv_left( n, nseq, A, lda,
+        subroutine sft_inv_left( n, nseq, A, lda,
      &          nkx1,nkx2, nnodex, xx_save )
-	implicit none
+        implicit none
 
         integer n,nseq,lda
         integer nkx1,nkx2,nnodex
@@ -57,106 +57,106 @@
         complex xx_save(1:(nkx2-nkx1+1))
 !
         integer i,j
-	complex A_t( n, nseq )
+        complex A_t( n, nseq )
 !       -------------------------------------
 !       compute Z(1:nseq,1:n) = A(1:nseq, 1:n) * inv_xx(i,n)
 !
 !       this is similar to computing
-!	     A_t(1:n,1:nseq) = transpose(A(1:nseq,1:n))
+!            A_t(1:n,1:nseq) = transpose(A(1:nseq,1:n))
 !
-!	     Z_t = inv_xx_t(i,n) * A_t(1:n,1:nseq)
+!            Z_t = inv_xx_t(i,n) * A_t(1:n,1:nseq)
 !
-!	----------------------------------------
+!       ----------------------------------------
 
 
 
-!	------------------
-!	transpose of input
-!	------------------
-	do j=1,nseq
-	do i=1,n
-	  A_t(i,j) = A(j,i)
-	enddo
-	enddo
+!       ------------------
+!       transpose of input
+!       ------------------
+        do j=1,nseq
+        do i=1,n
+          A_t(i,j) = A(j,i)
+        enddo
+        enddo
 
-	call sft_inv_t_right( n,nseq, A_t, size(A_t,1),
+        call sft_inv_t_right( n,nseq, A_t, size(A_t,1),
      &          nkx1,nkx2, nnodex, xx_save )
 
-!	-------------------
-!	transpose of output
-!	-------------------
-	do i=1,n
-	do j=1,nseq
-	  A(j,i) = A_t(i,j)
-	enddo
-	enddo
+!       -------------------
+!       transpose of output
+!       -------------------
+        do i=1,n
+        do j=1,nseq
+          A(j,i) = A_t(i,j)
+        enddo
+        enddo
 
 
-	return
-	end subroutine sft_inv_left
-	
+        return
+        end subroutine sft_inv_left
+        
 
-	subroutine sft_setup( xx, nkdim1,nkdim2, nxdim,
+        subroutine sft_setup( xx, nkdim1,nkdim2, nxdim,
      &          nkx1,nkx2, nnodex, xx_save )
-	implicit none
+        implicit none
 
-	integer nkdim1,nkdim2,nxdim, nnodex
-	integer nkx1,nkx2
-	complex xx(nkdim1 : nkdim2, nxdim)
-	complex xx_save( 1:(nkx2-nkx1+1) )
+        integer nkdim1,nkdim2,nxdim, nnodex
+        integer nkx1,nkx2
+        complex xx(nkdim1 : nkdim2, nxdim)
+        complex xx_save( 1:(nkx2-nkx1+1) )
 !
-!	--------------------------
-!	precompute twiddle factors
+!       --------------------------
+!       precompute twiddle factors
 !
-!	xx * v = (D * inv(S) * B * S ) * v
-!	where S is a shift, B is backward fourier transform
-!	and  D contain the twiddle factors
+!       xx * v = (D * inv(S) * B * S ) * v
+!       where S is a shift, B is backward fourier transform
+!       and  D contain the twiddle factors
 !
-!	--------------------------
-	real ar,ac
-	integer n,nseq,lda
-	complex, dimension(:,:), allocatable :: A, XA
+!       --------------------------
+        real ar,ac
+        integer n,nseq,lda
+        complex, dimension(:,:), allocatable :: A, XA
 
-	integer i,j, mshift
+        integer i,j, mshift
         complex tmp
-	complex inv_xx(nkx1:nkx2,1:nnodex)
-	complex inv_xx_t(1:nnodex,nkx1:nkx2)
+        complex inv_xx(nkx1:nkx2,1:nnodex)
+        complex inv_xx_t(1:nnodex,nkx1:nkx2)
 
-	integer, parameter :: idebug = 0
+        integer, parameter :: idebug = 0
 
-	complex v(1:nnodex), xxv(1:(nkx2-nkx1+1))
+        complex v(1:nnodex), xxv(1:(nkx2-nkx1+1))
 !      complex v(nnodex), xxv(nkx2-nkx1+1)
 
-	complex zi
-	real err, tol
-	logical isok
+        complex zi
+        real err, tol
+        logical isok
 
-	tol = 1.0e-6
-	zi = cmplx(0.0,1.0)
+        tol = 1.0e-6
+        zi = cmplx(0.0,1.0)
 
-	isok = nnodex .eq. (nkx2-nkx1+1)
-	if (.not.isok) then
-	   write(*,*) 'sft_setup: error with nkx1,nkx2,nnodex '
-	   write(*,*) 'nkx1,nkx2,nnodex ',
+        isok = nnodex .eq. (nkx2-nkx1+1)
+        if (.not.isok) then
+           write(*,*) 'sft_setup: error with nkx1,nkx2,nnodex '
+           write(*,*) 'nkx1,nkx2,nnodex ',
      &            nkx1,nkx2,nnodex
-	   stop '** error ** '
-	endif
-	
+           stop '** error ** '
+        endif
+        
 
-!	---------------------
-!	some arbitrary values
-!	---------------------
-	n = nnodex
-	do i=1,nnodex
-	  v(i) = real(i)/real(n) + zi * real(n-i+1)/real(n)
-	enddo
+!       ---------------------
+!       some arbitrary values
+!       ---------------------
+        n = nnodex
+        do i=1,nnodex
+          v(i) = real(i)/real(n) + zi * real(n-i+1)/real(n)
+        enddo
 
 
 !       ----------------------------------------------
 !efd    internal compiler error with intel 8 compiler
 !       rewrite matmul as do loop
 !       ----------------------------------------------
-!	xxv(1:(nkx2-nkx1+1))  =
+!       xxv(1:(nkx2-nkx1+1))  =
 !     &        matmul( xx(nkx1:nkx2,1:nnodex), v(1:nnodex) )
 
 
@@ -168,178 +168,178 @@
            xxv(i-nkx1+1) = tmp
         enddo
 
-!	--------------------------------------------
-!	note cshift in f90 is the opposite direction
-!	of cshift in matlab
-!	--------------------------------------------
+!       --------------------------------------------
+!       note cshift in f90 is the opposite direction
+!       of cshift in matlab
+!       --------------------------------------------
         mshift = -nkx1
         v = cshift( v, mshift )
         call vzfftb( nnodex, 1, v, nnodex )
-	v = cshift( v, -mshift )
+        v = cshift( v, -mshift )
         do i=1,(nkx2-nkx1+1)
-	  xx_save(i) = xxv(i) / v(i)
-	enddo
+          xx_save(i) = xxv(i) / v(i)
+        enddo
 
-!	---------------------------------------
-!	store the reciprical of twiddle factors
-!	to avoid very costly complex divisions
-!	---------------------------------------
-	do i=1,(nkx2-nkx1+1)
-	   xx_save(i) = 1.0/xx_save(i)
-	enddo
+!       ---------------------------------------
+!       store the reciprical of twiddle factors
+!       to avoid very costly complex divisions
+!       ---------------------------------------
+        do i=1,(nkx2-nkx1+1)
+           xx_save(i) = 1.0/xx_save(i)
+        enddo
 
         if (idebug.ge.1) then
 
 !       ------------
 !       double check
 !       ------------
-	do i=1,n
-	  v(i) = exp( zi*real(i)/real(n) )
-	enddo
-	xxv(1:(nkx2-nkx1+1)) =
+        do i=1,n
+          v(i) = exp( zi*real(i)/real(n) )
+        enddo
+        xxv(1:(nkx2-nkx1+1)) =
      &        matmul( xx(nkx1:nkx2,1:nnodex), v(1:nnodex))
-	v = cshift( v, mshift )
-	call vzfftb( nnodex, 1, v, nnodex )
-	v = cshift( v, -mshift )
-	do i=1,(nkx2-nkx1+1)
-	   v(i) = v(i) / xx_save(i)
-	enddo
+        v = cshift( v, mshift )
+        call vzfftb( nnodex, 1, v, nnodex )
+        v = cshift( v, -mshift )
+        do i=1,(nkx2-nkx1+1)
+           v(i) = v(i) / xx_save(i)
+        enddo
 
-	err = maxval(abs(xxv(1:(nkx2-nkx1+1)) - v(1:(nkx2-nkx1+1))))
-	if (idebug.ge.1) then
+        err = maxval(abs(xxv(1:(nkx2-nkx1+1)) - v(1:(nkx2-nkx1+1))))
+        if (idebug.ge.1) then
           write(*,*) 'err for xxv and v is ', err
-	endif
+        endif
 
-	if (err.gt. tol) then
-	   write(*,9100)  err
- 9100	   format('sft_setup: err = ', 1pe14.4)
+        if (err.gt. tol) then
+           write(*,9100)  err
+ 9100      format('sft_setup: err = ', 1pe14.4)
 
-	   do i=1,(nkx2-nkx1+1)
-	    write(*,*) ' i, xxv(i), v(i) ', i,xxv(i),v(i)
-	   enddo
+           do i=1,(nkx2-nkx1+1)
+            write(*,*) ' i, xxv(i), v(i) ', i,xxv(i),v(i)
+           enddo
 
-	   do i=1,(nkx2-nkx1+1)
-	    write(*,*) 'i,xx_save(i) ', i, xx_save(i)
-	   enddo
-	endif
-	
+           do i=1,(nkx2-nkx1+1)
+            write(*,*) 'i,xx_save(i) ', i, xx_save(i)
+           enddo
+        endif
+        
 
 
-!	--------------
-!	further checks with sft_inv_t_right
-!	--------------
-	do j=1,nnodex
-	do i=nkx1,nkx2
+!       --------------
+!       further checks with sft_inv_t_right
+!       --------------
+        do j=1,nnodex
+        do i=nkx1,nkx2
            inv_xx(i,j) = 1.0/xx(i,j)
-	enddo
-	enddo
+        enddo
+        enddo
 
-	do j=1,nnodex
-	do i=nkx1,nkx2
-	   inv_xx_t(j,i) = inv_xx(i,j)
-	enddo
-	enddo
+        do j=1,nnodex
+        do i=nkx1,nkx2
+           inv_xx_t(j,i) = inv_xx(i,j)
+        enddo
+        enddo
 
-	n = nkx2-nkx1+1
-	nseq = n
-	lda = n
-	allocate( A(lda, nseq ) )
-	allocate( XA(lda, nseq ) )
+        n = nkx2-nkx1+1
+        nseq = n
+        lda = n
+        allocate( A(lda, nseq ) )
+        allocate( XA(lda, nseq ) )
 
-	do j=1,nseq
-	do i=1,n
-	   ar = real(i+(j-1)*n)/real(n*nseq)
-	   ac = real(j + (i-1)*nseq)/real(n*nseq)
-	  A(i,j) = exp(ar + zi*ac)
-	enddo
-	enddo
+        do j=1,nseq
+        do i=1,n
+           ar = real(i+(j-1)*n)/real(n*nseq)
+           ac = real(j + (i-1)*nseq)/real(n*nseq)
+          A(i,j) = exp(ar + zi*ac)
+        enddo
+        enddo
 
-	XA(1:nnodex,1:nseq) =
+        XA(1:nnodex,1:nseq) =
      &       matmul( inv_xx_t(1:nnodex,nkx1:nkx2), A(1:n,1:nseq) )
 
 
-	call sft_inv_t_right( n,nseq, A, lda,
-     &		nkx1,nkx2, nnodex, xx_save )		
+        call sft_inv_t_right( n,nseq, A, lda,
+     &          nkx1,nkx2, nnodex, xx_save )            
 
-	err = maxval( abs(XA(1:nnodex,1:nseq) - A(1:nnodex,1:nseq)) )
-	if (idebug.ge.1) then
-	  write(*,*) 'err with sft_inv_xx_t_right ', err
-	endif
+        err = maxval( abs(XA(1:nnodex,1:nseq) - A(1:nnodex,1:nseq)) )
+        if (idebug.ge.1) then
+          write(*,*) 'err with sft_inv_xx_t_right ', err
+        endif
 
-	if (err .gt. tol) then
-	   write(*,*) 'sft_setup: err with sft_inv_t_right is ', err
+        if (err .gt. tol) then
+           write(*,*) 'sft_setup: err with sft_inv_t_right is ', err
 
-	   do j=1,nseq
-	   do i=1,nnodex
+           do j=1,nseq
+           do i=1,nnodex
             err = abs( XA(i,j) - A(i,j) )
 
-	    write(*, 9010) i,j,
+            write(*, 9010) i,j,
      &        real(XA(i,j)),aimag(XA(i,j)),
      &        real(A(i,j)), aimag(A(i,j)),err
- 9010	    format(' i,j ',2(1x,i3),
+ 9010       format(' i,j ',2(1x,i3),
      &        ' XA ',2(1x,1pe11.3),
      &        ' A ',2(1x,1pe11.3),' err ',1pe11.3)
-	   enddo
-	   enddo
+           enddo
+           enddo
 
-	   do i=nkx1,nkx2
-	   do j=1,nnodex
-	     write(*,*) 'j,i ', j,i, 'inv_xx_t(j,i) ', inv_xx_t(j,i)
-	   enddo
-	   enddo
+           do i=nkx1,nkx2
+           do j=1,nnodex
+             write(*,*) 'j,i ', j,i, 'inv_xx_t(j,i) ', inv_xx_t(j,i)
+           enddo
+           enddo
 
-	   stop '** stop for error ** '
-	endif
+           stop '** stop for error ** '
+        endif
 
 
-	deallocate( A )
-	deallocate( XA )
+        deallocate( A )
+        deallocate( XA )
 
-!	--------------------------------
-!	further checks with sft_inv_left
-!	--------------------------------
-	nseq = nkx2-nkx1+1
-	lda = nseq
-	allocate( A(nseq, n), XA(nseq,n) )
+!       --------------------------------
+!       further checks with sft_inv_left
+!       --------------------------------
+        nseq = nkx2-nkx1+1
+        lda = nseq
+        allocate( A(nseq, n), XA(nseq,n) )
 
-	do j=1,n
-	do i=1,nseq
+        do j=1,n
+        do i=1,nseq
            ar = real(i+(j-1)*n)/real(n*nseq)
            ac = real(j + (i-1)*nseq)/real(n*nseq)
-	  A(i,j) = ar + zi*ac
-	enddo
-	enddo
+          A(i,j) = ar + zi*ac
+        enddo
+        enddo
 
-	XA = matmul( A(1:nseq,1:n), inv_xx(nkx1:nkx2, 1:nnodex) )
+        XA = matmul( A(1:nseq,1:n), inv_xx(nkx1:nkx2, 1:nnodex) )
 
-	call sft_inv_left( n,nseq, A, lda,
+        call sft_inv_left( n,nseq, A, lda,
      &             nkx1,nkx2, nnodex, xx_save )
 
-	err = maxval( abs( XA(1:nseq,1:n) - A(1:nseq,1:n) ) )
-	if (idebug.ge.1) then
-	  write(*,*) 'err with sft_inv_left ', err
-	endif
+        err = maxval( abs( XA(1:nseq,1:n) - A(1:nseq,1:n) ) )
+        if (idebug.ge.1) then
+          write(*,*) 'err with sft_inv_left ', err
+        endif
 
 
-	if (err.gt.tol) then
-	   write(*,*) 'sft_setup: err with sft_inv_left is ', err
-	   stop '** stop for error ** '
-	endif
+        if (err.gt.tol) then
+           write(*,*) 'sft_setup: err with sft_inv_left is ', err
+           stop '** stop for error ** '
+        endif
 
-	deallocate( A )
-	deallocate( XA )
+        deallocate( A )
+        deallocate( XA )
 
-	endif
+        endif
 
-	return
-	end subroutine sft_setup
-	
+        return
+        end subroutine sft_setup
+        
 
 
       subroutine vzfftf( n,nseq, C, ldc )
-!	-------------------------------------------
-!	forward transform, using zfftf in dfftpack
-!	-------------------------------------------
+!       -------------------------------------------
+!       forward transform, using zfftf in dfftpack
+!       -------------------------------------------
       integer  n,nseq,ldc
       complex*16 C(ldc,*)
 
@@ -349,22 +349,22 @@
 
         call zffti( n, wsave )
       do j=1,nseq
-	do i=1,n
-	  cvec(i) = C(i,j)
-	enddo
+        do i=1,n
+          cvec(i) = C(i,j)
+        enddo
         call zfftf( n, cvec, wsave )
-	do i=1,n
-	  C(i,j) = cvec(i)
-	enddo
+        do i=1,n
+          C(i,j) = cvec(i)
+        enddo
       enddo
 
       return
       end
 
       subroutine vzfftb( n,nseq, C, ldc )
-!	-------------------------------------------
-!	backward transform, using zfftb in dfftpack
-!	-------------------------------------------
+!       -------------------------------------------
+!       backward transform, using zfftb in dfftpack
+!       -------------------------------------------
       integer  n,nseq,ldc
       complex*16 C(ldc,*)
 
@@ -374,20 +374,20 @@
 
         call zffti( n, wsave )
       do j=1,nseq
-	do i=1,n
-	  cvec(i) = C(i,j)
-	enddo
+        do i=1,n
+          cvec(i) = C(i,j)
+        enddo
         call zfftb( n, cvec, wsave )
-	do i=1,n
-	  C(i,j) = cvec(i)
-	enddo
+        do i=1,n
+          C(i,j) = cvec(i)
+        enddo
       enddo
 
       return
       end subroutine vzfftb
 
 
-	
+        
       subroutine convert2d_row(row_in, row_out,
      &   xlen, ylen, nnodex, nnodey,
      .   nxdim, nydim, nkdim1, nkdim2, mkdim1, mkdim2,
@@ -406,74 +406,74 @@
       complex xx(nkdim1 : nkdim2, nxdim), yy(mkdim1 : mkdim2, nydim)
       complex row_in(ndfmax), row_out(ndfmax)
 
-!	---------------
-!	local variables
-!	---------------
-	logical::  use_fft
-	complex, dimension(:), allocatable :: xx_save, yy_save
+!       ---------------
+!       local variables
+!       ---------------
+        logical::  use_fft
+        complex, dimension(:), allocatable :: xx_save, yy_save
 
-	logical, parameter :: use_gemm = .true.
-	integer :: mm,nn,kk, ld1,ld2,ld3
-	complex :: alpha,beta
+        logical, parameter :: use_gemm = .true.
+        integer :: mm,nn,kk, ld1,ld2,ld3
+        complex :: alpha,beta
 
-	integer :: irnc
-	integer :: j_lo,j_hi,j_size
-	integer :: i_lo,i_hi,i_size
-	integer :: m_lo,m_hi,m_size
-	integer :: n_lo,n_hi,n_size
+        integer :: irnc
+        integer :: j_lo,j_hi,j_size
+        integer :: i_lo,i_hi,i_size
+        integer :: m_lo,m_hi,m_size
+        integer :: n_lo,n_hi,n_size
 
-	real :: dx_over_xlen, dy_over_ylen
+        real :: dx_over_xlen, dy_over_ylen
 
-	complex, dimension(:,:), allocatable :: inv_xx, inv_xx_t
-	complex, dimension(:,:), allocatable :: inv_yy, inv_yy_t
-	complex, dimension(:,:), allocatable :: ealpha, ealphak
-	complex, dimension(:,:), allocatable :: ebeta, ebetak
-	complex, dimension(:,:), allocatable :: eb, ebk
-	complex, dimension(:,:), allocatable :: tmp_i_m
+        complex, dimension(:,:), allocatable :: inv_xx, inv_xx_t
+        complex, dimension(:,:), allocatable :: inv_yy, inv_yy_t
+        complex, dimension(:,:), allocatable :: ealpha, ealphak
+        complex, dimension(:,:), allocatable :: ebeta, ebetak
+        complex, dimension(:,:), allocatable :: eb, ebk
+        complex, dimension(:,:), allocatable :: tmp_i_m
 
-!	-------------------------------------------------------
-!	Forward transformation used in sft2d_mat from
-!	(i,j) configuration space to (n,m) fourier space is
+!       -------------------------------------------------------
+!       Forward transformation used in sft2d_mat from
+!       (i,j) configuration space to (n,m) fourier space is
 !
-!	F( (n,m); (i,j) )  = kron( inv_yy(m,j),  inv_xx(n,i) )	
+!       F( (n,m); (i,j) )  = kron( inv_yy(m,j),  inv_xx(n,i) )  
 !
 !        ealphak(n,m) = F( (n,m);(i,j) ) * ealpha(i,j)
 !
-!	Now we need the action of transpose(F) * vector
+!       Now we need the action of transpose(F) * vector
 !
-!	Let F_t( (i,j); (n,m) ) = transpose( F( (n,m); (i,j) )
+!       Let F_t( (i,j); (n,m) ) = transpose( F( (n,m); (i,j) )
 !
-!	Let inv_xx_t(i,n) = transpose( inv_xx(n,i) )
+!       Let inv_xx_t(i,n) = transpose( inv_xx(n,i) )
 !
-!	Let inv_yy_t(j,m) = transpose( inv_yy(m,j) )
+!       Let inv_yy_t(j,m) = transpose( inv_yy(m,j) )
 !
 !       Then
 !
-!	F_t(  (i,j);(n,m) )  = kron(inv_yy_t(j,m), inv_xx_t(i,n))
+!       F_t(  (i,j);(n,m) )  = kron(inv_yy_t(j,m), inv_xx_t(i,n))
 !
-!	ealpha(i,j) = F_t( (i,j);(n,m) ) * ealphak(n,m)
-!	-------------------------------------------------------
+!       ealpha(i,j) = F_t( (i,j);(n,m) ) * ealphak(n,m)
+!       -------------------------------------------------------
 
-	i_lo = 1
-	i_hi = nnodex
-	i_size = i_hi-i_lo+1
+        i_lo = 1
+        i_hi = nnodex
+        i_size = i_hi-i_lo+1
 
-	j_lo = 1
-	j_hi = nnodey
-	j_size = j_hi-j_lo+1
+        j_lo = 1
+        j_hi = nnodey
+        j_size = j_hi-j_lo+1
 
 
-	n_lo = nkx1
-	n_hi = nkx2
-	n_size = n_hi-n_lo+1
+        n_lo = nkx1
+        n_hi = nkx2
+        n_size = n_hi-n_lo+1
 
-	m_lo = nky1
-	m_hi = nky2
-	m_size = m_hi-m_lo+1
+        m_lo = nky1
+        m_hi = nky2
+        m_size = m_hi-m_lo+1
 
-!	-----------------
-!	initialize arrays
-!	-----------------
+!       -----------------
+!       initialize arrays
+!       -----------------
 
 
       allocate( tmp_i_m(i_lo:i_hi,m_lo:m_hi) )
@@ -492,14 +492,14 @@
 
       if (use_fft) then
 
-!	----------------------
-!	initialization for FFT
-!	----------------------
-	  allocate( xx_save( n_size + i_size ) )
-	  allocate( yy_save( m_size + j_size ) )
+!       ----------------------
+!       initialization for FFT
+!       ----------------------
+          allocate( xx_save( n_size + i_size ) )
+          allocate( yy_save( m_size + j_size ) )
 
-	  xx_save(:) = 0.0
-	  yy_save(:) = 0.0
+          xx_save(:) = 0.0
+          yy_save(:) = 0.0
 
           call sft_setup( xx, nkdim1,nkdim2, nxdim,
      &          nkx1,nkx2, nnodex, xx_save )
@@ -534,10 +534,10 @@
       endif
 
 
-!	------------------------------
-!	split row_in into  components
-!	ealphak(n,m), ebetak(n,m), ebk(n,m)
-!	------------------------------
+!       ------------------------------
+!       split row_in into  components
+!       ealphak(n,m), ebetak(n,m), ebk(n,m)
+!       ------------------------------
 
       do m = m_lo,m_hi
       do n = n_lo,n_hi
@@ -552,136 +552,136 @@
       end do
 
 
-!	----------------------------------------------------------
+!       ----------------------------------------------------------
 !       F_t(  (i,j);(n,m) )  = kron(inv_yy_t(j,m), inv_xx_t(i,n))
 !
 !       ealpha(i,j) = F_t( (i,j);(n,m) ) * ealphak(n,m)
 !
-!	            = inv_xx_t(i,n) * ealphak(n,m) * inv_yy(m,j)
-!	-----------------------------------------------------------
+!                   = inv_xx_t(i,n) * ealphak(n,m) * inv_yy(m,j)
+!       -----------------------------------------------------------
 
 
 
 
 
 
-!	--------------------
-!	compute with ealphak
-!	--------------------
+!       --------------------
+!       compute with ealphak
+!       --------------------
 
 
 
-!	---------------------------------
-!	compte tmp_i_m = matmul( inv_xx * ealphak )
-!	---------------------------------
+!       ---------------------------------
+!       compte tmp_i_m = matmul( inv_xx * ealphak )
+!       ---------------------------------
 
-	if (use_fft) then
+        if (use_fft) then
 
 
            tmp_i_m(i_lo:i_size,m_lo:m_hi) = ealphak(n_lo:n_hi,m_lo:m_hi)
 
-           call sft_inv_t_right( i_size,n_size,
+           call sft_inv_t_right( i_size,m_size,
      &            tmp_i_m, size(tmp_i_m,1),
      &            nkx1,nkx2, nnodex, xx_save )
 
-	   do m=m_lo,m_hi
-	   do i=i_lo,i_hi
-	     tmp_i_m(i,m) = dx_over_xlen * tmp_i_m(i,m)
-	   enddo
-	   enddo
+           do m=m_lo,m_hi
+           do i=i_lo,i_hi
+             tmp_i_m(i,m) = dx_over_xlen * tmp_i_m(i,m)
+           enddo
+           enddo
 
-	elseif  (use_gemm) then
-	   mm = i_size
-	   nn = m_size
-	   kk = n_size
-	   ld1 = size(inv_xx_t,1)
-	   ld2 = size(ealphak,1)
-	   ld3 = size(tmp_i_m,1)
-	   alpha = 1.0
-	   beta = 0.0
+        elseif  (use_gemm) then
+           mm = i_size
+           nn = m_size
+           kk = n_size
+           ld1 = size(inv_xx_t,1)
+           ld2 = size(ealphak,1)
+           ld3 = size(tmp_i_m,1)
+           alpha = 1.0
+           beta = 0.0
 
-	   call zgemm( 'N','N', mm,nn,kk,
+           call zgemm( 'N','N', mm,nn,kk,
      &                 alpha, inv_xx_t,ld1, ealphak,ld2,
      &                 beta,  tmp_i_m, ld3 )
 
-	else
+        else
 
-	tmp_i_m(i_lo:i_hi,m_lo:m_hi) =
+        tmp_i_m(i_lo:i_hi,m_lo:m_hi) =
 
      &    matmul( inv_xx_t(i_lo:i_hi,n_lo:n_hi),
      &            ealphak(n_lo:n_hi,m_lo:m_hi) )
 
-	endif
+        endif
 
 
 !debug-begin
-!	do m=m_lo,m_hi
-!	do i=i_lo,i_hi
+!       do m=m_lo,m_hi
+!       do i=i_lo,i_hi
 !          if (use_fft) then
-!	   write(*,9101) i,m,real(tmp_i_m(i,m)),aimag(tmp_i_m(i,m))
-!	  else
-!	   write(*,9102) i,m,real(tmp_i_m(i,m)),aimag(tmp_i_m(i,m))
-!	  endif
-!	enddo
-!	enddo
+!          write(*,9101) i,m,real(tmp_i_m(i,m)),aimag(tmp_i_m(i,m))
+!         else
+!          write(*,9102) i,m,real(tmp_i_m(i,m)),aimag(tmp_i_m(i,m))
+!         endif
+!       enddo
+!       enddo
 !
-! 9101	format('fft:i,m ',2i4,' tmp_i_m ',2(1x,1pe14.4))
-! 9102	format('mat:i,m ',2i4,' tmp_i_m ',2(1x,1pe14.4))
+! 9101  format('fft:i,m ',2i4,' tmp_i_m ',2(1x,1pe14.4))
+! 9102  format('mat:i,m ',2i4,' tmp_i_m ',2(1x,1pe14.4))
 !debug-end
 
 
-!	---------------------------------
-!	compute ealpha = matmul( tmp_i_m, inv_yy )
-!	---------------------------------
-	if (use_fft) then
+!       ---------------------------------
+!       compute ealpha = matmul( tmp_i_m, inv_yy )
+!       ---------------------------------
+        if (use_fft) then
 
-          call sft_inv_left( n_size, m_size, tmp_i_m, size(tmp_i_m,1),
+          call sft_inv_left( m_size, i_size, tmp_i_m, size(tmp_i_m,1),
      &          nky1,nky2, nnodey, yy_save )
 
-	  ealpha(i_lo:i_hi,j_lo:j_hi) =
+          ealpha(i_lo:i_hi,j_lo:j_hi) =
      &         dy_over_ylen * tmp_i_m(i_lo:i_hi,m_lo:m_hi)
 
-	elseif (use_gemm) then
-	
-	  mm = i_size
-	  nn = j_size
-	  kk = m_size
-	  ld1 = size(tmp_i_m,1)
-	  ld2 = size(inv_yy,1)
-	  ld3 = size(ealpha,1)
-	  alpha = 1.0
-	  beta = 0.0
-	
-	  call zgemm( 'N', 'N', mm,nn,kk,
-     &		alpha, tmp_i_m, ld1, inv_yy, ld2,
+        elseif (use_gemm) then
+        
+          mm = i_size
+          nn = j_size
+          kk = m_size
+          ld1 = size(tmp_i_m,1)
+          ld2 = size(inv_yy,1)
+          ld3 = size(ealpha,1)
+          alpha = 1.0
+          beta = 0.0
+        
+          call zgemm( 'N', 'N', mm,nn,kk,
+     &          alpha, tmp_i_m, ld1, inv_yy, ld2,
      &          beta,  ealpha, ld3 )
 
-	else
+        else
 
-	ealpha(i_lo:i_hi,j_lo:j_hi) =
+        ealpha(i_lo:i_hi,j_lo:j_hi) =
      &    matmul( tmp_i_m(i_lo:i_hi,m_lo:m_hi),
      &            inv_yy(m_lo:m_hi,j_lo:j_hi)  )
 
-	endif
+        endif
 
-!	-------------------
-!	compute with ebetak
-!	-------------------
+!       -------------------
+!       compute with ebetak
+!       -------------------
 
         if (use_fft) then
 
 
            tmp_i_m(i_lo:i_size,m_lo:m_hi) = ebetak(n_lo:n_hi,m_lo:m_hi)
 
-           call sft_inv_t_right( i_size,n_size,
+           call sft_inv_t_right( i_size,m_size,
      &          tmp_i_m, size(tmp_i_m,1),
      &          nkx1,nkx2, nnodex, xx_save )
 
-	   do m=m_lo,m_hi
-	   do i=i_lo,i_hi
-	     tmp_i_m(i,m) = dx_over_xlen * tmp_i_m(i,m)
-	   enddo
-	   enddo
+           do m=m_lo,m_hi
+           do i=i_lo,i_hi
+             tmp_i_m(i,m) = dx_over_xlen * tmp_i_m(i,m)
+           enddo
+           enddo
 
 
         elseif (use_gemm) then
@@ -700,12 +700,12 @@
      &                 beta,  tmp_i_m, ld3 )
 
 
-	else
+        else
 
-	tmp_i_m(i_lo:i_hi,m_lo:m_hi) =
+        tmp_i_m(i_lo:i_hi,m_lo:m_hi) =
      &    matmul( inv_xx_t(i_lo:i_hi,n_lo:n_hi),
      &            ebetak(n_lo:n_hi,m_lo:m_hi) )
-	endif
+        endif
 
 
 
@@ -714,7 +714,7 @@
 !       ---------------------------------
         if (use_fft) then
 
-          call sft_inv_left( n_size, m_size, tmp_i_m, size(tmp_i_m,1),
+          call sft_inv_left( m_size, i_size, tmp_i_m, size(tmp_i_m,1),
      &          nky1,nky2, nnodey, yy_save )
 
           ebeta(i_lo:i_hi,j_lo:j_hi) =
@@ -737,19 +737,19 @@
      &          beta,  ebeta, ld3 )
 
 
-	else
+        else
 
-	ebeta(i_lo:i_hi,j_lo:j_hi) =
+        ebeta(i_lo:i_hi,j_lo:j_hi) =
      &    matmul( tmp_i_m(i_lo:i_hi,m_lo:m_hi),
      &            inv_yy(m_lo:m_hi,j_lo:j_hi)  )
 
-	endif
+        endif
 
 
 
-!	----------------
-!	compute with ebk
-!	----------------
+!       ----------------
+!       compute with ebk
+!       ----------------
 
 
         if (use_fft) then
@@ -757,15 +757,15 @@
 
            tmp_i_m(i_lo:i_size,m_lo:m_hi) = ebk(n_lo:n_hi,m_lo:m_hi)
 
-           call sft_inv_t_right( i_size,n_size,
+           call sft_inv_t_right( i_size,m_size,
      &          tmp_i_m, size(tmp_i_m,1),
      &          nkx1,nkx2, nnodex, xx_save )
 
-	   do m=m_lo,m_hi
-	   do i=i_lo,i_hi
-	    tmp_i_m(i,m) = dx_over_xlen * tmp_i_m(i,m)
-	   enddo
-	   enddo
+           do m=m_lo,m_hi
+           do i=i_lo,i_hi
+            tmp_i_m(i,m) = dx_over_xlen * tmp_i_m(i,m)
+           enddo
+           enddo
 
         elseif (use_gemm) then
 
@@ -784,13 +784,13 @@
      &                 beta,  tmp_i_m, ld3 )
 
 
-	else
+        else
 
-	tmp_i_m(i_lo:i_hi,m_lo:m_hi) =
+        tmp_i_m(i_lo:i_hi,m_lo:m_hi) =
      &    matmul( inv_xx_t(i_lo:i_hi,n_lo:n_hi),
      &            ebk(n_lo:n_hi,m_lo:m_hi) )
 
-	endif
+        endif
 
 
 
@@ -799,7 +799,7 @@
 !       ---------------------------------
         if (use_fft) then
 
-          call sft_inv_left( n_size, m_size, tmp_i_m, size(tmp_i_m,1),
+          call sft_inv_left( m_size, i_size, tmp_i_m, size(tmp_i_m,1),
      &          nky1,nky2, nnodey, yy_save )
 
           eb(i_lo:i_hi,j_lo:j_hi) =
@@ -822,16 +822,16 @@
      &          beta,  eb, ld3 )
 
 
-	else
+        else
 
-	eb(i_lo:i_hi,j_lo:j_hi) =
+        eb(i_lo:i_hi,j_lo:j_hi) =
      &    matmul( tmp_i_m(i_lo:i_hi,m_lo:m_hi),
      &            inv_yy(m_lo:m_hi,j_lo:j_hi)  )
 
-	endif
-!	--------------------------------------
-!	copy transformed components to row_out
-!	--------------------------------------
+        endif
+!       --------------------------------------
+!       copy transformed components to row_out
+!       --------------------------------------
          do j = j_lo,j_hi
          do i = i_lo,i_hi
 
@@ -844,35 +844,35 @@
          end do
          end do
 
-!	------------------
-!	deallocate storage
-!	------------------
+!       ------------------
+!       deallocate storage
+!       ------------------
 
 
-	deallocate( ealphak )
-	deallocate( ebetak )
-	deallocate( ebk )
+        deallocate( ealphak )
+        deallocate( ebetak )
+        deallocate( ebk )
 
-	deallocate( ealpha )
-	deallocate( ebeta )
-	deallocate( eb )
+        deallocate( ealpha )
+        deallocate( ebeta )
+        deallocate( eb )
 
-	deallocate( tmp_i_m )
+        deallocate( tmp_i_m )
 
-	if (use_fft) then
-	  deallocate( xx_save )
-	  deallocate( yy_save )
-	else
+        if (use_fft) then
+          deallocate( xx_save )
+          deallocate( yy_save )
+        else
 
-	deallocate( inv_xx )
-	deallocate( inv_xx_t )
-	deallocate( inv_yy )
-	deallocate( inv_yy_t )
+        deallocate( inv_xx )
+        deallocate( inv_xx_t )
+        deallocate( inv_yy )
+        deallocate( inv_yy_t )
 
-	endif
+        endif
 
-	return
-	end
+        return
+        end
 c
 c*******************************************************************
 c
@@ -967,33 +967,33 @@ c
       complex f(nxdim, nydim)
       complex xx(nkdim1 : nkdim2, nxdim), yy(mkdim1 : mkdim2, nydim)
 
-!	---------------
-!	local variables
-!	---------------
-	logical, parameter :: use_gemm = .true.
-	integer :: n_size, m_size, i_size, j_size
-	integer :: mm,nn,kk,  ld1,ld2,ld3
-	integer :: n_lo,n_hi, m_lo,m_hi
-	complex :: alpha,beta
+!       ---------------
+!       local variables
+!       ---------------
+        logical, parameter :: use_gemm = .true.
+        integer :: n_size, m_size, i_size, j_size
+        integer :: mm,nn,kk,  ld1,ld2,ld3
+        integer :: n_lo,n_hi, m_lo,m_hi
+        complex :: alpha,beta
 
-	complex, dimension(:,:), allocatable :: fk_tmp
-	complex, dimension(:,:), allocatable :: inv_xx
-	complex, dimension(:,:), allocatable :: inv_yy
-	complex, dimension(:,:), allocatable :: inv_xx_f
+        complex, dimension(:,:), allocatable :: fk_tmp
+        complex, dimension(:,:), allocatable :: inv_xx
+        complex, dimension(:,:), allocatable :: inv_yy
+        complex, dimension(:,:), allocatable :: inv_xx_f
 
-	real :: dx_over_xlen, dy_over_ylen
+        real :: dx_over_xlen, dy_over_ylen
 
-!	interface
-!	subroutine zgemm( transa, transb, m,n,k,
-!     &		alpha, A, lda, B,ldb,
-!     &		beta, C, ldc )
+!       interface
+!       subroutine zgemm( transa, transb, m,n,k,
+!     &         alpha, A, lda, B,ldb,
+!     &         beta, C, ldc )
 !
-!	character transa, transb
-!	integer m,n,k,  lda,ldb,ldc
-!	complex*16 alpha,beta, A(*),B(*),C(*)
-!	end subroutine zgemm
-!	end interface
-	
+!       character transa, transb
+!       integer m,n,k,  lda,ldb,ldc
+!       complex*16 alpha,beta, A(*),B(*),C(*)
+!       end subroutine zgemm
+!       end interface
+        
 
 
       if (use_gemm) then
@@ -1017,7 +1017,7 @@ c
 
       do i=1,nnodex
       do n=nkx1,nkx2
-	inv_xx(  n-nkx1+1, i) = (dx_over_xlen) / xx(n,i)
+        inv_xx(  n-nkx1+1, i) = (dx_over_xlen) / xx(n,i)
       enddo
       enddo
 
@@ -1030,67 +1030,67 @@ c
       enddo
 
 !       -------------------------------------------------
-!	fk_tmp(n,m) =  inv_xx(n,i)* f(i,j) * inv_yy(m,j)
+!       fk_tmp(n,m) =  inv_xx(n,i)* f(i,j) * inv_yy(m,j)
 !       -------------------------------------------------
 
 
-!	-----------------------------------------------------
-!	compute inv_xx_f(n,j) = matmul( inv_xx(n,i), f(i,j) )
-!	-----------------------------------------------------
+!       -----------------------------------------------------
+!       compute inv_xx_f(n,j) = matmul( inv_xx(n,i), f(i,j) )
+!       -----------------------------------------------------
 
 
-	mm = n_size
-	nn = j_size
-	kk = i_size
+        mm = n_size
+        nn = j_size
+        kk = i_size
 
-	ld1 = size(inv_xx,1)
-	ld2 = size(f,1)
-	ld3 = size(inv_xx_f,1)
+        ld1 = size(inv_xx,1)
+        ld2 = size(f,1)
+        ld3 = size(inv_xx_f,1)
 
-	alpha = 1.0
-	beta = 0.0
+        alpha = 1.0
+        beta = 0.0
 
-	call zgemm( 'N','N', mm,nn,kk,
-     &		alpha, inv_xx, ld1, f, ld2,
+        call zgemm( 'N','N', mm,nn,kk,
+     &          alpha, inv_xx, ld1, f, ld2,
      &          beta, inv_xx_f, ld3 )
 
 
-!	--------------------------------------------------
-!	compute fk_tmp(n,m) = inv_xx_f(n,j) * inv_yy(m,j)
-!	--------------------------------------------------
-	mm = n_size
-	nn = m_size
-	kk = j_size
+!       --------------------------------------------------
+!       compute fk_tmp(n,m) = inv_xx_f(n,j) * inv_yy(m,j)
+!       --------------------------------------------------
+        mm = n_size
+        nn = m_size
+        kk = j_size
 
-	ld1 = size(inv_xx_f,1)
-	ld2 = size(inv_yy,1)
-	ld3 = size(fk_tmp,1)
+        ld1 = size(inv_xx_f,1)
+        ld2 = size(inv_yy,1)
+        ld3 = size(fk_tmp,1)
 
-	alpha = 1.0
-	beta = 0.0
-	
-	call zgemm( 'N', 'T', mm,nn,kk,
+        alpha = 1.0
+        beta = 0.0
+        
+        call zgemm( 'N', 'T', mm,nn,kk,
      &      alpha,  inv_xx_f, ld1,  inv_yy, ld2,
      &      beta,   fk_tmp, ld3 )
 
 
-!	-----------------------	
-!	copy results to fk(n,m)
-!	-----------------------	
-	do m=nky1,nky2
-	do n=nkx1,nkx2
-	  fk(n,m) =  fk_tmp( n-nkx1+1, m-nky1+1)
-	enddo
-	enddo
+!       ----------------------- 
+!       copy results to fk(n,m)
+!       ----------------------- 
+        do m=nky1,nky2
+        do n=nkx1,nkx2
+          fk(n,m) =  fk_tmp( n-nkx1+1, m-nky1+1)
+        enddo
+        enddo
 
-!	-------------------
-!	deallocate storage
-!	-------------------
-	deallocate( fk_tmp )
-	deallocate( inv_xx_f )
-	deallocate( inv_yy )
-	deallocate( inv_xx )
-	
+!       -------------------
+!       deallocate storage
+!       -------------------
+        deallocate( fk_tmp )
+        deallocate( inv_xx_f )
+        deallocate( inv_yy )
+        deallocate( inv_xx )
+        
 
       else
 
