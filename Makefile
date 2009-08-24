@@ -193,7 +193,7 @@ ifeq ($(MACHINE),dlghp)
 	WARN = #-Wall
 	DEBUG = -g -fbacktrace -fsignaling-nans -ffpe-trap=zero,invalid,overflow#,underflow
 	FFLAGS = ${WARN} ${DEBUG} 
-	F90FLAGS = ${WARN} ${DEBUG}
+	F90FLAGS = ${WARN} ${DEBUG} ${BOUNDS}
 
 endif
 	
