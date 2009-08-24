@@ -3069,9 +3069,13 @@ do i = 1, nnodex
                     xn5a(i,j) = xn5_rho2lim
                     xn6a(i,j) = xn6_rho2lim
                 endif
-                xnea(i,j)   = dlg_getDensity ( capR(i), y(j), ncFileNameIn = 'dlg_profile_ne.nc' )
-                if (xnea(i,j) < 1e10) xnea(i,j) = 1e10
-            endif
+           endif
+
+           xnea(i,j)   = dlg_getDensity ( capR(i), y(j), &
+                           ncFileNameIn = 'dlg_profiles.nc', &
+                           ncVariableNameIn = 'ne' )
+           if (xnea(i,j) < 1e10) xnea(i,j) = 1e10
+ 
         endif
 
 
@@ -3117,7 +3121,7 @@ do i = 1, nnodex
         xkti5(i,j) = ti5limj + (t0i5 - ti5limj) * shapeti5**alphati5 * flimiter
         xkti6(i,j) = ti6limj + (t0i6 - ti6limj) * shapeti6**alphati6 * flimiter
 
-        if (limiter_boundary .and. rho(i,j) .gt. 1.0) then
+        if (limiter_boundary) then
 
             if (mask(i,j) .lt. 1) then 
 
@@ -3142,6 +3146,13 @@ do i = 1, nnodex
  
                 endif
             endif
+
+            xkte(i,j)   = dlg_getDensity ( capR(i), y(j), &
+                           ncFileNameIn = 'dlg_profiles.nc', &
+                           ncVariableNameIn = 'te' ) * q
+            xkti(i,j)   = dlg_getDensity ( capR(i), y(j), &
+                           ncFileNameIn = 'dlg_profiles.nc', &
+                           ncVariableNameIn = 'ti' ) * q
        endif
 
     end if iprofile_eq_3

@@ -626,7 +626,7 @@ contains
 
     end subroutine dlg_particle_f
 
-    function dlg_getDensity ( capR, y, ncFileNameIn )
+    function dlg_getDensity ( capR, y, ncFileNameIn, ncVariableNameIn )
         use netcdf
         use dlg
         implicit none
@@ -639,8 +639,8 @@ contains
             R_binEdges_id, z_binEdges_id, &
             density_id
         integer ::  nR, nz, k, l
-        character(len=*), intent(in), optional :: ncFileNameIn
-        character(len=100) ::  ncFileName
+        character(len=*), intent(in), optional :: ncFileNameIn, ncVariableNameIn
+        character(len=100) ::  ncFileName, ncVariableName
         real, intent(IN) :: capR, y
         real, allocatable :: density(:,:), &
             R_bincenters(:), z_binCenters(:), &
@@ -656,9 +656,16 @@ contains
         else 
             ncFileName  = 'fdis.dav.nc'
         endif
+        
+        if ( present ( ncVariableNameIn ) ) then 
+            ncVariableName = ncVariableNameIn
+        else 
+            ncVariableName  = 'density'
+        endif
+
 
         call dlg_check ( nf90_open ( path = ncFileName, mode = nf90_nowrite, ncid = nc_id ) )
-        call dlg_check ( nf90_inq_varId ( nc_id, 'density', density_id ) )
+        call dlg_check ( nf90_inq_varId ( nc_id, ncVariableName, density_id ) )
         call dlg_check ( nf90_inq_varId ( nc_id, 'R_binCenters', &
             R_binCenters_id ) )
         call dlg_check ( nf90_inq_varId ( nc_id, 'z_binCenters', &
