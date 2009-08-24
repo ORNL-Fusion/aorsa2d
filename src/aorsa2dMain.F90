@@ -3062,13 +3062,15 @@ do i = 1, nnodex
 
             else
                 if ( mask_bbbs(i,j) .lt. 1 ) then 
-                    xnea(i,j) = density_by_gradient ( capR(i), y(j), xn_rho2lim, gradient, 1e10) 
+                    !xnea(i,j) = density_by_gradient ( capR(i), y(j), xn_rho2lim, gradient, 1e10) 
                     xn2a(i,j) = xn2_rho2lim
                     xn3a(i,j) = xn3_rho2lim
                     xn4a(i,j) = xn4_rho2lim
                     xn5a(i,j) = xn5_rho2lim
                     xn6a(i,j) = xn6_rho2lim
                 endif
+                xnea(i,j)   = dlg_getDensity ( capR(i), y(j), ncFileNameIn = 'dlg_profile_ne.nc' )
+                if (xnea(i,j) < 1e10) xnea(i,j) = 1e10
             endif
         endif
 
