@@ -2955,12 +2955,16 @@
 
 !DLG: read eqdsk dlg style
 
+    write(*,*) 'aorsa2dMain.F90:2958'
     call read_geqdsk ( eqdsk, plot = .false. )
     call bCurvature ()
     call bGradient ()
     call init_interp ()
+
     if ( ndisti2 .eq. 2 ) call init_particleFile ( myId )
 
+    write(*,*) 'aorsa2dMain.F90:2966'
+    
 !     -----------
 !     Mask array:
 !     -----------
@@ -2991,20 +2995,21 @@
          end do
       end do
 
+      write(*,*) 'aorsa2dMain.F90:2998'
+
 !    ----------------
 !    plasma profiles:
 !    ----------------
 
-do i = 1, nnodex
-   do j = 1, nnodey
+if(psimol .eq. 1.0) flimiter = 1.0
+if(psimol .ne. 1.0) flimiter = 1.0 / (1.0 + (psi(i,j) / psimol)**16)
 
+iprofile_eq_3: & 
+if (iprofile .eq. 3) then
+ 
+    do i = 1, nnodex
+        do j = 1, nnodey
 
-    if(psimol .eq. 1.0) flimiter = 1.0
-    if(psimol .ne. 1.0) flimiter = 1.0 / (1.0 + (psi(i,j) / psimol)**16)
-   
-    iprofile_eq_3: & 
-    if (iprofile .eq. 3) then
-    
         shapen = 0.0
         shapen2 = 0.0
         shapen3 = 0.0
@@ -3048,21 +3053,20 @@ do i = 1, nnodex
         xn5a(i,j) = xn5lim + (xn5 - xn5lim) * shapen5**alphan5 * flimiter
         xn6a(i,j) = xn6lim + (xn6 - xn6lim) * shapen6**alphan6 * flimiter
         xna_slo(i,j) = xnslolim + (xnslo - xnslolim) * shapen_slo**alphan_slo 
-
    
         if (limiter_boundary) then   
             if (mask(i,j) .lt. 1) then 
 
-                xnea(i,j) = 1e10 
-                xn2a(i,j) = 1e10
-                xn3a(i,j) = 1e10 
-                xn4a(i,j) = 1e10 
-                xn5a(i,j) = 1e10 
-                xn6a(i,j) = 1e10 
+                xnea(i,j) = 1e-10 
+                xn2a(i,j) = 1e-10
+                xn3a(i,j) = 1e-10 
+                xn4a(i,j) = 1e-10 
+                xn5a(i,j) = 1e-10 
+                xn6a(i,j) = 1e-10 
 
             else
                 if ( mask_bbbs(i,j) .lt. 1 ) then 
-                    !xnea(i,j) = density_by_gradient ( capR(i), y(j), xn_rho2lim, gradient, 1e10) 
+                    xnea(i,j) = density_by_gradient ( capR(i), y(j), xn_rho2lim, gradient, 1e-10) 
                     xn2a(i,j) = xn2_rho2lim
                     xn3a(i,j) = xn3_rho2lim
                     xn4a(i,j) = xn4_rho2lim
@@ -3071,47 +3075,7 @@ do i = 1, nnodex
                 endif
            endif
 
-           xnea(i,j)   = dlg_getDensity ( capR(i), y(j), &
-                           ncFileNameIn = 'dlg_profiles.nc', &
-                           ncVariableNameIn = 'ne' )
-           if (xnea(i,j) < 1e10) xnea(i,j) = 1e10
- 
         endif
-
-
-        !-----------------------------------
-        ! DLG: Read density from particle data
-        ! (change this to profile option!)
-        
-          if (nDisti2 .eq. 2 .and. particleDensity) then
-        
-              xn2a(i,j) = dlg_getDensity ( capR(i), y(j) )
-              xn2 = dlg_getDensity ( rmaxis, zmaxis )
-        
-          endif
-        
-        !-----------------------------------
-
-        xn1a(i, j) = (xnea(i, j) - z2 * xn2a(i, j) &
-                                  - z3 * xn3a(i, j) &
-                                  - z4 * xn4a(i, j) &
-                                  - z5 * xn5a(i, j) &
-                                  - z6 * xn6a(i, j) &
-                               - z_slo * xna_slo(i, j)   ) / z1
-
-        if (xn1a(i, j) .le. 0.0) xn1a(i, j) = 1.0e-10
-
-        eta2 = xn2 / xn0
-        eta3 = xn3 / xn0
-        eta4 = xn4 / xn0
-        eta5 = xn5 / xn0
-        eta6 = xn6 / xn0
-        eta_slo = xnslo / xn0
-
-        eta1 = 1.0 / z1 * (1.0 - z2 * eta2 - z3 * eta3 &
-                   - z4 * eta4 - z5 * eta5 - z6 * eta6 &
-                                           - z_slo * eta_slo)
-        xn1 = eta1 * xn0
 
         xkte(i,j) = telimj + (t0e - telimj) * shapete**alphate * flimiter
         xkti(i,j) = tilimj + (t0i - tilimj) * shapeti**alphati * flimiter
@@ -3147,16 +3111,68 @@ do i = 1, nnodex
                 endif
             endif
 
-            xkte(i,j)   = dlg_getDensity ( capR(i), y(j), &
+      endif
+
+        enddo
+    enddo
+
+    dlg_particle_density: &
+    if ( nDisti2 .eq. 2 .and. particleDensity ) then
+    
+        xn2a = dlg_getDensity ( capR, y, &
+                    rMAxis = rmaxis, zMAxis = zmaxis, &
+                    densityAxis = xn2 )
+    
+    endif dlg_particle_density
+    
+    dlg_limiter_boundary: &
+    if ( limiter_boundary ) then 
+    
+            xnea   = dlg_getDensity ( capR, y, &
+                           ncFileNameIn = 'dlg_profiles.nc', &
+                           ncVariableNameIn = 'ne', &
+                           rMAxis = rmaxis, zMAxis = zmaxis, &
+                           densityAxis = xn0 )
+
+            where ( xnea < 1.0e-10 ) xnea = 1.0e-10
+
+            xkte   = dlg_getDensity ( capR, y, &
                            ncFileNameIn = 'dlg_profiles.nc', &
                            ncVariableNameIn = 'te' ) * q
-            xkti(i,j)   = dlg_getDensity ( capR(i), y(j), &
+            xkti   = dlg_getDensity ( capR, y, &
                            ncFileNameIn = 'dlg_profiles.nc', &
                            ncVariableNameIn = 'ti' ) * q
-       endif
+    
+    endif dlg_limiter_boundary
+    
+    xn1a    = (xnea - z2 * xn2a &
+                - z3 * xn3a &
+                - z4 * xn4a &
+                - z5 * xn5a &
+                - z6 * xn6a &
+                - z_slo * xna_slo ) / z1
 
-    end if iprofile_eq_3
+    where ( xn1a < 1.0e-10 ) xn1a = 1.0e-10
+  
+    eta2 = xn2 / xn0
+    eta3 = xn3 / xn0
+    eta4 = xn4 / xn0
+    eta5 = xn5 / xn0
+    eta6 = xn6 / xn0
+    eta_slo = xnslo / xn0
+    
+    eta1 = 1.0 / z1 * (1.0 - z2 * eta2 - z3 * eta3 &
+               - z4 * eta4 - z5 * eta5 - z6 * eta6 &
+                                       - z_slo * eta_slo)
+    xn1 = eta1 * xn0
 
+    
+end if iprofile_eq_3
+
+
+
+do i = 1, nnodex
+   do j = 1, nnodey
 
     if (iprofile .eq. 1 .or. iprofile .eq. 2) then
     
@@ -3221,6 +3237,7 @@ do i = 1, nnodex
    end do
 end do
 
+write(*,*) 'aorsa2dMain.F90:3231'
 
 !     ---------------------------------------
 !     read profile data from the plasma state:

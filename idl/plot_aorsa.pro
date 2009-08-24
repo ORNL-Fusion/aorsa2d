@@ -88,7 +88,7 @@ pro plot_aorsa
 
 	nLevs	= 21
 
-	range	= max ( ePlus_real ) / 2.0
+	range	= max ( ePlus_real ) / 4.0
 	brange	= max ( bx_wave_real ) / 2.0
 
 	levels	= ( fIndGen ( nLevs ) - nLevs / 2.0 ) / ( nLevs / 2.0 ) * range 

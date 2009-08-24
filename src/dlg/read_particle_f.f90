@@ -626,7 +626,10 @@ contains
 
     end subroutine dlg_particle_f
 
-    function dlg_getDensity ( capR, y, ncFileNameIn, ncVariableNameIn )
+    function dlg_getDensity ( capR, y, &
+                ncFileNameIn, ncVariableNameIn, &
+                rMAxis, zMAxis, densityAxis )
+
         use netcdf
         use dlg
         implicit none
@@ -641,13 +644,24 @@ contains
         integer ::  nR, nz, k, l
         character(len=*), intent(in), optional :: ncFileNameIn, ncVariableNameIn
         character(len=100) ::  ncFileName, ncVariableName
-        real, intent(IN) :: capR, y
+        real, intent(IN) :: capR(:), y(:)
+        real, intent(IN), optional :: rMAxis, zMAxis
+        real, intent(OUT), optional :: densityAxis
+
         real, allocatable :: density(:,:), &
             R_bincenters(:), z_binCenters(:), &
             R_binEdges(:), z_binEdges(:)
-        integer :: R_index, z_index, insaneCnt
-        real :: dlg_getDensity
+        integer, allocatable :: R_index(:,:), z_index(:,:)
+        integer :: insaneCnt, i, j
+        real, allocatable :: dlg_getDensity(:,:)
         real :: minR, minz, RStep, zStep, RRange, zRange
+        integer :: R_index_axis, z_index_axis
+
+        if ( .not. allocated ( dlg_getDensity ) ) &
+            allocate ( dlg_getDensity ( size ( capR ), size ( y ) ) )
+
+        allocate ( R_index ( size ( capR ), size ( y ) ), &
+            z_index ( size ( capR ), size ( y ) ) )
 
         !   Read particle f netCdf file
        
@@ -670,10 +684,6 @@ contains
             R_binCenters_id ) )
         call dlg_check ( nf90_inq_varId ( nc_id, 'z_binCenters', &
             z_binCenters_id ) )
-        !call dlg_check ( nf90_inq_varId ( nc_id, 'R_binEdges', &
-        !    R_binEdges_id ) )
-        !call dlg_check ( nf90_inq_varId ( nc_id, 'z_binEdges', &
-        !    z_binEdges_id ) )
         
         call dlg_check ( nf90_inquire_variable ( &
             nc_id, density_id, dimIds = density_dim_ids ) )
@@ -685,9 +695,7 @@ contains
 
         allocate ( density ( R_nBins, z_nBins ), &
             R_binCenters ( R_nBins ), &
-            z_binCenters ( z_nBins ) )!, &
-        !    R_binEdges ( R_nBins+1 ), &
-        !    z_binEdges ( z_nBins+1 ) )
+            z_binCenters ( z_nBins ) )
 
         density = 0.0
 
@@ -696,10 +704,6 @@ contains
             R_binCenters ) )
         call dlg_check ( nf90_get_var ( nc_id, z_binCenters_id, &
             z_binCenters ) )
-        !call dlg_check ( nf90_get_var ( nc_id, R_binEdges_id, &
-        !    R_binEdges ) )
-        !call dlg_check ( nf90_get_var ( nc_id, z_binEdges_id, &
-        !    z_binEdges ) )
         
         call dlg_check ( nf90_close ( nc_id ) )
 
@@ -717,40 +721,53 @@ contains
         minR    = minVal ( R_binCenters ) - RStep / 2.0
         minz    = minVal ( z_binCenters ) - zStep / 2.0
 
-        !R_index = int ( (capR-minVal(R_binEdges)) / &
-        !        (maxVal(R_binEdges)-minVal(R_binEdges))*R_nBins+1 )
-        !z_index =int ( (y-minVal(z_binEdges)) / &
-        !        (maxVal(z_binEdges)-minVal(z_binEdges))*z_nBins+1 )
-        R_index = nint ( ( capR - minR ) / RRange * R_nBins+1 )
-        z_index = nint ( ( y - minz ) / zRange * z_nBins+1 )
-        
-        if ( R_index > 0 .and. R_index < R_nBins+1 &
-            .and. z_index > 0 .and. z_index < z_nBins+1 ) then
 
-            !write(*,*) 'DLG: ', capR, y, density(R_index,z_index)
-            dlg_getDensity  = density(R_index,z_index)
-        
-        else
+        axis_value: &
+        if ( present(rMAxis) .and. present(zMAxis) ) then
+                
+                R_index_axis = nint ( ( rMAxis - minR ) / RRange * R_nBins+1 )
+                z_index_axis = nint ( ( zMAxis - minz ) / zRange * z_nBins+1 )
 
-            !write(*,*) 'DLG: BAD ', capR, y, R_index,z_index, R_nBins, z_nBins
-            dlg_getDensity = 0.0
+                densityAxis = density ( R_index_axis, z_index_axis )
+ 
+        endif axis_value
+      
+        do i=1,size(capR) 
+            do j=1,size(y)
 
-        end if
+                R_index(i,j) = nint ( ( capR(i) - minR ) / RRange * R_nBins+1 )
+                z_index(i,j) = nint ( ( y(j) - minz ) / zRange * z_nBins+1 )
+ 
+                if ( R_index(i,j) > 0 .and. R_index(i,j) < R_nBins+1 &
+                    .and. z_index(i,j) > 0 .and. z_index(i,j) < z_nBins+1 ) then
 
-        sanity_check: &
-        if ( dlg_getDensity /= dlg_getDensity &
-            .or. dlg_getDensity < 0 &
-            .or. dlg_getDensity * 0 /= 0 ) then
+                    !write(*,*) 'DLG: ', capR, y, density(R_index,z_index)
+                    dlg_getDensity(i,j)  = density(R_index(i,j),z_index(i,j))
+                
+                else
 
-            write(*,*) 'ERROR: sanity failure on reading density from netcdf file, NaN, Inf or -ve value detected'
-            stop
-        endif sanity_check
+                    !write(*,*) 'DLG: BAD ', capR, y, R_index,z_index, R_nBins, z_nBins
+                    dlg_getDensity(i,j) = 0.0
+
+                end if
+
+                sanity_check: &
+                if ( dlg_getDensity(i,j) /= dlg_getDensity(i,j) &
+                    .or. dlg_getDensity(i,j) < 0 &
+                    .or. dlg_getDensity(i,j) * 0 /= 0 ) then
+
+                    write(*,*) 'ERROR: sanity failure on reading density from netcdf file, NaN, Inf or -ve value detected'
+                    stop
+                endif sanity_check
+
+            enddo
+        enddo
 
         deallocate ( density, &
             R_binCenters, &
-            z_binCenters )!, &
-            !R_binEdges, &
-            !z_binEdges)
+            z_binCenters, &
+            R_index, &
+            z_index )
 
         return
 
