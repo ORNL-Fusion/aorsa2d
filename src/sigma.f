@@ -499,54 +499,6 @@ c     .                           - uperp(ni) * dfdupar(ni, mi)
      .      call write_pf_dlg2 ( i, j, iValue, 
      .          nuPer, nuPar, dfduper, dfdupar )
  
-!!DLG:   Dump the final vPer/vPar df function for comparison
-!
-!      if ( i .eq. 17 .and. j .eq. 14 ) then 
-!
-!      write (*,*) 'WRITING output/fvv.nc ...'
-!      ncFileName = 'output/fvv.nc'
-!
-!      call check ( nf90_create ( ncFileName, nf90_clobber, nc_id ) )
-!      call check ( nf90_def_dim ( nc_id, "scalar", 1, scalar_id ) )
-!      call check ( nf90_def_dim ( nc_id, "n_uper", nuper , n_uper_id ) )
-!      call check ( nf90_def_dim ( nc_id, "n_upar", nupar , n_upar_id ) )
-!
-!      call check ( nf90_def_var ( nc_id, "dfduper", NF90_REAL, 
-!     .   (/ n_uper_id, n_upar_id /), dfduper_id ) )
-!      call check ( nf90_def_var ( nc_id, "dfdupar", NF90_REAL, 
-!     .   (/ n_uper_id, n_upar_id /), dfdupar_id ) )
-!      call check ( nf90_def_var ( nc_id, "f_vv", NF90_REAL, 
-!     .   (/ n_uper_id, n_upar_id /), fvv_id ) )
-!      call check ( nf90_def_var ( nc_id, "i", NF90_INT, 
-!     . scalar_id, i_id ) )
-!      call check ( nf90_def_var ( nc_id, "j", NF90_INT, 
-!     . scalar_id, j_id ) )
-!      call check ( nf90_def_var ( nc_id, "R", NF90_REAL, 
-!     . scalar_id, R_id ) )
-!      call check ( nf90_def_var ( nc_id, "z", NF90_REAL, 
-!     . scalar_id, z_id ) )
-!      call check ( nf90_def_var ( nc_id, "uPer", NF90_REAL, 
-!     . (/ n_uper_id /), uper_id ) )
-!      call check ( nf90_def_var ( nc_id, "uPar", NF90_REAL, 
-!     . (/ n_upar_id /), upar_id ) )
-!
-!      call check ( nf90_enddef ( nc_id ) )
-!
-!      call check ( nf90_put_var ( nc_id, dfduper_id, dfduper ) )
-!      call check ( nf90_put_var ( nc_id, dfdupar_id, dfdupar ) )
-!      call check ( nf90_put_var ( nc_id, fvv_id, p_f_rzvv_ ) )
-!      call check ( nf90_put_var ( nc_id, i_id, i ) )
-!      call check ( nf90_put_var ( nc_id, j_id, j ) )
-!      call check ( nf90_put_var ( nc_id, R_id, capR ) )
-!      call check ( nf90_put_var ( nc_id, z_id, zLoc ) )
-!      call check ( nf90_put_var ( nc_id, uper_id, uPerp ) )
-!      call check ( nf90_put_var ( nc_id, upar_id, uPara ) )
-!
-!      call check ( nf90_close ( nc_id ) )
-!      write (*,*) 'DONE'
-!
-!      endif 
-
 !!
 !           --------------------------------------
 !           Initialize the interpolation in k_perp:
