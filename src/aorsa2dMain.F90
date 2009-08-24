@@ -2955,7 +2955,6 @@
 
 !DLG: read eqdsk dlg style
 
-    write(*,*) 'aorsa2dMain.F90:2958'
     call read_geqdsk ( eqdsk, plot = .false. )
     call bCurvature ()
     call bGradient ()
@@ -2963,7 +2962,6 @@
 
     if ( ndisti2 .eq. 2 ) call init_particleFile ( myId )
 
-    write(*,*) 'aorsa2dMain.F90:2966'
     
 !     -----------
 !     Mask array:
@@ -2995,7 +2993,6 @@
          end do
       end do
 
-      write(*,*) 'aorsa2dMain.F90:2998'
 
 !    ----------------
 !    plasma profiles:
@@ -3237,7 +3234,6 @@ do i = 1, nnodex
    end do
 end do
 
-write(*,*) 'aorsa2dMain.F90:3231'
 
 !     ---------------------------------------
 !     read profile data from the plasma state:
