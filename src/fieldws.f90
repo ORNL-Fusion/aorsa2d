@@ -33,7 +33,7 @@ contains
        vpara_mks, vperp_cgs, uperp_1kev, duperp, dz, dx
       real exkmin, exkmax 
       integer, parameter :: DBL = selected_real_kind ( 13, 300 )
-      real(kind=DBL) :: prfin
+      real(kind=DBL) :: prfin, prfinMOD
 
       integer pgopen, pgbeg, ier, nmid, mmid
       integer n_theta_max, n_u_max, n_psi_max
@@ -407,8 +407,6 @@ contains
       fmid5 = 0.0
       fmid6 = 0.0
 
-
-
       read(38, 309) nnodex, nnodey, jmid
       read(38, 310) rhoplasm, prfin
       read(38, 310) (x(i), i = 1, nnodex)
@@ -461,6 +459,13 @@ contains
       read(38, 310) ((eykmod(n, m), n = 1, nkxplt), m = 1, nkyplt)
       read(38, 310) ((ezkmod(n, m), n = 1, nkxplt), m = 1, nkyplt)
 
+
+    ! catch for multiple nPhi setting prfin=0
+    if ( prfin == 0 ) then
+            prfinMOD = 1 
+    else 
+            prfinMOD = prfin
+    endif
 
 
 !
@@ -1153,7 +1158,7 @@ contains
             xjprl_int, nnoderho_half, nrhomax)
 
          titll= 'xjprl (MA/m2/MW)'
-       xjprlavg = xjprlavg  / prfin
+       xjprlavg = xjprlavg  / prfinMOD
 
          call ezplot1(title, titll, titlr, rhon_half, xjprlavg, &
             nnoderho_half, nrhomax)
@@ -1174,7 +1179,7 @@ contains
          xjprl_int = xjprl_int
 
          titll= 'xjprl (MAmps/m2/MW)'
-       xjprlavg = xjprlavg  / prfin
+       xjprlavg = xjprlavg  / prfinMOD
 
          call ezplot1(title, titll, titlr, rhon_half, xjprlavg, &
             nnoderho_half, nrhomax)
@@ -3080,7 +3085,7 @@ contains
             xjprl_int, nnoderho2_half, nrhomax)
 
          titll= 'xjprl (MA/m2/MW)'
-       xjprlavg = xjprlavg  / prfin
+       xjprlavg = xjprlavg  / prfinMOD
 
          call ezplot1(title, titll, titlr, rhon_half, xjprlavg, &
             nnoderho2_half, nrhomax)
@@ -3101,7 +3106,7 @@ contains
          xjprl_int = xjprl_int
 
          titll= 'xjprl (MAmps/m2/MW)'
-       xjprlavg = xjprlavg  / prfin
+       xjprlavg = xjprlavg  / prfinMOD
 
          call ezplot1(title, titll, titlr, rhon_half, xjprlavg, &
             nnoderho2_half, nrhomax)

@@ -580,6 +580,14 @@
       complex xjpx_lab(nxmx, nymx), &
               xjpy_lab(nxmx, nymx), &
               xjpz_lab(nxmx, nymx)
+
+      complex, allocatable :: xjpxe_lab(:,:), &
+                                xjpye_lab(:,:), &
+                                xjpze_lab(:,:)
+
+      real, allocatable :: ntilda_e_real(:,:)
+      complex, allocatable :: ntilda_e(:,:)
+
       complex pc(nxmx, nymx)
 
       real wdote(nxmx, nymx), wdoti1(nxmx, nymx), &
@@ -876,6 +884,12 @@
 
 
 
+      allocate (xjpxe_lab(nxmx, nymx), &
+                xjpye_lab(nxmx, nymx), &
+                xjpze_lab(nxmx, nymx) )
+      allocate ( ntilda_e_real ( nxmx, nymx ), &
+                 ntilda_e ( nxmx, nymx ) )
+
 !     --------------------------
 !     setup parallel environment
 !     --------------------------
@@ -897,13 +911,6 @@
       end if
 
 
-!     -----------------------------------
-!     Default: set of nphis to sum over
-!     -----------------------------------
-      do i = 1, nphi_max
-         nphi_array(i) = nphi1 + i -1
-      end do
-
 !     ------------------------
 !     Read namelist input data
 !     ------------------------
@@ -916,40 +923,32 @@
 
       if(abs(signbz).lt.1.0e-05)signbz = +1.0
 
-      if(nphi_max .eq. 101) then
-         nphi_array = 0.0
-         do i = 1, nphi_max
-            nphi_array(i) = nphi1 + i -1
-         end do
-      end if
-
-      if(nphi_max .lt. 101) then
-         do i = nphi_max + 1, nphimx
+!     ------------------------------------------- 
+!     Set the remainder of the nphi_array to zero
+!     -------------------------------------------  
+      do i = nphi_number + 1, nphimx
             nphi_array(i) = 0.0
-         end do
-      end if
-
+      enddo    
 
 !     ------------------------------------------------------
-!     if (nphi_max .gt. 1), set prfin=0.0 so that pscale=1.0
+!     if (nphi_number .gt. 1), set prfin=0.0 so that pscale=1.0
 !     ------------------------------------------------------
 
+      if(nphi_number .gt. 1) prfin=0.0
 
-      if(nphi_max .gt. 1) prfin=0.0
-
-      if (myid.eq.0) then
-         open(unit=15, file='out15', status='unknown', form='formatted')
-       open(unit=34, file='fpm',   status='unknown', form='formatted')
-      end if
+        if (myid.eq.0) then
+            open(unit=15, file='out15', status='unknown', form='formatted')
+            open(unit=166, file='bharvey_3d', status='unknown', form='formatted')
+            if (.not. nPhi_sum_only) &
+            open(unit=34, file='fpm',   status='unknown', form='formatted')
+        end if
 
 !     -----------------------
 !     write fpm (34) file
 !     ------------------------
-      if (myid.eq.0) then
+      if (myid.eq.0 .and. (.not. nPhi_sum_only)) then
          write(34,309) nphi1, nphi2
       end if
-
-
 
 
       idiag = nmodesx / 2
@@ -992,20 +991,19 @@
       call HPL_blacsinit( icontxt )
 #endif
 
-
+      if (nphi_sum_only) go to 9001
 
 !     ----------------
 !     loop over nphi's
 !     ----------------
       nt = 0
-      do 9000 nphi = nphi1, nphi2
 
 !     -------------------------------------------------------------
 !     Leave all modes out of the sum except the pre-determined ones
 !     -------------------------------------------------------------
-      do nsum = 1, nphi_max
-      if(nphi .eq. nphi_array(nsum))then
+      do 9000 nsum = 1, nphi_number
 
+      nphi  = nphi_array(nsum)
       nt = nt + 1
 
       time0=second1(dummy)
@@ -1179,12 +1177,12 @@
       if (myid .eq. 0) then
 
          write(15, *) "AORSA2D: version_number = ", version_number
-             write(15, *) "nphi_max = ", nphi_max
+             write(15, *) "nphi_number = ", nphi_number
          write(15, *) "nphi_array = ", nphi_array
 
 
          write(6, *) "AORSA2D: version_number = ", version_number
-         write(6, *) "nphi_max = ", nphi_max
+         write(6, *) "nphi_number = ", nphi_number
          write(6, *) "nphi_array = ", nphi_array
 
 
@@ -2955,12 +2953,16 @@
 
 !DLG: read eqdsk dlg style
 
-    call read_geqdsk ( eqdsk, plot = .false. )
-    call bCurvature ()
-    call bGradient ()
-    call init_interp ()
+    if ( nt == 1 ) then 
 
-    if ( ndisti2 .eq. 2 ) call init_particleFile ( myId )
+        call read_geqdsk ( eqdsk, plot = .false. )
+        call bCurvature ()
+        call bGradient ()
+        call init_interp ()
+
+        if ( ndisti2 .eq. 2 ) call init_particleFile ( myId )
+
+    endif
 
     
 !     -----------
@@ -3063,7 +3065,7 @@ if (iprofile .eq. 3) then
 
             else
                 if ( mask_bbbs(i,j) .lt. 1 ) then 
-                    xnea(i,j) = density_by_gradient ( capR(i), y(j), xn_rho2lim, gradient, 1e-10) 
+                    xnea(i,j) = xn_rho2lim!density_by_gradient ( capR(i), y(j), xn_rho2lim, gradient, 1e-10) 
                     xn2a(i,j) = xn2_rho2lim
                     xn3a(i,j) = xn3_rho2lim
                     xn4a(i,j) = xn4_rho2lim
@@ -6284,9 +6286,30 @@ end do
                             + uyz(i,j) * xjpy(i,j) &
                             + uzz(i,j) * xjpz(i,j)
 
+            xjpxe_lab(i,j)   = uxx(i,j) * xjpxe(i,j) + uyx(i,j) * xjpye(i,j) + uzx(i,j) * xjpze(i,j) 
+            xjpye_lab(i,j)   = uxy(i,j) * xjpxe(i,j) + uyy(i,j) * xjpye(i,j) + uzy(i,j) * xjpze(i,j)
+            xjpze_lab(i,j)   = uxz(i,j) * xjpxe(i,j) + uyz(i,j) * xjpye(i,j) + uzz(i,j) * xjpze(i,j)
+
          end do
       end do
 
+!     ----------------------------------------------------------------
+!     Calculate fluctuating charge density (rho_plasma) for electrons:
+!     ----------------------------------------------------------------
+      do i = 2, nnodex - 1
+         do j = 2, nnodey - 1
+
+            djxdx = (xjpxe_lab(i+1, j) - xjpxe_lab(i-1, j)) / (2.0 * dx)
+            djydy = (xjpye_lab(i, j+1) - xjpye_lab(i, j-1)) / (2.0 * dy)
+
+            rho_pla(i,j) = (djxdx + djydy + xjpxe_lab(i,j) / capr(i) &
+                          + zi * nphi / capr(i) * xjpze_lab(i,j) ) &
+                       / (zi * omgrf)
+
+!           ntilda_e(i,j) = rho_pla(i,j) / qe
+
+         end do
+      end do
 
 !     ---------------------------------------------------
 !     Calculate charge density (rho_plasma) in the plasma:
@@ -6996,10 +7019,10 @@ end do
       if (powtot .ne. 0.0) pscale = prfin / powtot
       if (powtot .eq. 0.0) pscale = 1.0
 
-      if (prfin .eq. 0.0) pscale = 1.0
+      if (nphi_number .gt. 1) prfin = 0.0
+
+      if (prfin .lt. 1e-5) pscale = 1.0
       if (pscale .le. 0.0) pscale = 1.0
-!!DLG:  Force pscale for now
-      !pscale = 1.0!prfin / powtot
 
       if (myid .eq. 0) then
          write(6, 1218) pscale
@@ -7061,14 +7084,14 @@ end do
       do i = 1, nnodex
          do j = 1, nnodey
 
-          eplus_flux_plot(i,j) = eplus_flux_plot(i,j) * sqrt(pscale)
-          eminus_flux_plot(i,j) = eminus_flux_plot(i,j) * sqrt(pscale)
+            eplus_flux_plot(i,j) = eplus_flux_plot(i,j) * sqrt(pscale)
+            eminus_flux_plot(i,j) = eminus_flux_plot(i,j) * sqrt(pscale)
 
             ex(i,j) = ex(i,j) * sqrt(pscale)
             ey(i,j) = ey(i,j) * sqrt(pscale)
             ez(i,j) = ez(i,j) * sqrt(pscale)
 
-          bxwave(i,j) = bxwave(i,j) * sqrt(pscale)
+            bxwave(i,j) = bxwave(i,j) * sqrt(pscale)
             bywave(i,j) = bywave(i,j) * sqrt(pscale)
             bzwave(i,j) = bzwave(i,j) * sqrt(pscale)
 
@@ -7076,11 +7099,21 @@ end do
             ebeta(i,j) = ebeta(i,j) * sqrt(pscale)
             eb(i,j) = eb(i,j) * sqrt(pscale)
 
+            eplus(i,j) = eplus(i,j) * sqrt(pscale)
+            eminus(i,j) = eplus(i,j) * sqrt(pscale)         
+            
+            ntilda_e(i,j) = ntilda_e(i,j) * sqrt(pscale)
+            ntilda_e_real(i,j) = real(ntilda_e(i,j))
+
             xjpxe(i,j) = xjpxe(i,j) * sqrt(pscale)
             xjpye(i,j) = xjpye(i,j) * sqrt(pscale)
             xjpze(i,j) = xjpze(i,j) * sqrt(pscale)
 
-          xjpx_ehst(i,j) = xjpx_ehst(i,j) * sqrt(pscale)
+            xjpxe_lab(i,j) = xjpxe_lab(i,j) * sqrt(pscale)
+            xjpye_lab(i,j) = xjpye_lab(i,j) * sqrt(pscale)
+            xjpze_lab(i,j) = xjpze_lab(i,j) * sqrt(pscale)
+
+            xjpx_ehst(i,j) = xjpx_ehst(i,j) * sqrt(pscale)
             xjpy_ehst(i,j) = xjpy_ehst(i,j) * sqrt(pscale)
             xjpz_ehst(i,j) = xjpz_ehst(i,j) * sqrt(pscale)
 
@@ -8831,6 +8864,25 @@ end do
 
        close (39)
 
+!       -----------------------------------------------
+!       Write file 46, "naoto_2d" for synthetic diagnostic
+!       -----------------------------------------------
+        open(unit=46, file='naoto_2d', status='unknown', form= 'formatted')
+        write (46, 309) nnodex, nnodey, nphi
+        write (46, 310) (capr(i),  i = 1, nnodex)
+        write (46, 310) (y(j),  j = 1, nnodey)
+        write (46, 310) ((ealpha(i, j), i = 1, nnodex), j = 1, nnodey) 
+        write (46, 310) ((ebeta(i, j), i = 1, nnodex), j = 1, nnodey)  
+        write (46, 310) ((eb(i, j), i = 1, nnodex), j = 1, nnodey)
+        write (46, 310) ((xjpxe(i,j) , i = 1, nnodex), j = 1, nnodey)
+        write (46, 310) ((xjpye(i,j) , i = 1, nnodex), j = 1, nnodey)
+        write (46, 310) ((xjpze(i,j) , i = 1, nnodex), j = 1, nnodey)
+        write (46, 310) ((xjpxe_lab(i,j) , i = 1, nnodex), j = 1, nnodey) 
+        write (46, 310) ((xjpye_lab(i,j) , i = 1, nnodex), j = 1, nnodey) 
+        write (46, 310) ((xjpze_lab(i,j) , i = 1, nnodex), j = 1, nnodey)
+        write (46, 310) ((ntilda_e(i, j), i = 1, nnodex), j = 1, nnodey)
+        close (46)   
+
       endif
 
 
@@ -8931,20 +8983,31 @@ end do
       if (myid.eq.0) then
 
          if(nphi .eq. nphi1 .or. nt .eq. 1)then
+         
+            write(34,309) nmodesx, nmodesy
+            write(34,310) rwleft, rwright, ytop, ybottom
 
             write(34,309) nnodex, nnodey
             write(34,310) (capr(i), i = 1, nnodex)
             write(34,310) (y(j), j = 1, nnodey)
 
-            write(34,310) psilim, rt
+            write(166, 309) nnodex, nnodey
+            write(166, 310) (capr(i), i = 1, nnodex)     
+            write(166, 310) (y(j), j = 1, nnodey) 
+            write(166, 310) psilim      
+            write(166, 310) ((rho(i, j), i = 1, nnodex), j = 1, nnodey) 
+            write(166, 309) nphi_number
+            write(166, 309) (nphi_array(n), n = 1, nphi_number)      
+            
+            write(34,310) psilim, rt, b0
             write(34,310) ((rho(i, j), i = 1, nnodex), j = 1, nnodey)
+            write(34,310) ((xnea(i, j), i = 1, nnodex), j = 1, nnodey)
 
-
-           write (34, 309) nuper
+            write (34, 309) nuper
             write (34, 309) nupar
             write (34, 309) nnoderho
 
-!DLG:   Adjust if statement for ndisti? >= 1
+!DLG:   A   djust if statement for ndisti? >= 1
             if(ndisti1 .ge. 1)write (34, 3310) vc1_cgs
             if(ndisti2 .ge. 1)write (34, 3310) vc2_cgs
 
@@ -8954,53 +9017,68 @@ end do
             write (34, 3310) (uperp(i_uperp), i_uperp = 1, nuper)
             write (34, 3310) (upara(i_upara), i_upara = 1, nupar)
 
-       end if
+        end if
 
-       write(34,309) nphi
+        write(34,309) nphi
 
-         write(34,310) ((ealpha(i, j), i = 1, nnodex), j = 1, nnodey)
-         write(34,310) ((ebeta(i, j),  i = 1, nnodex), j = 1, nnodey)
-         write(34,310) ((eb(i, j),     i = 1, nnodex), j = 1, nnodey)
+        write(34,310) ((ealpha(i, j), i = 1, nnodex), j = 1, nnodey)
+        write(34,310) ((ebeta(i, j),  i = 1, nnodex), j = 1, nnodey)
+        write(34,310) ((eb(i, j),     i = 1, nnodex), j = 1, nnodey)
 
-         write(34,310) ((xjpx(i, j), i = 1, nnodex), j = 1, nnodey)
-         write(34,310) ((xjpy(i, j), i = 1, nnodex), j = 1, nnodey)
-         write(34,310) ((xjpz(i, j), i = 1, nnodex), j = 1, nnodey)
+        write(166,310) ((eplus(i, j), i = 1, nnodex), j = 1, nnodey)
+        write(166,310) ((eminus(i, j),  i = 1, nnodex), j = 1, nnodey)
+        write(166,310) ((eb(i, j),     i = 1, nnodex), j = 1, nnodey)
+ 
+        write(166,310) ((ex(i, j), i = 1, nnodex), j = 1, nnodey)
+        write(166,310) ((ey(i, j),  i = 1, nnodex), j = 1, nnodey)
+        write(166,310) ((ez(i, j),     i = 1, nnodex), j = 1, nnodey)
 
-       write(34,310) ptot, pcrto2, pcito2, xjtot
+        write(166,310) ((bxwave(i, j), i = 1, nnodex), j = 1, nnodey)
+        write(166,310) ((bywave(i, j), i = 1, nnodex), j = 1, nnodey)
+        write(166,310) ((bzwave(i, j), i = 1, nnodex), j = 1, nnodey)
 
-       write(34, 309) nnoderho
-       write(34, 310) (rhon(n), n = 1, nnoderho)
+        write(34,310) ((xjpx(i, j), i = 1, nnodex), j = 1, nnodey)
+        write(34,310) ((xjpy(i, j), i = 1, nnodex), j = 1, nnodey)
+        write(34,310) ((xjpz(i, j), i = 1, nnodex), j = 1, nnodey)
 
-       write(34, 310) (redotjeavg(n), n = 1, nnoderho)
-         write(34, 310) (redotj1avg(n), n = 1, nnoderho)
-         write(34, 310) (redotj2avg(n), n = 1, nnoderho)
-         write(34, 310) (redotj3avg(n), n = 1, nnoderho)
-       write(34, 310) (redotj4avg(n), n = 1, nnoderho)
-         write(34, 310) (redotj5avg(n), n = 1, nnoderho)
-         write(34, 310) (redotj6avg(n), n = 1, nnoderho)
+        write(34,310) ((xjpxe_lab(i, j), i = 1, nnodex), j = 1, nnodey)
+        write(34,310) ((xjpye_lab(i, j), i = 1, nnodex), j = 1, nnodey)
+        write(34,310) ((xjpze_lab(i, j), i = 1, nnodex), j = 1, nnodey)
+ 
+        write(34,310) ((ntilda_e(i, j), i = 1, nnodex), j = 1, nnodey)
+        write(34,310) ptot, pcrto2, pcito2, xjtot
 
-       write(34, 310) (wdoteavg(n),  n = 1, nnoderho)
-         write(34, 310) (wdoti1avg(n), n = 1, nnoderho)
-         write(34, 310) (wdoti2avg(n), n = 1, nnoderho)
-         write(34, 310) (wdoti3avg(n), n = 1, nnoderho)
-         write(34, 310) (wdoti4avg(n), n = 1, nnoderho)
-         write(34, 310) (wdoti5avg(n), n = 1, nnoderho)
-         write(34, 310) (wdoti6avg(n), n = 1, nnoderho)
+        write(34, 309) nnoderho
+        write(34, 310) (rhon(n), n = 1, nnoderho)
 
-       write(34, 310) (wdote_ql(n),  n = 1, nnoderho)
-         write(34, 310) (wdoti1_ql(n), n = 1, nnoderho)
-         write(34, 310) (wdoti2_ql(n), n = 1, nnoderho)
-         write(34, 310) (wdoti3_ql(n), n = 1, nnoderho)
-         write(34, 310) (wdoti4_ql(n), n = 1, nnoderho)
-         write(34, 310) (wdoti5_ql(n), n = 1, nnoderho)
+        write(34, 310) (redotjeavg(n), n = 1, nnoderho)
+        write(34, 310) (redotj1avg(n), n = 1, nnoderho)
+        write(34, 310) (redotj2avg(n), n = 1, nnoderho)
+        write(34, 310) (redotj3avg(n), n = 1, nnoderho)
+        write(34, 310) (redotj4avg(n), n = 1, nnoderho)
+        write(34, 310) (redotj5avg(n), n = 1, nnoderho)
+        write(34, 310) (redotj6avg(n), n = 1, nnoderho)
 
-       write(34, 310) (xjprlavg(n),  n = 1, nnoderho)
+        write(34, 310) (wdoteavg(n),  n = 1, nnoderho)
+        write(34, 310) (wdoti1avg(n), n = 1, nnoderho)
+        write(34, 310) (wdoti2avg(n), n = 1, nnoderho)
+        write(34, 310) (wdoti3avg(n), n = 1, nnoderho)
+        write(34, 310) (wdoti4avg(n), n = 1, nnoderho)
+        write(34, 310) (wdoti5avg(n), n = 1, nnoderho)
+        write(34, 310) (wdoti6avg(n), n = 1, nnoderho)
 
+        write(34, 310) (wdote_ql(n),  n = 1, nnoderho)
+        write(34, 310) (wdoti1_ql(n), n = 1, nnoderho)
+        write(34, 310) (wdoti2_ql(n), n = 1, nnoderho)
+        write(34, 310) (wdoti3_ql(n), n = 1, nnoderho)
+        write(34, 310) (wdoti4_ql(n), n = 1, nnoderho)
+        write(34, 310) (wdoti5_ql(n), n = 1, nnoderho)
 
+        write(34, 310) (xjprlavg(n),  n = 1, nnoderho)
 
 !DLG:   Adjust if statement for ndisti1 >= 1
-         if(ndisti1 .ge. 1)then
-          write (34, 3310) (((bqlavg_i1(i_uperp, i_upara, n), &
+        if(ndisti1 .ge. 1)then
+            write (34, 3310) (((bqlavg_i1(i_uperp, i_upara, n), &
               i_uperp = 1, nuper), i_upara = 1, nupar), n = 1, nnoderho)
             write (34, 3310) (((cqlavg_i1(i_uperp, i_upara, n), &
               i_uperp = 1, nuper), i_upara = 1, nupar), n = 1, nnoderho)
@@ -9011,10 +9089,9 @@ end do
             write (34, 3310) xmi1
        end if
 
-
 !DLG:   Adjust if statement for ndisti2 >= 1
        if(ndisti2 .ge. 1)then
-          write (34, 3310) (((bqlavg_i2(i_uperp, i_upara, n), &
+            write (34, 3310) (((bqlavg_i2(i_uperp, i_upara, n), &
               i_uperp = 1, nuper), i_upara = 1, nupar), n = 1, nnoderho)
             write (34, 3310) (((cqlavg_i2(i_uperp, i_upara, n), &
               i_uperp = 1, nuper), i_upara = 1, nupar), n = 1, nnoderho)
@@ -9028,8 +9105,6 @@ end do
        write(6,*) "finished writing fpm; starting plots"
 
       end if
-
-
 
       call blacs_barrier(icontxt, 'All')
 
@@ -9047,6 +9122,7 @@ end do
       end if
 
  2846 format('time to do plots =', f9.3, ' min')
+ 2847 format('time to sum modes =', f9.3, ' min')
 
 !      write(6,*) "finished plots; starting deallocation"
       call blacs_barrier(icontxt, 'All')
@@ -9379,6 +9455,7 @@ end do
 
          deallocate( UPERP )
          deallocate( UPARA )
+         deallocate ( vPerp, vPara )
          deallocate( UPERP_work )
          deallocate( UPARA_work )
 
@@ -9414,6 +9491,8 @@ end do
          deallocate( cqlavg_i1 )
          deallocate( eqlavg_i1 )
          deallocate( fqlavg_i1 )
+
+         deallocate ( bqlavg_work, cqlavg_work, eqlavg_work, fqlavg_work )
 
          if(eta2 .ne. 0.0) then
             deallocate( bqlavg_i2 )
@@ -9575,22 +9654,37 @@ end do
       deallocate( mtable )
       deallocate( ntable )
 
-      end if
-      end do
+ !     end if
 
  9000 continue
 !    -----------------------
 !     End of loop over nphi's
 !     ------------------------
 
+ 9001 continue
+
+      deallocate (xjpxe_lab, xjpye_lab, xjpze_lab)
+      deallocate ( ntilda_e, ntilda_e_real )
+
       if (myid .eq. 0) then
-       close (15)
-       close (963)
-       close (34)
+            close ( 963 )
+            close (  34 )
+            close ( 166 )
       endif
 
-      close(6)
       close (63)
+
+      toroidalModeSum: &
+      if ( myid == 0 .and. nphi_number > 1 ) then
+              t1    = second1 ( dummy )
+              call aorsa2dSum ( myId )
+              tMin = ( second1 ( dummy ) - t1 ) / 60.0
+              write ( 6, 2847 ) tmin
+              write ( 15, 2847 ) tmin
+      endif toroidalModeSum
+
+      if ( myId == 0 ) close (15)
+      close(6)
 
 !     -------------------------
 !     stop parallel environment

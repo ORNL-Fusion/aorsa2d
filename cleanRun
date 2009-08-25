@@ -1,2 +1,2 @@
 #!/bin/bash
-rm fort.5 err* *.vtk* mchoi* zowens swain rho out_* out15* out238 movie* murakami fields_local fpm E_lab_frame bharvey *vkt* output/* running.log ZTABLE.TXT eqdsk_setup.ps namelist_input aorsa2d.ps out38 out138 AORSA* cql3d.out log* *.ps
+rm fort.5 err* *.vtk* mchoi* zowens swain rho out_* out15* out238 movie* murakami fields_local fpm E_lab_frame bharvey *vkt* output/* running.log ZTABLE.TXT eqdsk_setup.ps namelist_input aorsa2d.ps out38 out138 AORSA* cql3d.out log* *.ps bharvey_3d naoto* out16* out36* 

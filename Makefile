@@ -92,7 +92,9 @@ OBJ_FILES = \
  $(OBJ_DIR)/eqdsk_plot.o \
  $(OBJ_DIR)/fieldws.o \
  $(OBJ_DIR)/dshell.o \
- $(OBJ_DIR)/aorsa2dMain.o 
+ $(OBJ_DIR)/aorsa2dMain.o \
+ ${OBJ_DIR}/aorsa2dSum.o \
+ ${OBJ_DIR}/plot.o
 
 ifeq ($(USEGPU),yes)
 OBJ_CUDA = \
@@ -408,7 +410,11 @@ $(OBJ_DIR)/eqdsk_plot.o: $(SRC_DIR)/eqdsk_plot.f90 ${OBJ_DIR}/fieldws.o
 	$(COMPILE_DLG_R4) -o $(OBJ_DIR)/eqdsk_plot.o $(SRC_DIR)/eqdsk_plot.f90 ${BOUNDS}				     
 			     			     
 $(OBJ_DIR)/fieldws.o: $(SRC_DIR)/fieldws.f90
-	$(COMPILE_DLG_R4) -o $(OBJ_DIR)/fieldws.o $(SRC_DIR)/fieldws.f90 $(NETCDF) ${BOUNDS}
+	$(COMPILE_DLG_R4) -o $(OBJ_DIR)/fieldws.o $(SRC_DIR)/fieldws.f90 $(NETCDF) ${BOUNDS} ${DEBUG}
+
+$(OBJ_DIR)/plot.o: $(SRC_DIR)/plot.f90 ${OBJ_DIR}/fieldws.o
+	$(COMPILE_DLG_R4) -o $(OBJ_DIR)/plot.o $(SRC_DIR)/plot.f90 $(NETCDF) ${BOUNDS} ${DEBUG}
+
 
 			    		    		     		   			     			     				
 # FFT files

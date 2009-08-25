@@ -31,7 +31,7 @@
 
       real :: xkperp_cutoff = 0.75    ! fraction of xkperp above which the electron conductivity (sig3) 
                                       !  is enhanced to short out noise in E_parallel (default = 0.75)
-				      
+                      
       real :: damping = 0.0           !  enhancement factor (default = 0.0) for the electron conductivity (sig3) 
                                       !  applied above the fractional value of xkperp (xkperp_cutoff) to 
                                       !  short out noise in E_parallel 
@@ -216,11 +216,12 @@
       integer :: n_prof_flux = 0          !-----n_prof_flux = flag determining whether profiles are wrt toroidal or poloidal flux
                                           !           if(n_prof_flux .eq. 0) profiles are wrt sqrt(poloidal) flux (default)
                                           !           if(n_prof_flux .ne. 0) profiles are wrt sqrt(toroidal) flux 
-				       
+                       
       integer :: upshift = 1              !-----upshift: if (upshift .ne.  0) upshift is turned on (default)
                                           !-----if (upshift .eq. -1) upshift is turned off for xkperp > xkperp_cutoff
                                           !-----if (upshift .eq.  0) upshift is turned off always 
-				            
+                            
+      logical :: nPhi_sum_only = .false.  !-----if (nphi_sum_only .eq. .true.) skip aorsa and just sum the modes for nphi_number > 1
       integer :: i_write = 0              !-----i_write: if (i_write .eq. 0) 4-D ORBIT_RF file is NOT written (default)
                                           !-----         if (i_write .ne. 0) 4-D ORBIT_RF file IS written
 
@@ -236,7 +237,7 @@
       integer :: nkperp = 201             !-----nkperp: number of kperp values used in Lee's interpolation version of the 
                                           !     non-Maxwellian sigma (default = 201: interpolates on 201 points)
                                           !     if (nkperp .eq. 0) there is no interpolation
-				     
+                     
       integer :: nzeta_wdot = 51          !-----nzeta_wdot:  if (nzeta_wdot .eq. 0) no wdot calculation
                                           !-----             if (nzeta_wdot .eq. 1) wdot is calculated without interpolation
                                           !-----             if (nzeta_wdot .ge. 2) wdot is calculated with interpolation
@@ -254,7 +255,7 @@
       integer :: ftrap = 1                !-----ftrap = integer flag determining whether trapped particles effect current drive
                                           !        if(ftrap.eq.0) no trapped particles
                                           !        if(ftrap.ne.0) include trapped particles (default)
-				     
+                     
       integer :: nnode_local = 0          !-----nnode_local = number of local Fourier modes used to calculate local Wdot
                                           !-----      if (nnode_local .le. 0)Wdot is NOT calculated (default)
                                           !-----      if (nnode_local .gt. 0)Wdot is calculated
@@ -282,7 +283,7 @@
       
       integer :: iprint = 1               !-----iprint:  if (iprint .eq. 28) print fields_local
                                           !-----         if (iprint .eq. 1) don't print fields_local (default)
-				     
+                     
       integer :: iexact = 1               !-----iexact:  not used
       integer :: iroot = 2                !-----iroot: not used
       integer :: iequat = 1
@@ -301,7 +302,7 @@
                                           !-----        if(nzfun.eq.1) Generalized Z function of Brambilla is used (default)
                                           !-----        if(nzfun.eq.2) Z function of Smithe is used by doing numerical integrals.
                                           !-----        if(nzfun.eq.3) Z function table lookup of Smithe is used 
-				     
+                     
       integer :: iabsorb = 2              !-----iabsorb not used
       integer :: itemp = 0                !-----itemp not used
       integer :: nfreqm = 1               !-----nfreqm not used
@@ -326,7 +327,7 @@
       integer :: nnodecx                  !-----nnodecx = number of radial mesh points used for wdot calculation
       integer :: nnodecy                  !-----nnodecy = number of vertical mesh points used for wdot calculation
       
-      integer :: nphi_max = 101           !-----length of nphi_array      
+      integer :: nphi_number = 10           !-----length of nphi_array      
       parameter (nphimx = 200)            !-----aximum length of nphi_array 
       integer :: nphi_array(nphimx) = 0   !-----list of nphi's in the nphi_array
       
@@ -374,7 +375,7 @@
      &    ndisti4, ndisti5, ndisti6, nkperp, nzeta_wdot, n_bin, antlen,  &
      &    eqdsk, iql, i_antenna, antlc, n_prof_flux, netcdf_file1,  &
      &    netcdf_file2, upshift, xkperp_cutoff, damping, i_write,  &
-     &    nstrap, xlt, wd, phase_deg, nphi_max, nphi_array, &
+     &    nstrap, xlt, wd, phase_deg, nphi_number, nphi_array, &
      &    enorm_factor, version_number, enorm_factor_e, &
      &    enorm_factor_i1, enorm_factor_i2, enorm_factor_i3, &
      &    enorm_factor_i4, enorm_factor_i5, enorm_factor_i6, &
@@ -383,7 +384,7 @@
      &    xn3_rho2lim, xn4_rho2lim, xn5_rho2lim, xn6_rho2lim, &
      &    te_rho2lim, ti_rho2lim, ti2_rho2lim, ti3_rho2lim, &
      &    ti4_rho2lim, ti5_rho2lim, ti6_rho2lim, dlg_yRange, &
-     &    gradient
+     &    gradient, nPhi_sum_only
                 
 
       end module aorsa2din_mod

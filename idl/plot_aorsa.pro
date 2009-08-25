@@ -97,6 +97,10 @@ pro plot_aorsa
 	blevels	= ( fIndGen ( nLevs ) - nLevs / 2.0 ) / ( nLevs / 2.0 ) * brange 
 	bcolors	= bytScl ( blevels, top = 253 ) + 1
 
+	xRange	= [ min ( eqdsk.rlim ), max ( eqdsk.rlim ) ]
+	yRange	= [ min ( eqdsk.zlim ), max ( eqdsk.zlim ) ]
+
+
 	mod_nLevs	= 11
 	mod_levels	= fIndGen ( mod_nLevs ) / mod_nLevs * range 
 	mod_colors	= 255 - ( bytScl ( mod_levels, top = 253 ) + 1 )
@@ -109,7 +113,10 @@ pro plot_aorsa
 			levels = levels, $
 			c_colors = colors, $
 			title = 'ePlus_real', $
-			/fill
+			/fill, $
+			yRange = yRange, $
+			xRange = xRange, $
+			xSty = 1, ySty = 1
 	oPlot, eqdsk.rbbbs, eqdsk.zbbbs, $
 		   thick = 2, $
 		   color = 255 
@@ -122,7 +129,10 @@ pro plot_aorsa
 			levels = levels, $
 			c_colors = colors, $
 			title = 'ePlus_imag', $
-			/fill
+			/fill, $
+			yRange = yRange, $
+			xRange = xRange, $
+			xSty = 1, ySty = 1
 	oPlot, eqdsk.rbbbs, eqdsk.zbbbs, $
 		   thick = 2, $
 		   color = 255 
@@ -136,7 +146,10 @@ pro plot_aorsa
 			levels = mod_levels, $
 			c_colors = mod_colors, $
 			title = 'mod ( ePlus )', $
-			/fill
+			/fill, $
+			yRange = yRange, $
+			xRange = xRange, $
+			xSty = 1, ySty = 1
 	oPlot, eqdsk.rbbbs, eqdsk.zbbbs, $
 		   thick = 2, $
 		   color = 0 
@@ -150,7 +163,10 @@ pro plot_aorsa
 			levels = levels, $
 			c_colors = colors, $
 			title = 'eMinu_real', $
-			/fill
+			/fill, $
+			yRange = yRange, $
+			xRange = xRange, $
+			xSty = 1, ySty = 1
 	oPlot, eqdsk.rbbbs, eqdsk.zbbbs, $
 		   thick = 2, $
 		   color = 255 
@@ -163,7 +179,10 @@ pro plot_aorsa
 			levels = levels, $
 			c_colors = colors, $
 			title = 'eMinu_imag', $
-			/fill
+			/fill, $
+			yRange = yRange, $
+			xRange = xRange, $
+			xSty = 1, ySty = 1
 	oPlot, eqdsk.rbbbs, eqdsk.zbbbs, $
 		   thick = 2, $
 		   color = 255 
@@ -177,7 +196,10 @@ pro plot_aorsa
 			levels = mod_levels, $
 			c_colors = mod_colors, $
 			title = 'mod ( eMinu )', $
-			/fill
+			/fill, $
+			yRange = yRange, $
+			xRange = xRange, $
+			xSty = 1, ySty = 1
 	oPlot, eqdsk.rbbbs, eqdsk.zbbbs, $
 		   thick = 2, $
 		   color = 0 
@@ -193,7 +215,10 @@ pro plot_aorsa
 			levels = blevels, $
 			c_colors = bcolors, $
 			title = 'bx_wave_real', $
-			/fill
+			/fill, $
+			yRange = yRange, $
+			xRange = xRange, $
+			xSty = 1, ySty = 1
 	oPlot, eqdsk.rbbbs, eqdsk.zbbbs, $
 		   thick = 2, $
 		   color = 255 
@@ -206,7 +231,10 @@ pro plot_aorsa
 			levels = blevels, $
 			c_colors = bcolors, $
 			title = 'bx_wave_imag', $
-			/fill
+			/fill, $
+			yRange = yRange, $
+			xRange = xRange, $
+			xSty = 1, ySty = 1
 	oPlot, eqdsk.rbbbs, eqdsk.zbbbs, $
 		   thick = 2, $
 		   color = 255 
@@ -220,7 +248,10 @@ pro plot_aorsa
 			levels = mod_blevels, $
 			c_colors = mod_bcolors, $
 			title = 'mod ( bx_wave )', $
-			/fill
+			/fill, $
+			yRange = yRange, $
+			xRange = xRange, $
+			xSty = 1, ySty = 1
 	oPlot, eqdsk.rbbbs, eqdsk.zbbbs, $
 		   thick = 2, $
 		   color = 0 
@@ -234,7 +265,10 @@ pro plot_aorsa
 			levels = blevels, $
 			c_colors = bcolors, $
 			title = 'bz_wave_real', $
-			/fill
+			/fill, $
+			yRange = yRange, $
+			xRange = xRange, $
+			xSty = 1, ySty = 1
 	oPlot, eqdsk.rbbbs, eqdsk.zbbbs, $
 		   thick = 2, $
 		   color = 255 
@@ -247,7 +281,10 @@ pro plot_aorsa
 			levels = blevels, $
 			c_colors = bcolors, $
 			title = 'bz_wave_imag', $
-			/fill
+			/fill, $
+			yRange = yRange, $
+			xRange = xRange, $
+			xSty = 1, ySty = 1
 	oPlot, eqdsk.rbbbs, eqdsk.zbbbs, $
 		   thick = 2, $
 		   color = 255 
@@ -261,7 +298,10 @@ pro plot_aorsa
 			levels = mod_blevels, $
 			c_colors = mod_bcolors, $
 			title = 'mod ( bz_wave )', $
-			/fill
+			/fill, $
+			yRange = yRange, $
+			xRange = xRange, $
+			xSty = 1, ySty = 1
 	oPlot, eqdsk.rbbbs, eqdsk.zbbbs, $
 		   thick = 2, $
 		   color = 0 
