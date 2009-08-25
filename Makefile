@@ -134,7 +134,7 @@ OBJ_CQL3D_SETUP = \
 OBJ_DLG := $(patsubst src/dlg/%,obj/%.o,$(basename $(wildcard src/dlg/*)))
 
 ifeq ($(CRAYXT4),1)
-	OPT_FLAGS = #-fast -tp barcelona-64 -traceback #-Minfo -mp#-Mlist #-Mconcur=nonuma
+	OPT_FLAGS = -fast -tp barcelona-64 #-traceback #-Minfo -mp#-Mlist #-Mconcur=nonuma
 	PRECISION_FLAGS = -Mr8 -r8
 	COMMON_OPTION  = -Msave -I $(INCLUDE_DIR) $(OPT_FLAGS) -module $(MOD_DIR) -Kieee
 	COMMON_OPTION2  = -Mnosave -I $(INCLUDE_DIR) $(OPT_FLAGS) -module $(MOD_DIR) -Kieee
@@ -158,7 +158,7 @@ ifeq ($(CRAYXT4),1)
 	INC_DIR = 	
 	BOUNDS = # turning -Mbounds on causes PBLAS to crash
 	WARN = -Minform=warn
-	DEBUG = -g -traceback
+	DEBUG = #-g -traceback
 	FFLAGS = ${WARN} ${DEBUG} 
 	F90FLAGS = ${WARN} ${DEBUG}
 	FFTFLAGS = -Msave
