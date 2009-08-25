@@ -70,7 +70,7 @@
 
       real flimiter, parabola, dfdx, dfdy, caprmax, caprmin, rmax
 
-      real tmem, tsys, tio, ttotal, time0, time, cpu, dummy, second1
+      real tmem, tsys, tio, ttotal, time0, time, cpu, dummy, second1, dlgTime
 
       real tmin, gflops, gflopsp, ops, teev, t1ev, t2ev, t3ev
       real t4ev, t5ev, t6ev
@@ -941,6 +941,7 @@
             open(unit=166, file='bharvey_3d', status='unknown', form='formatted')
             if (.not. nPhi_sum_only) &
             open(unit=34, file='fpm',   status='unknown', form='formatted')
+            open(unit = 167, file = 'dlg_profiling', status = 'unknown', form = 'formatted' )
         end if
 
 !     -----------------------
@@ -1032,6 +1033,7 @@
       suffix(3:3) = char(ichar('0') + mod( myid/10, 10))
       suffix(2:2) = char(ichar('0') + mod( myid/100,10))
 
+      dlgTime = second1(dummy)
 
       if (myid.eq.0) then
          open(unit=38,file='out38',status='unknown',form='formatted')
@@ -1069,6 +1071,10 @@
 
       endif
 
+      if (myId==0) write(167,12398) 'open various files:', &
+        (dlgTime - second1(dummy))/60.0
+12398 format(a30,2x,f6.2)
+ 
       nrhs = 1
       nmaxe=1
 
@@ -1510,12 +1516,17 @@
 
       if(igeom .eq. 5) then
 
+      dlgTime = second1(dummy)
+
        call eqdsk_setup(myid, eqdsk, nmodesx, nmodesy, &
                 rwleft, rwright, ytop, ybottom, &
             rmaxis, zmaxis, b0, psio, psimag, psi_tor_max, &
             bxn, byn, bzn, bmod, psi_pol2d, rho_pol2d, qsafety, &
             bmod_mid,  capr_bpol_mid2,  capr_bpol_mid, rho_tor2d, &
             i_psi_eq, dldb_tot12, dldbavg, n_prof_flux,dlg_yRange)
+
+      if (myId==0) write(167,12398) 'eqdsk_setup:', &
+        (dlgTime - second1(dummy))/60.0
 
        call blacs_barrier(icontxt, 'All')
 
@@ -1882,8 +1893,14 @@
     endif sanity_check1
 
 
+          dlgTime = second1(dummy)
+
           if(myid .eq. 0) call cql3d_setup(netcdf_file1, nuper, nupar, &
                              xmi1, enorm_factor_i1, vc1_mks_cql3d)
+
+          if (myId==0) write(167,12398) 'cql3d_setup 1:', &
+            (dlgTime - second1(dummy))/60.0
+
 
             vc1_cgs_cql3d = vc1_mks_cql3d * 100.
 
@@ -1932,9 +1949,15 @@
         stop 'FAILED SANITY CHECK: plese set enorm_factor_i2'
     endif sanity_check2
 
+            dlgTime = second1(dummy)
+
           if(myid .eq. 0) call cql3d_setup(netcdf_file2, nuper, nupar, &
                               xmi2, eNorm_factor_i2, vc2_mks_cql3d)
             vc2_cgs_cql3d = vc2_mks_cql3d * 100.
+
+            if (myId==0) write(167,12398) 'cql3d_setup 2:', &
+            (dlgTime - second1(dummy))/60.0
+
 
             call blacs_barrier(icontxt, 'All')
 
@@ -1969,6 +1992,7 @@
 
             close(50)
 
+        dlgTime = second1(dummy)
         if ( myId .eq. 0 ) then
 !DLG:   Dump f(vPer,vPar,rho) for plotting
         write (*,*) 'WRITING output/f_vvp.nc ...'
@@ -2017,6 +2041,10 @@
             write (*,*) 'DONE'
         endif
        end if
+
+       if (myId==0) write(167,12398) 'write f_vvp.nc:', &
+            (dlgTime - second1(dummy))/60.0
+
 
 
 
@@ -2953,6 +2981,8 @@
 
 !DLG: read eqdsk dlg style
 
+    dlgTime = second1(dummy)
+
     if ( nt == 1 ) then 
 
         call read_geqdsk ( eqdsk, plot = .false. )
@@ -2964,10 +2994,16 @@
 
     endif
 
+    if (myId==0) write(167,12398) 'read_geqdsk:', &
+        (dlgTime - second1(dummy))/60.0
+
     
 !     -----------
 !     Mask array:
 !     -----------
+
+      dlgTime = second1 ( dummy )
+
       do i = 1, nnodex
          do j = 1, nnodey
 
@@ -2995,10 +3031,14 @@
          end do
       end do
 
+      if (myId==0) write(167,12398) 'calculate mask:', &
+        (dlgTime - second1(dummy))/60.0
 
 !    ----------------
 !    plasma profiles:
 !    ----------------
+
+dlgTime = second1 ( dummy )
 
 if(psimol .eq. 1.0) flimiter = 1.0
 if(psimol .ne. 1.0) flimiter = 1.0 / (1.0 + (psi(i,j) / psimol)**16)
@@ -3671,6 +3711,10 @@ end do
 !     --------------------------
 !     End of iprofile = 5 option
 !     --------------------------
+
+      if (myId==0) write(167,12398) 'setup profiles:', &
+        (dlgTime - second1(dummy))/60.0
+
 
 !     write (6, *) "b0 = ", b0
 !     write (6, *) "xmu0 = ", xmu0
@@ -4626,6 +4670,8 @@ end do
 
 !DLG: Initialise pf file
 
+        dlgTime = second1 ( dummy )
+
         if ( write_f_file ) then
 
             if ( myId .eq. 0 ) &
@@ -4639,6 +4685,10 @@ end do
 
         endif
 
+        if (myId==0) write(167,12398) 'initialise pf file:', &
+           (dlgTime - second1(dummy))/60.0
+
+
 
 !     ------------------------------------------------------------------------
 !     Load x, y and z equations for spatial point (i,j) and mode number (n,m)
@@ -4647,9 +4697,10 @@ end do
 
 
 
-
-
+      dlgTime = second1 ( dummy )
+    
       nnb = nprow*npcol*mmb
+      nia_loop: &
       do niastart=1,desc_amat(M_),nnb
          niaend = min(desc_amat(M_), niastart+nnb-1)
          niasize = niaend-niastart+1
@@ -4672,6 +4723,7 @@ end do
          enddo
 
 
+         ni_loop: &
          do ni=1,isize_all(myrow,mycol),3
 
 !          -------------------------------------------
@@ -4680,6 +4732,7 @@ end do
           nia = (ni-1) + niabegin_all(myrow,mycol)
           ia = new_to_org( nia )
 
+          ja_loop: &
           do ja=1,org_ncol,3
 
 
@@ -5351,8 +5404,8 @@ end do
                                 brhs(ni+2,1) = xd(i,j)
                         endif
 
-                   end do ! do ja
-              enddo ! do ni
+                   enddo ja_loop 
+              enddo ni_loop
 
 
 !      -------------------------------------
@@ -5407,11 +5460,10 @@ end do
       enddo
       enddo
 
-      enddo ! do niastart
+      enddo nia_loop 
 
-
-
-
+      if (myId==0) write(167,12398) 'nia_loop:', &
+           (dlgTime - second1(dummy))/60.0
 
       time = second1(dummy) - t1
       tmin = time / 60.
@@ -5510,6 +5562,7 @@ end do
 
 
 
+      dlgTime = second1 ( dummy )
 
       call blacs_barrier(icontxt, 'All')
       t1 = second1(dummy) 
@@ -5558,6 +5611,10 @@ end do
         call blacs_barrier(icontxt, 'All')
       time = second1(dummy) - t1
         time = max(1.0, time)
+
+      if (myId==0) write(167,12398) 'field solve:', &
+           (dlgTime - second1(dummy))/60.0
+
 
       deallocate(p_amat)
       deallocate(Btmp)
@@ -5932,10 +5989,13 @@ end do
 
  1930 format(3x, 'rf electric field in Lab frame')
 
-
+        
 !     -----------------------------------
 !     Calculate minimum and maximum xkprl
 !     -----------------------------------
+
+      dlgTime = second1 ( dummy )
+
       xkprl_min = 10000.0
       xkprl_max = -10000.0
       xkprl_pos_min = 10000.0
@@ -6031,6 +6091,10 @@ end do
          end do
       end do
 
+      if (myId==0) write(167,12398) 'calculate min and max kprl:', &
+           (dlgTime - second1(dummy))/60.0
+
+
       if (myid .eq. 0) then
              write(15, *) "xkprl_max = ", xkprl_max
          write(15, *) "xkprl_pos_min = ", xkprl_pos_min
@@ -6053,6 +6117,8 @@ end do
 !     --------------------------------------
 !     calculate individual species currents:
 !     --------------------------------------
+
+      dlgTime = second1 ( dummy )
 
       t1 = second1(dummy)
 
@@ -6242,6 +6308,10 @@ end do
          write(6 ,836) tmin
        write(15,836) tmin
       endif
+
+      if (myId==0) write(167,12398) 'currents:', &
+           (dlgTime - second1(dummy))/60.0
+
 
   836 format('time to calculate currents =',f9.3,4h min)
 
@@ -6440,6 +6510,7 @@ end do
 
 
 
+    dlgTime = second1 ( dummy )
 
       if (nzeta_wdot .gt. 0) then
 !DLG:   Setup particle tracing
@@ -6689,6 +6760,10 @@ end do
         if(myid.eq.0)write(*,*) 'dlg: vc2_mks post qlWrite: ', &
         vc2_mks
 
+        if (myId==0) write(167,12398) 'ql:', &
+           (dlgTime - second1(dummy))/60.0
+
+
 !        if( eNorm_factor_e>0)
 !     .  vce_mks = sqrt(2d0*1d3*eNorm_factor_e*e/xme)
 !        if( eNorm_factor_i1>0)
@@ -6710,6 +6785,7 @@ end do
       ! ------------------ !
       ! --  Electrons   -- !
       ! ------------------ !
+      dlgTime = second1 ( dummy )
 
       call wdot_qlcheck(wdote_ql, &
          nnoderho, nrhomax, &
@@ -6843,6 +6919,10 @@ end do
 
 
  2839 format('time to check the quasilinear operator =', f9.3, ' min')
+
+    if (myId==0) write(167,12398) 'ql check:', &
+           (dlgTime - second1(dummy))/60.0
+
 
       t1 = second1(dummy)
 
@@ -7031,6 +7111,8 @@ end do
 
 !DLG:   Append ql file with pScale
 
+    dlgTime = second1 ( dummy )
+
         if ( myId .eq. 0 .and. i_write .ne. 0 ) then
 
             write (*,*) 'APPENDING output/p_ql.nc ...'
@@ -7044,6 +7126,10 @@ end do
             call check ( nf90_close ( nc_id ) )
 
         endif
+
+    if (myId==0) write(167,12398) 'append p_ql.nc:', &
+           (dlgTime - second1(dummy))/60.0
+
 
 !     -----------------------
 !     Scale powers to Prf,in:
@@ -7274,6 +7360,8 @@ end do
 !DLG: Write the mchoi file contents into a netCDF file but
 !     on the R,z grid instead of the psi/theta grid ;-)
 
+        dlgTime = second1 ( dummy )
+
         if ( myId .eq. 0 ) then
 
         write (*,*) 'WRITING output/mchoi_dlg.nc ...'
@@ -7343,6 +7431,9 @@ end do
             write (*,*) 'DONE'
 
         endif
+
+    if (myId==0) write(167,12398) 'write mchoi_dlg.nc:', &
+           (dlgTime - second1(dummy))/60.0
 
 
 
@@ -9438,6 +9529,7 @@ end do
          close(42)
        close(43)
        close(44)
+       close(167)
 
       endif
 
