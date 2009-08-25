@@ -171,9 +171,9 @@ ifeq ($(MACHINE),dlghp)
 	MPIF90 = $(HOME)/openmpi/gnu_64/bin/mpif90
 	MPIF77 = $(HOME)/openmpi/gnu_64/bin/mpif77
 
-	COMMON_OPTION	= -fdefault-real-8 -fno-automatic -I $(MPI_INCLUDE_DIR) -J$(MOD_DIR)
-	COMMON_OPTION2	= -fdefault-real-8 -fautomatic -I $(MPI_INCLUDE_DIR) -J$(MOD_DIR)
-	COMMON_OPTION3	= -fautomatic -I -I $(MPI_INCLUDE_DIR) -J$(MOD_DIR)
+	COMMON_OPTION	= -g -fdefault-real-8 -fno-automatic -I $(MPI_INCLUDE_DIR) -J$(MOD_DIR)
+	COMMON_OPTION2	= -g -fdefault-real-8 -fautomatic -I $(MPI_INCLUDE_DIR) -J$(MOD_DIR)
+	COMMON_OPTION3	= -g -fautomatic -I -I $(MPI_INCLUDE_DIR) -J$(MOD_DIR)
 	#-finit-local-zero 
 	F77	= $(MPIF77)  $(COMMON_OPTION)
 	F77_NOSAVE	= $(MPIF77) $(COMMON_OPTION2)

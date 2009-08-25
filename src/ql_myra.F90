@@ -331,6 +331,11 @@ module ql_myra_mod
       fqlvol = 0.0
       fqlvol2d = 0.0
 
+      !DLG:   Dump QL coeffs to netCdf file for plotting.
+
+      dumpQL = i_write
+
+
 
       W = omgrf
       ZSPEC = q / 1.6e-19
@@ -391,7 +396,8 @@ module ql_myra_mod
       nwork = 0
       do j=1,nnodey
          do i=1,nnodex
-           has_work = (psi(i,j) .le. psilim .and. nboundary .eq. 1)
+           !has_work = (psi(i,j) .le. psilim .and. nboundary .eq. 1)
+           has_work = (mask(i,j) == 1 .and. nboundary .eq. 1 .and. bmod_mid(i,j) > 0)
            if (has_work) then
               nwork = nwork + 1
               i_table(nwork) = i
@@ -417,108 +423,112 @@ module ql_myra_mod
          finish=start+partition
       endif
 
-        call blacs_gridInfo ( &
-           iContxt, npRowOut, npColOut, myRowDLG, myColDLG )
+!      call blacs_gridInfo ( &
+!           iContxt, npRowOut, npColOut, myRowDLG, myColDLG )
+!
+!      call blacs_barrier(icontxt, 'All')
+!
+!!DLG:   Adjust if statement for ndist >= 1
+!
+!      if(i_write .eq. 1) then
+!!             allocate(bql_store(start:finish,1:nuper,1:nupar),
+!!     .         cql_store(start:finish,1:nuper,1:nupar),
+!!     .         eql_store(start:finish,1:nuper,1:nupar),
+!!     .         fql_store(start:finish,1:nuper,1:nupar))
+!
+!      allocate(bql4D(nModesX/npRowOut,nModesY/npColOut,1:nuPer,1:nuPar))
+!      allocate(cql4D(nModesX/npRowOut,nModesY/npColOut,1:nuPer,1:nuPar))
+!      allocate(eql4D(nModesX/npRowOut,nModesY/npColOut,1:nuPer,1:nuPar))
+!      allocate(fql4D(nModesX/npRowOut,nModesY/npColOut,1:nuPer,1:nuPar))
+!
+!      allocate(bql4D_cyl(nModesX/npRowOut, &
+!                nModesY/npColOut,1:nuPer,1:nuPar))
+!      !allocate(cql4D_cyl(nModesX/npRowOut,nModesY/npColOut,1:nuPer,1:nu
+!      !allocate(eql4D_cyl(nModesX/npRowOut,nModesY/npColOut,1:nuPer,1:nu
+!      !allocate(fql4D_cyl(nModesX/npRowOut,nModesY/npColOut,1:nuPer,1:nu
+!
+!
+!      endif
 
-      call blacs_barrier(icontxt, 'All')
+!spatial_loop: &
+!do ip = start,finish
+!iStart    = nModesX / npRowOut * myRowDLG
+!jStart    = nModesY / npColOut * myColDLG
+!iFinish   = nModesX / npRowOut * ( myRowDLG + 1 )
+!jFinish   = nModesY / npColOut * ( myColDLG + 1 )
 
-!DLG:   Adjust if statement for ndist >= 1
+ip_loop: do ip = start, finish
+!i_loop: do i = iStart + 1, iFinish
+!  j_loop: do j = jStart + 1, jFinish
+!      inMask: &
+!      if (mask(i,j) == 1) then
+      i = i_table(ip)
+      j = j_table(ip)
 
-      if(i_write .eq. 1) then
-!             allocate(bql_store(start:finish,1:nuper,1:nupar),
-!     .         cql_store(start:finish,1:nuper,1:nupar),
-!     .         eql_store(start:finish,1:nuper,1:nupar),
-!     .         fql_store(start:finish,1:nuper,1:nupar))
+      xkphi = nphi / capr(i)
+      if(xkphi .eq. 0.0)xkphi = 1.0e-05
 
-      allocate(bql4D(nModesX/npRowOut,nModesY/npColOut,1:nuPer,1:nuPar))
-      allocate(cql4D(nModesX/npRowOut,nModesY/npColOut,1:nuPer,1:nuPar))
-      allocate(eql4D(nModesX/npRowOut,nModesY/npColOut,1:nuPer,1:nuPar))
-      allocate(fql4D(nModesX/npRowOut,nModesY/npColOut,1:nuPer,1:nuPar))
+      alpha = sqrt(2.0 * xkt(i,j) / xm)
+      n = int(rho(i,j) / drho) + 1
 
-      allocate(bql4D_cyl(nModesX/npRowOut, &
-                nModesY/npColOut,1:nuPer,1:nuPar))
-      !allocate(cql4D_cyl(nModesX/npRowOut,nModesY/npColOut,1:nuPer,1:nu
-      !allocate(eql4D_cyl(nModesX/npRowOut,nModesY/npColOut,1:nuPer,1:nu
-      !allocate(fql4D_cyl(nModesX/npRowOut,nModesY/npColOut,1:nuPer,1:nu
+      !DLG: Set maxwellian v grid range using eNorm_factor
+      if (ndist .eq. 0) then
 
+          if ( eNormIN < 0 ) then
+              vc_mks =  3.0 * alpha    !--Maxwellian only--!
+          else
+              vc_mks = vc_mks_cql!sqrt(2d0*1d3*eNormIN*e/xm)
+          endif
+
+          vc_mks_cql = vc_mks
+          UminPara_cql = -1.0
+          UmaxPara_cql = 1.0
 
       endif
 
-      !spatial_loop: &
-      !do ip = start,finish
-      iStart    = nModesX / npRowOut * myRowDLG
-      jStart    = nModesY / npColOut * myColDLG
-      iFinish   = nModesX / npRowOut * ( myRowDLG + 1 )
-      jFinish   = nModesY / npColOut * ( myColDLG + 1 )
+      !has_work = (psi(i,j) .le. psilim .and. nboundary .eq. 1)
+      !has_work = (mask(i,j) == 1 .and. nboundary .eq. 1 .and. bmod_mid(i,j) > 0)
 
-        !ip_loop: do ip = start, finish
-      i_loop: do i = iStart + 1, iFinish
-        j_loop: do j = jStart + 1, jFinish
-            inMask: &
-            if (mask(i,j) == 1) then
-            !i = i_table(ip)
-            !j = j_table(ip)
+      !hasWork: &
+      !if (has_work) then
 
-            xkphi = nphi / capr(i)
-            if(xkphi .eq. 0.0)xkphi = 1.0e-05
+      u0 = vc_mks / alpha
 
-            alpha = sqrt(2.0 * xkt(i,j) / xm)
-            n = int(rho(i,j) / drho) + 1
+      Emax = 0.5 * xm * vc_mks**2
+      Enorm = Emax / 1.6e-19
+      ASPEC = xm / 1.67e-27
+      BMAG = omgc(i,j) * (xm / q)
 
-            !DLG: Set maxwellian v grid range using eNorm_factor
-            if (ndist .eq. 0) then
+    duperp = (uperp(nuper) - uperp(1)) / (nuper - 1)
+      dupara = (upara(nupar) - upara(1)) / (nupar - 1)
 
-                if ( eNormIN < 0 ) then
-                    vc_mks =  3.0 * alpha    !--Maxwellian only--!
-                else
-                    vc_mks = vc_mks_cql!sqrt(2d0*1d3*eNormIN*e/xm)
-                endif
-
-                  vc_mks_cql = vc_mks
-                  UminPara_cql = -1.0
-                  UmaxPara_cql = 1.0
-              endif
-
-            has_work = (psi(i,j) .le. psilim .and. nboundary .eq. 1)
-            if (has_work) then
-
-            u0 = vc_mks / alpha
-
-            Emax = 0.5 * xm * vc_mks**2
-            Enorm = Emax / 1.6e-19
-            ASPEC = xm / 1.67e-27
-            BMAG = omgc(i,j) * (xm / q)
-
-          bratio = bmod_mid(i,j) / bmod(i,j)
-          if (bratio .gt. 1.0) bratio = 1.0
-
-          duperp = (uperp(nuper) - uperp(1)) / (nuper - 1)
-            dupara = (upara(nupar) - upara(1)) / (nupar - 1)
-
-          psic = 1.0 / bratio
+    bratio = bmod_mid(i,j) / bmod(i,j)
+    if (bratio .gt. 1.0) bratio = 1.0
+    psic = 1.0 / bratio
 
 !           -----------------------------------------------------
 !           get CQL3D distribution function on the midplane:
 !           used for Wdot only - not the quasilinear coefficients
 !           -----------------------------------------------------
 
-            if(ndist .eq. 0)then   !--Maxwellian--!
+        if(ndist .eq. 0)then   !--Maxwellian--!
 
-             call maxwell_dist(u0, NUPAR, NUPER, &
-                    UminPara, UmaxPara, &
-                    UPERP, UPARA, DFDUPER, DFDUPAR)
+         call maxwell_dist(u0, NUPAR, NUPER, &
+                UminPara, UmaxPara, &
+                UPERP, UPARA, DFDUPER, DFDUPAR)
 
-            else   !--non-Maxwellian--!
+        else   !--non-Maxwellian--!
 
-               call cql3d_dist(nupar, nuper, n_psi, &
-                    n_psi_dim, rho_a, rho(i,j), &
-                    UminPara,UmaxPara, &
-                    df_cql_uprp, df_cql_uprl, &
-                    UPERP, UPARA, DFDUPER0, DFDUPAR0)
+           call cql3d_dist(nupar, nuper, n_psi, &
+                n_psi_dim, rho_a, rho(i,j), &
+                UminPara,UmaxPara, &
+                df_cql_uprp, df_cql_uprl, &
+                UPERP, UPARA, DFDUPER0, DFDUPAR0)
 
 !              ---------------------------------------------------------
 !              map CQL3D distribution function off the midplane for Wdot
 !              ---------------------------------------------------------
+               ifBratio: &
                if(bratio .gt. 0.0)then
 
                 dfduper = 0.0
@@ -613,25 +623,26 @@ module ql_myra_mod
 
                      enddo mi_loop
                   enddo ni_loop
-               endif
+          endif ifBratio
 
             endif
 
 !DLG:   Overwrite the df terms with those from the particle list for ql_myra
 
-      if ( ndist .eq. 2 .and. (.not. ana_maxwellian) ) then
-      call dlg_particle_f ( capR(i), zLoc(j), &
-          uPerp, uPara, &
-          nuper, nupar, xm, eNormIN, &
-          p_f_rzvv_, p_dfduPerp_, p_dfduPar_ )
+    if ( ndist .eq. 2 .and. (.not. ana_maxwellian) ) then
 
-      dfdupar   = 0.0
-      dfduper = 0.0
-
-      dfdupar = p_dfduPar_
-      dfduper = p_dfduPerp_
-
-      end if
+        call dlg_particle_f ( capR(i), zLoc(j), &
+            uPerp, uPara, &
+            nuper, nupar, xm, eNormIN, &
+            p_f_rzvv_, p_dfduPerp_, p_dfduPar_ )
+        
+        dfdupar   = 0.0
+        dfduper = 0.0
+        
+        dfdupar = p_dfduPar_
+        dfduper = p_dfduPerp_
+    
+    end if
 
 !           ----------------------------------
 !           Loop over perpendicular velocities
@@ -841,6 +852,7 @@ module ql_myra_mod
             ba_wdot = .false.
         endif
 
+        bounceAveWdot: &
         if ( ba_wdot ) then
 
         wdoti_RZ = 0.0
@@ -895,7 +907,7 @@ module ql_myra_mod
 
             enddo ni_loop3
         enddo mi_loop3
-        endif
+        endif bounceAveWdot
 
 !           --------------------------------------------
 !           integrate wdot over perpendicular velocities
@@ -934,20 +946,16 @@ module ql_myra_mod
 
             fz0(i,j)  = xkphi / omgrf * wdot(i,j)
 
-!DLG:   Dump QL coeffs to netCdf file for plotting.
-
-        dumpQL = i_write
-
 
 !     --------------------------------
 !     end loop over i,j spatial points
 !     --------------------------------
-       !enddo spatial_loop
-        endif
-        endif inMask
-        enddo j_loop
-        enddo i_loop
-        !enddo ip_loop
+        !enddo spatial_loop
+        !endif hasWork
+        !endif inMask
+        !enddo j_loop
+        !enddo i_loop
+        enddo ip_loop
 
 !DLG:   Overwrite wdot with the bounce averaged version
 !        if ( ba_wdot ) wdot = wdot__
