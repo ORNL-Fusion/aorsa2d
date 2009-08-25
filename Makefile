@@ -16,7 +16,7 @@
 
 ifeq ($(MACHINE),dlghp)
 	HOME = /home/dg6/code
-	USEGPU=yes
+	USEGPU=no
 	ifeq ($(USEGPU),yes)
 		CU = /home/dg6/code/cuda/bin/nvcc
 		CUFLAGS = -g -O3 -arch=sm_11 --ptxas-options=-v --compiler-bindir /home/dg6/code/gcc43/usr/bin -I /usr/include/c++/4.4.0/x86_64-redhat-linux/ -I /usr/include/c++/4.4.0/
@@ -373,8 +373,8 @@ ifeq ($(USEGPU),yes)
 $(OBJ_DIR)/ql_myra.o:	$(CUDA_DIR)/ql_myra_gpu.f $(OBJ_DIR)/read_particle_f.o $(OBJ_DIR)/gc_integrate.o ${OBJ_DIR}/write_pql.o 
 	$(COMPILE_NOSAVE) ${CPP_DIRECTIVES} -o $(OBJ_DIR)/ql_myra.o $(CUDA_DIR)/ql_myra_gpu.f $(NETCDF) ${BOUNDS} ${PNETCDF}
 else
-$(OBJ_DIR)/ql_myra.o:	$(SRC_DIR)/ql_myra.F $(OBJ_DIR)/read_particle_f.o $(OBJ_DIR)/gc_integrate.o ${OBJ_DIR}/write_pql.o 
-	$(COMPILE_NOSAVE) ${CPP_DIRECTIVES} -o $(OBJ_DIR)/ql_myra.o $(SRC_DIR)/ql_myra.F $(NETCDF) ${BOUNDS} ${PNETCDF}
+$(OBJ_DIR)/ql_myra.o:	$(SRC_DIR)/ql_myra.F90 $(OBJ_DIR)/read_particle_f.o $(OBJ_DIR)/gc_integrate.o ${OBJ_DIR}/write_pql.o 
+	$(COMPILE90_NOSAVE) ${CPP_DIRECTIVES} -o $(OBJ_DIR)/ql_myra.o $(SRC_DIR)/ql_myra.F90 $(NETCDF) ${BOUNDS} ${PNETCDF}
 endif
 
 ifeq ($(MACHINE),dlghp)

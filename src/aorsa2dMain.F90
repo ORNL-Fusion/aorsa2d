@@ -6562,7 +6562,7 @@ end do
          zeffcd, clight, x, y, rt, b0, ftrap, omgrf, &
          nkperp, lmaxdim, nzeta_wdot, theta_, &
          n_theta_max, n_psi_max, i_psi_eq, n_theta_, dldbavg, &
-         n_bin, upshift, 0, xk_cutoff, y, eNorm_factor_e)
+         n_bin, upshift, 0, xk_cutoff, y, eNorm_factor_e, mask )
 
 
 
@@ -6591,7 +6591,7 @@ end do
          zeffcd, clight, x, y, rt, b0, ftrap, omgrf, &
          nkperp, lmaxdim, nzeta_wdot, theta_, &
          n_theta_max, n_psi_max, i_psi_eq, n_theta_, dldbavg, &
-         n_bin, upshift, 0, xk_cutoff, y, eNorm_factor_i1)
+         n_bin, upshift, 0, xk_cutoff, y, eNorm_factor_i1, mask)
 
       ! ------------------ !
       ! --Minority ions -- !
@@ -6620,7 +6620,7 @@ end do
          zeffcd, clight, x, y, rt, b0, ftrap, omgrf, &
          nkperp, lmaxdim, nzeta_wdot, theta_, &
          n_theta_max, n_psi_max, i_psi_eq, n_theta_, dldbavg, &
-         n_bin, upshift, i_write, xk_cutoff, y, eNorm_factor_i2)
+         n_bin, upshift, i_write, xk_cutoff, y, eNorm_factor_i2, mask)
       end if
 
       ! --------------------- !
@@ -6649,7 +6649,7 @@ end do
          zeffcd, clight, x, y, rt, b0, ftrap, omgrf, &
          nkperp, lmaxdim, nzeta_wdot, theta_, &
          n_theta_max, n_psi_max, i_psi_eq, n_theta_, dldbavg, &
-         n_bin, upshift, 0, xk_cutoff, y, eNorm_factor_i3)
+         n_bin, upshift, 0, xk_cutoff, y, eNorm_factor_i3, mask)
       end if
 
 
@@ -6681,7 +6681,7 @@ end do
          zeffcd, clight, x, y, rt, b0, ftrap, omgrf, &
          nkperp, lmaxdim, nzeta_wdot, theta_, &
          n_theta_max, n_psi_max, i_psi_eq, n_theta_, dldbavg, &
-         n_bin, upshift, 0, xk_cutoff, y, eNorm_factor_i4)
+         n_bin, upshift, 0, xk_cutoff, y, eNorm_factor_i4, mask)
       end if
 
 
@@ -6711,7 +6711,7 @@ end do
          zeffcd, clight, x, y, rt, b0, ftrap, omgrf, &
          nkperp, lmaxdim, nzeta_wdot, theta_, &
          n_theta_max, n_psi_max, i_psi_eq, n_theta_, dldbavg, &
-         n_bin, upshift, 0, xk_cutoff, y, eNorm_factor_i5)
+         n_bin, upshift, 0, xk_cutoff, y, eNorm_factor_i5, mask)
       end if
 
 
@@ -6741,7 +6741,7 @@ end do
          zeffcd, clight, x, y, rt, b0, ftrap, omgrf, &
          nkperp, lmaxdim, nzeta_wdot, theta_, &
          n_theta_max, n_psi_max, i_psi_eq, n_theta_, dldbavg, &
-         n_bin, upshift, 0, xk_cutoff, y, eNorm_factor_i6)
+         n_bin, upshift, 0, xk_cutoff, y, eNorm_factor_i6, mask)
       end if
 
 
