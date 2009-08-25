@@ -964,8 +964,6 @@
          rg, zg, psig, nxeqd, nyeqd, fpsi, &
          psio, ro, zo, qpsi, eqdsk, psi_tor_max)
 
-        write(*,*) 'eqdsk parameters: ', nxeqd, nyeqd
-
       psig2 = psig
       if(psig(nxeqd/2, nyeqd/2) .lt. 0.0) psig2 = -psig
 
