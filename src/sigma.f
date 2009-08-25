@@ -174,8 +174,8 @@ c
       
       
       if(xkperp .gt. kperp_max)then
-         write (6, *)"xkperp is gt kperp_max"
-         write (15, *)"xkperp is gt kperp_max"
+         write (6, *)"xkperp is gt kperp_max", xkperp, kperp_max
+         write (15, *)"xkperp is gt kperp_max", xkperp, kperp_max
       end if
             
       
