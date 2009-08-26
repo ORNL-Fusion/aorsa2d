@@ -115,7 +115,7 @@
 !      parameter (nmodesmax = 450)
 !      parameter (mmodesmax = 450)
 
-      parameter (n_theta_max = 300)
+      parameter (n_theta_max = 400)
       parameter (n_u_max = 300)
       parameter (n_psi_max = 300)
 
@@ -1532,580 +1532,243 @@
       n_theta_check = 75
 
 
-!      do i = 2, nnodex - 1
-        do i = i0, nnodex - 1
-
-!        do j = 1, nnodey - 1
-          do j = j0, j0
-
-
+    i0Loop: &
+    do i = i0, nnodex - 1
+    
+        j0Loop: &
+        do j = j0, j0
+        
             capr_x0 = capr(i) + dx / 2.0
             capz_x0 = y(j) + dy / 2.0
-
+            
             x_extint = capr_x0 - rt
             y_extint = capz_x0
-
+            
             xprimex0 = x_extint - xwleft
             yprimex0 = y_extint - ybottom
-
-          psix_prev = psix
-
+            
+            psix_prev = psix
+            
             psix =surf2(xprimex0, yprimex0, nnodex, nnodey, &
                xprime, yprime, &
                psi, nxmx, zpsi, sigma)
-
+            
             if(psix .gt. psilim_ .and. psix_prev .le. psilim_)i_max =i-1
-
-          if(psix .le. psilim_)then
-
-!          write(6, 1314) i, j, psix, psilim_
-
-            i_psi = 1
-
-
-          do i_sgn_vprl = 1, 2
-
-          if(i_sgn_vprl .eq. 1) sgn_vprl = -1.0
-            if(i_sgn_vprl .eq. 2) sgn_vprl =  1.0
-
-
-!           ---------------------
-!           Set extint parameters
-!           ---------------------
-
-            h0 = 1.0e-04
-            nmax = 2
-
-            mmax = 4
-            eps = 1.0e-06
-
-            do i_err = 1, nmax
-               s_err(i_err)=.1
-            end do
-
-
-!           -------------------------------------------
-!           Set initial conditions for field line trace
-!           -------------------------------------------
-
-            phi = 0.0
-            ncell = 0
-
-            y_phi(1) = xprimex0
-            y_phi(2) = yprimex0
-
-          icell = int(xprimex0 / dx) + 1
-            jcell = int(yprimex0 / dy) + 1
-
-            length = 0.0
-            dtau_tot_sum = 0.0
-          dldb_tot_sum = 0.0
-
-            call f(phi, y_phi, dy_phi)
-            modb_init = modb
-
-            do n_theta = 1, n_theta_(i_psi)
-               dtau_tot(n_theta) = 0.0
-               sinth2_init(n_theta, i_psi)=sin(theta_(n_theta,i_psi))**2
-            end do
-
-
-
-!           -------------------------------------
-!           Do norb_dim phi steps of field line trace
-!           -------------------------------------
-
-            i_stop = 0
-          i_box  = 1
-
-            n_phi_loop: &
-            do n_phi = 1, norb_dim
-
-             fcount = 0
-               xprime_prev = y_phi(1)
-               yprime_prev = y_phi(2)
-             phi_prev    = phi
-               length_prev = length
-
-               dxdphi_prev = dxdphi
-               dydphi_prev = dydphi
-
-               icell_prev = icell
-               jcell_prev = jcell
-
-               if(ncell .eq. 0 .and. n_phi .eq. 1)nphi_enter = n_phi
-               if(ncell .eq. 0 .and. n_phi .ne. 1)nphi_enter = n_phi - 1
-
-
-               call extint(nmax, phi, y_phi, f, h0, mmax, error)
-
-               ncell = ncell + 1
-
-
-               xprimex = y_phi(1)
-               yprimex = y_phi(2)
-
-               icell = int(xprimex / dx) + 1
-               jcell = int(yprimex / dy) + 1
-
-               delta_x = xprimex - xprime_prev
-               delta_y = yprimex - yprime_prev
-             delta_phi = phi - phi_prev
-             delta_z = caprx * delta_phi
-
-             delta_l = sqrt(delta_x**2 + delta_y**2 + delta_z**2)
-               length = length + delta_l
-
-
-               x_extint = xprimex + xwleft
-               y_extint = yprimex + ybottom
-
-
-!              ----------------------------------------------
-!              Save arrays of phi, R, Z, Bmod and l = length
-!              ----------------------------------------------
-
-               phin_x(n_phi) = phi
-               capr_x(n_phi) = x_extint + rt
-               capz_x(n_phi) = y_extint
-               modb_x(n_phi) = modb
-               dlen_x(n_phi) = delta_l
-               len_x (n_phi) = length
-
-
-!              -----------------------
-!              Numerical dtau integral
-!              -----------------------
-               if (n_phi .ge. 2) then
-              dl_bratio(n_phi) = delta_l * bratio_phi
-
-                  argi = 1.0 - modb / modb_init &
-                                * sinth2_init(n_theta_check, i_psi)
-
-                  dl_vprl(n_phi) = 0.0
-
-                  if(argi .ge. 0.0)then
-                     vprl = sqrt(argi)
-                     dl_vprl(n_phi) = delta_l / vprl
-                  end if
-
-
-               end if
-
-
-!               write(6, 1213)n_phi, ncell, phin_x(n_phi),
-!     .            capr_x(n_phi), len_x(n_phi),
-!     .            zprimex, bratio_phi, icell, jcell, fcount
-
-!               write(115,1213)n_phi, ncell, phin_x(n_phi),
-!     .            capr_x(n_phi), len_x(n_phi),
-!     .            zprimex, bratio_phi, icell, jcell, fcount
-
-
-
-!               h0 = twopi / 720.
-                h0 = twopi / 360.
-
-            go to 200
-
-!              ---------------------------------------------------------
-!              If cell changes in x, redo the step to land on x boundary
-!              ---------------------------------------------------------
-
-               if (icell .ne. icell_prev .and. ncell .ne. 1) then
-
-                fcount = 0
-                  y_phi(1) = xprime_prev
-                  y_phi(2) = yprime_prev
-                  phi      = phi_prev
-                  length = length_prev
-
-                  if (icell .lt. icell_prev)xprime_want = icell * dx
-                  if (icell .gt. icell_prev)xprime_want = (icell-1) * dx
-
-                  icell = icell_prev
-                  jcell = jcell_prev
-
-                  delta_x = xprime_want - xprime_prev
-
-
-                  h0 = abs(2.0 * delta_x / (dxdphi + dxdphi_prev))
-
-
-                  call extint(nmax, phi, y_phi, f, h0, mmax, error)
-
-                xprimex = y_phi(1)
-                yprimex = y_phi(2)
-
-                  icell = int(xprimex / dx) + 1
-                  jcell = int(yprimex / dy) + 1
-
-
-
-                  delta_x = xprimex - xprime_prev
-                  delta_y = yprimex - yprime_prev
-                delta_phi = phi - phi_prev
-                delta_z = caprx * delta_phi
-
-                delta_l = sqrt(delta_x**2 + delta_y**2 + delta_z**2)
-
-                  length = length + delta_l
-
-                  x_extint = xprimex + xwleft
-                  y_extint = yprimex + ybottom
-
-                  phin_x(n_phi) = phi
-                  capr_x(n_phi) = x_extint + rt
-                  capz_x(n_phi) = y_extint
-                  modb_x(n_phi) = modb
-                  dlen_x(n_phi) = delta_l
-                  len_x (n_phi) = length
-
-!                -----------------------
-!                Numerical dtau integral
-!                -----------------------
-                 if (n_phi .ge. 2) then
-                dl_bratio(n_phi) = delta_l * bratio_phi
-
-                    argi = 1.0 - modb / modb_init &
-                                * sinth2_init(n_theta_check, i_psi)
-
-                    dl_vprl(n_phi) = 0.0
-
-                    if(argi .ge. 0.0)then
-                       vprl = sqrt(argi)
-                       dl_vprl(n_phi) = delta_l / vprl
+        
+            psiLimIf: &
+            if(psix .le. psilim_)then
+            
+                i_psi = 1
+        
+                vPrlSgnLoop: &
+                do i_sgn_vprl = 1, 2
+                
+                    if(i_sgn_vprl .eq. 1) sgn_vprl = -1.0
+                    if(i_sgn_vprl .eq. 2) sgn_vprl =  1.0
+                    
+                    !---------------------
+                    !Set extint parameters
+                    !---------------------
+                    
+                    h0 = 1.0e-04
+                    nmax = 2
+                    mmax = 4
+                    eps = 1.0e-06
+                    
+                    do i_err = 1, nmax
+                       s_err(i_err)=.1
+                    enddo
+                    
+                    !-------------------------------------------
+                    !Set initial conditions for field line trace
+                    !-------------------------------------------
+                    
+                    phi = 0.0
+                    ncell = 0
+                    
+                    y_phi(1) = xprimex0
+                    y_phi(2) = yprimex0
+                    
+                    icell = int(xprimex0 / dx) + 1
+                    jcell = int(yprimex0 / dy) + 1
+                    
+                    length = 0.0
+                    dtau_tot_sum = 0.0
+                    dldb_tot_sum = 0.0
+                    
+                    call f(phi, y_phi, dy_phi)
+                    modb_init = modb
+                    
+                    dTau_tot    = 0.0
+                    sinTh2_init = sin ( theta_ )**2
+                    
+                    !do n_theta = 1, n_theta_(i_psi)
+                    !   write(*,*) 'loop index: ', n_theta
+                    !   dtau_tot(n_theta) = 0.0
+                    !   sinth2_init(n_theta, i_psi)=sin(theta_(n_theta,i_psi))**2
+                    !end do
+                    
+                    !-------------------------------------
+                    !Do norb_dim phi steps of field line trace
+                    !-------------------------------------
+                    
+                    i_stop = 0
+                    i_box  = 1
+                    
+                    n_phi_loop: &
+                    do n_phi = 1, norb_dim
+                    
+                        fcount = 0
+                        xprime_prev = y_phi(1)
+                        yprime_prev = y_phi(2)
+                        phi_prev    = phi
+                        length_prev = length
+                        dxdphi_prev = dxdphi
+                        dydphi_prev = dydphi
+                        icell_prev = icell
+                        jcell_prev = jcell
+                        
+                        if(ncell .eq. 0 .and. n_phi .eq. 1)nphi_enter = n_phi
+                        if(ncell .eq. 0 .and. n_phi .ne. 1)nphi_enter = n_phi - 1
+                        
+                        call extint(nmax, phi, y_phi, f, h0, mmax, error)
+                        
+                        ncell = ncell + 1
+                        xprimex = y_phi(1)
+                        yprimex = y_phi(2)
+                        icell = int(xprimex / dx) + 1
+                        jcell = int(yprimex / dy) + 1
+                        delta_x = xprimex - xprime_prev
+                        delta_y = yprimex - yprime_prev
+                        delta_phi = phi - phi_prev
+                        delta_z = caprx * delta_phi
+                        delta_l = sqrt(delta_x**2 + delta_y**2 + delta_z**2)
+                        length = length + delta_l
+                        x_extint = xprimex + xwleft
+                        y_extint = yprimex + ybottom
+                        
+                        !----------------------------------------------
+                        !Save arrays of phi, R, Z, Bmod and l = length
+                        !----------------------------------------------
+                        
+                        phin_x(n_phi) = phi
+                        capr_x(n_phi) = x_extint + rt
+                        capz_x(n_phi) = y_extint
+                        modb_x(n_phi) = modb
+                        dlen_x(n_phi) = delta_l
+                        len_x (n_phi) = length
+                        
+                        !-----------------------
+                        !Numerical dtau integral
+                        !-----------------------
+                        
+                        nPhiGT2: &
+                        if (n_phi .ge. 2) then
+                                
+                            dl_bratio(n_phi) = delta_l * bratio_phi
+                            argi = 1.0 - modb / modb_init * sinth2_init(n_theta_check, i_psi)
+                            dl_vprl(n_phi) = 0.0
+                            
+                            if(argi .ge. 0.0)then
+                                vprl = sqrt(argi)
+                                dl_vprl(n_phi) = delta_l / vprl
+                            end if
+                        
+                        endif nPhiGT2
+                        
+                        h0 = twopi / 360.
+                        
+                        !------------------------------------------------
+                        !Wait until B increases at least once; then set
+                        !i_stop = 1, and stop at the next B field maximum
+                        !(i.e. B decreases)
+                        !-----------------------------------------------
+                        
+                        nPhiGT2_A: &
+                        if(n_phi .ge. 2)then
+                        
+                            delta_b = (modb_x(n_phi) - modb_x(n_phi -1))
+                            if (delta_b .ge. 1.0e-05 .and. i_stop .eq. 0)i_stop = 1
+                            if (delta_b .lt. -1.0e-05 .and. i_stop .eq. 1)go to 201
+                        
+                        endif nPhiGT2_A
+                    
+                    enddo n_phi_loop       
+                    
+                    !-----------------------
+                    !End of field line trace
+                    !-----------------------
+                    
+                    201 continue
+                    
+                    !DLG: 
+                    if ( n_phi > norb_dim ) n_phi = norb_dim
+                    
+                    nphi_exit = n_phi
+                    
+                    !-----------------------
+                    !Numerical dtau integral:
+                    !-----------------------
+                    
+                    dtau_sum = 0.0
+                    
+                    do nphii = nphi_enter + 1, nphi_exit - 1
+                       dtau_sum = dtau_sum + dl_vprl(nphii)
+                    enddo
+                    
+                    dtau_sum = dtau_sum + 0.5 * dl_vprl(nphi_enter)
+                    dtau_sum = dtau_sum + 0.5 * dl_vprl(nphi_exit)
+                    
+                    
+                    !do nphii = nphi_enter, nphi_exit
+                    !    write(6, 1312)nphii, dl_vprl(nphii)
+                    !enddo
+                    
+                    
+                    dtau_tot_sum = dtau_tot_sum + dtau_sum
+                    dldb_tot_sum = 0.0
+                    
+                    do nphii = 2, n_phi - 1
+                        dldb_tot_sum = dldb_tot_sum + dl_bratio(nphii)
+                    end do
+                    
+                    dldb_tot_sum = dldb_tot_sum + 0.5 * dl_bratio(1)
+                    dldb_tot_sum = dldb_tot_sum + 0.5 * dl_bratio(nphi)
+                    n_phi_max = n_phi - 1
+                    
+                    
+                    !do n_theta = 1, n_theta_(i_psi)
+                    
+                    if (i_sgn_vprl .eq. 1) then
+                        !dtau_tot1(n_theta) = dtau_tot(n_theta)
+                        !dtau_first1(n_theta) = dtau_first(n_theta)
+                        dtau_tot1 = dtau_tot
+                        dtau_first1 = dtau_first
                     end if
-
-                 end if
-
-
-
-!                  write(6, 1213)n_phi, ncell, phin_x(n_phi),
-!     .               capr_x(n_phi), len_x(n_phi),
-!     .               zprimex, bratio_phi, icell, jcell, fcount
-
-!                  write(115,1213)n_phi, ncell, phin_x(n_phi),
-!     .               capr_x(n_phi), len_x(n_phi),
-!     .               zprimex, bratio_phi, icell, jcell, fcount
-
-                  ncell = 0
-
-                  nphi_exit = n_phi
-
-!                  write(6, *)"nphi_enter = ", nphi_enter
-!                  write(6, *)"nphi_exit = ",  nphi_exit
-
-!              write(115, *)"nphi_enter = ", nphi_enter
-!                  write(115, *)"nphi_exit = ",  nphi_exit
-
-
-!                 ------------------------
-!                 Analytic dtau integral:
-!                 ------------------------
-                  call fdtau(dtau, nxmx, nymx, len_x, modb_x, &
-                     n_theta_max, n_psi_max, norb_dim, sinth2_init, &
-                     modb_init, n_theta_, &
-                     i_psi, i, j, nphi_enter, nphi_exit, sgn_vprl)
-
-                  do n_theta = 1, n_theta_(i_psi)
-                     dtau_tot(n_theta) = dtau_tot(n_theta) &
-                                                 + dtau(n_theta)
-                     if(i_box .eq. 1) dtau_first(n_theta) &
-                                        =   dtau(n_theta)
-                  end do
-
-
-
-!                 -----------------------
-!                 Numerical dtau integral:
-!                 -----------------------
-                  dtau_sum = 0.0
-
-                  do nphii = nphi_enter + 1, nphi_exit - 1
-                     dtau_sum = dtau_sum + dl_vprl(nphii)
-                  end do
-
-                  dtau_sum = dtau_sum + 0.5 * dl_vprl(nphi_enter)
-                  dtau_sum = dtau_sum + 0.5 * dl_vprl(nphi_exit)
-
-
-!                  do nphii = nphi_enter, nphi_exit
-!                     write(6, 1312)nphii, dl_vprl(nphii)
-!                  end do
-
-
-                  dtau_tot_sum = dtau_tot_sum + dtau_sum
-
-
-!                  write(6, 1414) n_theta_check,
-!     .                theta_(n_theta_check, i_psi),
-!     .                dtau_sum, dtau_tot_sum,
-!     .                dldb_sum, dldb_tot_sum,
-!     .                i_box
-
-!                  write(115, 1414) n_theta_check,
-!     .                theta_(n_theta_check, i_psi),
-!     .                dtau_sum, dtau_tot_sum,
-!     .                dldb_sum, dldb_tot_sum,
-!     .                i_box
-
-               i_box = i_box + 1
-
-                  go to 200
-
-               end if
-
-!              ---------------------------------------------------------
-!              If cell changes in y, redo the step to land on y boundary
-!              ---------------------------------------------------------
-
-               if (jcell .ne. jcell_prev .and. ncell .ne. 1) then
-
-                fcount = 0
-                  y_phi(1) = xprime_prev
-                  y_phi(2) = yprime_prev
-                  phi      = phi_prev
-                  length = length_prev
-
-                  if (jcell .lt. jcell_prev)yprime_want = jcell * dy
-                  if (jcell .gt. jcell_prev)yprime_want = (jcell-1) * dy
-
-                  icell = icell_prev
-                  jcell = jcell_prev
-
-                  delta_y = yprime_want - yprime_prev
-
-                  h0 = abs(2.0 * delta_y / (dydphi + dydphi_prev))
-
-                  call extint(nmax, phi, y_phi, f, h0, mmax, error)
-
-                xprimex = y_phi(1)
-                yprimex = y_phi(2)
-
-                  icell = int(xprimex / dx) + 1
-                  jcell = int(yprimex / dy) + 1
-
-                  delta_x = xprimex - xprime_prev
-                  delta_y = yprimex - yprime_prev
-                delta_phi = phi - phi_prev
-                delta_z = caprx * delta_phi
-
-                delta_l = sqrt(delta_x**2 + delta_y**2 + delta_z**2)
-
-                  length = length + delta_l
-
-                  x_extint = xprimex + xwleft
-                  y_extint = yprimex + ybottom
-
-                  phin_x(n_phi) = phi
-                  capr_x(n_phi) = x_extint + rt
-                  capz_x(n_phi) = y_extint
-                  modb_x(n_phi) = modb
-                  dlen_x(n_phi) = delta_l
-                  len_x (n_phi) = length
-
-
-!                -----------------------
-!                Numerical dtau integral
-!                -----------------------
-                 if (n_phi .ge. 2) then
-                dl_bratio(n_phi) = delta_l * bratio_phi
-
-                    argi = 1.0 - modb / modb_init &
-                                * sinth2_init(n_theta_check, i_psi)
-
-                    dl_vprl(n_phi) = 0.0
-
-                    if(argi .ge. 0.0)then
-                       vprl = sqrt(argi)
-                       dl_vprl(n_phi) = delta_l / vprl
+                    
+                    if (i_sgn_vprl .eq. 2) then
+                        !dtau_tot2(n_theta) = dtau_tot(n_theta)
+                        !dtau_first2(n_theta) = dtau_first(n_theta)
+                        dtau_tot2 = dtau_tot
+                        dtau_first2 = dtau_first
                     end if
-
-                  end if
-
-
-!                  write(6, 1213)n_phi, ncell, phin_x(n_phi),
-!     .               capr_x(n_phi), len_x(n_phi),
-!     .               zprimex, bratio_phi, icell, jcell, fcount
-
-!                  write(115, 1213)n_phi, ncell, phin_x(n_phi),
-!     .               capr_x(n_phi), len_x(n_phi),
-!     .               zprimex, bratio_phi, icell, jcell, fcount
-
-                  ncell = 0
-
-                  nphi_exit = n_phi
-
-!                  write(6, *)"nphi_enter = ", nphi_enter
-!                  write(6, *)"nphi_exit = ",  nphi_exit
-
-!                  write(115, *)"nphi_enter = ", nphi_enter
-!                  write(115, *)"nphi_exit = ",  nphi_exit
-
-!                 ----------------------
-!                 Analytic dtau integral:
-!                 ----------------------
-                  call fdtau(dtau, nxmx, nymx, len_x, modb_x, &
-                     n_theta_max, n_psi_max, norb_dim, sinth2_init, &
-                     modb_init, n_theta_, &
-                     i_psi, i, j, nphi_enter, nphi_exit, sgn_vprl)
-
-                  do n_theta = 1, n_theta_(i_psi)
-                     dtau_tot(n_theta) = dtau_tot(n_theta) &
-                                                 + dtau(n_theta)
-                     if(i_box .eq. 1) dtau_first(n_theta) &
-                                        =   dtau(n_theta)
-                  end do
-
-
-!                 -----------------------
-!                 Numerical dtau integral:
-!                 -----------------------
-
-                  dtau_sum = 0.0
-
-                  do nphii = nphi_enter + 1, nphi_exit - 1
-                     dtau_sum = dtau_sum + dl_vprl(nphii)
-                  end do
-
-                  dtau_sum = dtau_sum + 0.5 * dl_vprl(nphi_enter)
-                  dtau_sum = dtau_sum + 0.5 * dl_vprl(nphi_exit)
-
-
-                  dtau_tot_sum = dtau_tot_sum + dtau_sum
-
-
-!                  write(6, 1414) n_theta_check,
-!     .                theta_(n_theta_check, i_psi),
-!     .                dtau_sum, dtau_tot_sum,
-!     .                dldb_sum, dldb_tot_sum,
-!     .                i_box
-
-!                  write(115, 1414) n_theta_check,
-!     .                theta_(n_theta_check, i_psi),
-!     .                dtau_sum, dtau_tot_sum,
-!     .                dldb_sum, dldb_tot_sum,
-!     .                i_box
-
-               i_box = i_box + 1
-
-                  go to 200
-
-              end if
-
-  200         continue
-!             ------------------------------------------------
-!             Wait until B increases at least once; then set
-!             i_stop = 1, and stop at the next B field maximum
-!             (i.e. B decreases)
-!             -----------------------------------------------
-              if(n_phi .ge. 2)then
-               delta_b = (modb_x(n_phi) - modb_x(n_phi -1))
-               if (delta_b .ge. 1.0e-05 .and. i_stop .eq. 0)i_stop = 1
-                 if (delta_b .lt. -1.0e-05 .and. i_stop .eq. 1)go to 201
-              end if
-
-           enddo n_phi_loop       ! end of n_phi loop along orbit !
-!          -----------------------
-!          End of field line trace
-!          -----------------------
-
-  201      continue
-
-            !DLG
-            if ( n_phi > norb_dim ) n_phi = norb_dim
-
-                  nphi_exit = n_phi
-
-!                  write(6, *)"nphi_enter = ", nphi_enter
-!                  write(6, *)"nphi_exit = ",  nphi_exit
-
-!                  write(115, *)"nphi_enter = ", nphi_enter
-!                  write(115, *)"nphi_exit = ",  nphi_exit
-
-!                 -----------------------
-!                 Numerical dtau integral:
-!                 -----------------------
-                  dtau_sum = 0.0
-
-                  do nphii = nphi_enter + 1, nphi_exit - 1
-                     dtau_sum = dtau_sum + dl_vprl(nphii)
-                  end do
-
-                  dtau_sum = dtau_sum + 0.5 * dl_vprl(nphi_enter)
-                  dtau_sum = dtau_sum + 0.5 * dl_vprl(nphi_exit)
-
-
-!                  do nphii = nphi_enter, nphi_exit
-!                     write(6, 1312)nphii, dl_vprl(nphii)
-!                  end do
-
-
-                  dtau_tot_sum = dtau_tot_sum + dtau_sum
-
-!                  write(6, 1414) n_theta_check,
-!     .                theta_(n_theta_check, i_psi),
-!     .                dtau_sum, dtau_tot_sum,
-!     .                dldb_sum, dldb_tot_sum,
-!     .                i_box
-
-!                  write(115, 1414) n_theta_check,
-!     .                theta_(n_theta_check, i_psi),
-!     .                dtau_sum, dtau_tot_sum,
-!     .                dldb_sum, dldb_tot_sum,
-!     .                i_box
-
-           dldb_tot_sum = 0.0
-
-         do nphii = 2, n_phi - 1
-            dldb_tot_sum = dldb_tot_sum + dl_bratio(nphii)
-         end do
-
-         dldb_tot_sum = dldb_tot_sum + 0.5 * dl_bratio(1)
-           dldb_tot_sum = dldb_tot_sum + 0.5 * dl_bratio(nphi)
-
-           n_phi_max = n_phi - 1
-
-         do n_theta = 1, n_theta_(i_psi)
-
-            if (i_sgn_vprl .eq. 1) then
-               dtau_tot1(n_theta) = dtau_tot(n_theta)
-             dtau_first1(n_theta) = dtau_first(n_theta)
-            end if
-
-            if (i_sgn_vprl .eq. 2) then
-               dtau_tot2(n_theta) = dtau_tot(n_theta)
-             dtau_first2(n_theta) = dtau_first(n_theta)
-            end if
-
-         end do
-
-         if(i_sgn_vprl .eq. 1)dldb_tot1 = dldb_tot_sum
-         if(i_sgn_vprl .eq. 2)dldb_tot2 = dldb_tot_sum
-
-         end do       ! end of i_sgn_vprl loop !
-
-
-         do n_theta = 1, n_theta_(i_psi)
-            dtau_first_12 = dtau_first1(n_theta) + dtau_first2(n_theta)
-            dtau_tot12 = dtau_tot1(n_theta) + dtau_tot2(n_theta)
-!            dtau_ratio(i, j, n_theta) = dtau_first_12/ dtau_tot12
-!            tau_bounce(i, j, n_theta) = dtau_tot12
-         end do
-
-         dldb_tot12(i,j) = dldb_tot1 + dldb_tot2
-
-!         write(6, *)"dldb_tot12(i,j) = ",dldb_tot12(i,j)
-!         write(115, *)"dldb_tot12(i,j) = ",dldb_tot12(i,j)
-
-         i_sav = i
-         j_sav = j
-
-         end if  !endif for psix .le. psilim_
-
-         end do  ! end do for y big loop
-      end do     ! end do for x  big loop
+                    
+                    !end do
+                    
+                    if(i_sgn_vprl .eq. 1)dldb_tot1 = dldb_tot_sum
+                    if(i_sgn_vprl .eq. 2)dldb_tot2 = dldb_tot_sum
+                    
+                enddo vPrlSgnLoop
+        
+                dldb_tot12(i,j) = dldb_tot1 + dldb_tot2
+        
+                i_sav = i
+                j_sav = j
+        
+            endif psiLimIF 
+        
+        enddo j0Loop
+    enddo i0Loop
 
 
       nrho = i_max - i0 + 1
