@@ -5,6 +5,7 @@
 
       use size_mod
       use aorsa2din_mod
+      use netcdf
 
       implicit none
 
@@ -227,6 +228,12 @@
       real, dimension (:, :, :), allocatable :: rho_sum
 
       integer  nsum
+
+    character(len=100) :: ncFileName
+    integer :: nc_id, nR_id, nz_id, nPhi_id, &
+        eMod_id, eAlpha_re_id, eAlpha_im_id, &
+        R_id, z_id, phi_id
+
 
       external jfun
 
@@ -1708,6 +1715,41 @@
 
  3410 format(1p4e10.2)
  3411 format(6f16.4)
+
+!DLG: write netcdf equivilant of the 3D vtk file
+
+if ( myId .eq. 0 ) then
+
+    write (*,*) 'WRITING output/E3D.nc ...'
+    ncFileName = 'output/E3D.nc'
+    
+    call check ( nf90_create ( ncFileName, nf90_clobber, nc_id ) )
+    call check ( nf90_def_dim ( nc_id, "nR", nnodex, nR_id ) )
+    call check ( nf90_def_dim ( nc_id, "nZ", nnodey, nz_id ) )
+    call check ( nf90_def_dim ( nc_id, "nPhi", nPhi3D, nPhi_id ) )
+    
+    call check ( nf90_def_var ( nc_id, "eMod", NF90_REAL, (/ nR_id, nz_id, nPhi_id /), eMod_id ) )
+    call check ( nf90_def_var ( nc_id, "eAlpha_re", NF90_REAL, (/ nR_id, nz_id, nPhi_id /), eAlpha_re_id ) )
+    call check ( nf90_def_var ( nc_id, "eAlpha_im", NF90_REAL, (/ nR_id, nz_id, nPhi_id /), eAlpha_im_id ) )
+    
+    call check ( nf90_def_var ( nc_id, "R", NF90_REAL, (/ nR_id /), R_id ) )
+    call check ( nf90_def_var ( nc_id, "z", NF90_REAL, (/ nz_id /), z_id ) )
+    call check ( nf90_def_var ( nc_id, "phi", NF90_REAL, (/ nPhi_id /), phi_id ) )
+   
+    call check ( nf90_enddef ( nc_id ) )
+    
+    call check ( nf90_put_var ( nc_id, R_id, capr(1:nnodex) ) )
+    call check ( nf90_put_var ( nc_id, z_id, capz(1:nnodey) ) )
+    call check ( nf90_put_var ( nc_id, phi_id, phi3D(1:nPhi3D) ) )
+
+    call check ( nf90_put_var ( nc_id, eMod_id, eAlpha_sum_mod(1:nnodex,1:nnodey,1:nPhi3D) ) )
+    call check ( nf90_put_var ( nc_id, eAlpha_re_id, eAlpha_sum_real(1:nnodex,1:nnodey,1:nPhi3D) ) )
+    call check ( nf90_put_var ( nc_id, eAlpha_im_id, eAlpha_sum_imag(1:nnodex,1:nnodey,1:nPhi3D) ) )
+    
+    call check ( nf90_close ( nc_id ) )
+    write (*,*) 'DONE'
+
+endif
 
 
       if(ndisti1  .eq. 1) then
