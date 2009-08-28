@@ -33,6 +33,9 @@ pro plot_aorsa
 	nCdf_varGet, cdfId, 'eAlpha', eAlpha
 	nCdf_varGet, cdfId, 'eBeta', eBeta
 	nCdf_varGet, cdfId, 'eParallel', eParallel
+	nCdf_varGet, cdfId, 'ex', ex
+	nCdf_varGet, cdfId, 'ey', ey
+	nCdf_varGet, cdfId, 'ez', ez
 	ncdf_close, cdfId
 
 	;	create an interpolated limiter boundary
@@ -213,6 +216,101 @@ pro plot_aorsa
    	loadct, 13, file = 'davect.tbl', /silent
    	;window, 1, xSize = 1200, ySize = 600
 
+	contour, (ex<range)>(-range), capR, zLoc, $
+			color = 255, $
+			levels = levels, $
+			c_colors = colors, $
+			title = 'ex', $
+			/fill, $
+			yRange = yRange, $
+			xRange = xRange, $
+			xSty = 1, ySty = 1
+	oPlot, eqdsk.rbbbs, eqdsk.zbbbs, $
+		   thick = 2, $
+		   color = 255 
+	oPlot, eqdsk.rLim, eqdsk.zLim, $
+		   thick = 2, $
+		   color = 255 
+	contour, (ey<range)>(-range), capR, zLoc, $
+			color = 255, $
+			levels = levels, $
+			c_colors = colors, $
+			title = 'ey', $
+			/fill, $
+			yRange = yRange, $
+			xRange = xRange, $
+			xSty = 1, ySty = 1
+	oPlot, eqdsk.rbbbs, eqdsk.zbbbs, $
+		   thick = 2, $
+		   color = 255 
+	oPlot, eqdsk.rLim, eqdsk.zLim, $
+		   thick = 2, $
+		   color = 255 
+	contour, (ez<range)>(-range), capR, zLoc, $
+			color = 255, $
+			levels = levels, $
+			c_colors = colors, $
+			title = 'ez', $
+			/fill, $
+			yRange = yRange, $
+			xRange = xRange, $
+			xSty = 1, ySty = 1
+	oPlot, eqdsk.rbbbs, eqdsk.zbbbs, $
+		   thick = 2, $
+		   color = 255 
+	oPlot, eqdsk.rLim, eqdsk.zLim, $
+		   thick = 2, $
+		   color = 255 
+	
+   	contour, (eAlpha<range)>(-range), capR, zLoc, $
+			color = 255, $
+			levels = levels, $
+			c_colors = colors, $
+			title = 'eAlpha', $
+			/fill, $
+			yRange = yRange, $
+			xRange = xRange, $
+			xSty = 1, ySty = 1
+	oPlot, eqdsk.rbbbs, eqdsk.zbbbs, $
+		   thick = 2, $
+		   color = 255 
+	oPlot, eqdsk.rLim, eqdsk.zLim, $
+		   thick = 2, $
+		   color = 255 
+
+	contour, (eBeta<range)>(-range), capR, zLoc, $
+			color = 255, $
+			levels = levels, $
+			c_colors = colors, $
+			title = 'eBeta', $
+			/fill, $
+			yRange = yRange, $
+			xRange = xRange, $
+			xSty = 1, ySty = 1
+	oPlot, eqdsk.rbbbs, eqdsk.zbbbs, $
+		   thick = 2, $
+		   color = 255 
+	oPlot, eqdsk.rLim, eqdsk.zLim, $
+		   thick = 2, $
+		   color = 255 
+
+   	contour, (eParallel<range)>(-range), capR, zLoc, $
+			color = 255, $
+			levels = levels, $
+			c_colors = colors, $
+			title = 'eParallel', $
+			/fill, $
+			yRange = yRange, $
+			xRange = xRange, $
+			xSty = 1, ySty = 1
+	oPlot, eqdsk.rbbbs, eqdsk.zbbbs, $
+		   thick = 2, $
+		   color = 255 
+	oPlot, eqdsk.rLim, eqdsk.zLim, $
+		   thick = 2, $
+		   color = 255 
+
+
 	contour, (bx_wave_real<brange)>(-brange), capR, zLoc, $
 			color = 255, $
 			levels = blevels, $
@@ -245,7 +343,7 @@ pro plot_aorsa
 		   thick = 2, $
 		   color = 255 
 
-   	loadct, 13, /silent
+   	loadct, 3, /silent
    	contour, (sqrt(bx_wave_imag^2+bx_wave_real^2)<brange)>(-brange), capR, zLoc, $
 			color = 0, $
 			levels = mod_blevels, $
@@ -379,20 +477,31 @@ pro plot_aorsa
 	
 	!p.multi = [2,2,2]
 
-   	surface, density, capR, zLoc, $
+	nxGrid	= 25
+	nyGrid	= 50
+	densityGrid	= congrid ( density, nxGrid, nyGrid, /interp )
+	capRGrid	= congrid ( capR, nxGrid, /interp )
+	zLocGrid	= congrid ( zLoc, nyGrid, /interp )
+
+	loadct, 3, /silent
+   	surface, densityGrid, capRGrid, zLocGrid, $
 			title = 'density', $
 			charSize = 1.0, $
 			ax = 80, $
-			az = -15, font=0, /save
+			az = -15, font=0, /save, $
+			shades = (255 - ( bytScl ( densityGrid, top = 253, min = 1e17, max = 1e20) + 1 ))<220, $
+			color = 0, $
+			zRange = [1e16,5e19]
+	loadct, 12, /silent
 	plots, eqdsk.rbbbs, eqdsk.zbbbs, eqdsk.rbbbs*0+2e18, $
 			color = 12*16-1, $
 		   	/t3d, $
-			thick = 3
+			thick = 5
 	plots, eqdsk.rlim, eqdsk.zlim, eqdsk.rbbbs*0+2e18, $
 			color = 8*16-1, $
 		   	/t3d, $
-			thick = 3
-   	
+			thick = 5
+	
    	surface, density, capR, zLoc, $
 			ax = 40, $
 			az = -80, $

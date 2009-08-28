@@ -827,9 +827,9 @@
     real, parameter:: PI = 3.141592653597932384
     real :: cosbeta_n_m, sinbeta_n_m
  
-    !DLG
-    complex, allocatable :: sumwdot_11_dlg(:), &
-       sumwdot_31_dlg(:)  
+    !!DLG
+    !complex, allocatable :: sumwdot_11_dlg(:), &
+    !   sumwdot_31_dlg(:)  
     complex, intent(OUT), optional :: sum_wdot_dlg(nupar)
     integer, intent(OUT), optional :: sum_wdot_res(nupar)
     integer :: nc_id, nupar_id, scalar_id, dfduper_id, &
@@ -838,8 +838,8 @@
     real :: duPar
 
 
-    allocate(sumwdot_11_dlg(nupar))
-    allocate(sumwdot_31_dlg(nupar))
+!    allocate(sumwdot_11_dlg(nupar))
+!    allocate(sumwdot_31_dlg(nupar))
    
     
     allocate( zbeta(nkx1:nkx2,nky1:nky2) )
@@ -1199,9 +1199,9 @@
     c_sum = 0.0
     e_sum = 0.0
     f_sum = 0.0
-    !DLG
-    sum_wdot_dlg = 0.0
-    sum_wdot_res = 0
+!    !DLG
+!    sum_wdot_dlg = 0.0
+!    sum_wdot_res = 0
        
     do IHARM = -NHARM, NHARM
 
@@ -1219,9 +1219,9 @@
        sumf_11 = 0.0
        sumf_31 = 0.0      
        
-       !DLG
-       sumwdot_11_dlg = 0.0
-       sumwdot_31_dlg = 0.0
+!       !DLG
+!       sumwdot_11_dlg = 0.0
+!       sumwdot_31_dlg = 0.0
        
        sumwdot_11 = 0.0
        sumwdot_31 = 0.0       
@@ -1352,9 +1352,9 @@
           sumwdot_11_nm = sumb_11_nm * u0
           sumwdot_31_nm = sumb_31_nm * u0   
                                                  
-          !DLG - keep uPrl dependance of wDot
-          sumwdot_11_dlg(i_uprl) = sumwdot_11_dlg(i_uprl) + sumwdot_11_nm
-          sumwdot_31_dlg(i_uprl) = sumwdot_31_dlg(i_uprl) + sumwdot_31_nm
+          !!DLG - keep uPrl dependance of wDot
+          !sumwdot_11_dlg(i_uprl) = sumwdot_11_dlg(i_uprl) + sumwdot_11_nm
+          !sumwdot_31_dlg(i_uprl) = sumwdot_31_dlg(i_uprl) + sumwdot_31_nm
 
           sumf_11(i_uprl) = sumf_11(i_uprl) + sumf_11_nm
           sumf_31(i_uprl) = sumf_31(i_uprl) + sumf_31_nm
@@ -1414,11 +1414,11 @@
           f_sum(i_uprl) = f_sum(i_uprl) + sum2_1 * sumf_11(i_uprl)   &
                                        + sum2_2 * sumf_11(i_uprl)   &
                                        + sum2_3 * sumf_31(i_uprl)     
-         !DLG - keep uPrl dependence of wdot
-         sum_wdot_dlg(i_uprl) = sum_wdot_dlg(i_uprl) &
-           + sum2_1 * sumwdot_11_dlg(i_uprl) &
-           + sum2_2 * sumwdot_11_dlg(i_uprl) &
-           + sum2_3 * sumwdot_31_dlg(i_uprl)
+         !!DLG - keep uPrl dependence of wdot
+         !sum_wdot_dlg(i_uprl) = sum_wdot_dlg(i_uprl) &
+         !  + sum2_1 * sumwdot_11_dlg(i_uprl) &
+         !  + sum2_2 * sumwdot_11_dlg(i_uprl) &
+         !  + sum2_3 * sumwdot_31_dlg(i_uprl)
        end do
        
        
@@ -1453,9 +1453,9 @@
     
     deallocate( is_resonance_nm )
     
-    !DLG
-    deallocate(sumwdot_11_dlg)
-    deallocate(sumwdot_31_dlg)
+    !!DLG
+    !deallocate(sumwdot_11_dlg)
+    !deallocate(sumwdot_31_dlg)
     
     return
 

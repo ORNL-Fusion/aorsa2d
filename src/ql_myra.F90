@@ -682,9 +682,9 @@ ip_loop: do ip = start, finish
                      upshift, xk_cutoff, wdot_sum_dlg, wdot_sum_res )
 
 
-!DLG:   Retain vPar wdot sum in array
-        wdot_sum_UU(ni,:) = wdot_sum_dlg
-        wdot_sum_res_UU(ni,:) = wdot_sum_res
+!!DLG:   Retain vPar wdot sum in array
+!        wdot_sum_UU(ni,:) = wdot_sum_dlg
+!        wdot_sum_res_UU(ni,:) = wdot_sum_res
 !              -----------------------------
 !              Loop over parallel velocities
 !              -----------------------------
@@ -841,73 +841,73 @@ ip_loop: do ip = start, finish
           fx0i = 0.0
           fy0i = 0.0
 
-!DLG:   Calculate R,z orbit trajectory for each uPerp/uPar that absorbed power
-!       Then distribute the power (wdot) at that uPerp/uPar
-!       along that R,z orbit to give a 2D (R,z) wdot for each
-!       uPerp/uPar that absorbs power.
-
-        if ( ndist .ge. 1 ) then
-            ba_wdot = .false.
-        else
-            ba_wdot = .false.
-        endif
-
-        bounceAveWdot: &
-        if ( ba_wdot ) then
-
-        wdoti_RZ = 0.0
-
-        mi_loop3: do mi = 1, nuper
-            ni_loop3: do ni = 1, nupar
-
-                ! Only trace orbit if power is absorbed here
-                !if ( wdot_sum_res_UU(mi,ni) .gt. 0 ) then
-                if ( abs(real(wdot_sum_UU(mi,ni))) .gt. 0.1 ) then
-
-                    startR  = capR(i)
-                    startz  = zLoc(j)
-                    vPer    = uPerp(mi) * vc_mks
-                    vPar    = uPara(ni) * vc_mks
-
-                    if ( myid .eq. 1 ) then
-                        plotVar = .false.
-                    else
-                        plotVar = .false.
-                    endif
-
-                    wdot_orbit = 0.0
-
-                    call gc_orbit ( startR, startz, &
-                            vPer, vPar, &
-                            1.0, nnodex,nnodey, &
-                            capR(nnodex)-capR(1), &
-                            zLoc(nnodey)-zLoc(1), &
-                            capR(1), zLoc(1), wdot_orbit, &
-                            goodOrbit, plot = plotVar )
-
-                    if ( goodOrbit ) then
-
-                        wdoti_RZ = wdoti_RZ + &
-                          wdot_sum_UU(mi,ni) * wdot_orbit &
-                           * duperp
-
-!                        write(*,*) maxVal(abs(real(wdoti_RZ))),
-!     .                    maxVal(wdot_orbit),duperp,
-!     .                    maxVal(capR)-minVal(capR),
-!     .                    abs(maxVal(zLoc)-minVal(zLoc))/2.0,
-!     .                    minVal(capR), size(capR), size(zLoc)
+!!DLG:   Calculate R,z orbit trajectory for each uPerp/uPar that absorbed power
+!!       Then distribute the power (wdot) at that uPerp/uPar
+!!       along that R,z orbit to give a 2D (R,z) wdot for each
+!!       uPerp/uPar that absorbs power.
 !
-!                        write(*,*) maxVal(wdot_orbit)
+!        if ( ndist .ge. 1 ) then
+!            ba_wdot = .false.
+!        else
+!            ba_wdot = .false.
+!        endif
 !
-                       wdot_orbit_ = wdot_orbit
-
-                    endif
-
-                endif
-
-            enddo ni_loop3
-        enddo mi_loop3
-        endif bounceAveWdot
+!        bounceAveWdot: &
+!        if ( ba_wdot ) then
+!
+!        wdoti_RZ = 0.0
+!
+!        mi_loop3: do mi = 1, nuper
+!            ni_loop3: do ni = 1, nupar
+!
+!                ! Only trace orbit if power is absorbed here
+!                !if ( wdot_sum_res_UU(mi,ni) .gt. 0 ) then
+!                if ( abs(real(wdot_sum_UU(mi,ni))) .gt. 0.1 ) then
+!
+!                    startR  = capR(i)
+!                    startz  = zLoc(j)
+!                    vPer    = uPerp(mi) * vc_mks
+!                    vPar    = uPara(ni) * vc_mks
+!
+!                    if ( myid .eq. 1 ) then
+!                        plotVar = .false.
+!                    else
+!                        plotVar = .false.
+!                    endif
+!
+!                    wdot_orbit = 0.0
+!
+!                    call gc_orbit ( startR, startz, &
+!                            vPer, vPar, &
+!                            1.0, nnodex,nnodey, &
+!                            capR(nnodex)-capR(1), &
+!                            zLoc(nnodey)-zLoc(1), &
+!                            capR(1), zLoc(1), wdot_orbit, &
+!                            goodOrbit, plot = plotVar )
+!
+!                    if ( goodOrbit ) then
+!
+!                        wdoti_RZ = wdoti_RZ + &
+!                          wdot_sum_UU(mi,ni) * wdot_orbit &
+!                           * duperp
+!
+!!                        write(*,*) maxVal(abs(real(wdoti_RZ))),
+!!     .                    maxVal(wdot_orbit),duperp,
+!!     .                    maxVal(capR)-minVal(capR),
+!!     .                    abs(maxVal(zLoc)-minVal(zLoc))/2.0,
+!!     .                    minVal(capR), size(capR), size(zLoc)
+!!
+!!                        write(*,*) maxVal(wdot_orbit)
+!!
+!                       wdot_orbit_ = wdot_orbit
+!
+!                    endif
+!
+!                endif
+!
+!            enddo ni_loop3
+!        enddo mi_loop3
+!        endif bounceAveWdot
 
 !           --------------------------------------------
 !           integrate wdot over perpendicular velocities
@@ -930,11 +930,11 @@ ip_loop: do ip = start, finish
                         + 0.5 * sum_fy0(nuper) * duperp
 
 
-!DLG:   Use bounce averaged wdot, i.e., power deposition, not absorption.
-        if ( ba_wdot ) then
-         wdot__    = wdot__ - pi / 2.0 * eps0 * omgp2 &
-                    / omgrf * real ( wdoti_RZ )
-        endif
+!!DLG:   Use bounce averaged wdot, i.e., power deposition, not absorption.
+!        if ( ba_wdot ) then
+!         wdot__    = wdot__ - pi / 2.0 * eps0 * omgp2 &
+!                    / omgrf * real ( wdoti_RZ )
+!        endif
 
         wdot(i,j) = - pi / 2.0 * eps0 * omgp2(i,j) &
                     / omgrf * real(wdoti)

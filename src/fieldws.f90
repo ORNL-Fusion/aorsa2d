@@ -28,7 +28,8 @@ contains
        bx_wave_real_id, bx_wave_imag_id, &
        bz_wave_real_id, bz_wave_imag_id, &
        mask_id, density_id, janty_id, jantx_id, &
-       jeDotE_id, eAlpha_id, eBeta_id, eParallel_id
+       jeDotE_id, eAlpha_id, eBeta_id, eParallel_id, &
+       ex_id, ey_id, ez_id
 
       real logmax, ycut, dy, xmax, ymax, xmi, E_eV, vperp_mks, &
        vpara_mks, vperp_cgs, uperp_1kev, duperp, dz, dx
@@ -868,6 +869,16 @@ contains
             call check ( &
        nf90_def_var ( nc_id, "eParallel", NF90_REAL, &
        (/ nR_id, nz_id /), eParallel_id ) )
+            call check ( &
+       nf90_def_var ( nc_id, "ex", NF90_REAL, &
+       (/ nR_id, nz_id /), ex_id ) )
+            call check ( &
+       nf90_def_var ( nc_id, "ey", NF90_REAL, &
+       (/ nR_id, nz_id /), ey_id ) )
+            call check ( &
+       nf90_def_var ( nc_id, "ez", NF90_REAL, &
+       (/ nR_id, nz_id /), ez_id ) )
+
 
 
 
@@ -2676,6 +2687,16 @@ contains
       freal(1:nnodex,1:nnodey) ) )
       call check ( nf90_put_var ( nc_id, ePlus_imag_id, &
       fimag(1:nnodex,1:nnodey) ) )
+
+    call check ( nf90_put_var ( nc_id, ex_id, &
+      real(ex(1:nnodex,1:nnodey)) ) )
+    call check ( nf90_put_var ( nc_id, ey_id, &
+      real(ey(1:nnodex,1:nnodey)) ) )
+    call check ( nf90_put_var ( nc_id, ez_id, &
+      real(ez(1:nnodex,1:nnodey)) ) )
+  
+
+
 
       title = 'real(E_plus)'
       call ezconc(capr, y, freal, ff, nnodex, nnodey, numb, &
