@@ -6143,7 +6143,7 @@ end do
          zeffcd, clight, x, y, rt, b0, ftrap, omgrf, &
          xjpx_ehst, xjpy_ehst, xjpz_ehst, nkperp, zi, eps0, &
          v0i, xk0, kperp_max, i_sav, j_sav, upshift, damping, xk_cutoff, &
-         y, eNorm_factor_e )
+         y, eNorm_factor_e, mask )
 
 
 

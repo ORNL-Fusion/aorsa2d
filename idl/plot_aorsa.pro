@@ -30,6 +30,9 @@ pro plot_aorsa
 	nCdf_varGet, cdfId, 'janty', janty 
 	nCdf_varGet, cdfId, 'jantx', jantx
 	nCdf_varGet, cdfId, 'jeDotE', jeDotE
+	nCdf_varGet, cdfId, 'eAlpha', eAlpha
+	nCdf_varGet, cdfId, 'eBeta', eBeta
+	nCdf_varGet, cdfId, 'eParallel', eParallel
 	ncdf_close, cdfId
 
 	;	create an interpolated limiter boundary
