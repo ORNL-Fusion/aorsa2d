@@ -29,7 +29,7 @@ pro plot_aorsa
 	nCdf_varGet, cdfId, 'mask', mask
 	nCdf_varGet, cdfId, 'janty', janty 
 	nCdf_varGet, cdfId, 'jantx', jantx
-
+	nCdf_varGet, cdfId, 'jeDotE', jeDotE
 	ncdf_close, cdfId
 
 	;	create an interpolated limiter boundary
@@ -242,7 +242,7 @@ pro plot_aorsa
 		   thick = 2, $
 		   color = 255 
 
-   	loadct, 3, /silent
+   	loadct, 13, /silent
    	contour, (sqrt(bx_wave_imag^2+bx_wave_real^2)<brange)>(-brange), capR, zLoc, $
 			color = 0, $
 			levels = mod_blevels, $
