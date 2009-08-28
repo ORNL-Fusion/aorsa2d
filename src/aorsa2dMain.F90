@@ -6165,7 +6165,7 @@ end do
          UminPara, UmaxPara, UPERP, UPARA, &
          vc1_mks, df1_cql_uprp, df1_cql_uprl, rho, rho_a, nbessj,nkperp, &
          zi, eps0, v0i, omgrf, xk0, kperp_max, i_sav1, j_sav1, upshift, &
-         damping, xk_cutoff,y, eNorm_factor_i1)
+         damping, xk_cutoff,y, eNorm_factor_i1, mask)
 
 
 
@@ -6188,7 +6188,7 @@ end do
          UminPara, UmaxPara, UPERP, UPARA, &
          vc2_mks, df2_cql_uprp, df2_cql_uprl, rho, rho_a, nbessj,nkperp, &
          zi, eps0, v0i, omgrf, xk0, kperp_max, i_sav2, j_sav2, upshift, &
-         damping, xk_cutoff,y, eNorm_factor_i2)
+         damping, xk_cutoff,y, eNorm_factor_i2, mask)
 
       endif
 
@@ -6211,7 +6211,7 @@ end do
          UminPara, UmaxPara, UPERP, UPARA, &
          vc3_mks, df3_cql_uprp, df3_cql_uprl, rho, rho_a, nbessj,nkperp, &
          zi, eps0, v0i, omgrf, xk0, kperp_max, i_sav, j_sav, upshift, &
-         damping, xk_cutoff,y, eNorm_factor_i3)
+         damping, xk_cutoff,y, eNorm_factor_i3, mask)
 
       endif
 
@@ -6234,7 +6234,7 @@ end do
          UminPara, UmaxPara, UPERP, UPARA, &
          vc4_mks, df4_cql_uprp, df4_cql_uprl, rho, rho_a, nbessj,nkperp, &
          zi, eps0, v0i, omgrf, xk0, kperp_max, i_sav, j_sav, upshift, &
-         damping, xk_cutoff,y, eNorm_factor_i4)
+         damping, xk_cutoff,y, eNorm_factor_i4, mask)
 
       endif
 
@@ -6257,7 +6257,7 @@ end do
          UminPara, UmaxPara, UPERP, UPARA, &
          vc5_mks, df5_cql_uprp, df5_cql_uprl, rho, rho_a, nbessj,nkperp, &
          zi, eps0, v0i, omgrf, xk0, kperp_max, i_sav, j_sav, upshift, &
-         damping, xk_cutoff,y, eNorm_factor_i5)
+         damping, xk_cutoff,y, eNorm_factor_i5, mask)
 
       endif
 
@@ -6280,7 +6280,7 @@ end do
          UminPara, UmaxPara, UPERP, UPARA, &
          vc6_mks, df6_cql_uprp, df6_cql_uprl, rho, rho_a, nbessj,nkperp, &
          zi, eps0, v0i, omgrf, xk0, kperp_max, i_sav, j_sav, upshift, &
-         damping, xk_cutoff,y, eNorm_factor_i6)
+         damping, xk_cutoff,y, eNorm_factor_i6, mask)
 
       endif
 

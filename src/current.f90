@@ -351,13 +351,16 @@
          UminPara, UmaxPara, UPERP, UPARA, &
          vc_mks, df_cql_uprp, df_cql_uprl, rho, rho_a, nbessj, nkperp, &
          zi, eps0, v0i, omgrf, xk0, kperp_max, i_sav, j_sav, upshift, &
-         damping, xk_cutoff,zLoc,eNormIN)
+         damping, xk_cutoff,zLoc,eNormIN, mask)
 
 !-----------------------------------------------------------------------
 !     This subroutine calculates the plasma current for a single species
 !-----------------------------------------------------------------------
 
+        use size_mod
+
       implicit none
+
 
       logical ismine
       real :: eNormIN
@@ -367,6 +370,7 @@
       real damping, xk_cutoff
       !DLG:
       real :: zLoc(nydim)
+      integer, intent(in) :: mask(nmodesmax,mmodesmax)
 
       integer nproc, myid, ngrid, id, ndist, nbessj, nkperp
       integer  i, j, n, m, lmax, nzfun, ibessel, nphi
@@ -435,7 +439,9 @@
             xjpy(i,j) = 0.0
             xjpz(i,j) = 0.0
 
-            if(psi(i,j) .le. psilim .and. nboundary .eq. 1)then
+            !if(psi(i,j) .le. psilim .and. nboundary .eq. 1)then
+            if(mask(i,j) == 1 .and. nboundary .eq. 1)then
+
 
                do n = nkx1, nkx2
                   do m = nky1, nky2
@@ -543,12 +549,13 @@
          UminPara, UmaxPara, UPERP, UPARA, &
          vc_mks, df_cql_uprp, df_cql_uprl, rho, rho_a, nbessj, nkperp, &
          zi, eps0, v0i, omgrf, xk0, kperp_max, i_sav, j_sav, upshift, &
-         damping, xk_cutoff, zLoc,eNormIN)
+         damping, xk_cutoff, zLoc,eNormIN, mask)
 
 !-----------------------------------------------------------------------
 !     This subroutine calculates the plasma current for a single species
 !-----------------------------------------------------------------------
 
+        use size_mod
       implicit none
 
       logical ismine
@@ -559,6 +566,7 @@
       real damping, xk_cutoff
       !DLG:
       real :: zLoc(nydim)
+      integer, intent(in) :: mask(nmodesmax,mmodesmax)
 
       integer nproc, myid, ngrid, id, ndist, nbessj, nkperp
       integer  i, j, n, m, lmax, nzfun, ibessel, nphi
@@ -627,7 +635,7 @@
             xjpy(i,j) = 0.0
             xjpz(i,j) = 0.0
 
-            if(psi(i,j) .le. psilim .and. nboundary .eq. 1)then
+            if(mask(i,j) == 1 .and. nboundary .eq. 1)then
 
                do n = nkx1, nkx2
                   do m = nky1, nky2
@@ -735,12 +743,13 @@
          UminPara, UmaxPara, UPERP, UPARA, &
          vc_mks, df_cql_uprp, df_cql_uprl, rho, rho_a, nbessj, nkperp, &
          zi, eps0, v0i, omgrf, xk0, kperp_max, i_sav, j_sav, upshift, &
-         damping, xk_cutoff, zLoc, eNormIN)
+         damping, xk_cutoff, zLoc, eNormIN, mask)
 
 !-----------------------------------------------------------------------
 !     This subroutine calculates the plasma current for a single species
 !-----------------------------------------------------------------------
 
+        use size_mod
       implicit none
 
       logical ismine
@@ -752,6 +761,7 @@
       real damping, xk_cutoff
       !DLG:
       real :: zLoc(nydim)
+      integer, intent(in) :: mask(nmodesmax,mmodesmax)
 
       integer nproc, myid, ngrid, id, ndist, nbessj, nkperp
       integer  i, j, n, m, lmax, nzfun, ibessel, nphi
@@ -820,7 +830,7 @@
             xjpy(i,j) = 0.0
             xjpz(i,j) = 0.0
 
-            if(psi(i,j) .le. psilim .and. nboundary .eq. 1)then
+            if(mask(i,j) == 1 .and. nboundary .eq. 1)then
 
                do n = nkx1, nkx2
                   do m = nky1, nky2
