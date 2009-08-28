@@ -27,7 +27,8 @@ contains
        eMinu_real_id, eMinu_imag_id, &
        bx_wave_real_id, bx_wave_imag_id, &
        bz_wave_real_id, bz_wave_imag_id, &
-       mask_id, density_id, janty_id, jantx_id
+       mask_id, density_id, janty_id, jantx_id, &
+       jeDotE_id, eAlpha_id, eBeta_id, eParallel_id
 
       real logmax, ycut, dy, xmax, ymax, xmi, E_eV, vperp_mks, &
        vpara_mks, vperp_cgs, uperp_1kev, duperp, dz, dx
@@ -855,6 +856,20 @@ contains
             call check ( &
        nf90_def_var ( nc_id, "wdoti2_rz", NF90_REAL, &
        (/ nR_id, nz_id /), wdoti2_rz_id ) )
+            call check ( &
+       nf90_def_var ( nc_id, "jeDotE", NF90_REAL, &
+       (/ nR_id, nz_id /), jeDotE_id ) )
+            call check ( &
+       nf90_def_var ( nc_id, "eAlpha", NF90_REAL, &
+       (/ nR_id, nz_id /), eAlpha_id ) )
+            call check ( &
+       nf90_def_var ( nc_id, "eBeta", NF90_REAL, &
+       (/ nR_id, nz_id /), eBeta_id ) )
+            call check ( &
+       nf90_def_var ( nc_id, "eParallel", NF90_REAL, &
+       (/ nR_id, nz_id /), eParallel_id ) )
+
+
 
        call check ( nf90_def_var ( nc_id, "ePlus_real", NF90_REAL, &
        (/ nR_id, nz_id /), ePlus_real_id ) )
@@ -1792,6 +1807,11 @@ contains
          nnodey, numb, &
          nxmx, nymx, nlevmax, title, titx, tity)
 
+    call check ( nf90_put_var ( nc_id, eAlpha_id, &
+        freal(1:nnodex,1:nnodey) ) )
+    call check ( nf90_put_var ( nc_id, eParallel_id, &
+        real (eb(1:nnodex,1:nnodey)) ) )
+ 
 !      call ezconz(capr, y, freal, ff, nnodex, nnodey, numb,
 !     .   nxmx, nymx, nlevmax, title, titx, tity)
 
@@ -1877,6 +1897,10 @@ contains
       if (iflag .eq. 0) call boundary (capr, y, rho, ff, nnodex, &
          nnodey, numb, &
          nxmx, nymx, nlevmax, title, titx, tity)
+
+      call check ( nf90_put_var ( nc_id, eBeta_id, &
+      freal(1:nnodex,1:nnodey) ) )
+
 
 
 
@@ -2090,6 +2114,9 @@ contains
          nnodey, numb, &
          nxmx, nymx, nlevmax, title, titx, tity)
 
+      call check ( nf90_put_var ( nc_id, jeDotE_id, &
+      redotje(1:nnodex,1:nnodey) ) )
+ 
 
 
 !
