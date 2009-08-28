@@ -3184,7 +3184,11 @@ if (iprofile .eq. 3) then
             xkti   = dlg_getDensity ( capR, y, &
                            ncFileNameIn = 'dlg_profiles.nc', &
                            ncVariableNameIn = 'ti' ) * q
-    
+   
+            xnea    = 3.0e19
+            xkte    = 700.0 * q
+            xkti    = 800.0 * q
+
     endif dlg_limiter_boundary
     
     xn1a    = (xnea - z2 * xn2a &

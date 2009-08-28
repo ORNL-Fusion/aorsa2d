@@ -94,7 +94,7 @@ pro plot_aorsa
 
 	nLevs	= 21
 
-	range	= 5000.0;max ( ePlus_real ) / 2.0
+	range	= max ( ePlus_real ) / 2.0
 	brange	= max ( bx_wave_real ) / 2.0
 	prange	= max ( jedote ) / 20.0
 
