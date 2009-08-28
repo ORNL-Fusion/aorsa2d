@@ -52,6 +52,7 @@
       real :: antlen = 1.0
       real :: antlc = .0001            !-----antlc = propagation constant along the antenna = c / vphase
       logical :: limiter_boundary = .false. ! use the rLim/zLim boundary from the eqdsk file
+      logical :: bbbsMask = .false. ! use rbbbs/zbbbs as boundary instead of rlim/zlim
       real :: gradient = -50.0e16
       real :: psilim = .99
       real :: psimask = 1.05
@@ -384,7 +385,7 @@
      &    xn3_rho2lim, xn4_rho2lim, xn5_rho2lim, xn6_rho2lim, &
      &    te_rho2lim, ti_rho2lim, ti2_rho2lim, ti3_rho2lim, &
      &    ti4_rho2lim, ti5_rho2lim, ti6_rho2lim, dlg_yRange, &
-     &    gradient, nPhi_sum_only
+     &    gradient, nPhi_sum_only, bbbsMask
                 
 
       end module aorsa2din_mod

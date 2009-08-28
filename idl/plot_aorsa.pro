@@ -94,14 +94,19 @@ pro plot_aorsa
 
 	nLevs	= 21
 
-	range	= max ( ePlus_real ) / 4.0
+	range	= 5000.0;max ( ePlus_real ) / 2.0
 	brange	= max ( bx_wave_real ) / 2.0
+	prange	= max ( jedote ) / 20.0
 
 	levels	= ( fIndGen ( nLevs ) - nLevs / 2.0 ) / ( nLevs / 2.0 ) * range 
 	colors	= bytScl ( levels, top = 253 ) + 1
 
 	blevels	= ( fIndGen ( nLevs ) - nLevs / 2.0 ) / ( nLevs / 2.0 ) * brange 
 	bcolors	= bytScl ( blevels, top = 253 ) + 1
+
+	plevels	= ( fIndGen ( nLevs ) - nLevs / 2.0 ) / ( nLevs / 2.0 ) * prange 
+	pcolors	= bytScl ( plevels, top = 253 ) + 1
+
 
 	xRange	= [ min ( eqdsk.rlim ), max ( eqdsk.rlim ) ]
 	yRange	= [ min ( eqdsk.zlim ), max ( eqdsk.zlim ) ]
@@ -294,11 +299,11 @@ pro plot_aorsa
 		   thick = 2, $
 		   color = 255 
 
-   	contour, (eParallel<range)>(-range), capR, zLoc, $
+   	contour, ((eParallel*100)<range)>(-range), capR, zLoc, $
 			color = 255, $
 			levels = levels, $
 			c_colors = colors, $
-			title = 'eParallel', $
+			title = 'eParallel x100', $
 			/fill, $
 			yRange = yRange, $
 			xRange = xRange, $
@@ -522,7 +527,25 @@ pro plot_aorsa
 		   	/t3d, $
 			thick = 3
    	
-   	
+
+   loadct, 13, file = 'davect.tbl'	
+	contour, (jedote<prange)>(-prange), capR, zLoc, $
+			color = 255, $
+			levels = plevels, $
+			c_colors = pcolors, $
+			title = 'jedote', $
+			/fill, $
+			yRange = yRange, $
+			xRange = xRange, $
+			xSty = 1, ySty = 1
+	oPlot, eqdsk.rbbbs, eqdsk.zbbbs, $
+		   thick = 2, $
+		   color = 255 
+	oPlot, eqdsk.rLim, eqdsk.zLim, $
+		   thick = 2, $
+		   color = 255 
+
+  	
    device, /close_file
 stop
 

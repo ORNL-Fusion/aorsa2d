@@ -245,8 +245,11 @@ pro plot_aorsa_3d
 
 	endfor
 
-	myLight = obj_new ( 'IDLgrLight', type = 2 )
+	myLight = obj_new ( 'IDLgrLight', type = 1, location = [3,0,0] )
 	myModel -> add, myLight
+	myLight = obj_new ( 'IDLgrLight', type = 1, location = [-1,1,1] )
+	;myModel -> add, myLight
+
 
 	myModel -> add, myVol
 	myModel -> rotate, [0,1,0], 90 
@@ -254,6 +257,14 @@ pro plot_aorsa_3d
 	myModel -> rotate, [0,0,1], 90 
 	set_view, myView, myWin
 	myWin -> draw, myView
+	
+	for i =0, 360 do begin
+	;myModel -> rotate, [0,1,0], 1
+	xLoc	= 3 * cos ( i * !dtor )
+	yLoc	= 3 * sin ( i * !dtor )
+	myLight -> setProperty, location = [xLoc,yLoc,0]
+	myWin -> draw, myView
+	endfor
 
 	myWin -> getProperty, resolution = screenResolution
 

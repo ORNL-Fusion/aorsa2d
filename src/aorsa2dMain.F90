@@ -3025,11 +3025,14 @@
                 else
                     mask_bbbs(i,j) = 0
                 endif eqdsk_bbbs_mask
+                
+                if ( bbbsMask ) mask = mask_bbbs
 
             endif
 
          end do
       end do
+
 
       if (myId==0) write(167,12398) 'calculate mask:', &
         (dlgTime - second1(dummy))/60.0
