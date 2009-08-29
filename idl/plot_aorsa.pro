@@ -1,4 +1,5 @@
-pro plot_aorsa
+pro plot_aorsa, $
+		range = range
 
 	;eqDskFileName	= 'g123435.00400'
 	;eqDskFileName	= 'eqdsk.122993'
@@ -94,7 +95,7 @@ pro plot_aorsa
 
 	nLevs	= 21
 
-	range	= max ( ePlus_real ) / 2.0
+	if(not keyword_set(range)) then range = max ( ePlus_real ) / 2.0
 	brange	= max ( bx_wave_real ) / 2.0
 	prange	= max ( jedote ) / 20.0
 
