@@ -1,5 +1,8 @@
 pro plot_aorsa, $
-		range = range
+		range = range, $
+		brange = brange, $
+		prange = prange, $
+		flat = flat
 
 	;eqDskFileName	= 'g123435.00400'
 	;eqDskFileName	= 'eqdsk.122993'
@@ -82,22 +85,16 @@ pro plot_aorsa, $
 	set_plot, 'ps'
 	device, fileName = 'output/aorsa_dlg.ps', $
 			/color, $
-			/preview, $
-			bits_per_pixel = 8, $
-			ySize = 8.5, $
-			xSize = 11.0, $
-			/inches, $
-			xOffset = 1.0, $
-			yOffset = 1.0
+			bits_per_pixel = 8
 
 	!p.multi = [0,3,2]
-	!p.charSize = 1.6
+	!p.charSize = 1.0
 
 	nLevs	= 21
 
 	if(not keyword_set(range)) then range = max ( ePlus_real ) / 2.0
-	brange	= max ( bx_wave_real ) / 2.0
-	prange	= max ( jedote ) / 20.0
+	if(not keyword_set(brange)) then brange	= max ( bx_wave_real ) / 2.0
+	if(not keyword_set(prange)) then prange	= max ( jedote ) / 5.0
 
 	levels	= ( fIndGen ( nLevs ) - nLevs / 2.0 ) / ( nLevs / 2.0 ) * range 
 	colors	= bytScl ( levels, top = 253 ) + 1
@@ -168,7 +165,12 @@ pro plot_aorsa, $
 	oPlot, eqdsk.rLim, eqdsk.zLim, $
 		   thick = 2, $
 		   color = 0 
-
+   	loadct, 12, /silent
+   	contour, janty, capR, zLoc, $
+		   c_color = 1*16-1, $
+		   /overplot, $ 
+   			levels = fIndGen(10)*10
+	
    	loadct, 13, file = 'davect.tbl', /silent
     contour, (eMinu_real<range)>(-range), capR, zLoc, $
 			color = 255, $
@@ -438,6 +440,7 @@ pro plot_aorsa, $
 	loadct, 12, /silent
 	plots, newR, newZ, psym = 5, color = 12*16-1
 
+	if (not keyword_set(flat)) then begin
 	!p.multi = [0,2,2]
 	contour, density, capR, zLoc, $
 		   nlev = 20, $
@@ -527,9 +530,10 @@ pro plot_aorsa, $
 			color = 8*16-1, $
 		   	/t3d, $
 			thick = 3
-   	
+   endif	
 
    loadct, 13, file = 'davect.tbl'	
+   !p.multi = [0,3,2]
 	contour, (jedote<prange)>(-prange), capR, zLoc, $
 			color = 255, $
 			levels = plevels, $
@@ -545,7 +549,7 @@ pro plot_aorsa, $
 	oPlot, eqdsk.rLim, eqdsk.zLim, $
 		   thick = 2, $
 		   color = 255 
-
+	!p.multi = 0
   	
    device, /close_file
 stop

@@ -1,0 +1,14 @@
+How to make the 3D slice movie:
+-------------------------------
+
+Run plot_aorsa_3d
+
+then
+
+for f in *.eps; do convert -quality 100 -depth 8 $f `basename $f eps`png; done
+
+then
+
+mencoder "mf://*.png" -mf fps=4:type=png -o test.avi -ovc lavc -lavcopts vcodec=msmpeg4v2:vbitrate=800
+
+done, mplayer test.avi

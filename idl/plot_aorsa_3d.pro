@@ -1,4 +1,5 @@
-pro plot_aorsa_3d
+pro plot_aorsa_3d, $
+		range = range
 
 	eqDskFileName = 'eqdsk'
 
@@ -42,6 +43,219 @@ pro plot_aorsa_3d
 	cartY	= ( fIndGen ( nY ) - nY / 2 ) / ( nY / 2 ) * yRange 
 	cartZ	= ( fIndGen ( nZ ) - nZ / 2 ) / ( nZ / 2 ) * zRange 
 
+
+	;	plot toroidal slice
+
+	;	create an interpolated limiter boundary
+
+	newR	= (eqdsk.rLim)[0]
+	newZ	= (eqdsk.zLim)[0]
+
+	for i=0,n_elements(eqdsk.rLim)-2 do begin
+
+		;	get slope
+
+		m	= ( (eqdsk.zLim)[i+1]-(eqdsk.zLim)[i] ) $
+				/ ( (eqdsk.rLim)[i+1] - (eqdsk.rLim)[i] )
+		b	= (eqdsk.zLim)[i] - m * (eqdsk.rLim)[i]
+
+		;	distance
+
+		d	= sqrt ( ( (eqdsk.rLim)[i+1] - (eqdsk.rLim)[i] )^2 $
+				+ ( (eqdsk.zLim)[i+1] - (eqdsk.zLim)[i] )^2 )
+
+		;dMin	= ( capR[0] - capR[1] ) / 2.0
+
+		;if d gt abs(dMin) then begin
+
+			nExtra	= 10;fix ( d / abs(dMin) )
+			dStep	= ((eqdsk.rLim)[i+1] - (eqdsk.rLim)[i]) / nExtra
+
+			for j = 0, nExtra - 1 do begin
+
+				if dStep ne 0 then begin
+					newR	= [ newR, (eqdsk.rLim)[i] + dStep*j ]
+					newZ	= [ newZ, m * ((eqdsk.rLim)[i] + dStep*j) + b ]
+				endif
+
+			endfor
+
+		;endif
+
+	endfor
+
+	newRbbbs	= (eqdsk.rbbbs)[0]
+	newZbbbs	= (eqdsk.zbbbs)[0]
+
+	for i=0,n_elements(eqdsk.rbbbs)-2 do begin
+
+		;	get slope
+
+		m	= ( (eqdsk.zbbbs)[i+1]-(eqdsk.zbbbs)[i] ) $
+				/ ( (eqdsk.rbbbs)[i+1] - (eqdsk.rbbbs)[i] )
+		b	= (eqdsk.zbbbs)[i] - m * (eqdsk.rbbbs)[i]
+
+		;	distance
+
+		d	= sqrt ( ( (eqdsk.rbbbs)[i+1] - (eqdsk.rbbbs)[i] )^2 $
+				+ ( (eqdsk.zbbbs)[i+1] - (eqdsk.zbbbs)[i] )^2 )
+
+		;dMin	= ( capR[0] - capR[1] ) / 2.0
+
+		;if d gt abs(dMin) then begin
+
+			nExtra	= 10;fix ( d / abs(dMin) )
+			dStep	= ((eqdsk.rbbbs)[i+1] - (eqdsk.rbbbs)[i]) / nExtra
+
+			for j = 0, nExtra - 1 do begin
+
+				if dStep ne 0 then begin
+					newRbbbs	= [ newRbbbs, (eqdsk.rbbbs)[i] + dStep*j ]
+					newZbbbs	= [ newZbbbs, m * ((eqdsk.rbbbs)[i] + dStep*j) + b ]
+				endif
+
+			endfor
+
+		;endif
+
+	endfor
+
+
+	;loadct, 3, /silent
+	set_plot, 'ps'
+	!p.multi = [0,2,1]
+	nLevs = 21
+	if(not keyword_set(range)) then range = max ( eMod[*,100,*] ) / 2.0
+
+	b3Phi	=fIndGen (360) *!dtor 	
+	b3R		=fltArr(360)+min(eqdsk.rlim)
+	b3X		= b3R * cos ( b3Phi )
+	b3Y		= b3R * sin ( b3Phi )
+
+	levels	= fIndGen ( nLevs ) / nLevs * range 
+	colors	= 255 - ( bytScl ( levels, top = 253 ) + 1 )
+
+	iiRight	= where ( newR gt 1.2 )
+	useZ	= newZ[iiRight]
+	useR	= newR[iiRight]
+
+	strapR	= fltArr(12) + 1.56
+	sep	= 19.4e-2/(2.0*!pi*1.56)*360*!dtor
+	strapPhi	= fIndGen(12)*sep-6.5*sep
+	strapX	= strapR * cos(strapPhi)
+	strapY	= strapR * sin(strapPhi)
+
+	zspan =128 
+	for i=170,500 do begin
+			print, i
+		device, fileName = 'output/movie/'+string(i,format='(i3.3)')+'aorsa_dlg_3d.eps', $
+			/color, $
+			bits_per_pixel = 8, $
+			/encap, $
+			xSize = 8.7*2, $
+			ySize = 8, $
+			/inc
+
+
+		;	find nearest index in both bbbs and emod
+		iiMod	= (((newZbbbs)[i]-min(z_))/(max(z_)-min(z_))*n_elements(z_))
+		
+		iiClose	= (where ( abs(useZ-newZbbbs[i]) eq min ( abs(useZ - newZbbbs[i]) ) ))[0]
+		;zii	= n_elements(eMod[0,*,0])/2-zspan/2 + zspan/(6-1)*i
+		loadct, 3, /sil
+		polar_contour, transpose(reform(eMod[*,iiMod,*])), phi, R, $
+				levels = levels, $
+			   	c_colors = colors, $
+				/fill, $
+				title = 'z = '+ string ( newZbbbs[i] ), $
+				color = 255, $
+				xRange = [-1.4, 1.6], $
+				yRange = [-1.4,1.4], $
+				xSty = 1, ySty = 1
+		loadct, 12, /sil
+
+	b1Phi	=fIndGen (360) *!dtor 	
+	b1R		=fltArr(360)+newrbbbs[i]
+	b1X		= b1R * cos ( b1Phi )
+	b1Y		= b1R * sin ( b1Phi )
+
+	b2Phi	=fIndGen (360) *!dtor 	
+	b2R		=fltArr(360)+useR[iiClose]
+	b2X		= b2R * cos ( b2Phi )
+	b2Y		= b2R * sin ( b2Phi )
+
+		lineR=[0,useR[iiClose]]
+		linePhi	= [phi[(i-170) mod 200],phi[(i-170) mod 200]]
+		lineX = lineR * cos ( linePhi )
+		lineY = lineR * sin ( linePhi )
+		plots,lineX, lineY, $
+				color = 14*16-1, $
+				thick = 40, $
+				lineStyle = 0
+	
+		loadct, 3, /sil
+		polar_contour, transpose(reform(eMod[*,iiMod,*])), phi, R, $
+				levels = levels, $
+			   	c_colors = colors, $
+				title = 'z = '+ string ( newZbbbs[i] ), $
+				color = 255, $
+				xRange = [-1.4, 1.6], $
+				yRange = [-1.4,1.4], $
+				xSty = 1, ySty = 1, /over
+		loadct, 12, /sil
+
+
+		plots, b1X, b1Y, $
+				color = 8 * 16 - 1, $
+				thick = 6, $
+				lineStyle = 0
+		plots, b2X, b2Y, $
+				color = 1 * 16 - 1, $
+				thick = 6, $
+				lineStyle = 0
+		plots, b3X, b3Y, $
+				color = 1 * 16 - 1, $
+				thick = 6, $
+				lineStyle = 0
+		plots, strapX, strapY, $
+				psym = 4, $
+				color = 12 * 16 - 1, $
+				thick = 6
+	loadct, 3, /sil
+		contour, eMod[*,*,(i-170) mod 200], R,z_, $
+				color = 255, $
+				xRange = [0,1.7], $
+				yRange = [-1.8, 1.8], $
+				levels = levels, $
+				c_colors = colors, $
+				/fill
+	loadct, 12, /sil
+	plots, findGen(20)/20*(max(eqdsk.rlim)-min(eqdsk.rlim))+min(eqdsk.rlim),fltArr(20)+(newzbbbs)[i], $
+			linestyle = 0, $
+			color = 14*16-1, $
+			thick = 40 
+		loadct, 3, /sil
+		contour, eMod[*,*,(i-170) mod 200], R,z_, $
+				color = 255, $
+				xRange = [0,1.7], $
+				yRange = [-1.8, 1.8], $
+				levels = levels, $
+				c_colors = colors, $
+				/over
+	loadct, 12, /sil
+	
+	plots, eqdsk.rbbbs, eqdsk.zbbbs, $
+			color = 8*16-1, $
+			thick = 6
+	plots, eqdsk.rlim, eqdsk.zlim, $
+			color = 0, $
+			thick = 6
+device, /close
+	endfor
+
+
+	;device, /close
+
 	;for i=0,nR-1 do begin
 	;	print, i, nR-1
 	;	for j=0,nz_-1 do begin
@@ -61,6 +275,7 @@ pro plot_aorsa_3d
 	;iiCnt	= where ( cartCnt gt 0 )
 	;cartData[iiCnt]	= cartData[iiCnt] / cartCnt[iiCnt]
 
+	stop
 	restore, 'cartData.sav'
 
 	;	use object graphics
