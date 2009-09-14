@@ -35,6 +35,8 @@
 
     complex, dimension(:,:), allocatable :: zbeta
     complex, dimension(:,:), allocatable :: zbeta_iharm
+    complex, dimension(:,:), allocatable :: zbeta_iharm_dlg
+
     
     real  y, y0, alpha, xm, akprl, sgn_kprl, omgc, bmod, xkprl_eff,  &
       descrim, xme, fgam, gradprlb, gammab, xk_cutoff
@@ -126,6 +128,7 @@
     
     allocate( zbeta(nkx1:nkx2,nky1:nky2) )
     allocate( zbeta_iharm(nkx1:nkx2,nky1:nky2) )
+    allocate( zbeta_iharm_dlg(nkx1:nkx2,nky1:nky2) )
 
     allocate(zetai(nzeta + 1) )
     allocate(Jni(-lmaxdim : lmaxdim, nzeta + 1) )
@@ -155,6 +158,8 @@
 
     zbeta = 0.0
     zbeta_iharm = 0.0
+    zbeta_iharm_dlg = 0.0
+
 
     sumf_11_nm = 0.0
     sumf_31_nm = 0.0
@@ -449,13 +454,9 @@
       
              do iharm = -NHARM - 1, NHARM + 1
       
-                Jn(iharm, n, m) = Jni(iharm, i)    &
-              + p * (Jni(iharm, i + 1) - Jni(iharm, i))
-                if(i .ne. 1 )then
-                   Jn(iharm, n, m) = A1 * Jni(iharm, i - 1)     &
-                                  + A2 * Jni(iharm, i)         &
-                                  + A3 * Jni(iharm, i + 1)
-                end if
+                Jn(iharm, n, m) = Jni(iharm, i) + p * (Jni(iharm, i + 1) - Jni(iharm, i))
+                if (i .ne. 1 ) &
+                   Jn(iharm, n, m) = A1 * Jni(iharm, i - 1) + A2 * Jni(iharm, i) + A3 * Jni(iharm, i + 1)
           
              end do
       
@@ -517,6 +518,10 @@
        sumky2_3 = 0.0       
        
        call zpow((nkx2-nkx1+1)*(nky2-nky1+1), zbeta, iharm, zbeta_iharm) 
+       !call zpow_dlg((nkx2-nkx1+1)*(nky2-nky1+1), zbeta, iharm, zbeta_iharm_dlg) 
+       !write(*,*) 'qlsum.f90:522-', maxVal ( real(zBeta_iHarm) - real(zBeta_iHarm_dlg) )
+       !write(*,*) 'qlsum.f90:522-', maxVal ( imag(zBeta_iHarm) - imag(zBeta_iHarm_dlg) )
+
        
        ! ----------------------- !
        ! ---Find resonant modes--!
@@ -1465,7 +1470,50 @@
 !
 !*************************************************************************
 !
+    subroutine zpow_dlg ( n, z, iharm, zout )
 
+        implicit none
+        integer, intent(in) :: n, iharm
+        complex, intent(in) :: z(n)
+        complex, intent(out) :: zout(n)
+
+        integer i, nharm 
+        complex zin
+        complex zk(n)
+
+        zout = 1d0
+        
+        if ( iharm .eq. 0 ) return
+
+        zk = z
+
+        nharm = abs(iharm)
+        do while (nharm .gt. 0)
+
+            if ( mod(nharm,2).eq.1 ) then
+                    
+                zout    = zout * zk
+
+            endif
+            zk = zk**2
+            nharm = nharm / 2
+        enddo
+
+
+        iharm_lt0: &
+        if (iharm.lt.0) then
+
+                do i=1,n
+                    zin = zout(i)
+                    call zdiv( zin, zout(i) )
+                enddo
+
+        endif iharm_lt0
+
+        return
+
+    end subroutine zpow_dlg
+ 
     subroutine zpow(n, z, iharm, zout )
     implicit none
     integer n, iharm
@@ -1576,6 +1624,9 @@
             d = a + (b_over_a)*b
             rd = one/d
             zout = cmplx( rd, -(b_over_a)*rd )
+
+            rd  = a**2 + b**2
+            zout    = cmplx ( a / rd, -b / rd )
         else
             a_over_b = a/b
             d = (a_over_b)*a + b
@@ -1586,7 +1637,33 @@
         return
         end subroutine
     
+        subroutine zdiv_dlg( zin, zout )
+        implicit none
+        complex zin, zout
+        real a, b
+        real d
 
+        real one
+        parameter(one=1.0d0)
+        real rd, a_over_b, b_over_a
+
+
+        a = real(zin)
+        b = aimag(zin)
+
+        if (abs(a).gt.abs(b)) then
+            rd  = a**2 + b**2
+            zout    = cmplx ( a / rd, -b / rd )
+        else
+            a_over_b = a/b
+            d = (a_over_b)*a + b
+            rd = one/d
+            zout = cmplx( (a_over_b)*rd, -rd )
+        endif
+
+        return
+        end subroutine zdiv_dlg
+ 
 
 !
 !*************************************************************************
