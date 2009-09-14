@@ -26,6 +26,9 @@ ifeq ($(MACHINE),dlghp)
 		CUDA_DIR = src/cuda
 	endif
 	CPP_DIRECTIVES = -DUSE_DISLIN=1 -DDLGHP=1
+	OPTDIR = ${HOME}/opt
+	OPT = #-I${OPTDIR}/opt/include -L${OPTDIR}/opt/lib/static -lopt-openmpi -lstdc++ -ldl
+
 endif
 
 ifeq ($(MACHINE),lens)
@@ -171,6 +174,8 @@ ifeq ($(MACHINE),dlghp)
 	MPIF90 = $(HOME)/openmpi/gnu_64/bin/mpif90
 	MPIF77 = $(HOME)/openmpi/gnu_64/bin/mpif77
 
+	MPI_LINK_FLAGS = $(shell ${MPIF90} --showme:link)
+
 	COMMON_OPTION	= -pg -g -fdefault-real-8 -fno-automatic -I $(MPI_INCLUDE_DIR) -J$(MOD_DIR)
 	COMMON_OPTION2	= -pg -g -fdefault-real-8 -fautomatic -I $(MPI_INCLUDE_DIR) -J$(MOD_DIR)
 	COMMON_OPTION3	= -pg -g -fautomatic -I -I $(MPI_INCLUDE_DIR) -J$(MOD_DIR)
@@ -193,7 +198,7 @@ ifeq ($(MACHINE),dlghp)
 	INC_DIR = 	
 	BOUNDS = -fbounds-check
 	WARN = #-Wall
-	DEBUG = -pg -g -fbacktrace -fsignaling-nans -ffpe-trap=zero,invalid,overflow#,underflow
+	DEBUG = -pg -g -fbacktrace -fsignaling-nans -ffpe-trap=zero,invalid#,overflow#,underflow
 	FFLAGS = ${WARN} ${DEBUG} 
 	F90FLAGS = ${WARN} ${DEBUG} ${BOUNDS}
 
@@ -276,6 +281,9 @@ ifeq ($(MACHINE),dlghp)
 	NETCDF = -I ${NETCDF_DIR}/include
 	LIBS = -L$(HOME)/netcdf/netcdf_gnu64/lib -lnetcdf $(HOME)/pgplot/pgplot_gnu64/libpgplot.a $(SCALAPACK) $(HPL) $(BLACS) $(BLAS) $(X11) $(FFT_LIB) ${PNETCDF}
 	INC_DIR = -I ${NETCDF_DIR}/include -I ${DISLIN_DIR}/gf -I ${PNETCDF_DIR}/include
+
+	LOAD = gfortran $(OPTIMIZATION)  
+	LINK_FLAGS = ${OPT} ${MPI_LINK_FLAGS}
 endif
 
 ifeq ($(MACHINE),franklin)
@@ -288,6 +296,8 @@ ifeq ($(MACHINE),franklin)
 	  	${NETCDF} \
 		${PNETCDF} \
 		-L/u0/j/jaegeref/pgplot_xt3 -lpgplot #-L/ccs/home/jaegeref/pgplot_xt3 -lpgplot 
+
+	LOAD = $(F90) $(OPTIMIZATION) $(LOADFLAGS) 
 endif
 
 ifeq ($(MACHINE),jaguar)
@@ -304,6 +314,7 @@ ifeq ($(MACHINE),jaguar)
 	  ${NETCDF_FLIB} $(PGPLOT_LIB) 
 	INC_DIR = -I ${NETCDF_DIR}/include -I ${PNETCDF_DIR}/include
 
+	LOAD = $(F90) $(OPTIMIZATION) $(LOADFLAGS) 
 endif
 
 ifeq ($(MACHINE),lens)
@@ -323,13 +334,14 @@ ifeq ($(MACHINE),lens)
 		${BLACS_LIB} \
 		${BLASGOTO_LIB} 
 	INC_DIR = -I ${NETCDF_DIR}/include -I ${PNETCDF_DIR}/include
+
+	LOAD = $(F90) $(OPTIMIZATION) $(LOADFLAGS) 
 endif
 
 
 PERFORMANCE = 
 #-L/ccs/home/larkin/xt3/fpmpi/lib -lfpmpi_papi
 
-LOAD = $(F90) $(OPTIMIZATION) $(LOADFLAGS) 
 
 # Compile the program
 
@@ -337,8 +349,7 @@ LOAD = $(F90) $(OPTIMIZATION) $(LOADFLAGS)
 
 ifeq ($(MACHINE),dlghp)
 $(EXEC): $(OBJ_FILES) $(OBJ_FFT) $(OBJ_CQL3D_SETUP) $(OBJ_DLG) ${OBJ_CUDA}
-	@echo ${OBJ_DLG}
-	$(LOAD) -o $(EXEC) $(OBJ_FILES) $(OBJ_FFT) $(OBJ_CQL3D_SETUP) $(OBJ_DLG) $(LIBS) $(DISLIN) ${OBJ_CUDA} ${CUDA_LIB} 
+	$(LOAD) -o $(EXEC) $(OBJ_FILES) $(OBJ_FFT) $(OBJ_CQL3D_SETUP) $(OBJ_DLG) $(LIBS) $(DISLIN) ${OBJ_CUDA} ${CUDA_LIB} ${LINK_FLAGS} 
 else
 $(EXEC): load_modules $(OBJ_FILES) $(OBJ_FFT) $(OBJ_CQL3D_SETUP) $(OBJ_DLG) ${OBJ_CUDA}
 	$(LOAD) -o $(EXEC) $(OBJ_FILES) $(OBJ_FFT) $(OBJ_CQL3D_SETUP) $(OBJ_DLG) $(LIBS) ${OBJ_CUDA} ${CUDA_LIB}

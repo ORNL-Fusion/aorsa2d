@@ -80,6 +80,14 @@ pro plot_aorsa, $
 
 	endfor
 
+	;	calculate div jant to test for div . jant = 0
+
+	R2D	= rebin ( capR, n_elements ( capR ), n_elements ( zLoc ) )
+	RStep	= capR[1]-capR[0]
+	zStep	= zLoc[1] - zLoc[0]
+	divJ	= 1.0 / R2D * dlg_pderiv ( R2D * jantx, 1, RStep ) $
+			+ dlg_pderiv ( janty, 1, zStep )
+
 	loadct, 13, file = 'davect.tbl', /silent
 
 	set_plot, 'ps'
@@ -169,7 +177,7 @@ pro plot_aorsa, $
    	contour, janty, capR, zLoc, $
 		   c_color = 1*16-1, $
 		   /overplot, $ 
-   			levels = fIndGen(10)*10
+   			levels = fIndGen(10)
 	
    	loadct, 13, file = 'davect.tbl', /silent
     contour, (eMinu_real<range)>(-range), capR, zLoc, $

@@ -16,6 +16,7 @@
       use netcdf
       use read_particle_f
       use set_edge_density
+      use dlg_ant
 
 !------------------------------------------------------------------------------
 !     This version (4/01/03: newlab3) does not solve equations for the points
@@ -2978,6 +2979,10 @@
 
          end do
       end do
+
+!DLG: use external antenna current from dlgAnt.nc
+
+    call read_dlg_ant ( capR, y, xjx, xjy ) 
 
 !DLG: read eqdsk dlg style
 
@@ -7110,6 +7115,7 @@ end do
 
       if (prfin .lt. 1e-5) pscale = 1.0
       if (pscale .le. 0.0) pscale = 1.0
+      if (pScale > huge (4) ) pScale = 1.0
 
       if (myid .eq. 0) then
          write(6, 1218) pscale
