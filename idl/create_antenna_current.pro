@@ -50,8 +50,85 @@ pro create_antenna_current
 	ncdf_close, cdfId
 
 
+	; test the div of jant from old aorsa file
 
-	window, 0, xSize = 800, ySize = 800
+	divJ_old	= fltArr ( size ( janty_, /dim ) )
+	dR	= capR[1]-capR[0]
+	dz	= zLoc[1]-zloc[0]
+
+	for i=1,n_elements(janty_[*,0])-2 do begin
+		for j=1,n_elements(janty_[0,*])-2 do begin
+			
+			divJ_old[i,j]	= ( janty_[i,j+1]-janty_[i,j-1] ) / dz $
+					+ ( jantx_[i+1,j]-jantx_[i-1,j] ) / dR
+
+		endfor
+	endfor
+
+	window, 1, xSize = 600, ySize = 600
+	device, decomposed = 0
+	loadct, 3
+	!p.background = 255 
+	levels	= fIndGen(21)*10
+	colors	= 255 - ( bytScl ( levels, top = 253 ) + 1 )
+	contour, janty_, capr, zloc, $
+			yrange=[-0.5,0.6], $
+			xrange=[1.4,1.58], $
+			color=0, $
+			/fill, $
+			levels = levels, $
+			c_colors = colors, /noData
+
+	xStep	= capR[1] - capR[0]
+	yStep 	= zLoc[1] - zLoc[0]
+
+	for i=0,n_elements(janty_[*,0])-1 do begin
+		for j=0,n_elements(janty_[0,*])-1 do begin
+
+			if janty_[i,j] gt 0.1 then begin
+
+			plots,[capR[i]-xStep/2.0, $
+				capR[i]+xStep/2.0, $
+				capR[i]+xStep/2.0, $
+				capR[i]-xStep/2.0, $
+				capR[i]-xStep/2.0], $
+				[zLoc[j]-yStep/2.0, $
+				zLoc[j]-yStep/2.0, $
+				zLoc[j]+yStep/2.0, $
+				zLoc[j]+yStep/2.0, $
+				zLoc[j]-yStep/2.0], $
+				color = 255 - bytScl ( janty_[i,j], max = 100, min = 0 ), $
+				/data
+	
+			polyFill,[capR[i]-xStep/2.0, $
+				capR[i]+xStep/2.0, $
+				capR[i]+xStep/2.0, $
+				capR[i]-xStep/2.0, $
+				capR[i]-xStep/2.0], $
+				[zLoc[j]-yStep/2.0, $
+				zLoc[j]-yStep/2.0, $
+				zLoc[j]+yStep/2.0, $
+				zLoc[j]+yStep/2.0, $
+				zLoc[j]-yStep/2.0], $
+				color = 255-janty_[i,j], $
+				/data
+
+				endif
+				
+		endfor
+	endfor
+	loadct, 12, /sil
+	oplot, eqdsk.rlim, eqdsk.zlim, $
+			psym = -4, $
+			color = 0
+	oPlot, eqdsk.rbbbs, eqdsk.zbbbs, $
+			color = 8*16-1
+
+
+
+stop
+	
+	window, 0, xSize = 1600, ySize = 1200
 	!p.multi = [0,3,2]
 	!p.charSize = 2.0
 	device, decomposed = 0
@@ -163,47 +240,23 @@ pro create_antenna_current
 ;	normalise to Am^-1 for 1 Amp
 
 	antThick = 0.03
-	antJX_line	= antJX_line / antThick / (2.0*!pi*newAntR)
-	antJY_line	= antJY_line / antThick / (2.0*!pi*newAntR)
+	antJX_line	= antJX_line / antThick ;/ (2.0*!pi*newAntR)
+	antJY_line	= antJY_line / antThick ;/ (2.0*!pi*newAntR)
 
-;	create oversampled 512x512 jAnt mesh
+	; test the div of jant new 
 
-	nX	= 256 
-	nY	= 512	
+	divJ_new	= fltArr ( size ( jAnty_, /dim ) )
+	dR	= xGrid[1]-xGrid[0]
+	dz	= yGrid[1]-yGrid[0]
 
-	xRange	= max ( eqdsk.r ) - min ( eqdsk.r )
-	yRange	= max ( eqdsk.z ) - min ( eqdsk.z )
-
-	xStep	= xRange / ( nX - 1 )
-	yStep	= yRange / ( nY - 1 )
-
-	xGrid	= fIndGen ( nX ) * xStep + min ( eqdsk.r )
-	yGrid	= fIndGen ( nY ) * yStep + min ( eqdsk.z )
-
-	xGrid2D	= rebin ( xGrid, nX, nY )
-	yGrid2D	= transpose ( rebin ( yGrid, nY, nX ) )
-
-	jAntX	= fltArr ( nX, nY )
-	jAntY	= fltArr ( nX, nY )
-	jAntCnt	= intArr ( nX, nY )
-
-	for i=0,nAnt-1 do begin
-
-		distance 	= sqrt ( (newantR[i]-xGrid2D[*])^2 + (newantz[i]-yGrid2D[*])^2 ) 
-		iiAnt	= where ( distance lt antThick/2.0, iiAntCnt )
-		if iiAntCnt gt 0 then begin
+	for i=1,n_elements(jAnty[*,0])-2 do begin
+		for j=1,n_elements(jAnty[0,*])-2 do begin
 			
-			jAntX[iiAnt] += antJX_line[i]
-			jAntY[iiAnt] += antJY_line[i]
-			jAntCnt[iiAnt] ++
+			divJ_new[i,j]	= ( janty[i,j+1]-janty[i,j-1] ) / dz $
+					+ ( jantx[i+1,j]-jantx[i-1,j] ) / dR
 
-		endif
-
+		endfor
 	endfor
-
-	iiNotZero	= where ( jAntCnt gt 0 )
-	jAntX[iiNotZero]	= jAntX[iiNotZero] / jAntCnt[iiNotZero]
-	jAntY[iiNotZero]	= jAntY[iiNotZero] / jAntCnt[iiNotZero]
 
 
 	for i=1,nX-2 do begin
@@ -223,12 +276,54 @@ pro create_antenna_current
 						yGrid[j]-yStep/2.0], $
 						color = 0, /data
 
+			endif
+
+		endfor
+	endfor	
+
+	loadct, 3, /sil
+	for i=1,nXDiv-2 do begin
+		for j=1,nYDiv-2 do begin
+
+			if jAntDiv[i,j] gt 0 then begin
+
+				plots, 	[xGrid[i*xSam-(xSam/2-1)], $
+						xGrid[i*xSam+(xSam/2-1)], $
+						xGrid[i*xSam+(xSam/2-1)], $
+						xGrid[i*xSam-(xSam/2-1)], $
+						xGrid[i*xSam-(xSam/2-1)]], $
+						[yGrid[j*ySam-(ySam/2-1)], $
+						yGrid[j*ySam-(ySam/2-1)], $
+						yGrid[j*ySam+(ySam/2-1)], $
+						yGrid[j*ySam+(ySam/2-1)], $
+						yGrid[j*ySam-(ySam/2-1)]], $
+						color = 231-(bytScl ( abs ( jAntDiv[i,j] ), max=10, min = 0, top=230 ) + 1), $
+						/data, $
+						thick = 3.0
+				print, ''
+				print, xGrid[i*xSam], yGrid[j*ySam]
+				print, jAntDiv[i,j]
+
+				jyTop	= total ( jAntY[i*xSam-(xSam/2-1):i*xSam+(xSam/2-1),j*ySam-(ySam/2-1)] )
+				jyBot	= total ( jAntY[i*xSam-(xSam/2-1):i*xSam+(xSam/2-1),j*ySam+(ySam/2-1)] )
+				jyL	= total ( jAntY[i*xSam-(xSam/2-1),j*ySam-(ySam/2-1):j*ySam+(ySam/2-1)] )
+				jyR	= total ( jAntY[i*xSam+(xSam/2-1),j*ySam-(ySam/2-1):j*ySam+(ySam/2-1)] )
+
+				jxTop	= total ( jAntX[i*xSam-(xSam/2-1):i*xSam+(xSam/2-1),j*ySam-(ySam/2-1)] )
+				jxBot	= total ( jAntX[i*xSam-(xSam/2-1):i*xSam+(xSam/2-1),j*ySam+(ySam/2-1)] )
+				jxL	= total ( jAntX[i*xSam-(xSam/2-1),j*ySam-(ySam/2-1):j*ySam+(ySam/2-1)] )
+				jxR	= total ( jAntX[i*xSam+(xSam/2-1),j*ySam-(ySam/2-1):j*ySam+(ySam/2-1)] )
+
+
+				print, jyTop, jyBot, jyL, jyR
+				print, jxTop, jxBot, jxL, jxR
 
 			endif
 
 		endfor
 	endfor	
 
+	loadct, 12, /sil
 	contour, janty_, capr, zloc, $
 			color = 0, $
 			xRange = [1.2, 1.9], $
@@ -295,6 +390,8 @@ pro create_antenna_current
 	nCdf_varPut, nc_id, janty_id, jAntY 
 
 	nCdf_close, nc_id
+
+
 
 	stop
 

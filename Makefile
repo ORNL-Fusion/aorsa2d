@@ -27,7 +27,7 @@ ifeq ($(MACHINE),dlghp)
 	endif
 	CPP_DIRECTIVES = -DUSE_DISLIN=1 -DDLGHP=1
 	OPTDIR = ${HOME}/opt
-	OPT = #-I${OPTDIR}/opt/include -L${OPTDIR}/opt/lib/static -lopt-openmpi -lstdc++ -ldl
+	OPT = -I${OPTDIR}/opt/include -L${OPTDIR}/opt/lib/static -lopt-openmpi -lstdc++ -ldl
 
 endif
 

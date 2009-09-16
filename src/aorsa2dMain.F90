@@ -881,7 +881,7 @@
              ePlus_id, eMinu_id, &
              ePlus_img_id, eMinu_img_id, &
              kPer_cold_id, kPer_img_cold_id, &
-             R_id, z_id
+             R_id, z_id, rho_pla_id, rho_ant_id
 
 
 
@@ -2982,7 +2982,7 @@
 
 !DLG: use external antenna current from dlgAnt.nc
 
-    call read_dlg_ant ( capR, y, xjx, xjy ) 
+!    call read_dlg_ant ( capR, y, xjx, xjy ) 
 
 !DLG: read eqdsk dlg style
 
@@ -7399,7 +7399,13 @@ end do
             call check ( &
        nf90_def_var ( nc_id, "eMinu_img", NF90_REAL, &
        (/ nR_id, nz_id /), eMinu_img_id ) )
-
+            call check ( &
+       nf90_def_var ( nc_id, "rho_pla", NF90_REAL, &
+       (/ nR_id, nz_id /), rho_pla_id ) )
+             call check ( &
+       nf90_def_var ( nc_id, "rho_ant", NF90_REAL, &
+       (/ nR_id, nz_id /), rho_ant_id ) )
+ 
             call check ( &
        nf90_def_var ( nc_id, "kPer_cold", NF90_REAL, &
        (/ nR_id, nz_id /), kPer_cold_id ) )
@@ -7432,7 +7438,13 @@ end do
             call check ( &
        nf90_put_var ( nc_id, eMinu_img_id, &
        aimag ( eminus(1:nnodex,1:nnodey) * sqrt(pscale) ) ) )
-
+            call check ( &
+       nf90_put_var ( nc_id, rho_pla_id, &
+       real ( rho_pla(1:nnodex,1:nnodey) ) ) )
+             call check ( &
+       nf90_put_var ( nc_id, rho_ant_id, &
+       real ( rho_ant(1:nnodex,1:nnodey) ) ) )
+ 
             call check ( &
        nf90_put_var ( nc_id, kPer_cold_id, &
        real ( xkperp_cold(1:nnodex,1:nnodey) ) ) )
