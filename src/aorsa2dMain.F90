@@ -881,7 +881,8 @@
              ePlus_id, eMinu_id, &
              ePlus_img_id, eMinu_img_id, &
              kPer_cold_id, kPer_img_cold_id, &
-             R_id, z_id, rho_pla_id, rho_ant_id
+             R_id, z_id, rho_pla_id, rho_ant_id, &
+             xjx_id, xjy_id
 
 
 
@@ -7405,6 +7406,12 @@ end do
              call check ( &
        nf90_def_var ( nc_id, "rho_ant", NF90_REAL, &
        (/ nR_id, nz_id /), rho_ant_id ) )
+              call check ( &
+       nf90_def_var ( nc_id, "antJ_x", NF90_REAL, &
+       (/ nR_id, nz_id /), xjx_id ) )
+              call check ( &
+       nf90_def_var ( nc_id, "antJ_y", NF90_REAL, &
+       (/ nR_id, nz_id /), xjy_id ) )
  
             call check ( &
        nf90_def_var ( nc_id, "kPer_cold", NF90_REAL, &
@@ -7444,6 +7451,12 @@ end do
              call check ( &
        nf90_put_var ( nc_id, rho_ant_id, &
        real ( rho_ant(1:nnodex,1:nnodey) ) ) )
+              call check ( &
+       nf90_put_var ( nc_id, xjx_id, &
+       real ( xjx(1:nnodex,1:nnodey) ) ) )
+              call check ( &
+       nf90_put_var ( nc_id, xjy_id, &
+       real ( xjy(1:nnodex,1:nnodey) ) ) )
  
             call check ( &
        nf90_put_var ( nc_id, kPer_cold_id, &

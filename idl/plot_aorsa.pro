@@ -2,6 +2,7 @@ pro plot_aorsa, $
 		range = range, $
 		brange = brange, $
 		prange = prange, $
+		rrange = rrange, $
 		flat = flat
 
 	;eqDskFileName	= 'g123435.00400'
@@ -41,6 +42,12 @@ pro plot_aorsa, $
 	nCdf_varGet, cdfId, 'ey', ey
 	nCdf_varGet, cdfId, 'ez', ez
 	ncdf_close, cdfId
+
+	cdfId = ncdf_open ( 'output/mchoi_dlg.nc', /noWrite ) 
+	nCdf_varGet, cdfId, 'rho_pla', rho_pla 
+	nCdf_varGet, cdfId, 'rho_ant', rho_ant
+	ncdf_close, cdfId
+
 
 	;	create an interpolated limiter boundary
 
@@ -103,6 +110,7 @@ pro plot_aorsa, $
 	if(not keyword_set(range)) then range = max ( ePlus_real ) / 2.0
 	if(not keyword_set(brange)) then brange	= max ( bx_wave_real ) / 2.0
 	if(not keyword_set(prange)) then prange	= max ( jedote ) / 5.0
+	if(not keyword_set(rrange)) then rrange	= max ( rho_pla ) / 5.0
 
 	levels	= ( fIndGen ( nLevs ) - nLevs / 2.0 ) / ( nLevs / 2.0 ) * range 
 	colors	= bytScl ( levels, top = 253 ) + 1
@@ -113,6 +121,8 @@ pro plot_aorsa, $
 	plevels	= ( fIndGen ( nLevs ) - nLevs / 2.0 ) / ( nLevs / 2.0 ) * prange 
 	pcolors	= bytScl ( plevels, top = 253 ) + 1
 
+	rlevels	= ( fIndGen ( nLevs ) - nLevs / 2.0 ) / ( nLevs / 2.0 ) * rrange 
+	rcolors	= bytScl ( rlevels, top = 253 ) + 1
 
 	xRange	= [ min ( eqdsk.rlim ), max ( eqdsk.rlim ) ]
 	yRange	= [ min ( eqdsk.zlim ), max ( eqdsk.zlim ) ]
@@ -557,6 +567,37 @@ pro plot_aorsa, $
 	oPlot, eqdsk.rLim, eqdsk.zLim, $
 		   thick = 2, $
 		   color = 255 
+   	contour, rho_pla, capR, zLoc, $
+			color = 255, $
+			levels = rlevels, $
+			c_colors = rcolors, $
+			title = 'rho_pla', $
+			/fill, $
+			yRange = yRange, $
+			xRange = xRange, $
+			xSty = 1, ySty = 1
+	oPlot, eqdsk.rbbbs, eqdsk.zbbbs, $
+		   thick = 2, $
+		   color = 255 
+	oPlot, eqdsk.rLim, eqdsk.zLim, $
+		   thick = 2, $
+		   color = 255 
+	contour, rho_ant, capR, zLoc, $
+			color = 255, $
+			levels = rlevels, $
+			c_colors = rcolors, $
+			title = 'rho_pla', $
+			/fill, $
+			yRange = yRange, $
+			xRange = xRange, $
+			xSty = 1, ySty = 1
+	oPlot, eqdsk.rbbbs, eqdsk.zbbbs, $
+		   thick = 2, $
+		   color = 255 
+	oPlot, eqdsk.rLim, eqdsk.zLim, $
+		   thick = 2, $
+		   color = 255 
+	
 	!p.multi = 0
   	
    device, /close_file
