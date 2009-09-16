@@ -46,6 +46,8 @@ pro plot_aorsa, $
 	cdfId = ncdf_open ( 'output/mchoi_dlg.nc', /noWrite ) 
 	nCdf_varGet, cdfId, 'rho_pla', rho_pla 
 	nCdf_varGet, cdfId, 'rho_ant', rho_ant
+	nCdf_varGet, cdfId, 'antJ_x', antJ_x
+	nCdf_varGet, cdfId, 'antJ_y', antJ_y
 	ncdf_close, cdfId
 
 

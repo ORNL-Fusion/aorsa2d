@@ -882,7 +882,9 @@
              ePlus_img_id, eMinu_img_id, &
              kPer_cold_id, kPer_img_cold_id, &
              R_id, z_id, rho_pla_id, rho_ant_id, &
-             xjx_id, xjy_id
+             xjx_id, xjy_id, xjpx_lab_id, xjpy_lab_id, &
+             scalar_2_id, antOmega_id, nPhi_id, &
+             xjz_id, xjpz_lab_id
 
 
 
@@ -7387,6 +7389,9 @@ end do
        nf90_def_dim ( nc_id, "nR", nnodex, nR_id ) )
             call check ( &
        nf90_def_dim ( nc_id, "nZ", nnodey, nz_id ) )
+            call check ( &
+       nf90_def_dim ( nc_id, "scalar", 1, scalar_2_id ) )
+ 
 
             call check ( &
        nf90_def_var ( nc_id, "ePlus", NF90_REAL, &
@@ -7412,7 +7417,28 @@ end do
               call check ( &
        nf90_def_var ( nc_id, "antJ_y", NF90_REAL, &
        (/ nR_id, nz_id /), xjy_id ) )
+              call check ( &
+       nf90_def_var ( nc_id, "antJ_z", NF90_REAL, &
+       (/ nR_id, nz_id /), xjz_id ) )
  
+               call check ( &
+       nf90_def_var ( nc_id, "plaJ_x", NF90_REAL, &
+       (/ nR_id, nz_id /), xjpx_lab_id ) )
+              call check ( &
+       nf90_def_var ( nc_id, "plaJ_y", NF90_REAL, &
+       (/ nR_id, nz_id /), xjpy_lab_id ) )
+               call check ( &
+       nf90_def_var ( nc_id, "plaJ_z", NF90_REAL, &
+       (/ nR_id, nz_id /), xjpz_lab_id ) )
+ 
+               call check ( &
+       nf90_def_var ( nc_id, "antOmega", NF90_REAL, &
+       scalar_2_id, antOmega_id ) )
+               call check ( &
+       nf90_def_var ( nc_id, "nPhi", NF90_REAL, &
+       scalar_2_id, nPhi_id ) )
+
+
             call check ( &
        nf90_def_var ( nc_id, "kPer_cold", NF90_REAL, &
        (/ nR_id, nz_id /), kPer_cold_id ) )
@@ -7457,6 +7483,26 @@ end do
               call check ( &
        nf90_put_var ( nc_id, xjy_id, &
        real ( xjy(1:nnodex,1:nnodey) ) ) )
+              call check ( &
+       nf90_put_var ( nc_id, xjz_id, &
+       real ( xjz(1:nnodex,1:nnodey) ) ) )
+              call check ( &
+       nf90_put_var ( nc_id, antOmega_id, &
+       omgrf ) )
+              call check ( &
+       nf90_put_var ( nc_id, nPhi_id, &
+       nPhi ) )
+
+
+               call check ( &
+       nf90_put_var ( nc_id, xjpx_lab_id, &
+       real ( xjpx_lab(1:nnodex,1:nnodey) ) ) )
+              call check ( &
+       nf90_put_var ( nc_id, xjpy_lab_id, &
+       real ( xjpy_lab(1:nnodex,1:nnodey) ) ) )
+               call check ( &
+       nf90_put_var ( nc_id, xjpz_lab_id, &
+       real ( xjpz_lab(1:nnodex,1:nnodey) ) ) )
  
             call check ( &
        nf90_put_var ( nc_id, kPer_cold_id, &
