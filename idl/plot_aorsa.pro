@@ -48,6 +48,13 @@ pro plot_aorsa, $
 	nCdf_varGet, cdfId, 'rho_ant', rho_ant
 	nCdf_varGet, cdfId, 'antJ_x', antJ_x
 	nCdf_varGet, cdfId, 'antJ_y', antJ_y
+	nCdf_varGet, cdfId, 'antJ_z', antJ_z
+	nCdf_varGet, cdfId, 'plaJ_y', plaJ_x
+	nCdf_varGet, cdfId, 'plaJ_y', plaJ_y
+	nCdf_varGet, cdfId, 'plaJ_y', plaJ_z
+	nCdf_varGet, cdfId, 'antOmega', antOmega
+	nCdf_varGet, cdfId, 'nPhi', nPhi 
+
 	ncdf_close, cdfId
 
 
@@ -91,11 +98,38 @@ pro plot_aorsa, $
 
 	;	calculate div jant to test for div . jant = 0
 
-	R2D	= rebin ( capR, n_elements ( capR ), n_elements ( zLoc ) )
 	RStep	= capR[1]-capR[0]
 	zStep	= zLoc[1] - zLoc[0]
-	divJ	= 1.0 / R2D * dlg_pderiv ( R2D * jantx, 1, RStep ) $
-			+ dlg_pderiv ( janty, 1, zStep )
+	divJ	= complexArr ( size ( antJ_x, /dim ) )
+	divJp	= complexArr ( size ( antJ_x, /dim ) )
+
+	iC	= complex ( 0, 1 )
+
+	for i=1,n_elements(capR)-2 do begin
+		for j=1,n_elements(zLoc)-2 do begin
+
+			divJ[i,j]	= ( ( antJ_x[i+1,j] - antJ_x[i-1,j] ) / (2.0 * rStep) $
+					+ ( antJ_y[i,j+1] - antJ_y[i,j-1] ) / (2.0 * zStep) $
+					+ iC * nPhi / capR[i] * antJ_z[i,j] ) / ( iC * antOmega ) 
+			divJp[i,j]	= ( ( plaJ_x[i+1,j] - plaJ_x[i-1,j] ) / (2.0 * rStep) $
+					+ ( plaJ_y[i,j+1] - plaJ_y[i,j-1] ) / (2.0 * zStep) $
+					+ iC * nPhi / capR[i] * plaJ_z[i,j] ) / ( iC * antOmega )
+
+		endfor
+	endfor
+
+	if(not keyword_set(range)) then range = max ( ePlus_real ) / 2.0
+	if(not keyword_set(brange)) then brange	= max ( bx_wave_real ) / 2.0
+	if(not keyword_set(prange)) then prange	= max ( jedote ) / 5.0
+	if(not keyword_set(rrange)) then rrange	= max ( rho_pla ) / 5.0
+
+	window, 4
+	!p.multi = [0,2,2]
+	plot, float(divJp),yRange=[-rrange,rrange]
+	plot, float(divJ),yRange=[-rrange,rrange]
+	plot, imaginary(divJp),yRange=[-rrange,rrange]
+	plot, imaginary(divJ),yRange=[-rrange,rrange]
+	!p.multi = 0
 
 	loadct, 13, file = 'davect.tbl', /silent
 
@@ -108,11 +142,6 @@ pro plot_aorsa, $
 	!p.charSize = 1.0
 
 	nLevs	= 21
-
-	if(not keyword_set(range)) then range = max ( ePlus_real ) / 2.0
-	if(not keyword_set(brange)) then brange	= max ( bx_wave_real ) / 2.0
-	if(not keyword_set(prange)) then prange	= max ( jedote ) / 5.0
-	if(not keyword_set(rrange)) then rrange	= max ( rho_pla ) / 5.0
 
 	levels	= ( fIndGen ( nLevs ) - nLevs / 2.0 ) / ( nLevs / 2.0 ) * range 
 	colors	= bytScl ( levels, top = 253 ) + 1

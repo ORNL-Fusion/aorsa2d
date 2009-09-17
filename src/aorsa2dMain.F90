@@ -2985,7 +2985,7 @@
 
 !DLG: use external antenna current from dlgAnt.nc
 
-!    call read_dlg_ant ( capR, y, xjx, xjy ) 
+    if ( dlgAnt ) call read_dlg_ant ( capR, y, xjx, xjy ) 
 
 !DLG: read eqdsk dlg style
 

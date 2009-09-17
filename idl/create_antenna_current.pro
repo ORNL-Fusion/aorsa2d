@@ -26,8 +26,8 @@ pro over_sample_boundary,  r, z, newR, newz
 
 	endfor
 
-	;newR	= [r, newR]
-	;newz	= [z, newz]	
+	newR	= [r, newR]
+	newz	= [z, newz]	
 	
 end 
 
@@ -124,11 +124,7 @@ pro create_antenna_current
 	oPlot, eqdsk.rbbbs, eqdsk.zbbbs, $
 			color = 8*16-1
 
-
-
-stop
-	
-	window, 0, xSize = 1600, ySize = 1200
+	window, 0, xSize = 800, ySize = 600
 	!p.multi = [0,3,2]
 	!p.charSize = 2.0
 	device, decomposed = 0
@@ -181,6 +177,11 @@ stop
 
 	antR	= [ topPtX, (eqdsk.rLim)[13:23], botPtX ]
 	antz	= [ topPtY, (eqdsk.zLim)[13:23], botPtY ]
+	
+	;	first step is to just use a straight vertical antenna connecting
+	;	the top and bottom points, do overwrite this for the time being
+
+	antR	= antR * 0 + topPtX
 
 	eqdsk.rLim[13:23]	= eqdsk.rLim[13:23] + rShift
 
@@ -218,24 +219,51 @@ stop
 
 	nAnt	= n_elements ( newantR )
 
-	antJX_line	= fltArr ( nAnt )
-	antJY_line	= fltArr ( nAnt )
-
+	antCnt = 0
 	for i=0,nAnt-2 do begin
 
 		distance = sqrt ( (newAntR[i] - newAntR[i+1])^2 + (newAntZ[i] - newAntZ[i+1])^2 )
 		jXDir	= (newAntR[i] - newAntR[i+1]) / distance
 		jYDir	= -(newAntz[i] - newAntz[i+1]) / distance
 
-		antJX_line[i]	= jXDir
-		antJY_line[i]	= jYDir
+		if distance gt 0 then begin
 
-		if distance eq 0 then stop
+			if size(antJX_line,/ty) eq 0 then antJX_line = jXDir $
+					else antJX_line = [antJX_line,jXDir]
+			if size(antJY_line,/ty) eq 0 then antJY_line = jYDir $
+					else antJY_line = [antJY_line,jYDir]
+
+			antCnt++
+
+		endif
 
 	endfor
 
-	antJX_line[nAnt-1]	= antJX_line[nAnt-2]
-	antJY_line[nAnt-1]	= antJY_line[nAnt-2]
+	antJX_line	= [antJX_line, antJX_line[antCnt-1]]
+	antJY_line	= [antJY_line, antJY_line[antCnt-1]]
+	nAnt	= antCnt+1
+
+;	put the antenna line on a grid
+
+	nX	= 128
+	nY	= 256
+
+	xRange	= max ( eqdsk.r ) - min ( eqdsk.r )
+	antGrid_x	= fIndGen ( nX ) * xRange + min ( eqdsk.r )
+	yRange	= max ( eqdsk.z ) - min ( eqdsk.z )
+	antGrid_y	= fIndGen ( nY ) * yRange + min ( eqdsk.z )
+
+	antJX_grid	= fltArr ( nX, nY )
+	antJY_grid	= fltArr ( nX, nY )
+
+	; this only works for the vertical line current 
+
+	antXii	=  ( newAntR[0] - min(antGrid_x) ) / xRange * nX
+	antYii_top	=  ( max(newAntZ) - min(antGrid_y) ) / yRange * nY
+	antYii_bot	=  ( min(newAntZ) - min(antGrid_y) ) / yRange * nY
+
+	antJY_grid[antXii,antYii_bot:antYii_top]	= antJY_line[0]
+
 
 ;	normalise to Am^-1 for 1 Amp
 
@@ -245,83 +273,19 @@ stop
 
 	; test the div of jant new 
 
-	divJ_new	= fltArr ( size ( jAnty_, /dim ) )
-	dR	= xGrid[1]-xGrid[0]
-	dz	= yGrid[1]-yGrid[0]
+	divJ_new	= fltArr ( nX, nY )
+	dz	= antGrid_x[1] - antGrid_x[0]
+	dR	= antGrid_y[1] - antGrid_y[0]
 
-	for i=1,n_elements(jAnty[*,0])-2 do begin
-		for j=1,n_elements(jAnty[0,*])-2 do begin
+	for i=1,nX-2 do begin
+		for j=1,nY-2 do begin
 			
-			divJ_new[i,j]	= ( janty[i,j+1]-janty[i,j-1] ) / dz $
-					+ ( jantx[i+1,j]-jantx[i-1,j] ) / dR
+			divJ_new[i,j]	= ( antJY_grid[i,j+1]-antJY_grid[i,j-1] ) / dz $
+					+ ( antJX_grid[i+1,j]-antJX_grid[i-1,j] ) / dR
 
 		endfor
 	endfor
 
-
-	for i=1,nX-2 do begin
-		for j=1,nY-2 do begin
-
-			if jAntCnt[i,j] gt 0 then begin
-
-				plots, 	[xGrid[i]-xStep/2.0, $
-						xGrid[i]+xStep/2.0, $
-						xGrid[i]+xStep/2.0, $
-						xGrid[i]-xStep/2.0, $
-						xGrid[i]-xStep/2.0], $
-						[yGrid[j]-yStep/2.0, $
-						yGrid[j]-yStep/2.0, $
-						yGrid[j]+yStep/2.0, $
-						yGrid[j]+yStep/2.0, $
-						yGrid[j]-yStep/2.0], $
-						color = 0, /data
-
-			endif
-
-		endfor
-	endfor	
-
-	loadct, 3, /sil
-	for i=1,nXDiv-2 do begin
-		for j=1,nYDiv-2 do begin
-
-			if jAntDiv[i,j] gt 0 then begin
-
-				plots, 	[xGrid[i*xSam-(xSam/2-1)], $
-						xGrid[i*xSam+(xSam/2-1)], $
-						xGrid[i*xSam+(xSam/2-1)], $
-						xGrid[i*xSam-(xSam/2-1)], $
-						xGrid[i*xSam-(xSam/2-1)]], $
-						[yGrid[j*ySam-(ySam/2-1)], $
-						yGrid[j*ySam-(ySam/2-1)], $
-						yGrid[j*ySam+(ySam/2-1)], $
-						yGrid[j*ySam+(ySam/2-1)], $
-						yGrid[j*ySam-(ySam/2-1)]], $
-						color = 231-(bytScl ( abs ( jAntDiv[i,j] ), max=10, min = 0, top=230 ) + 1), $
-						/data, $
-						thick = 3.0
-				print, ''
-				print, xGrid[i*xSam], yGrid[j*ySam]
-				print, jAntDiv[i,j]
-
-				jyTop	= total ( jAntY[i*xSam-(xSam/2-1):i*xSam+(xSam/2-1),j*ySam-(ySam/2-1)] )
-				jyBot	= total ( jAntY[i*xSam-(xSam/2-1):i*xSam+(xSam/2-1),j*ySam+(ySam/2-1)] )
-				jyL	= total ( jAntY[i*xSam-(xSam/2-1),j*ySam-(ySam/2-1):j*ySam+(ySam/2-1)] )
-				jyR	= total ( jAntY[i*xSam+(xSam/2-1),j*ySam-(ySam/2-1):j*ySam+(ySam/2-1)] )
-
-				jxTop	= total ( jAntX[i*xSam-(xSam/2-1):i*xSam+(xSam/2-1),j*ySam-(ySam/2-1)] )
-				jxBot	= total ( jAntX[i*xSam-(xSam/2-1):i*xSam+(xSam/2-1),j*ySam+(ySam/2-1)] )
-				jxL	= total ( jAntX[i*xSam-(xSam/2-1),j*ySam-(ySam/2-1):j*ySam+(ySam/2-1)] )
-				jxR	= total ( jAntX[i*xSam+(xSam/2-1),j*ySam-(ySam/2-1):j*ySam+(ySam/2-1)] )
-
-
-				print, jyTop, jyBot, jyL, jyR
-				print, jxTop, jxBot, jxL, jxR
-
-			endif
-
-		endfor
-	endfor	
 
 	loadct, 12, /sil
 	contour, janty_, capr, zloc, $
@@ -334,8 +298,6 @@ stop
 	oPlot, eqdsk.rbbbs, eqdsk.zbbbs, $
 			color = 8*16-1
 
-	plot, xGrid, jAnty[*,n_elements(janty[0,*])/2-3], $
-			color = 0
 	plot, capR, jAnty_[*,n_elements(janty_[0,*])/2-3], $
 			color = 0
 
@@ -384,10 +346,10 @@ stop
 
 	nCdf_control, nc_id, /enDef
 	
-	nCdf_varPut, nc_id, R_id, xGrid
-	nCdf_varPut, nc_id, z_id, yGrid 
-	nCdf_varPut, nc_id, jantx_id, jAntX 
-	nCdf_varPut, nc_id, janty_id, jAntY 
+	nCdf_varPut, nc_id, R_id, antGrid_x
+	nCdf_varPut, nc_id, z_id, antGrid_y 
+	nCdf_varPut, nc_id, jantx_id, antJX_grid 
+	nCdf_varPut, nc_id, janty_id, antJY_grid
 
 	nCdf_close, nc_id
 
