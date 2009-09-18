@@ -181,7 +181,8 @@ pro create_antenna_current
 	;	first step is to just use a straight vertical antenna connecting
 	;	the top and bottom points, do overwrite this for the time being
 
-	antR	= antR * 0 + topPtX
+	antR	= antR * 0 + topPtX*1.04
+	antz	= (antz<0.15)>(-0.15)
 
 	eqdsk.rLim[13:23]	= eqdsk.rLim[13:23] + rShift
 
@@ -249,9 +250,9 @@ pro create_antenna_current
 	nY	= 256
 
 	xRange	= max ( eqdsk.r ) - min ( eqdsk.r )
-	antGrid_x	= fIndGen ( nX ) * xRange + min ( eqdsk.r )
+	antGrid_x	= fIndGen ( nX )/(nX-1) * xRange + min ( eqdsk.r )
 	yRange	= max ( eqdsk.z ) - min ( eqdsk.z )
-	antGrid_y	= fIndGen ( nY ) * yRange + min ( eqdsk.z )
+	antGrid_y	= fIndGen ( nY )/(nY-1) * yRange + min ( eqdsk.z )
 
 	antJX_grid	= fltArr ( nX, nY )
 	antJY_grid	= fltArr ( nX, nY )

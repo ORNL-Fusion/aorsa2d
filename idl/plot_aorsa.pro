@@ -598,7 +598,7 @@ pro plot_aorsa, $
 	oPlot, eqdsk.rLim, eqdsk.zLim, $
 		   thick = 2, $
 		   color = 255 
-   	contour, rho_pla, capR, zLoc, $
+   	contour, abs(divJp), capR, zLoc, $
 			color = 255, $
 			levels = rlevels, $
 			c_colors = rcolors, $
@@ -613,7 +613,7 @@ pro plot_aorsa, $
 	oPlot, eqdsk.rLim, eqdsk.zLim, $
 		   thick = 2, $
 		   color = 255 
-	contour, rho_ant, capR, zLoc, $
+	contour, abs(divJ), capR, zLoc, $
 			color = 255, $
 			levels = rlevels, $
 			c_colors = rcolors, $
