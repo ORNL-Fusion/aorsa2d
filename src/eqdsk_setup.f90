@@ -7,9 +7,10 @@
          rmaxis, zmaxis, b0, psio, psimag, psi_tor_max, &
          bxn_eq, byn_eq, bzn_eq, bmod_eq, psi, rho_pol2d, qsafety, &
          bmod_mid, capr_bpol_mid2, capr_bpol_mid, rho_tor2d, &
-         i_psi, dldb_tot12, dldbavg, n_prof_flux, dlg_yRange)
+         i_psi, dldb_tot12, dldbavg, n_prof_flux )
 
       use size_mod
+      use aorsa2din_mod, ONLY: eqdsk_rRange, eqdsk_zRange
 
       implicit none
 
@@ -1028,9 +1029,13 @@
 
       ! DLG
       ! use entire vertial eqdsk box range instead
-      if (dlg_yRange .eq. 1 ) then 
+      if (eqdsk_zRange) then 
         ytop  = zmax
         ybottom   = zmin
+      endif
+      if (eqdsk_rRange) then 
+        rwright  = rmax
+        rwleft   = rmin
       endif
 
       xmax = rwright - rwleft

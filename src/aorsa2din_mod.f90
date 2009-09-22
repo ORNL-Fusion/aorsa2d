@@ -99,7 +99,9 @@
       real :: alim = 100.0             !-----alim = location of limiter
       real :: grad = 0.0               !-----grad = 0.0 ignors gradients in Wdot (default)
                                        !-----grad = 1.0 includes gradients in Wdot      
-      integer :: dlg_yRange = 0         ! 0 = auto, 1 = max
+      logical :: eqdsk_zRange = .false.        ! 0 = auto, 1 = max
+      logical :: eqdsk_rRange = .false.        ! 0 = auto, 1 = max
+
       real :: signbz = 1.0000E+00
       real :: xn0 = 3.1100E+19         !-----xn0=electron density at x=0
       real :: xn2 = 0.0
@@ -385,8 +387,8 @@
      &    limiter_boundary, xn_rho2lim, xn2_rho2lim, &
      &    xn3_rho2lim, xn4_rho2lim, xn5_rho2lim, xn6_rho2lim, &
      &    te_rho2lim, ti_rho2lim, ti2_rho2lim, ti3_rho2lim, &
-     &    ti4_rho2lim, ti5_rho2lim, ti6_rho2lim, dlg_yRange, &
-     &    gradient, nPhi_sum_only, bbbsMask, dlgAnt
+     &    ti4_rho2lim, ti5_rho2lim, ti6_rho2lim, eqdsk_zRange, &
+     &    gradient, nPhi_sum_only, bbbsMask, dlgAnt, eqdsk_rRange
                 
 
       end module aorsa2din_mod

@@ -186,6 +186,9 @@ pro create_antenna_current
 
 	eqdsk.rLim[13:23]	= eqdsk.rLim[13:23] + rShift
 
+	iiShift	= where ( eqdsk.rLim gt 0.6, iiShiftCnt )
+	eqdsk.rLim[iiShift]	= 1.8
+
 	plot, eqdsk.rlim, eqdsk.zlim, $
 			psym = -4, $
 			color = 0
@@ -257,14 +260,35 @@ pro create_antenna_current
 	antJX_grid	= fltArr ( nX, nY )
 	antJY_grid	= fltArr ( nX, nY )
 
-	; this only works for the vertical line current 
+	;; this only works for the vertical line current 
 
-	antXii	=  ( newAntR[0] - min(antGrid_x) ) / xRange * nX
-	antYii_top	=  ( max(newAntZ) - min(antGrid_y) ) / yRange * nY
-	antYii_bot	=  ( min(newAntZ) - min(antGrid_y) ) / yRange * nY
+	;antXii	=  ( newAntR[0] - min(antGrid_x) ) / xRange * nX
+	;antYii_top	=  ( max(newAntZ) - min(antGrid_y) ) / yRange * nY
+	;antYii_bot	=  ( min(newAntZ) - min(antGrid_y) ) / yRange * nY
 
-	antJY_grid[antXii,antYii_bot:antYii_top]	= antJY_line[0]
+	;	define connecting path for the antenna, 
+	;	at the moment it requires right angle connectors,
+	;	but this will be changed later
 
+	xAnt	= 1.56
+	yAnt1	= -0.5
+	yAnt2	=  0.5
+	iiFeedLength	= where ( antGrid_x ge xAnt, iiFeedCnt )
+	iiAntLength		= where ( antGrid_y ge yAnt1 and antGrid_y le yAnt2, iiAntCnt )
+	bottomFeederX	= nX - indGen ( iiFeedCnt ) -1
+	bottomFeederY	= bottomFeederX*0+min(iiAntLength)
+	antLengthX		= intArr ( iiAntCnt ) + bottomFeederX[iiFeedCnt-1]
+	antLengthY		= indGen ( iiAntCnt ) + min ( iiAntLength )
+	topFeederX		= reverse ( bottomFeederX ) 
+	topFeederY		= bottomFeederX*0+max(iiAntLength)
+	
+	ant_grid_path_X	= [ bottomFeederX, antLengthX[1:*], topFeederX[1:*] ]
+	ant_grid_path_Y	= [ bottomFeederY, antLengthY[1:*], topFeederY[1:*] ]
+
+	trace_ant_path, ant_grid_path_X, ant_grid_path_Y, nX, nY, $
+			JxInterp = antJX_grid, JyInterp = antJY_grid, $
+			dX = antGrid_x[1]-antGrid_x[0], $
+			dY = antGrid_y[1]-antGrid_y[0]
 
 ;	normalise to Am^-1 for 1 Amp
 
@@ -289,7 +313,9 @@ pro create_antenna_current
 
 
 	loadct, 12, /sil
-	contour, janty_, capr, zloc, $
+	window, 3
+	!p.multi = [0,2,1]
+	contour, sqrt(antJX_grid^2+antJY_grid^2), antGrid_x, antGrid_y, $
 			color = 0, $
 			xRange = [1.2, 1.9], $
 			yRange = [-0.6, 0.6] 
@@ -299,6 +325,19 @@ pro create_antenna_current
 	oPlot, eqdsk.rbbbs, eqdsk.zbbbs, $
 			color = 8*16-1
 
+	contour, divJ_new, antGrid_x, antGrid_y, $
+			color = 0, $
+			xRange = [1.2, 1.9], $
+			yRange = [-0.6, 0.6] 
+	oPlot, eqdsk.rlim, eqdsk.zlim, $
+			psym = -4, $
+			color = 0
+	oPlot, eqdsk.rbbbs, eqdsk.zbbbs, $
+			color = 8*16-1
+	
+	!p.multi = 0
+
+	window, 4
 	plot, capR, jAnty_[*,n_elements(janty_[0,*])/2-3], $
 			color = 0
 
@@ -353,8 +392,6 @@ pro create_antenna_current
 	nCdf_varPut, nc_id, janty_id, antJY_grid
 
 	nCdf_close, nc_id
-
-
 
 	stop
 

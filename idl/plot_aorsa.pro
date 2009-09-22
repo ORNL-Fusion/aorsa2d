@@ -120,7 +120,7 @@ pro plot_aorsa, $
 
 	if(not keyword_set(range)) then range = max ( ePlus_real ) / 2.0
 	if(not keyword_set(brange)) then brange	= max ( bx_wave_real ) / 2.0
-	if(not keyword_set(prange)) then prange	= max ( jedote ) / 5.0
+	if(not keyword_set(prange)) then prange	= max ( jedote ) / 2.0
 	if(not keyword_set(rrange)) then rrange	= max ( rho_pla ) / 5.0
 
 	window, 4

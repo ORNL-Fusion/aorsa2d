@@ -1527,7 +1527,7 @@
             rmaxis, zmaxis, b0, psio, psimag, psi_tor_max, &
             bxn, byn, bzn, bmod, psi_pol2d, rho_pol2d, qsafety, &
             bmod_mid,  capr_bpol_mid2,  capr_bpol_mid, rho_tor2d, &
-            i_psi_eq, dldb_tot12, dldbavg, n_prof_flux,dlg_yRange)
+            i_psi_eq, dldb_tot12, dldbavg, n_prof_flux)
 
       if (myId==0) write(167,12398) 'eqdsk_setup:', &
         (dlgTime - second1(dummy))/60.0
