@@ -876,7 +876,7 @@
        nrho_id, f_vvp_id, uper_id, upar_id, rho_id, &
        vc_mks_id, pScale_id
 
-    logical :: sane
+    logical :: sane, gridMatch
          integer :: nR_id, nz_id, &
              ePlus_id, eMinu_id, &
              ePlus_img_id, eMinu_img_id, &
@@ -2985,7 +2985,9 @@
 
 !DLG: use external antenna current from dlgAnt.nc
 
-    if ( dlgAnt ) call read_dlg_ant ( capR, y, xjx, xjy ) 
+    gridMatch = .true.
+    if ( dlgAnt ) &
+    call read_dlg_ant ( capR(1:nnodex), y(1:nnodey), xjx, xjy, gridMatch = gridMatch ) 
 
 !DLG: read eqdsk dlg style
 

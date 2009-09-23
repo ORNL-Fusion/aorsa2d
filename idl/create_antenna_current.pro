@@ -39,7 +39,7 @@ pro create_antenna_current
 	eqdsk_fileName	 = '~/data/eqdsk/g128797.00400_nstx_efit2'
 	eqdsk	= readgeqdsk ( eqdsk_fileName )
 
-	cdfId = ncdf_open ( '/home/dg6/scratch/aorsa2d/nstx/bench_solps_256x256_nPhi_-18/output/plotData.nc', /noWrite ) 
+	cdfId = ncdf_open ( '/home/dg6/scratch/aorsa2d/nstx/ant_feeders_nPhi-8_0.45T_square_flat_cold/output/plotData.nc', /noWrite ) 
 	ncdf_varGet, cdfId, 'rho', rho 
 	ncdf_varget, cdfId, 'capR', capR 
 	ncdf_varget, cdfId, 'zLoc', zLoc 
@@ -249,13 +249,22 @@ pro create_antenna_current
 
 ;	put the antenna line on a grid
 
-	nX	= 128
+	nX	= 16
 	nY	= 256
 
-	xRange	= max ( eqdsk.r ) - min ( eqdsk.r )
-	antGrid_x	= fIndGen ( nX )/(nX-1) * xRange + min ( eqdsk.r )
+	rMax	= 1.8
+	xRange	= rMax - min ( eqdsk.r )
+	dX	= xRange / nX
+	antGrid_x	= fIndGen ( nX ) * dX + min ( eqdsk.r ) + dX / 2.0
 	yRange	= max ( eqdsk.z ) - min ( eqdsk.z )
 	antGrid_y	= fIndGen ( nY )/(nY-1) * yRange + min ( eqdsk.z )
+
+	nX	= n_elements ( capR )
+	nY	= n_elements ( zLoc )
+	xRange = max ( capR ) - min ( capR )
+	yRange = max ( zLoc ) - min ( zLoc )
+	antGrid_x	= capR
+	antGrid_y	= zLoc
 
 	antJX_grid	= fltArr ( nX, nY )
 	antJY_grid	= fltArr ( nX, nY )

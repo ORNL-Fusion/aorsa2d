@@ -1161,6 +1161,10 @@
       jmid = j0
       jequat = jmid
 
+      if(myId==0)write(*,'(16f6.3)') capR(1:nnodex)
+      if(myId==0)write(*,'(16f6.3)') y(1:nnodey)
+      if(myId==0)write(*,'(16f6.3)') rmin,rmax,zmin,zmax,dx,dy
+
 !      write(6, *)"jequat = ", jequat
 
 
