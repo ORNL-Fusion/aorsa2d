@@ -185,9 +185,17 @@ pro create_antenna_current
 	antz	= (antz<0.15)>(-0.15)
 
 	eqdsk.rLim[13:23]	= eqdsk.rLim[13:23] + rShift
-
 	iiShift	= where ( eqdsk.rLim gt 0.6, iiShiftCnt )
 	eqdsk.rLim[iiShift]	= 1.8
+
+	;	custom limiter
+
+	eqdsk.rLim[*]	= eqdsk.rLeft
+   	eqdsk.zLim[*]	= min(eqdsk.z)	
+	eqdsk.rlim	= [ eqdsk.rLeft, 1.5, 1.84, 1.84, 1.5, eqdsk.rLeft, eqdsk.rLeft ]
+	eqdsk.zLim	= [ min(eqdsk.z), min(eqdsk.z), -0.2, 0.2, max(eqdsk.z), max(eqdsk.z), min(eqdsk.z) ]
+	eqdsk.limitr	= n_elements ( eqdsk.rlim )
+	stop
 
 	plot, eqdsk.rlim, eqdsk.zlim, $
 			psym = -4, $
@@ -279,7 +287,7 @@ pro create_antenna_current
 	;	at the moment it requires right angle connectors,
 	;	but this will be changed later
 
-	xAnt	= 1.75
+	xAnt	= 1.8
 	yAnt1	= -0.5
 	yAnt2	=  0.5
 	iiFeedLength	= where ( antGrid_x ge xAnt, iiFeedCnt )

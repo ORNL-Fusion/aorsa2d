@@ -209,7 +209,7 @@ contains
 
         ! create an interpolated limiter boundary
 
-        nInterp = 10
+        nInterp = 100
         nLim    = size ( rLim__ )
         cnt = 1
 
