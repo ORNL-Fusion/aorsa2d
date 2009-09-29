@@ -273,6 +273,10 @@ pro plot_aorsa, $
    	loadct, 13, file = 'davect.tbl', /silent
    	;window, 1, xSize = 1200, ySize = 600
 
+	ex	= smooth ( ex,4 )
+	ey	= smooth ( ey,4 )
+
+
 	contour, (ex<range)>(-range), capR, zLoc, $
 			color = 255, $
 			levels = levels, $

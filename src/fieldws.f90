@@ -29,7 +29,7 @@ contains
        bz_wave_real_id, bz_wave_imag_id, &
        mask_id, density_id, janty_id, jantx_id, &
        jeDotE_id, eAlpha_id, eBeta_id, eParallel_id, &
-       ex_id, ey_id, ez_id
+       ex_id, ey_id, ez_id, xkperp_imag_id, xkperp_real_id
 
       real logmax, ycut, dy, xmax, ymax, xmi, E_eV, vperp_mks, &
        vpara_mks, vperp_cgs, uperp_1kev, duperp, dz, dx
@@ -910,6 +910,11 @@ contains
        call check ( nf90_def_var ( nc_id, "mask", NF90_INT, &
        (/ nR_id, nz_id /), mask_id ) )
  
+       call check ( nf90_def_var ( nc_id, "xkperp_real", NF90_REAL, &
+       (/ nR_id, nz_id /), xkperp_real_id ) )
+       call check ( nf90_def_var ( nc_id, "xkperp_imag", NF90_REAL, &
+       (/ nR_id, nz_id /), xkperp_imag_id ) )
+ 
             call check ( &
        nf90_def_var ( nc_id, "pscale", NF90_REAL, &
        scalar_id, pscale_id ) )
@@ -1693,6 +1698,12 @@ contains
        if (iflag .eq. 0) call boundary(capr, y, rho, ff, nnodex, &
           nnodey, 1, &
          nxmx, nymx, nlevmax, title, titx, tity)
+
+        call check ( nf90_put_var ( nc_id, xkperp_real_id, &
+            freal(1:nnodex,1:nnodey) ) )
+        call check ( nf90_put_var ( nc_id, xkperp_imag_id, &
+            fimag(1:nnodex,1:nnodey) ) )
+
 
 
 !     --------------------------------------

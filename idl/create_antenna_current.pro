@@ -279,7 +279,7 @@ pro create_antenna_current
 	;	at the moment it requires right angle connectors,
 	;	but this will be changed later
 
-	xAnt	= 1.56
+	xAnt	= 1.75
 	yAnt1	= -0.5
 	yAnt2	=  0.5
 	iiFeedLength	= where ( antGrid_x ge xAnt, iiFeedCnt )
@@ -299,6 +299,32 @@ pro create_antenna_current
 			dX = antGrid_x[1]-antGrid_x[0], $
 			dY = antGrid_y[1]-antGrid_y[0]
 
+;	overwrite with simple form to start
+
+	dz	= antGrid_x[1] - antGrid_x[0]
+	dR	= antGrid_y[1] - antGrid_y[0]
+
+	antJX_grid[*]	= 0
+	antJY_grid[*]	= 0
+	antJX_grid[bottomFeederX[0:iiFeedCnt-2],bottomFeederY[0:iiFeedCnt-2]]	= -1.0*dR
+	antJY_grid[antLengthX[1:iiAntCnt-2],antLengthY[1:iiAntCnt-2]]	= 1.0*dz
+	antJX_grid[topFeederX[1:*],topFeederY[1:*]]	= 1.0*dR
+
+;	antJX_grid	= smooth ( antJX_grid, 4 )
+;	antJY_grid	= smooth ( antJY_grid, 4 )
+;
+;	antJX_bak	= antJX_grid
+;	antJY_bak	= antJY_grid
+;
+	;for i=0,nX-1 do antJX_grid[i,*]	= ts_smooth ( (antJX_grid[i,*])[*], 4 )
+	;for j=0,nY-1 do antJY_grid[*,j]	= ts_smooth ( antJY_grid[*,j], 4 )
+
+	;iiBadX	= where ( antJX_grid ne antJX_grid )
+	;antJX_grid[iiBadX]	= antJX_bak[iiBadX]
+	;iiBadY	= where ( antJY_grid ne antJY_grid )
+	;antJY_grid[iiBadY]	= antJY_bak[iiBadY]
+
+
 ;	normalise to Am^-1 for 1 Amp
 
 	antThick = 0.03
@@ -308,9 +334,6 @@ pro create_antenna_current
 	; test the div of jant new 
 
 	divJ_new	= fltArr ( nX, nY )
-	dz	= antGrid_x[1] - antGrid_x[0]
-	dR	= antGrid_y[1] - antGrid_y[0]
-
 	for i=1,nX-2 do begin
 		for j=1,nY-2 do begin
 			
@@ -323,7 +346,7 @@ pro create_antenna_current
 
 	loadct, 12, /sil
 	window, 3
-	!p.multi = [0,2,1]
+	!p.multi = [0,2,2]
 	contour, sqrt(antJX_grid^2+antJY_grid^2), antGrid_x, antGrid_y, $
 			color = 0, $
 			xRange = [1.2, 1.9], $
@@ -343,6 +366,12 @@ pro create_antenna_current
 			color = 0
 	oPlot, eqdsk.rbbbs, eqdsk.zbbbs, $
 			color = 8*16-1
+	veloVect, antJX_grid, antJY_grid, antGrid_x, antGrid_y,$
+		   	/over, color = 12*16-1, length= 0.5
+	
+	veloVect, antJX_grid, antJY_grid, antGrid_x, antGrid_y,$
+		   	color = 12*16-1, length= 2.5, $
+			xRange = [1.5,1.7], yRange = [0.40,0.60]
 	
 	!p.multi = 0
 

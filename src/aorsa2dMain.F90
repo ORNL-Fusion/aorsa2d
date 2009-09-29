@@ -3174,7 +3174,9 @@ if (iprofile .eq. 3) then
         xn2a = dlg_getDensity ( capR, y, &
                     rMAxis = rmaxis, zMAxis = zmaxis, &
                     densityAxis = xn2 )
-    
+
+        where ( xn2a < 1.0e-10 ) xn2a = 1.0e-10
+   
     endif dlg_particle_density
     
     dlg_limiter_boundary: &
