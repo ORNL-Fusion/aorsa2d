@@ -2175,7 +2175,8 @@
 
             a = (ps - psio) / (0.0 - psio)
             psi(i, j) = a
-            if(a .gt. .999) a = .999
+            !DLG
+            !if(a .gt. .999) a = .999
 
 
             f = curv2(a, ma, psis, fs, ypf, sigma)
