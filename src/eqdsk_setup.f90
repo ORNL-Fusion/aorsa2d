@@ -2145,7 +2145,7 @@
                   sigma, ierr)
 
       call curv1 (ma, psis, fs, slp1, slpn, islpsw1, &
-             ypf, temp1, sigma, ierr)
+             ypf, temp1, sigma*10, ierr)
 
       call curv1 (ma, psis, qs, slp1, slpn, islpsw1, &
              ypq, temp1, sigma, ierr)
@@ -2179,7 +2179,7 @@
             !if(a .gt. .999) a = .999
 
 
-            f = curv2(a, ma, psis, fs, ypf, sigma)
+            f = curv2(a, ma, psis, fs, ypf, sigma*10)
             q = curv2(a, ma, psis, qs, ypq, sigma)
             rhot = curv2(a, ma, psis, rho_tors, yprho, sigma)
 
@@ -2234,7 +2234,7 @@
 !     Find b0:
 !     --------
       a = 1.e-04
-      f = curv2(a, ma, psis, fs, ypf, sigma)
+      f = curv2(a, ma, psis, fs, ypf, sigma*10)
       b0 = f / r0
 
 
