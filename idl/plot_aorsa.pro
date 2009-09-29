@@ -41,6 +41,8 @@ pro plot_aorsa, $
 	nCdf_varGet, cdfId, 'ex', ex
 	nCdf_varGet, cdfId, 'ey', ey
 	nCdf_varGet, cdfId, 'ez', ez
+	nCdf_varGet, cdfId, 'xkperp_real', xkperp_real
+	nCdf_varGet, cdfId, 'xkperp_imag', xkperp_imag
 	ncdf_close, cdfId
 
 	cdfId = ncdf_open ( 'output/mchoi_dlg.nc', /noWrite ) 
