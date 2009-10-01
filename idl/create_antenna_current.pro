@@ -192,7 +192,7 @@ pro create_antenna_current
 
 	eqdsk.rLim[*]	= eqdsk.rLeft
    	eqdsk.zLim[*]	= min(eqdsk.z)	
-	eqdsk.rlim	= [ eqdsk.rLeft, 1.5, 1.84, 1.84, 1.5, eqdsk.rLeft, eqdsk.rLeft ]
+	eqdsk.rlim	= [ eqdsk.rLeft, 1.84, 1.84, 1.84, 1.84, eqdsk.rLeft, eqdsk.rLeft ]
 	eqdsk.zLim	= [ min(eqdsk.z), min(eqdsk.z), -0.2, 0.2, max(eqdsk.z), max(eqdsk.z), min(eqdsk.z) ]
 	eqdsk.limitr	= n_elements ( eqdsk.rlim )
 	stop
@@ -314,9 +314,10 @@ pro create_antenna_current
 
 	antJX_grid[*]	= 0
 	antJY_grid[*]	= 0
-	antJX_grid[bottomFeederX[0:iiFeedCnt-2],bottomFeederY[0:iiFeedCnt-2]]	= -1.0*dR
-	antJY_grid[antLengthX[1:iiAntCnt-2],antLengthY[1:iiAntCnt-2]]	= 1.0*dz
-	antJX_grid[topFeederX[1:*],topFeederY[1:*]]	= 1.0*dR
+	;antJX_grid[bottomFeederX[0:iiFeedCnt-2],bottomFeederY[0:iiFeedCnt-2]]	= -1.0*dR
+	;antJY_grid[antLengthX[1:iiAntCnt-2],antLengthY[1:iiAntCnt-2]]	= 1.0*dz
+	antJY_grid[antLengthX,antLengthY]	= 1.0*dz
+	;antJX_grid[topFeederX[1:*],topFeederY[1:*]]	= 1.0*dR
 
 ;	antJX_grid	= smooth ( antJX_grid, 4 )
 ;	antJY_grid	= smooth ( antJY_grid, 4 )
