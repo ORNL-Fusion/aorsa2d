@@ -2059,7 +2059,7 @@
       integer ihalf, jequat, ir, iz, ipsi, nxeqdmax, nyeqdmax
 
       integer islpsw, islpsw1, ierr
-      real sigma, slp1, slpn, sigma_fPol
+      real sigma, slp1, slpn
         real zx1(nyeqdmax), zxm(nyeqdmax), zy1(nxeqdmax), zyn(nxeqdmax)
         real zxy11, zxym1, zxy1n, zxymn
       real zp(nxeqdmax, nyeqdmax, 3)
@@ -2144,9 +2144,8 @@
                   islpsw, zpz, temp, &
                   sigma, ierr)
 
-      sigma_fPol    = 50.0
       call curv1 (ma, psis, fs, slp1, slpn, islpsw1, &
-             ypf, temp1, sigma_fPol, ierr)
+             ypf, temp1, sigma, ierr)
 
       call curv1 (ma, psis, qs, slp1, slpn, islpsw1, &
              ypq, temp1, sigma, ierr)
@@ -2177,10 +2176,10 @@
             a = (ps - psio) / (0.0 - psio)
             psi(i, j) = a
             !DLG
-            !if(a .gt. .999) a = .999
+            if(a .gt. .999) a = .999
 
 
-            f = curv2(a, ma, psis, fs, ypf, sigma_fPol)
+            f = curv2(a, ma, psis, fs, ypf, sigma)
             q = curv2(a, ma, psis, qs, ypq, sigma)
             rhot = curv2(a, ma, psis, rho_tors, yprho, sigma)
 
@@ -2235,7 +2234,7 @@
 !     Find b0:
 !     --------
       a = 1.e-04
-      f = curv2(a, ma, psis, fs, ypf, sigma_fPol)
+      f = curv2(a, ma, psis, fs, ypf, sigma)
       b0 = f / r0
 
 
