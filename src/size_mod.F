@@ -15,8 +15,8 @@
       parameter (nmodesmax = 256)
       parameter (mmodesmax = 256)
 #else
-      parameter (nmodesmax = 580)
-      parameter (mmodesmax = 580)
+      parameter (nmodesmax = 256)
+      parameter (mmodesmax = 256)
 #endif
 
       end module size_mod
