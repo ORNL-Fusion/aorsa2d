@@ -55,6 +55,8 @@
       logical :: bbbsMask = .false. ! use rbbbs/zbbbs as boundary instead of rlim/zlim
       real :: gradient = -50.0e16
       logical :: dlgAnt = .false. ! use the dlgAnt.nc file for the antenna geometry
+      character(len=100) :: dlgAntFileName = 'dlgAnt.nc'
+      character(len=100) :: dlgProfileFileName = 'dlg_profiles.nc'
       real :: psilim = .99
       real :: psimask = 1.05
       real :: psiant = 0.95
@@ -388,7 +390,8 @@
      &    xn3_rho2lim, xn4_rho2lim, xn5_rho2lim, xn6_rho2lim, &
      &    te_rho2lim, ti_rho2lim, ti2_rho2lim, ti3_rho2lim, &
      &    ti4_rho2lim, ti5_rho2lim, ti6_rho2lim, eqdsk_zRange, &
-     &    gradient, nPhi_sum_only, bbbsMask, dlgAnt, eqdsk_rRange
+     &    gradient, nPhi_sum_only, bbbsMask, dlgAnt, eqdsk_rRange, &
+     &    dlgAntFileName, dlgProfileFileName
                 
 
       end module aorsa2din_mod

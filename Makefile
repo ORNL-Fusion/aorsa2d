@@ -198,7 +198,7 @@ ifeq ($(MACHINE),dlghp)
 	INC_DIR = 	
 	BOUNDS = -fbounds-check
 	WARN = #-Wall
-	DEBUG = -pg -g -fbacktrace -fsignaling-nans -ffpe-trap=zero,invalid#,overflow#,underflow
+	DEBUG = -pg -g -fbacktrace -fsignaling-nans #-ffpe-trap=zero,invalid#,overflow#,underflow
 	FFLAGS = ${WARN} ${DEBUG} 
 	F90FLAGS = ${WARN} ${DEBUG} ${BOUNDS}
 
@@ -297,7 +297,9 @@ ifeq ($(MACHINE),franklin)
 		${PNETCDF} \
 		-L/u0/j/jaegeref/pgplot_xt3 -lpgplot #-L/ccs/home/jaegeref/pgplot_xt3 -lpgplot 
 
+	INC_DIR = -I ${NETCDF_DIR}/include -I ${PNETCDF_DIR}/include
 	LOAD = $(F90) $(OPTIMIZATION) $(LOADFLAGS) 
+
 endif
 
 ifeq ($(MACHINE),jaguar)

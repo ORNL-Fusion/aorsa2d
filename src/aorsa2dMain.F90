@@ -2985,9 +2985,10 @@
 
 !DLG: use external antenna current from dlgAnt.nc
 
-    gridMatch = .true.
+    gridMatch = .false.
     if ( dlgAnt ) &
-    call read_dlg_ant ( capR(1:nnodex), y(1:nnodey), xjx, xjy, gridMatch = gridMatch ) 
+    call read_dlg_ant ( capR(1:nnodex), y(1:nnodey), xjx, xjy, &
+            gridMatch = gridMatch, ncFileNameIn = dlgAntFileName ) 
 
 !DLG: read eqdsk dlg style
 
@@ -3183,7 +3184,7 @@ if (iprofile .eq. 3) then
     if ( limiter_boundary ) then 
     
             xnea   = dlg_getDensity ( capR, y, &
-                           ncFileNameIn = 'dlg_profiles.nc', &
+                           ncFileNameIn = dlgProfileFileName, &
                            ncVariableNameIn = 'ne', &
                            rMAxis = rmaxis, zMAxis = zmaxis, &
                            densityAxis = xn0 )
@@ -3191,10 +3192,10 @@ if (iprofile .eq. 3) then
             where ( xnea < 1.0e-10 ) xnea = 1.0e-10
 
             xkte   = dlg_getDensity ( capR, y, &
-                           ncFileNameIn = 'dlg_profiles.nc', &
+                           ncFileNameIn = dlgProfileFileName, &
                            ncVariableNameIn = 'te' ) * q
             xkti   = dlg_getDensity ( capR, y, &
-                           ncFileNameIn = 'dlg_profiles.nc', &
+                           ncFileNameIn = dlgProfileFileName, &
                            ncVariableNameIn = 'ti' ) * q
    
             !xnea    = 3.0e19

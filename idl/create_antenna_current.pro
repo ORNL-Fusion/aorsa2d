@@ -36,10 +36,14 @@ pro create_antenna_current
 
 	e	= 1.602e-19
 
-	eqdsk_fileName	 = '~/data/eqdsk/g128797.00400_nstx_efit2'
+	;eqdsk_fileName	 = '~/data/nstx/eqdsk/g120742.00275.EFIT02.mds.uncorrected.qscale_1.00000'
+	;eqdsk_fileName	 = '~/data/nstx/eqdsk/g120745.00277.EFIT02.mds.uncorrected.qscale_1.00000'
+	eqdsk_fileName	 = '~/data/nstx/eqdsk/g120740.00275.EFIT02.mds.uncorrected.qscale_1.00000'
+
+
 	eqdsk	= readgeqdsk ( eqdsk_fileName )
 
-	cdfId = ncdf_open ( '/home/dg6/scratch/aorsa2d/nstx/ant_feeders_nPhi-8_0.45T_square_flat_cold/output/plotData.nc', /noWrite ) 
+	cdfId = ncdf_open ( '/home/dg6/scratch/aorsa2d/nstx/bench/output/plotData.nc', /noWrite ) 
 	ncdf_varGet, cdfId, 'rho', rho 
 	ncdf_varget, cdfId, 'capR', capR 
 	ncdf_varget, cdfId, 'zLoc', zLoc 
@@ -181,19 +185,19 @@ pro create_antenna_current
 	;	first step is to just use a straight vertical antenna connecting
 	;	the top and bottom points, do overwrite this for the time being
 
-	antR	= antR * 0 + topPtX*1.04
-	antz	= (antz<0.15)>(-0.15)
+	;antR	= antR * 0 + topPtX*1.04
+	;antz	= (antz<0.15)>(-0.15)
 
 	eqdsk.rLim[13:23]	= eqdsk.rLim[13:23] + rShift
-	iiShift	= where ( eqdsk.rLim gt 0.6, iiShiftCnt )
-	eqdsk.rLim[iiShift]	= 1.8
+	;iiShift	= where ( eqdsk.rLim gt 0.6, iiShiftCnt )
+	;eqdsk.rLim[iiShift]	= 1.8
 
 	;	custom limiter
 
-	eqdsk.rLim[*]	= eqdsk.rLeft
-   	eqdsk.zLim[*]	= min(eqdsk.z)	
-	eqdsk.rlim	= [ eqdsk.rLeft, 1.84, 1.84, 1.84, 1.84, eqdsk.rLeft, eqdsk.rLeft ]
-	eqdsk.zLim	= [ min(eqdsk.z), min(eqdsk.z), -0.2, 0.2, max(eqdsk.z), max(eqdsk.z), min(eqdsk.z) ]
+	eqdsk.rLim[*]	= 0.23
+   	eqdsk.zLim[*]	= -1.6
+	eqdsk.rlim	= [ 0.23, 1.5, 1.84, 1.84, 1.5, 0.23, 0.23 ]
+	eqdsk.zLim	= [ -1.6, -1.6, -0.3, 0.3, 1.6, 1.6, 1.6 ]
 	eqdsk.limitr	= n_elements ( eqdsk.rlim )
 	stop
 
@@ -257,7 +261,7 @@ pro create_antenna_current
 
 ;	put the antenna line on a grid
 
-	nX	= 16
+	nX	= 128 
 	nY	= 256
 
 	rMax	= 1.8
@@ -287,9 +291,9 @@ pro create_antenna_current
 	;	at the moment it requires right angle connectors,
 	;	but this will be changed later
 
-	xAnt	= 1.8
-	yAnt1	= -0.5
-	yAnt2	=  0.5
+	xAnt	= 1.76
+	yAnt1	= -1.9
+	yAnt2	=  1.9
 	iiFeedLength	= where ( antGrid_x ge xAnt, iiFeedCnt )
 	iiAntLength		= where ( antGrid_y ge yAnt1 and antGrid_y le yAnt2, iiAntCnt )
 	bottomFeederX	= nX - indGen ( iiFeedCnt ) -1
@@ -315,9 +319,19 @@ pro create_antenna_current
 	antJX_grid[*]	= 0
 	antJY_grid[*]	= 0
 	;antJX_grid[bottomFeederX[0:iiFeedCnt-2],bottomFeederY[0:iiFeedCnt-2]]	= -1.0*dR
-	;antJY_grid[antLengthX[1:iiAntCnt-2],antLengthY[1:iiAntCnt-2]]	= 1.0*dz
+	antJY_grid[antLengthX[1:iiAntCnt-2],antLengthY[1:iiAntCnt-2]]	= 1.0*dz
 	antJY_grid[antLengthX,antLengthY]	= 1.0*dz
 	;antJX_grid[topFeederX[1:*],topFeederY[1:*]]	= 1.0*dR
+
+	;iiNewAntR	= (newAntR-min(capR))/(max(capR)-min(capR))*nX
+	;iiNewAntz	= (newAntz-min(zLoc))/(max(zLoc)-min(zLoc))*nY
+
+	;for i=0,n_elements(newAntR)-1 do begin
+
+	;		antJY_grid[iiNewAntR[i],iiNewAntz[i]]	= 1.0
+
+	;endfor
+
 
 ;	antJX_grid	= smooth ( antJX_grid, 4 )
 ;	antJY_grid	= smooth ( antJY_grid, 4 )
