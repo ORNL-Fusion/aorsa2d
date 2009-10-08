@@ -2985,10 +2985,9 @@
 
 !DLG: use external antenna current from dlgAnt.nc
 
-    gridMatch = .false.
     if ( dlgAnt ) &
     call read_dlg_ant ( capR(1:nnodex), y(1:nnodey), xjx, xjy, &
-            gridMatch = gridMatch, ncFileNameIn = dlgAntFileName ) 
+            gridMatch = antGridMatch, ncFileNameIn = dlgAntFileName ) 
 
 !DLG: read eqdsk dlg style
 

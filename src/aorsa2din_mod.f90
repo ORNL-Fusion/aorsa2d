@@ -57,6 +57,7 @@
       logical :: dlgAnt = .false. ! use the dlgAnt.nc file for the antenna geometry
       character(len=100) :: dlgAntFileName = 'dlgAnt.nc'
       character(len=100) :: dlgProfileFileName = 'dlg_profiles.nc'
+      logical :: antGridMatch = .false.
       real :: psilim = .99
       real :: psimask = 1.05
       real :: psiant = 0.95
@@ -391,7 +392,7 @@
      &    te_rho2lim, ti_rho2lim, ti2_rho2lim, ti3_rho2lim, &
      &    ti4_rho2lim, ti5_rho2lim, ti6_rho2lim, eqdsk_zRange, &
      &    gradient, nPhi_sum_only, bbbsMask, dlgAnt, eqdsk_rRange, &
-     &    dlgAntFileName, dlgProfileFileName
+     &    dlgAntFileName, dlgProfileFileName, antGridMatch
                 
 
       end module aorsa2din_mod

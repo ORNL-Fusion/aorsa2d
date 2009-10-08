@@ -153,6 +153,7 @@ subroutine read_dlg_ant ( capR, y, dlg_jantx, dlg_janty, ncFileNameIn, gridMatch
         write(*,*) maxVal(janty), minval(janty),maxVal(jantx), minval(jantx)
         write(*,*) shape(jantx), shape(janty), shape(dlg_jantx), shape(dlg_janty)
         write(*,*) size ( capR ), size ( y )
+        write(*,*) maxVal(capR), minVal(capR), maxVal(y), minVal(y)
         stop
     endif sanity_check_value
 

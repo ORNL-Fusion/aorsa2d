@@ -32,101 +32,106 @@ pro over_sample_boundary,  r, z, newR, newz
 end 
 
 
-pro create_antenna_current
+pro create_antenna_current, $
+		gridMatch = gridMatch
 
 	e	= 1.602e-19
 
-	;eqdsk_fileName	 = '~/data/nstx/eqdsk/g120742.00275.EFIT02.mds.uncorrected.qscale_1.00000'
+	eqdsk_fileName	 = '~/data/nstx/eqdsk/g120742.00275.EFIT02.mds.uncorrected.qscale_1.00000'
 	;eqdsk_fileName	 = '~/data/nstx/eqdsk/g120745.00277.EFIT02.mds.uncorrected.qscale_1.00000'
-	eqdsk_fileName	 = '~/data/nstx/eqdsk/g120740.00275.EFIT02.mds.uncorrected.qscale_1.00000'
+	;eqdsk_fileName	 = '~/data/nstx/eqdsk/g120740.00275.EFIT02.mds.uncorrected.qscale_1.00000'
 
 
 	eqdsk	= readgeqdsk ( eqdsk_fileName )
 
-	cdfId = ncdf_open ( '/home/dg6/scratch/aorsa2d/nstx/bench/output/plotData.nc', /noWrite ) 
-	ncdf_varGet, cdfId, 'rho', rho 
-	ncdf_varget, cdfId, 'capR', capR 
-	ncdf_varget, cdfId, 'zLoc', zLoc 
-	nCdf_varGet, cdfId, 'mask', mask
-	nCdf_varGet, cdfId, 'janty', janty_
-	nCdf_varGet, cdfId, 'jantx', jantx_
-	nCdf_varGet, cdfId, 'pscale', pscale
-	ncdf_close, cdfId
+	if keyword_set ( gridMatch ) then begin
+
+		cdfId = ncdf_open ( '/home/dg6/scratch/aorsa2d/nstx/bench/output/plotData.nc', /noWrite ) 
+		ncdf_varGet, cdfId, 'rho', rho 
+		ncdf_varget, cdfId, 'capR', capR 
+		ncdf_varget, cdfId, 'zLoc', zLoc 
+		nCdf_varGet, cdfId, 'mask', mask
+		nCdf_varGet, cdfId, 'janty', janty_
+		nCdf_varGet, cdfId, 'jantx', jantx_
+		nCdf_varGet, cdfId, 'pscale', pscale
+		ncdf_close, cdfId
 
 
-	; test the div of jant from old aorsa file
+		; test the div of jant from old aorsa file
 
-	divJ_old	= fltArr ( size ( janty_, /dim ) )
-	dR	= capR[1]-capR[0]
-	dz	= zLoc[1]-zloc[0]
+		divJ_old	= fltArr ( size ( janty_, /dim ) )
+		dR	= capR[1]-capR[0]
+		dz	= zLoc[1]-zloc[0]
 
-	for i=1,n_elements(janty_[*,0])-2 do begin
-		for j=1,n_elements(janty_[0,*])-2 do begin
-			
-			divJ_old[i,j]	= ( janty_[i,j+1]-janty_[i,j-1] ) / dz $
-					+ ( jantx_[i+1,j]-jantx_[i-1,j] ) / dR
-
-		endfor
-	endfor
-
-	window, 1, xSize = 600, ySize = 600
-	device, decomposed = 0
-	loadct, 3
-	!p.background = 255 
-	levels	= fIndGen(21)*10
-	colors	= 255 - ( bytScl ( levels, top = 253 ) + 1 )
-	contour, janty_, capr, zloc, $
-			yrange=[-0.5,0.6], $
-			xrange=[1.4,1.58], $
-			color=0, $
-			/fill, $
-			levels = levels, $
-			c_colors = colors, /noData
-
-	xStep	= capR[1] - capR[0]
-	yStep 	= zLoc[1] - zLoc[0]
-
-	for i=0,n_elements(janty_[*,0])-1 do begin
-		for j=0,n_elements(janty_[0,*])-1 do begin
-
-			if janty_[i,j] gt 0.1 then begin
-
-			plots,[capR[i]-xStep/2.0, $
-				capR[i]+xStep/2.0, $
-				capR[i]+xStep/2.0, $
-				capR[i]-xStep/2.0, $
-				capR[i]-xStep/2.0], $
-				[zLoc[j]-yStep/2.0, $
-				zLoc[j]-yStep/2.0, $
-				zLoc[j]+yStep/2.0, $
-				zLoc[j]+yStep/2.0, $
-				zLoc[j]-yStep/2.0], $
-				color = 255 - bytScl ( janty_[i,j], max = 100, min = 0 ), $
-				/data
-	
-			polyFill,[capR[i]-xStep/2.0, $
-				capR[i]+xStep/2.0, $
-				capR[i]+xStep/2.0, $
-				capR[i]-xStep/2.0, $
-				capR[i]-xStep/2.0], $
-				[zLoc[j]-yStep/2.0, $
-				zLoc[j]-yStep/2.0, $
-				zLoc[j]+yStep/2.0, $
-				zLoc[j]+yStep/2.0, $
-				zLoc[j]-yStep/2.0], $
-				color = 255-janty_[i,j], $
-				/data
-
-				endif
+		for i=1,n_elements(janty_[*,0])-2 do begin
+			for j=1,n_elements(janty_[0,*])-2 do begin
 				
+				divJ_old[i,j]	= ( janty_[i,j+1]-janty_[i,j-1] ) / dz $
+						+ ( jantx_[i+1,j]-jantx_[i-1,j] ) / dR
+
+			endfor
 		endfor
-	endfor
-	loadct, 12, /sil
-	oplot, eqdsk.rlim, eqdsk.zlim, $
-			psym = -4, $
-			color = 0
-	oPlot, eqdsk.rbbbs, eqdsk.zbbbs, $
-			color = 8*16-1
+
+		window, 1, xSize = 600, ySize = 600
+		device, decomposed = 0
+		loadct, 3
+		!p.background = 255 
+		levels	= fIndGen(21)*10
+		colors	= 255 - ( bytScl ( levels, top = 253 ) + 1 )
+		contour, janty_, capr, zloc, $
+				yrange=[-0.5,0.6], $
+				xrange=[1.4,1.58], $
+				color=0, $
+				/fill, $
+				levels = levels, $
+				c_colors = colors, /noData
+
+		xStep	= capR[1] - capR[0]
+		yStep 	= zLoc[1] - zLoc[0]
+
+		for i=0,n_elements(janty_[*,0])-1 do begin
+			for j=0,n_elements(janty_[0,*])-1 do begin
+
+				if janty_[i,j] gt 0.1 then begin
+
+				plots,[capR[i]-xStep/2.0, $
+					capR[i]+xStep/2.0, $
+					capR[i]+xStep/2.0, $
+					capR[i]-xStep/2.0, $
+					capR[i]-xStep/2.0], $
+					[zLoc[j]-yStep/2.0, $
+					zLoc[j]-yStep/2.0, $
+					zLoc[j]+yStep/2.0, $
+					zLoc[j]+yStep/2.0, $
+					zLoc[j]-yStep/2.0], $
+					color = 255 - bytScl ( janty_[i,j], max = 100, min = 0 ), $
+					/data
+		
+				polyFill,[capR[i]-xStep/2.0, $
+					capR[i]+xStep/2.0, $
+					capR[i]+xStep/2.0, $
+					capR[i]-xStep/2.0, $
+					capR[i]-xStep/2.0], $
+					[zLoc[j]-yStep/2.0, $
+					zLoc[j]-yStep/2.0, $
+					zLoc[j]+yStep/2.0, $
+					zLoc[j]+yStep/2.0, $
+					zLoc[j]-yStep/2.0], $
+					color = 255-janty_[i,j], $
+					/data
+
+					endif
+					
+			endfor
+		endfor
+		loadct, 12, /sil
+		oplot, eqdsk.rlim, eqdsk.zlim, $
+				psym = -4, $
+				color = 0
+		oPlot, eqdsk.rbbbs, eqdsk.zbbbs, $
+				color = 8*16-1
+
+	endif
 
 	window, 0, xSize = 800, ySize = 600
 	!p.multi = [0,3,2]
@@ -194,9 +199,9 @@ pro create_antenna_current
 
 	;	custom limiter
 
-	eqdsk.rLim[*]	= 0.23
+	eqdsk.rLim[*]	= 0.12
    	eqdsk.zLim[*]	= -1.6
-	eqdsk.rlim	= [ 0.23, 1.5, 1.84, 1.84, 1.5, 0.23, 0.23 ]
+	eqdsk.rlim	= [ 0.12, 1.5, 1.84, 1.84, 1.5, 0.12, 0.12 ]
 	eqdsk.zLim	= [ -1.6, -1.6, -0.3, 0.3, 1.6, 1.6, 1.6 ]
 	eqdsk.limitr	= n_elements ( eqdsk.rlim )
 	stop
@@ -261,8 +266,8 @@ pro create_antenna_current
 
 ;	put the antenna line on a grid
 
-	nX	= 128 
-	nY	= 256
+	nX	= 64 
+	nY	= 128 
 
 	rMax	= 1.8
 	xRange	= rMax - min ( eqdsk.r )
@@ -271,12 +276,16 @@ pro create_antenna_current
 	yRange	= max ( eqdsk.z ) - min ( eqdsk.z )
 	antGrid_y	= fIndGen ( nY )/(nY-1) * yRange + min ( eqdsk.z )
 
-	nX	= n_elements ( capR )
-	nY	= n_elements ( zLoc )
-	xRange = max ( capR ) - min ( capR )
-	yRange = max ( zLoc ) - min ( zLoc )
-	antGrid_x	= capR
-	antGrid_y	= zLoc
+	if keyword_set ( gridMatch ) then begin
+
+		nX	= n_elements ( capR )
+		nY	= n_elements ( zLoc )
+		xRange = max ( capR ) - min ( capR )
+		yRange = max ( zLoc ) - min ( zLoc )
+		antGrid_x	= capR
+		antGrid_y	= zLoc
+
+	endif
 
 	antJX_grid	= fltArr ( nX, nY )
 	antJY_grid	= fltArr ( nX, nY )
@@ -303,13 +312,13 @@ pro create_antenna_current
 	topFeederX		= reverse ( bottomFeederX ) 
 	topFeederY		= bottomFeederX*0+max(iiAntLength)
 	
-	ant_grid_path_X	= [ bottomFeederX, antLengthX[1:*], topFeederX[1:*] ]
-	ant_grid_path_Y	= [ bottomFeederY, antLengthY[1:*], topFeederY[1:*] ]
+	;ant_grid_path_X	= [ bottomFeederX, antLengthX[1:*], topFeederX[1:*] ]
+	;ant_grid_path_Y	= [ bottomFeederY, antLengthY[1:*], topFeederY[1:*] ]
 
-	trace_ant_path, ant_grid_path_X, ant_grid_path_Y, nX, nY, $
-			JxInterp = antJX_grid, JyInterp = antJY_grid, $
-			dX = antGrid_x[1]-antGrid_x[0], $
-			dY = antGrid_y[1]-antGrid_y[0]
+	;trace_ant_path, ant_grid_path_X, ant_grid_path_Y, nX, nY, $
+	;		JxInterp = antJX_grid, JyInterp = antJY_grid, $
+	;		dX = antGrid_x[1]-antGrid_x[0], $
+	;		dY = antGrid_y[1]-antGrid_y[0]
 
 ;	overwrite with simple form to start
 
@@ -397,11 +406,6 @@ pro create_antenna_current
 			xRange = [1.5,1.7], yRange = [0.40,0.60]
 	
 	!p.multi = 0
-
-	window, 4
-	plot, capR, jAnty_[*,n_elements(janty_[0,*])/2-3], $
-			color = 0
-
 
 ;	save modified rLim/zLim boundary in eqdsk file
 
