@@ -201,7 +201,7 @@ pro create_antenna_current, $
 
 	eqdsk.rLim[*]	= 0.12
    	eqdsk.zLim[*]	= -1.6
-	eqdsk.rlim	= [ 0.12, 1.5, 1.84, 1.84, 1.5, 0.12, 0.12 ]
+	eqdsk.rlim	= [ 0.12, 1.3, 1.64, 1.64, 1.3, 0.12, 0.12 ]
 	eqdsk.zLim	= [ -1.6, -1.6, -0.3, 0.3, 1.6, 1.6, 1.6 ]
 	eqdsk.limitr	= n_elements ( eqdsk.rlim )
 	stop
@@ -300,7 +300,7 @@ pro create_antenna_current, $
 	;	at the moment it requires right angle connectors,
 	;	but this will be changed later
 
-	xAnt	= 1.76
+	xAnt	= 1.6
 	yAnt1	= -1.9
 	yAnt2	=  1.9
 	iiFeedLength	= where ( antGrid_x ge xAnt, iiFeedCnt )

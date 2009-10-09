@@ -1106,31 +1106,44 @@ contains
       call ezplot1(title, titll, titlr, rhon_half, xktiavg, &
           nnoderho_half, nrhomax)
 
-
-      title= 'Flux average beam density'
+      title= 'Flux average spec1 density'
       titll= 'density (m-3)'
       titlr='       '
-      call ezplot1(title, titll, titlr, rhon_half, xn3avg, &
+      call ezplot1(title, titll, titlr, rhon_half, xn1avg, &
          nnoderho_half, nrhomax)
 
 
-      title= 'Flux average beam temperature'
+      title= 'Flux average spec1 temperature'
       titll= 'kTi_fast (eV)'
       titlr='       '
-      call ezplot1(title, titll, titlr, rhon_half, xkti3avg, &
+      call ezplot1(title, titll, titlr, rhon_half, xkti1avg, &
           nnoderho_half, nrhomax)
 
 
-      title= 'Flux average minority density'
+      title= 'Flux average spec2 density'
       titll= 'density (m-3)'
       titlr='       '
       call ezplot1(title, titll, titlr, rhon_half, xn2avg, &
          nnoderho_half, nrhomax)
 
-      title= 'Flux average minority temperature'
-      titll= 'kT2 (eV)'
+
+      title= 'Flux average spec2 temperature'
+      titll= 'kTi_fast (eV)'
       titlr='       '
       call ezplot1(title, titll, titlr, rhon_half, xkti2avg, &
+          nnoderho_half, nrhomax)
+
+
+      title= 'Flux average spec3 density'
+      titll= 'density (m-3)'
+      titlr='       '
+      call ezplot1(title, titll, titlr, rhon_half, xn3avg, &
+         nnoderho_half, nrhomax)
+
+      title= 'Flux average spec3 temperature'
+      titll= 'kT2 (eV)'
+      titlr='       '
+      call ezplot1(title, titll, titlr, rhon_half, xkti3avg, &
           nnoderho_half, nrhomax)
 
       title = 'Contour plot of density'
