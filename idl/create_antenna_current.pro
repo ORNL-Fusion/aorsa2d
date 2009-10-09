@@ -301,8 +301,8 @@ pro create_antenna_current, $
 	;	but this will be changed later
 
 	xAnt	= 1.6
-	yAnt1	= -1.9
-	yAnt2	=  1.9
+	yAnt1	= -0.6
+	yAnt2	=  0.6
 	iiFeedLength	= where ( antGrid_x ge xAnt, iiFeedCnt )
 	iiAntLength		= where ( antGrid_y ge yAnt1 and antGrid_y le yAnt2, iiAntCnt )
 	bottomFeederX	= nX - indGen ( iiFeedCnt ) -1

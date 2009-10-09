@@ -3106,28 +3106,28 @@ if (iprofile .eq. 3) then
         xn6a(i,j) = xn6lim + (xn6 - xn6lim) * shapen6**alphan6 * flimiter
         xna_slo(i,j) = xnslolim + (xnslo - xnslolim) * shapen_slo**alphan_slo 
    
-        if (limiter_boundary) then   
-            if (mask(i,j) .lt. 1) then 
+        !if (limiter_boundary) then   
+        !    if (mask(i,j) .lt. 1) then 
 
-                xnea(i,j) = 1e-10 
-                xn2a(i,j) = 1e-10
-                xn3a(i,j) = 1e-10 
-                xn4a(i,j) = 1e-10 
-                xn5a(i,j) = 1e-10 
-                xn6a(i,j) = 1e-10 
+        !        xnea(i,j) = 1e-10 
+        !        xn2a(i,j) = 1e-10
+        !        xn3a(i,j) = 1e-10 
+        !        xn4a(i,j) = 1e-10 
+        !        xn5a(i,j) = 1e-10 
+        !        xn6a(i,j) = 1e-10 
 
-            else
-                if ( mask_bbbs(i,j) .lt. 1 ) then 
-                    xnea(i,j) = xn_rho2lim!density_by_gradient ( capR(i), y(j), xn_rho2lim, gradient, 1e-10) 
-                    xn2a(i,j) = xn2_rho2lim
-                    xn3a(i,j) = xn3_rho2lim
-                    xn4a(i,j) = xn4_rho2lim
-                    xn5a(i,j) = xn5_rho2lim
-                    xn6a(i,j) = xn6_rho2lim
-                endif
-           endif
+        !    else
+        !        if ( mask_bbbs(i,j) .lt. 1 ) then 
+        !            xnea(i,j) = xn_rho2lim!density_by_gradient ( capR(i), y(j), xn_rho2lim, gradient, 1e-10) 
+        !            xn2a(i,j) = xn2_rho2lim
+        !            xn3a(i,j) = xn3_rho2lim
+        !            xn4a(i,j) = xn4_rho2lim
+        !            xn5a(i,j) = xn5_rho2lim
+        !            xn6a(i,j) = xn6_rho2lim
+        !        endif
+        !   endif
 
-        endif
+        !endif
 
         xkte(i,j) = telimj + (t0e - telimj) * shapete**alphate * flimiter
         xkti(i,j) = tilimj + (t0i - tilimj) * shapeti**alphati * flimiter
@@ -3137,33 +3137,33 @@ if (iprofile .eq. 3) then
         xkti5(i,j) = ti5limj + (t0i5 - ti5limj) * shapeti5**alphati5 * flimiter
         xkti6(i,j) = ti6limj + (t0i6 - ti6limj) * shapeti6**alphati6 * flimiter
 
-        if (limiter_boundary) then
+        !if (limiter_boundary) then
 
-            if (mask(i,j) .lt. 1) then 
+        !    if (mask(i,j) .lt. 1) then 
 
-                xkte(i,j)   =    te_rho2lim*q
-                xkti(i,j)   =    ti_rho2lim*q
-                xkti2(i,j)  =   ti2_rho2lim*q
-                xkti3(i,j)  =   ti3_rho2lim*q
-                xkti4(i,j)  =   ti4_rho2lim*q
-                xkti5(i,j)  =   ti5_rho2lim*q
-                xkti6(i,j)  =   ti6_rho2lim*q
+        !        xkte(i,j)   =    te_rho2lim*q
+        !        xkti(i,j)   =    ti_rho2lim*q
+        !        xkti2(i,j)  =   ti2_rho2lim*q
+        !        xkti3(i,j)  =   ti3_rho2lim*q
+        !        xkti4(i,j)  =   ti4_rho2lim*q
+        !        xkti5(i,j)  =   ti5_rho2lim*q
+        !        xkti6(i,j)  =   ti6_rho2lim*q
  
-            else
-                if ( mask_bbbs(i,j) .lt. 1 ) then 
+        !    else
+        !        if ( mask_bbbs(i,j) .lt. 1 ) then 
 
-                    xkte(i,j)   =    te_rho2lim*q
-                    xkti(i,j)   =    ti_rho2lim*q
-                    xkti2(i,j)  =   ti2_rho2lim*q
-                    xkti3(i,j)  =   ti3_rho2lim*q
-                    xkti4(i,j)  =   ti4_rho2lim*q
-                    xkti5(i,j)  =   ti5_rho2lim*q
-                    xkti6(i,j)  =   ti6_rho2lim*q
+        !            xkte(i,j)   =    te_rho2lim*q
+        !            xkti(i,j)   =    ti_rho2lim*q
+        !            xkti2(i,j)  =   ti2_rho2lim*q
+        !            xkti3(i,j)  =   ti3_rho2lim*q
+        !            xkti4(i,j)  =   ti4_rho2lim*q
+        !            xkti5(i,j)  =   ti5_rho2lim*q
+        !            xkti6(i,j)  =   ti6_rho2lim*q
  
-                endif
-            endif
+        !        endif
+        !    endif
 
-      endif
+        !endif
 
         enddo
     enddo
