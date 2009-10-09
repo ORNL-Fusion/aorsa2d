@@ -26,6 +26,14 @@
 
       implicit none
 
+      !external CULA_INITIALIZE
+      !external CULA_SGEQRF
+      !external CULA_SHUTDOWN
+      !
+      !integer CULA_INITIALIZE
+      !integer CULA_SGEQRF
+      !integer cula_status
+
       integer n_theta_max, n_theta, n_psi_max, nt, k, nbessj
 
       integer :: nphi1 = -50
@@ -780,7 +788,7 @@
       complex,        allocatable::p_amat(:)
 
 
-      integer, allocatable ::         p_ipiv(:)
+      integer, allocatable ::         p_ipiv(:), cula_ipiv(:)
       complex, allocatable ::         p_brhs(:)
 
       real err_max,err,b_nrm2,err_nrm2
@@ -4589,9 +4597,10 @@ end do
 
       p_brhs_dim = nrow
       p_ipiv_dim = nrow
-      allocate( p_brhs(p_brhs_dim), p_ipiv(p_ipiv_dim) )
+      allocate( p_brhs(p_brhs_dim), p_ipiv(p_ipiv_dim), cula_ipiv(p_ipiv_dim) )
       p_brhs(:) = cmplx(0.0,0.0)
       p_ipiv(:) = 0
+      cula_ipiv(:) = 0
 
 
 
@@ -5614,6 +5623,19 @@ end do
          write(15,*) 'pzgetrf returns info = ', info
            stop '** error ** '
       endif
+
+      if (myId == 0) then 
+
+        !write(*,*) 'Initialising cula'
+        !cula_status   = cula_initialize ()
+        !call check_status ( cula_status )
+
+        !!cula_status = cula_sgeqrf ( nRow, nCol, p_amat, nRow, cula_ipiv )
+
+        !write(*,*) 'Shutting down cula'
+        !call cula_shutdown ()
+
+      endif 
 
       call blacs_barrier(icontxt, 'All')
 
@@ -9986,4 +10008,25 @@ end do
 !
 
 
+!      SUBROUTINE CHECK_STATUS(STATUS)
+!         INTEGER STATUS
+!         INTEGER INFO
+!         INTEGER CULA_GETERRORINFO
+!
+!         IF (STATUS .NE. 0) THEN
+!            IF (STATUS .EQ. 6) THEN
+!!              culaArgumentError
+!               INFO = CULA_GETERRORINFO()
+!               WRITE(*,*) 'Invalid value for parameter ', INFO
+!            ELSE IF (STATUS .EQ. 9) THEN
+!!              culaRuntimeError
+!               INFO = CULA_GETERRORINFO()
+!               WRITE(*,*) 'Runtime error (', INFO ,')'
+!            ELSE
+!!              others
+!               call CULA_GETSTATUSSTRING(STATUS)
+!            ENDIF
+!            STOP 1
+!         END IF
+!      END
 

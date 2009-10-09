@@ -280,10 +280,16 @@ ifeq ($(MACHINE),dlghp)
 	NETCDF_DIR = $(HOME)/netcdf/netcdf_gnu64
 	NETCDF = -I ${NETCDF_DIR}/include
 	LIBS = -L$(HOME)/netcdf/netcdf_gnu64/lib -lnetcdf $(HOME)/pgplot/pgplot_gnu64/libpgplot.a $(SCALAPACK) $(HPL) $(BLACS) $(BLAS) $(X11) $(FFT_LIB) ${PNETCDF}
-	INC_DIR = -I ${NETCDF_DIR}/include -I ${DISLIN_DIR}/gf -I ${PNETCDF_DIR}/include
+
+	CULA_INCPATH = -I ${CULA_INC_PATH}
+	CULA_LIBPATH = -L ${CULA_LIB_PATH_64}
+	CULA_LIBS = -lcula -lcula_fortran -lcublas -lcudart
+
+	INC_DIR = -I ${NETCDF_DIR}/include -I ${DISLIN_DIR}/gf -I ${PNETCDF_DIR}/include ${CULA_INCPATH}
 
 	LOAD = gfortran $(OPTIMIZATION)  
-	LINK_FLAGS = ${OPT} ${MPI_LINK_FLAGS}
+	LINK_FLAGS = ${OPT} ${MPI_LINK_FLAGS} ${CULA_LIBS} ${CULA_LIBPATH}
+
 endif
 
 ifeq ($(MACHINE),franklin)
@@ -351,7 +357,7 @@ PERFORMANCE =
 
 ifeq ($(MACHINE),dlghp)
 $(EXEC): $(OBJ_FILES) $(OBJ_FFT) $(OBJ_CQL3D_SETUP) $(OBJ_DLG) ${OBJ_CUDA}
-	$(LOAD) -o $(EXEC) $(OBJ_FILES) $(OBJ_FFT) $(OBJ_CQL3D_SETUP) $(OBJ_DLG) $(LIBS) $(DISLIN) ${OBJ_CUDA} ${CUDA_LIB} ${LINK_FLAGS} 
+	$(LOAD) -o $(EXEC) $(OBJ_FILES) $(OBJ_FFT) $(OBJ_CQL3D_SETUP) $(OBJ_DLG) $(LIBS) $(DISLIN) ${OBJ_CUDA} ${CUDA_LIB} ${LINK_FLAGS}
 else
 $(EXEC): load_modules $(OBJ_FILES) $(OBJ_FFT) $(OBJ_CQL3D_SETUP) $(OBJ_DLG) ${OBJ_CUDA}
 	$(LOAD) -o $(EXEC) $(OBJ_FILES) $(OBJ_FFT) $(OBJ_CQL3D_SETUP) $(OBJ_DLG) $(LIBS) ${OBJ_CUDA} ${CUDA_LIB}
@@ -443,13 +449,13 @@ ${OBJ_DIR}/%.o: ${SRC_DIR}/%.F
 	${F77} -c ${FFLAGS} $< -o $@ ${BOUNDS} ${NETCDF} ${CPP_DIRECTIVES}
 
 ${OBJ_DIR}/%.o: ${SRC_DIR}/%.F90
-	${F90} -c ${F90FLAGS} $< -o $@ ${BOUNDS} ${NETCDF} ${CPP_DIRECTIVES}
+	${F90} -c ${F90FLAGS} $< -o $@ ${BOUNDS} ${NETCDF} ${CPP_DIRECTIVES} ${INC_DIR}
 
 ${OBJ_DIR}/%.o: ${SRC_DIR}/%.f
 	${F77} -c ${FFLAGS} $< -o $@ ${NETCDF} 
 
 ${OBJ_DIR}/%.o: ${SRC_DIR}/%.f90
-	${F90} -c ${F90FLAGS} $< -o $@ ${BOUNDS} ${NETCDF}
+	${F90} -c ${F90FLAGS} $< -o $@ ${BOUNDS} ${NETCDF} 
 
 
 # CQL files
