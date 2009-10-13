@@ -1,0 +1,2 @@
+#/bin/bash
+rsync -avz --exclude '*.git*' --exclude '*.mod' --exclude '*.o' --exclude '*.ps' --exclude '*.eps' --exclude 'xaorsa*' ~/code/aorsa2d/ ccsd1.oic.ornl.gov:~/aorsa2d 

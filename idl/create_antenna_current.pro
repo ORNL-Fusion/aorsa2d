@@ -37,9 +37,9 @@ pro create_antenna_current, $
 
 	e	= 1.602e-19
 
-	eqdsk_fileName	 = '~/data/nstx/eqdsk/g120742.00275.EFIT02.mds.uncorrected.qscale_1.00000'
+	;eqdsk_fileName	 = '~/data/nstx/eqdsk/g120742.00275.EFIT02.mds.uncorrected.qscale_1.00000'
 	;eqdsk_fileName	 = '~/data/nstx/eqdsk/g120745.00277.EFIT02.mds.uncorrected.qscale_1.00000'
-	;eqdsk_fileName	 = '~/data/nstx/eqdsk/g120740.00275.EFIT02.mds.uncorrected.qscale_1.00000'
+	eqdsk_fileName	 = '~/data/nstx/eqdsk/g120740.00275.EFIT02.mds.uncorrected.qscale_1.00000'
 
 
 	eqdsk	= readgeqdsk ( eqdsk_fileName )

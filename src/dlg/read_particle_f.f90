@@ -757,6 +757,7 @@ contains
                     .or. dlg_getDensity(i,j) * 0 /= 0 ) then
 
                     write(*,*) 'ERROR: sanity failure on reading density from netcdf file, NaN, Inf or -ve value detected'
+                    write(*,*) dlg_getDensity(i,j),  ncVariableName
                     stop
                 endif sanity_check
 

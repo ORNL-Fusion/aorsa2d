@@ -32,7 +32,7 @@ ifeq ($(MACHINE),dlghp)
 endif
 
 ifeq ($(MACHINE),lens)
-	USEGPU=yes
+	USEGPU=no
 	ifeq ($(USEGPU),yes)
 		CU = nvcc
 		CUFLAGS = -g -O3 -arch=sm_13 --ptxas-options=-v 
@@ -47,6 +47,11 @@ endif
 ifeq ($(MACHINE),$(filter $(MACHINE),franklin jaguar))
 	CRAYXT4=1
 endif
+
+ifeq ($(MACHINE),oic))
+	CPP_DIRECTIVES = -DUSE_DISLIN=0 -DDLGHP=0
+endif
+
 
 EXEC = xaorsa2d.$(MACHINE)
 
@@ -229,7 +234,40 @@ ifeq ($(MACHINE),lens)
 	WARN =
 endif
 
+ifeq ($(MACHINE),oic)
+	MPI_INCLUDE_DIR = 
+	MPIF90 = mpif90
+	MPIF77 = mpif77
+	MPI_LINK_FLAGS = 
 
+	COMMON_OPTION	= -fdefault-real-8 -fno-automatic -I $(MPI_INCLUDE_DIR) -J$(MOD_DIR)
+	COMMON_OPTION2	= -fdefault-real-8 -fautomatic -I $(MPI_INCLUDE_DIR) -J$(MOD_DIR)
+	COMMON_OPTION3	= -fautomatic -I -I $(MPI_INCLUDE_DIR) -J$(MOD_DIR)
+	#-finit-local-zero 
+	F77	= $(MPIF77)  $(COMMON_OPTION)
+	F77_NOSAVE	= $(MPIF77) $(COMMON_OPTION2)
+	F77_r4	= $(MPIF77) $(COMMON_OPTION3)
+	F77_FFT	= $(MPIF77) $(COMMON_OPTION)
+	F90	= $(MPIF90) -ffree-form $(COMMON_OPTION)
+	F90_NOSAVE	= $(MPIF90) -ffree-form $(COMMON_OPTION2)
+	F90_2 = $(MPIF90) -ffixed-form $(COMMON_OPTION)
+	F90_2_NOSAVE = $(MPIF90) -ffixed-form $(COMMON_OPTION2)
+	F90_CQL	= $(MPIF90) -ffree-form $(COMMON_OPTION2)
+	COMPILE_DLG	= $(MPIF90) -c -I $(INCLUDE_DIR) -I $(MPI_INCLUDE_DIR) -I ${NETCDF_DIR}/include/ -fdefault-real-8 -J$(MOD_DIR)
+	COMPILE_DLG_R4	= $(MPIF77) -c -I $(INCLUDE_DIR) -I $(MPI_INCLUDE_DIR) -I ${NETCDF_DIR}/include/ -J$(MOD_DIR)
+	OPTIMIZATION = #-O3 -march=core2 -funroll-loops -Wuninitialized
+	F77FLAGS= -c $(OPTIMIZATION)  -I $(INCLUDE_DIR) -I${NETCDF_DIR}/include/
+	F90_lst = $(MPIF90) -ffree-form $(COMMON_OPTION)
+
+	INC_DIR = 	
+	BOUNDS = -fbounds-check
+	WARN = #-Wall
+	DEBUG = -g -fsignaling-nans #-ffpe-trap=zero,invalid#,overflow#,underflow
+	FFLAGS = ${WARN} ${DEBUG} 
+	F90FLAGS = ${WARN} ${DEBUG} ${BOUNDS}
+
+endif
+	
 INLINE=
 
 
@@ -291,6 +329,35 @@ ifeq ($(MACHINE),dlghp)
 	LINK_FLAGS = ${OPT} ${MPI_LINK_FLAGS} ${CULA_LIBS} ${CULA_LIBPATH}
 
 endif
+
+ifeq ($(MACHINE),oic)
+
+	DISLIN_DIR = 
+	DISLIN = 
+	BLACS = \
+		/opt/BLACS/LIB/blacs_MPI-LINUX-0.a \
+		/opt/BLACS/LIB/blacsCinit_MPI-LINUX-0.a \
+		/opt/BLACS/LIB/blacsF77init_MPI-LINUX-0.a \
+		/opt/BLACS/LIB/blacs_MPI-LINUX-0.a
+	BLAS = -lblas -lpthread
+	HPL = 
+	FFT_LIB = 
+	SCALAPACK = /opt/scalapack-1.7.1/libscalapack.a
+	X11 = -L/usr/lib -lX11
+	LOADFLAGS = 
+	PNETCDF_DIR = $(HOME)/pNetCdf/pnetcdf_gnu64
+	PNETCDF = -I ${PNETCDF_DIR}/include ${PNETCDF_DIR}/lib/libpnetcdf.a
+	NETCDF_DIR = /opt/netcdf-3.6.2-b3
+	NETCDF = -I ${NETCDF_DIR}/include
+	LIBS = -L{NETCDF_DIR}/lib -lnetcdf $(HOME)/pgplot/pgplot_gnu64/libpgplot.a $(SCALAPACK) $(BLACS) $(BLAS) $(X11) $(FFT_LIB) ${PNETCDF}
+
+	INC_DIR = -I ${NETCDF_DIR}/include -I ${DISLIN_DIR}/gf -I ${PNETCDF_DIR}/include 
+
+	LOAD = gfortran $(OPTIMIZATION)  
+	LINK_FLAGS = ${OPT} 
+
+endif
+
 
 ifeq ($(MACHINE),franklin)
 	HPL_LIB = /u0/j/jaegeref/AORSA2D/libzhpl.a

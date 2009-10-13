@@ -339,7 +339,7 @@
       integer :: nphi_array(nphimx) = 0   !-----list of nphi's in the nphi_array
       
       real phase, zmin, zmax, phi0, amplt(20) 
-      common/stpcom/xlt, wd, nstrap, phase, zmin, zmax, phi0, amplt
+      !common / stpcom / xlt, wd, nstrap, phase, zmin, zmax, phi0, amplt
                    
       namelist/aorsa2din/nmodesx, nmodesy, nwdot, lmax, ibessel, &
      &    ti0, xnuead, xnu1ad, xnu2ad, rant, te0, yant,  &
