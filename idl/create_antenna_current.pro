@@ -276,6 +276,9 @@ pro create_antenna_current, $
 	yRange	= max ( eqdsk.z ) - min ( eqdsk.z )
 	antGrid_y	= fIndGen ( nY )/(nY-1) * yRange + min ( eqdsk.z )
 
+	antGrid_x2D	= rebin ( antGrid_x, nX, nY )
+	antGrid_y2D	= transpose ( rebin ( antGrid_y, nY, nX ) )
+
 	if keyword_set ( gridMatch ) then begin
 
 		nX	= n_elements ( capR )
@@ -300,7 +303,7 @@ pro create_antenna_current, $
 	;	at the moment it requires right angle connectors,
 	;	but this will be changed later
 
-	xAnt	= 1.7
+	xAnt	= 1.65
 	yAnt1	= -0.6
 	yAnt2	=  0.6
 	iiFeedLength	= where ( antGrid_x ge xAnt, iiFeedCnt )
@@ -328,8 +331,27 @@ pro create_antenna_current, $
 	antJX_grid[*]	= 0
 	antJY_grid[*]	= 0
 	;antJX_grid[bottomFeederX[0:iiFeedCnt-2],bottomFeederY[0:iiFeedCnt-2]]	= -1.0*dR
-	antJY_grid[antLengthX[1:iiAntCnt-2],antLengthY[1:iiAntCnt-2]]	= 1.0*dz
-	antJY_grid[antLengthX,antLengthY]	= 1.0*dz
+	;antJY_grid[antLengthX[1:iiAntCnt-2],antLengthY[1:iiAntCnt-2]]	= 1.0*dz
+	;antJY_grid[antLengthX,antLengthY]	= 1.0*dz
+
+
+	iiAntYRange	= where ( antGrid_y gt yAnt1 and antGrid_y lt yAnt2 )
+	iiTop	= max ( iiAntYRange, min = iiBot )
+	sigX	= 0.01
+	sigY	= 0.04
+	antJY_grid	= exp ( -( $
+			( antGrid_x2D-xAnt )^2 / sigX + ( antGrid_y2D-antGrid_y[iiTop] )^2 / sigY ) )
+	antJY_grid	+= exp ( -( $
+			( antGrid_x2D-xAnt )^2 / sigX + ( antGrid_y2D-antGrid_y[iiBot] )^2 / sigY ) )
+
+	antJY_grid[*,iiAntYRange]	= exp ( -( antGrid_x[*,iiAntYRange]-xAnt )^2 / sigX )
+
+	antJY_grid	= antJY_grid / max ( antJY_grid )
+
+	;iiZeroOut	= where ( antJY_grid lt max(antJY_grid)/100.0*5 )
+
+	;antJY_grid[iiZeroOut]	= 0.0
+
 	;antJX_grid[topFeederX[1:*],topFeederY[1:*]]	= 1.0*dR
 
 	;iiNewAntR	= (newAntR-min(capR))/(max(capR)-min(capR))*nX
@@ -377,8 +399,8 @@ pro create_antenna_current, $
 
 
 	loadct, 12, /sil
-	window, 3
-	!p.multi = [0,2,2]
+	window, 3, ySize = 900
+	!p.multi = [0,2,3]
 	contour, sqrt(antJX_grid^2+antJY_grid^2), antGrid_x, antGrid_y, $
 			color = 0, $
 			xRange = [1.2, 1.9], $
@@ -391,20 +413,22 @@ pro create_antenna_current, $
 
 	contour, divJ_new, antGrid_x, antGrid_y, $
 			color = 0, $
-			xRange = [1.2, 1.9], $
-			yRange = [-0.6, 0.6] 
+			xRange = [1.3, 1.7], $
+			yRange = [-0.8, 0.8] 
 	oPlot, eqdsk.rlim, eqdsk.zlim, $
 			psym = -4, $
 			color = 0
 	oPlot, eqdsk.rbbbs, eqdsk.zbbbs, $
 			color = 8*16-1
 	veloVect, antJX_grid, antJY_grid, antGrid_x, antGrid_y,$
-		   	/over, color = 12*16-1, length= 0.5
+		   	/over, color = 12*16-1, length= 1.5
 	
 	veloVect, antJX_grid, antJY_grid, antGrid_x, antGrid_y,$
-		   	color = 12*16-1, length= 2.5, $
-			xRange = [1.5,1.7], yRange = [0.40,0.60]
-	
+		   	color = 12*16-1, length= 2.5
+
+	plot, antjy_grid[nX/4*3,*],color=0, psym = -4
+	plot, antjy_grid[*,nY/2],color=0, psym = -4
+
 	!p.multi = 0
 
 ;	save modified rLim/zLim boundary in eqdsk file

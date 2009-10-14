@@ -157,8 +157,8 @@ pro plot_aorsa, $
 	rlevels	= ( fIndGen ( nLevs ) - nLevs / 2.0 ) / ( nLevs / 2.0 ) * rrange 
 	rcolors	= bytScl ( rlevels, top = 253 ) + 1
 
-	xRange	= [ min ( eqdsk.rlim ), max ( eqdsk.rlim ) ]
-	yRange	= [ min ( eqdsk.zlim ), max ( eqdsk.zlim ) ]
+	xRange	= [ min ( capR ), max ( capR ) ]
+	yRange	= [ min ( zLoc ), max ( zLoc ) ]
 
 
 	mod_nLevs	= 11
@@ -275,8 +275,8 @@ pro plot_aorsa, $
    	loadct, 13, file = 'davect.tbl', /silent
    	;window, 1, xSize = 1200, ySize = 600
 
-	ex	= smooth ( ex,2 )
-	ey	= smooth ( ey,2 )
+	;ex	= smooth ( ex,2 )
+	;ey	= smooth ( ey,2 )
 
 
 	contour, (ex<range)>(-range), capR, zLoc, $

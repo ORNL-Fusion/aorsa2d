@@ -278,5 +278,86 @@ contains
 
     end function is_inside_lim
 
+    function is_inside_domain ( rIn, zIn )
+
+        use aorsa2din_mod, only: rwLeft, rwRight, yTop, yBottom
+
+        implicit none
+        logical :: is_inside_domain
+        real, intent(in) :: rIn, zIn
+        integer :: q1, q2, q3, q4
+        real, allocatable :: newR(:), newZ(:)
+        integer :: nInterp, nLim, i, j, cnt
+        real :: m, b, d, dStep
+        real :: rDomain(5), zDomain(5)
+
+        ! create an interpolated limiter boundary
+
+        rDomain = (/ rwLeft, rwRight, rwRight, rwLeft, rwLeft /)
+        zDomain = (/ yBottom, yBottom, yTop, yTop, yBottom /)
+
+        nInterp = 100
+        nLim    = size ( rDomain )
+        cnt = 1
+
+        allocate ( newR(nInterp*nLim+nLim), &
+            newZ(nInterp*nLim+nLim) )
+    
+        newR(1:nLim)    = rDomain 
+        newZ(1:nLim)    = zDomain
+
+        do i=1,nLim-1
+
+            !   get slope
+
+            dStep   = (rDomain(i+1) - rDomain(i)) / nInterp
+
+            if (abs(dStep) .gt. 0 ) then 
+
+                m   = ( zDomain(i+1)-zDomain(i) ) &
+                        / ( rDomain(i+1) - rDomain(i) )
+                b   = zDomain(i) - m * rDomain(i)
+
+                !   distance
+
+                d   = sqrt ( ( rDomain(i+1) - rDomain(i) )**2 &
+                        + ( zDomain(i+1) - zDomain(i) )**2 )
+
+                do j = 1, nInterp
+
+                        newR(nLim+cnt)  = rDomain(i) + dStep*j
+                        newZ(nLim+cnt)  = m * (rDomain(i) + dStep*j) + b 
+                        cnt = cnt + 1
+
+                enddo
+
+            endif
+
+        enddo
+
+        !   interpolated eqdsk limite boundary
+
+        q1  = count ( rIn - newR(1:nLim+cnt-1) .ge. 0 .and. zIn - newZ(1:nLim+cnt-1) .ge. 0 )
+        q2  = count ( rIn - newR(1:nLim+cnt-1) .ge. 0 .and. zIn - newZ(1:nLim+cnt-1) .le. 0 )
+        q3  = count ( rIn - newR(1:nLim+cnt-1) .le. 0 .and. zIn - newZ(1:nLim+cnt-1) .ge. 0 )
+        q4  = count ( rIn - newR(1:nLim+cnt-1) .le. 0 .and. zIn - newZ(1:nLim+cnt-1) .le. 0 )
+
+        if ( q1 > 0 .and. q2 > 0 .and. q3 > 0 .and. q4 > 0 ) then
+
+           is_inside_domain = .true. 
+
+        else
+
+           is_inside_domain = .false.
+
+        endif
+      
+        deallocate ( newR, newZ )
+
+        return
+
+    end function is_inside_domain
+
+
 
 end module eqdsk_dlg

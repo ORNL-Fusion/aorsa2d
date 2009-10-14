@@ -259,7 +259,8 @@
 
       integer ilayer,nlayer
       integer mask(nxmx, nymx), mask2(nxmx,nymx)
-      integer mask_bbbs(nxmx,nymx)
+      integer mask_bbbs(nxmx,nymx), mask_domain(nxmx,nymx), &
+        mask_lim(nxmx,nymx)
 
       complex ealphak(nkdim1 : nkdim2, mkdim1 : mkdim2), &
               ebetak(nkdim1 : nkdim2, mkdim1 : mkdim2), &
@@ -3032,9 +3033,9 @@
 
                 eqdsk_box_mask: &
                 if ( is_inside_lim ( capR(i), y(j) ) ) then
-                    mask(i,j) = 1
+                    mask_lim(i,j) = 1
                 else
-                    mask(i,j) = 0
+                    mask_lim(i,j) = 0
                 endif eqdsk_box_mask
 
                 eqdsk_bbbs_mask: &
@@ -3043,8 +3044,17 @@
                 else
                     mask_bbbs(i,j) = 0
                 endif eqdsk_bbbs_mask
-                
+ 
+                domain_mask: &
+                if ( is_inside_domain ( capR(i), y(j) ) ) then
+                    mask_domain(i,j) = 1
+                else
+                    mask_domain(i,j) = 0
+                endif domain_mask
+            
+                mask    = mask_lim    
                 if ( bbbsMask ) mask = mask_bbbs
+                if ( domainMask ) mask = mask_domain
 
             endif
 
@@ -5186,6 +5196,31 @@ end do
                         i_sav, j_sav)
 
                      end if
+
+                set_conducting_wall: &
+                if ( domainMask .and. mask_lim(i,j) == 0 ) then
+
+                        sigexx = (0,1e15)
+                        sigexy = (0,0)
+                        sigexz = (0,0)
+                        sigeyx = (0,0)
+                        sigeyy = (0,1e15)
+                        sigeyz = (0,0)
+                        sigezx = (0,0)
+                        sigezy = (0,0)
+                        sigezz = (0,1e15)
+             
+                        sig1xx = (0,1e15)
+                        sig1xy = (0,0)
+                        sig1xz = (0,0)
+                        sig1yx = (0,0)
+                        sig1yy = (0,1e15)
+                        sig1yz = (0,0)
+                        sig1zx = (0,0)
+                        sig1zy = (0,0)
+                        sig1zz = (0,1e15)
+ 
+                endif set_conducting_wall
 
 
                   sigxx = sigexx + sig1xx + sig2xx + sig3xx &
