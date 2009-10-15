@@ -266,7 +266,7 @@ pro create_antenna_current, $
 
 ;	put the antenna line on a grid
 
-	nX	= 60 
+	nX	= 120 
 	nY	= 120 
 
 	rMax	= 1.8
@@ -303,9 +303,9 @@ pro create_antenna_current, $
 	;	at the moment it requires right angle connectors,
 	;	but this will be changed later
 
-	xAnt	= 1.65
-	yAnt1	= -0.6
-	yAnt2	=  0.6
+	xAnt	= 1.7
+	yAnt1	= -1.4
+	yAnt2	=  1.4
 	iiFeedLength	= where ( antGrid_x ge xAnt, iiFeedCnt )
 	iiAntLength		= where ( antGrid_y ge yAnt1 and antGrid_y le yAnt2, iiAntCnt )
 	bottomFeederX	= nX - indGen ( iiFeedCnt ) -1
@@ -338,7 +338,7 @@ pro create_antenna_current, $
 	iiAntYRange	= where ( antGrid_y gt yAnt1 and antGrid_y lt yAnt2 )
 	iiTop	= max ( iiAntYRange, min = iiBot )
 	sigX	= 0.01
-	sigY	= 0.04
+	sigY	= 0.2
 	antJY_grid	= exp ( -( $
 			( antGrid_x2D-xAnt )^2 / sigX + ( antGrid_y2D-antGrid_y[iiTop] )^2 / sigY ) )
 	antJY_grid	+= exp ( -( $
@@ -428,6 +428,14 @@ pro create_antenna_current, $
 
 	plot, antjy_grid[nX/4*3,*],color=0, psym = -4
 	plot, antjy_grid[*,nY/2],color=0, psym = -4
+	contour, antjy_grid, antGrid_x, antGrid_y, $
+			color = 0, nlev=30
+	oPlot, eqdsk.rlim, eqdsk.zlim, $
+			psym = -4, $
+			color = 0
+	oPlot, eqdsk.rbbbs, eqdsk.zbbbs, $
+			color = 8*16-1
+
 
 	!p.multi = 0
 

@@ -5197,30 +5197,30 @@ end do
 
                      end if
 
-                set_conducting_wall: &
-                if ( domainMask .and. mask_lim(i,j) == 0 ) then
+                !set_conducting_wall: &
+                !if ( domainMask .and. mask_lim(i,j) == 0 ) then
 
-                        sigexx = (0,1e15)
-                        sigexy = (0,0)
-                        sigexz = (0,0)
-                        sigeyx = (0,0)
-                        sigeyy = (0,1e15)
-                        sigeyz = (0,0)
-                        sigezx = (0,0)
-                        sigezy = (0,0)
-                        sigezz = (0,1e15)
+                !        sigexx = (5e7,0)
+                !        sigexy = (0,0)
+                !        sigexz = (0,0)
+                !        sigeyx = (0,0)
+                !        sigeyy = (5e7,0)
+                !        sigeyz = (0,0)
+                !        sigezx = (0,0)
+                !        sigezy = (0,0)
+                !        sigezz = (5e7,0)
              
-                        sig1xx = (0,1e15)
-                        sig1xy = (0,0)
-                        sig1xz = (0,0)
-                        sig1yx = (0,0)
-                        sig1yy = (0,1e15)
-                        sig1yz = (0,0)
-                        sig1zx = (0,0)
-                        sig1zy = (0,0)
-                        sig1zz = (0,1e15)
+                !        sig1xx = (5e7,0)
+                !        sig1xy = (0,0)
+                !        sig1xz = (0,0)
+                !        sig1yx = (0,0)
+                !        sig1yy = (5e7,0)
+                !        sig1yz = (0,0)
+                !        sig1zx = (0,0)
+                !        sig1zy = (0,0)
+                !        sig1zz = (5e7,0)
  
-                endif set_conducting_wall
+                !endif set_conducting_wall
 
 
                   sigxx = sigexx + sig1xx + sig2xx + sig3xx &
