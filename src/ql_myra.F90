@@ -116,7 +116,7 @@ module ql_myra_mod
       real xm, omgc(nxdim, nydim), omgp2(nxdim, nydim), &
            psi(nxdim, nydim), psilim, alpha
 !DLG:   Define variables
-      real capr(nxdim), xnuomg, delta0, dx, dy, r0
+      real capr(nxdim), xnuomg(:,:), delta0, dx, dy, r0
       real gradprlb(nxdim, nydim), bmod(nxdim, nydim), &
                                bmod_mid(nxdim, nydim)
 

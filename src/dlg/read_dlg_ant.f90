@@ -2,7 +2,8 @@ module dlg_ant
 
 contains
 
-subroutine read_dlg_ant ( capR, y, dlg_jantx, dlg_janty, ncFileNameIn, gridMatch )
+subroutine read_dlg_ant ( capR, y, dlg_jantx, dlg_janty, ncFileNameIn, gridMatch, &
+    dlg_limSigma )
 
     use netcdf
     use dlg
@@ -14,7 +15,8 @@ subroutine read_dlg_ant ( capR, y, dlg_jantx, dlg_janty, ncFileNameIn, gridMatch
         R_nBins, z_nBins, &
         R_binCenters_id, z_binCenters_id, &
         R_binEdges_id, z_binEdges_id, &
-        jantx_id, janty_id, ncStat
+        jantx_id, janty_id, ncStat, &
+        limSigma_id
     integer ::  nR, nz, k, l
     character(len=*), intent(in), optional :: ncFileNameIn
     logical, intent(inout), optional :: gridMatch
@@ -23,10 +25,12 @@ subroutine read_dlg_ant ( capR, y, dlg_jantx, dlg_janty, ncFileNameIn, gridMatch
 
     real, allocatable :: jantx(:,:), janty(:,:), &
         R_bincenters(:), z_binCenters(:), &
-        R_binEdges(:), z_binEdges(:)
+        R_binEdges(:), z_binEdges(:), &
+        limSigma(:,:)
     integer, allocatable :: R_index(:,:), z_index(:,:)
     integer :: insaneCnt, i, j
     real, intent(inout) :: dlg_jantx(:,:), dlg_janty(:,:)
+    real, intent(inout), optional :: dlg_limSigma(:,:)
     real :: minR, minz, RStep, zStep, RRange, zRange
 
     allocate ( R_index ( size ( capR ), size ( y ) ), &
@@ -45,6 +49,7 @@ subroutine read_dlg_ant ( capR, y, dlg_jantx, dlg_janty, ncFileNameIn, gridMatch
     ncStat = nf90_open ( path = ncFileName, mode = nf90_nowrite, ncid = nc_id )
     ncStat = nf90_inq_varId ( nc_id, 'jantx', jantx_id )
     ncStat = nf90_inq_varId ( nc_id, 'janty', janty_id )
+    ncStat = nf90_inq_varId ( nc_id, 'limiter_sigma', limSigma_id )
 
     ncStat = nf90_inq_varId ( nc_id, 'R_binCenters', R_binCenters_id )
     ncStat = nf90_inq_varId ( nc_id, 'z_binCenters', z_binCenters_id )
@@ -57,15 +62,18 @@ subroutine read_dlg_ant ( capR, y, dlg_jantx, dlg_janty, ncFileNameIn, gridMatch
     allocate ( jantx ( R_nBins, z_nBins ), &
         janty ( R_nBins, z_nBins ), &
         R_binCenters ( R_nBins ), &
-        z_binCenters ( z_nBins ) )
+        z_binCenters ( z_nBins ), &
+        limSigma ( R_nBins, z_nBins ) )
 
     jantx = 0.0
     janty = 0.0
+    limSigma = 0
     dlg_jantx   = 0.0
     dlg_janty   = 0.0
 
     ncStat = nf90_get_var ( nc_id, jantx_id, jantx ) 
     ncStat = nf90_get_var ( nc_id, janty_id, janty ) 
+    ncStat = nf90_get_var ( nc_id, limSigma_id, limSigma ) 
 
     ncStat = nf90_get_var ( nc_id, R_binCenters_id, R_binCenters ) 
     ncStat = nf90_get_var ( nc_id, z_binCenters_id, z_binCenters ) 
@@ -106,6 +114,8 @@ subroutine read_dlg_ant ( capR, y, dlg_jantx, dlg_janty, ncFileNameIn, gridMatch
 
                 dlg_jantx(i,j)  = jantx(i,j)
                 dlg_janty(i,j)  = janty(i,j)
+                if ( present ( dlg_limSigma ) ) &
+                    dlg_limSigma(i,j) = limSigma(i,j)
 
             else
 
@@ -117,6 +127,8 @@ subroutine read_dlg_ant ( capR, y, dlg_jantx, dlg_janty, ncFileNameIn, gridMatch
 
                     dlg_jantx(i,j)  = jantx(R_index(i,j),z_index(i,j))
                     dlg_janty(i,j)  = janty(R_index(i,j),z_index(i,j))
+                    if ( present ( dlg_limSigma ) ) &
+                        dlg_limSigma(i,j) = limSigma (R_index(i,j),z_index(i,j)) 
 
                 endif
             endif exact_aorsa_grid
@@ -139,6 +151,18 @@ subroutine read_dlg_ant ( capR, y, dlg_jantx, dlg_janty, ncFileNameIn, gridMatch
                 write(*,*) dlg_janty(i,j)
                 stop
             endif sanity_check_y
+
+            if ( present ( dlg_limSigma ) ) then 
+                sanity_check_sigma: &
+                if ( dlg_limSigma(i,j) < 0 &
+                    .or. dlg_limSigma(i,j) * 0 /= 0 &
+                    .or. dlg_limSigma(i,j) /= dlg_limSigma(i,j) ) then
+
+                    write(*,*) 'ERROR: sanity failure on limiter sigma when read from netCDF file in src/dlg/read_dlg_ant.f90'
+                    write(*,*) dlg_limSigma(i,j)
+                    stop
+                endif sanity_check_sigma
+            endif
 
 
         enddo

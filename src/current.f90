@@ -1,3 +1,7 @@
+module current_module
+
+contains
+
 !
 !***************************************************************************
 !
@@ -62,7 +66,7 @@
 
       real xm, omgc(nxdim, nydim), omgp2(nxdim, nydim), &
            psi(nxdim, nydim), psilim
-      real capr(nxdim), xnuomg, delta0
+      real capr(nxdim), xnuomg(:,:), delta0
       real gradprlb(nxdim, nydim), bmod(nxdim, nydim), &
                                bmod_mid(nxdim, nydim)
 
@@ -232,7 +236,7 @@
                      if (isigma .eq. 1) &
                         call sigmad_cql3d(i, j, n, m, rho(i,j),rho_a, &
                             gradprlb(i,j), bmod(i,j), bmod_mid(i,j), &
-                            xm, q, xn(i,j), xnuomg, &
+                            xm, q, xn(i,j), xnuomg(i,j), &
                             xkt(i,j), omgc(i,j), omgp2(i,j), &
                             -lmax, lmax, nzfun, ibessel, &
                             xkxsav(n), xkysav(m), nphi, capr(i), &
@@ -254,7 +258,7 @@
 
                      if (isigma .eq. 0) &
                         call sigmac_stix(i, j, n, m, &
-                            xm, q, xn(i,j), xnuomg, &
+                            xm, q, xn(i,j), xnuomg(i,j), &
                             xkt(i,j), omgc(i,j), omgp2(i,j), &
                             -lmax, lmax, nzfun, ibessel, &
                             xkxsav(n), xkysav(m), nphi, capr(i), &
@@ -326,7 +330,7 @@
   100 format (1p8e12.4)
   101 format (10i10)
 
-      end
+      end subroutine current_cd
 
 
 
@@ -384,7 +388,7 @@
 
       real xm, omgc(nxdim, nydim), omgp2(nxdim, nydim), &
            psi(nxdim, nydim), psilim
-      real capr(nxdim), xnuomg, delta0
+      real capr(nxdim), xnuomg(:,:), delta0
       real gradprlb(nxdim, nydim), bmod(nxdim, nydim), &
                                bmod_mid(nxdim, nydim)
 
@@ -449,7 +453,7 @@
                      if (isigma .eq. 1) &
                         call sigmad_cql3d(i, j, n, m, rho(i,j),rho_a, &
                             gradprlb(i,j), bmod(i,j), bmod_mid(i,j), &
-                            xm, q, xn(i,j), xnuomg, &
+                            xm, q, xn(i,j), xnuomg(i,j), &
                             xkt(i,j), omgc(i,j), omgp2(i,j), &
                             -lmax, lmax, nzfun, ibessel, &
                             xkxsav(n), xkysav(m), nphi, capr(i), &
@@ -471,7 +475,7 @@
 
                      if (isigma .eq. 0) &
                         call sigmac_stix(i, j, n, m, &
-                            xm, q, xn(i,j), xnuomg, &
+                            xm, q, xn(i,j), xnuomg(i,j), &
                             xkt(i,j), omgc(i,j), omgp2(i,j), &
                             -lmax, lmax, nzfun, ibessel, &
                             xkxsav(n), xkysav(m), nphi, capr(i), &
@@ -523,7 +527,7 @@
   100 format (1p8e12.4)
   101 format (10i10)
 
-      end
+      end subroutine current
 
 
 !
@@ -580,7 +584,7 @@
 
       real xm, omgc(nxdim, nydim), omgp2(nxdim, nydim), &
            psi(nxdim, nydim), psilim
-      real capr(nxdim), xnuomg, delta0
+      real capr(nxdim), xnuomg(:,:), delta0
       real gradprlb(nxdim, nydim), bmod(nxdim, nydim), &
                                bmod_mid(nxdim, nydim)
 
@@ -643,7 +647,7 @@
                      if (isigma .eq. 1) &
                         call sigmad_cql3d(i, j, n, m, rho(i,j),rho_a, &
                             gradprlb(i,j), bmod(i,j), bmod_mid(i,j), &
-                            xm, q, xn(i,j), xnuomg, &
+                            xm, q, xn(i,j), xnuomg(i,j), &
                             xkt(i,j), omgc(i,j), omgp2(i,j), &
                             -lmax, lmax, nzfun, ibessel, &
                             xkxsav(n), xkysav(m), nphi, capr(i), &
@@ -665,7 +669,7 @@
 
                      if (isigma .eq. 0) &
                         call sigmac_stix(i, j, n, m, &
-                            xm, q, xn(i,j), xnuomg, &
+                            xm, q, xn(i,j), xnuomg(i,j), &
                             xkt(i,j), omgc(i,j), omgp2(i,j), &
                             -lmax, lmax, nzfun, ibessel, &
                             xkxsav(n), xkysav(m), nphi, capr(i), &
@@ -717,7 +721,7 @@
   100 format (1p8e12.4)
   101 format (10i10)
 
-      end
+      end subroutine current_1
 
 
 !
@@ -775,7 +779,7 @@
 
       real xm, omgc(nxdim, nydim), omgp2(nxdim, nydim), &
            psi(nxdim, nydim), psilim
-      real capr(nxdim), xnuomg, delta0
+      real capr(nxdim), xnuomg(:,:), delta0
       real gradprlb(nxdim, nydim), bmod(nxdim, nydim), &
                                bmod_mid(nxdim, nydim)
 
@@ -838,7 +842,7 @@
                      if (isigma .eq. 1) &
                         call sigmad_cql3d(i, j, n, m, rho(i,j),rho_a, &
                             gradprlb(i,j), bmod(i,j), bmod_mid(i,j), &
-                            xm, q, xn(i,j), xnuomg, &
+                            xm, q, xn(i,j), xnuomg(i,j), &
                             xkt(i,j), omgc(i,j), omgp2(i,j), &
                             -lmax, lmax, nzfun, ibessel, &
                             xkxsav(n), xkysav(m), nphi, capr(i), &
@@ -860,7 +864,7 @@
 
                      if (isigma .eq. 0) &
                         call sigmac_stix(i, j, n, m, &
-                            xm, q, xn(i,j), xnuomg, &
+                            xm, q, xn(i,j), xnuomg(i,j), &
                             xkt(i,j), omgc(i,j), omgp2(i,j), &
                             -lmax, lmax, nzfun, ibessel, &
                             xkxsav(n), xkysav(m), nphi, capr(i), &
@@ -912,7 +916,7 @@
   100 format (1p8e12.4)
   101 format (10i10)
 
-      end
+      end subroutine current_2
 
 
 !
@@ -956,7 +960,7 @@
 
       real xm, omgc(nxdim, nydim), omgp2(nxdim, nydim), &
            psi(nxdim, nydim), psilim, zeffcd
-      real capr(nxdim), xnuomg
+      real capr(nxdim), xnuomg(:,:)
 
       complex xx(nkdim1 : nkdim2, 1 : nxdim), &
               yy(mkdim1 : mkdim2, 1 : nydim)
@@ -999,7 +1003,7 @@
                   do m = nky1, nky2
 
                      call sigmah_slow(i, j, n, m, &
-                         xm, q, xn(i,j), xnuomg, &
+                         xm, q, xn(i,j), xnuomg(i,j), &
                          eslow, omgc(i,j), omgp2(i,j), &
                          -lmax, lmax, nzfun, ibessel, &
                          xkxsav(n), xkysav(m), nphi, capr(i), &
@@ -1050,9 +1054,10 @@
   100 format (1p8e12.4)
   101 format (10i10)
 
-      end
+      end subroutine cur_slo
 
 !
 !***************************************************************************
 !
 
+end module current_module

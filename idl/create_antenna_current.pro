@@ -229,7 +229,7 @@ pro create_antenna_current, $
 
 	;	grow custom limiter
 
-	grow_rlim	= [ 0.1, 1.46, 1.82, 1.82, 1.46, 0.1, 0.1 ]
+	grow_rlim	= [ 0.0, 1.56, 1.92, 1.92, 1.56, 0.0, 0.0 ]
 	grow_zLim	= [ -1.75, -1.75, -0.32, 0.32, 1.75, 1.75, -1.75 ]
 
 	plot, eqdsk.rlim, eqdsk.zlim, $
@@ -299,10 +299,11 @@ pro create_antenna_current, $
 	nX	= 120 
 	nY	= 120 
 
-	rMax	= 1.8
-	xRange	= rMax - min ( eqdsk.r )
+	rMax	= max ( eqdsk.r )
+	rMin	= -0.2
+	xRange	= rMax - rMin
 	dX	= xRange / nX
-	antGrid_x	= fIndGen ( nX ) * dX + min ( eqdsk.r ) + dX / 2.0
+	antGrid_x	= fIndGen ( nX ) * dX + rMin + dX / 2.0
 	yRange	= max ( eqdsk.z ) - min ( eqdsk.z )
 	antGrid_y	= fIndGen ( nY )/(nY-1) * yRange + min ( eqdsk.z )
 
@@ -439,7 +440,7 @@ pro create_antenna_current, $
 			mask = mask_outerWall
 
 	smoothSigma	= fltArr ( nX, nY )
-	wallSigX	= 0.01
+	wallSigX	= 0.04
 	wallSigY	= 0.02
 	
 	for i=0,nX-1 do begin
@@ -499,13 +500,16 @@ pro create_antenna_current, $
 
 	window, 9, ySize = 1200
 	!p.multi = 0
+	loadct, 3
 	contour, smoothsigma, antgrid_x, antgrid_y, $
 		color = 0, levels = (findgen(10)+1)/10, $
-		c_labels	= fIndGen(10)+1, /iso
+		c_labels = fIndGen(10)+1, /iso, $
+		/fill
 
+	loadct, 12
 	oplot, eqdsk.rlim, eqdsk.zlim, $
 			psym = -4, $
-			color = 0, $
+			color = 8*16-1, $
 			thick = 2
 	oPlot, eqdsk.rbbbs, eqdsk.zbbbs, $
 			color = 8*16-1, $
@@ -559,6 +563,7 @@ pro create_antenna_current, $
 	z_id = nCdf_varDef ( nc_id, 'z_binCenters', [ nz_id ], /float )
 	jantx_id = nCdf_varDef ( nc_id, 'jantx', [nR_id, nz_id], /float )
 	janty_id = nCdf_varDef ( nc_id, 'janty', [nR_id, nz_id], /float )
+	limSigma_id = nCdf_varDef ( nc_id, 'limiter_sigma', [nR_id, nz_id], /float )
 
 	nCdf_control, nc_id, /enDef
 	
@@ -566,6 +571,7 @@ pro create_antenna_current, $
 	nCdf_varPut, nc_id, z_id, antGrid_y 
 	nCdf_varPut, nc_id, jantx_id, antJX_grid 
 	nCdf_varPut, nc_id, janty_id, antJY_grid
+	nCdf_varPut, nc_id, limSigma_id, smoothSigma
 
 	nCdf_close, nc_id
 

@@ -17,6 +17,7 @@
       use read_particle_f
       use set_edge_density
       use dlg_ant
+      use current_module
 
 !------------------------------------------------------------------------------
 !     This version (4/01/03: newlab3) does not solve equations for the points
@@ -335,6 +336,8 @@
 
       real xjantx, xjanty, xjantz, xjant
       real xjx(nxmx, nymx), xjy(nxmx, nymx), xjz(nxmx, nymx)
+      real dlg_limSigma(nxmx, nymx), dlg_wallSig
+      real dlg_xnuomg(nxmx,nymx)
       real djxdx, djydy
       complex rho_ant(nxmx, nymx), rho_pla(nxmx, nymx)
 
@@ -481,6 +484,8 @@
            xiota(nxmx, nymx), qsafety(nxmx, nymx), bmod_mid(nxmx, nymx), &
            capr_bpol_mid2(nxmx, nymx), rho_tor2d(nxmx, nymx), &
            psi_tor2d(nxmx, nymx)
+
+      real dlcfs(nxmx,nymx)
 
       real zeff(nxmx, nymx)
 
@@ -2994,9 +2999,13 @@
 
 !DLG: use external antenna current from dlgAnt.nc
 
-    if ( dlgAnt ) &
-    call read_dlg_ant ( capR(1:nnodex), y(1:nnodey), xjx, xjy, &
-            gridMatch = antGridMatch, ncFileNameIn = dlgAntFileName ) 
+    if ( dlgAnt ) then 
+
+        call read_dlg_ant ( capR(1:nnodex), y(1:nnodey), xjx, xjy, &
+            gridMatch = antGridMatch, ncFileNameIn = dlgAntFileName, &
+            dlg_limSigma = dlg_limSigma ) 
+
+    endif
 
 !DLG: read eqdsk dlg style
 
@@ -3214,7 +3223,13 @@ if (iprofile .eq. 3) then
             xkti   = dlg_getDensity ( capR, y, &
                            ncFileNameIn = dlgProfileFileName, &
                            ncVariableNameIn = 'ti' ) * q
-   
+            dlcfs  = dlg_getDensity ( capR, y, &
+                           ncFileNameIn = dlgProfileFileName, &
+                           ncVariableNameIn = 'dlcfs' )
+
+            dlg_xnuomg = dlcfs * 0.1 
+            where ( dlg_xnuomg < 0 ) dlg_xnuomg = 0
+  
             !xnea    = 3.0e19
             !xkte    = 700.0 * q
             !xkti    = 800.0 * q
@@ -4879,7 +4894,7 @@ end do
 
                         call sigmad_cql3d(i, j, n, m, rho(i,j), rho_a, &
                         gradprlb(i,j), bmod(i,j), bmod_mid(i,j), &
-                        xme, qe, xnea(i,j), xnuomg, &
+                        xme, qe, xnea(i,j), dlg_xnuomg(i,j), &
                         xkte(i,j), omgce(i,j), omgpe2(i,j), &
                         -lmax, lmax, nzfun, ibessel, &
                         xkxsav(n), xkysav(m), nphi, capr(i), &
@@ -4900,7 +4915,7 @@ end do
 
                         call sigmad_cql3d(i, j, n, m, rho(i,j), rho_a, &
                         gradprlb(i,j), bmod(i,j), bmod_mid(i,j), &
-                        xmi1, qi1, xn1a(i,j), xnuomg, &
+                        xmi1, qi1, xn1a(i,j), dlg_xnuomg(i,j), &
                         xkti(i,j), omgci1(i,j), omgp12(i,j), &
                         -lmax, lmax, nzfun, ibessel, &
                         xkxsav(n), xkysav(m), nphi, capr(i), &
@@ -4925,7 +4940,7 @@ end do
                         if(eta2 .ne. 0.0) &
                         call sigmad_cql3d(i, j, n, m, rho(i,j), rho_a, &
                         gradprlb(i,j), bmod(i,j), bmod_mid(i,j), &
-                        xmi2, qi2, xn2a(i,j), xnuomg, &
+                        xmi2, qi2, xn2a(i,j), dlg_xnuomg(i,j), &
                         xkti2(i,j), omgci2(i,j), omgp22(i,j), &
                         -lmax, lmax, nzfun, ibessel, &
                         xkxsav(n), xkysav(m), nphi, capr(i), &
@@ -4949,7 +4964,7 @@ end do
                         if(eta2 .ne. 0.0) &
                         call sigmad_cql3d(i, j, n, m, rho(i,j), rho_a, &
                         gradprlb(i,j), bmod(i,j), bmod_mid(i,j), &
-                        xmi2, qi2, xn2a(i,j), xnuomg, &
+                        xmi2, qi2, xn2a(i,j), dlg_xnuomg(i,j), &
                         xkti2(i,j), omgci2(i,j), omgp22(i,j), &
                         -lmax, lmax, nzfun, ibessel, &
                         xkxsav(n), xkysav(m), nphi, capr(i), &
@@ -4974,7 +4989,7 @@ end do
                         if(eta3 .ne. 0.0) &
                         call sigmad_cql3d(i, j, n, m, rho(i,j), rho_a, &
                         gradprlb(i,j), bmod(i,j), bmod_mid(i,j), &
-                        xmi3, qi3, xn3a(i,j), xnuomg, &
+                        xmi3, qi3, xn3a(i,j), dlg_xnuomg(i,j), &
                         xkti3(i,j), omgci3(i,j), omgp32(i,j), &
                         -lmax, lmax, nzfun, ibessel, &
                         xkxsav(n), xkysav(m), nphi, capr(i), &
@@ -4996,7 +5011,7 @@ end do
                         if(eta4 .ne. 0.0) &
                         call sigmad_cql3d(i, j, n, m, rho(i,j), rho_a, &
                         gradprlb(i,j), bmod(i,j), bmod_mid(i,j), &
-                        xmi4, qi4, xn4a(i,j), xnuomg, &
+                        xmi4, qi4, xn4a(i,j), dlg_xnuomg(i,j), &
                         xkti4(i,j), omgci4(i,j), omgp42(i,j), &
                         -lmax, lmax, nzfun, ibessel, &
                         xkxsav(n), xkysav(m), nphi, capr(i), &
@@ -5018,7 +5033,7 @@ end do
                         if(eta5 .ne. 0.0) &
                         call sigmad_cql3d(i, j, n, m, rho(i,j), rho_a, &
                         gradprlb(i,j), bmod(i,j), bmod_mid(i,j), &
-                        xmi5, qi5, xn5a(i,j), xnuomg, &
+                        xmi5, qi5, xn5a(i,j), dlg_xnuomg(i,j), &
                         xkti5(i,j), omgci5(i,j), omgp52(i,j), &
                         -lmax, lmax, nzfun, ibessel, &
                         xkxsav(n), xkysav(m), nphi, capr(i), &
@@ -5040,7 +5055,7 @@ end do
                         if(eta6 .ne. 0.0) &
                         call sigmad_cql3d(i, j, n, m, rho(i,j), rho_a, &
                         gradprlb(i,j), bmod(i,j), bmod_mid(i,j), &
-                        xmi6, qi6, xn6a(i,j), xnuomg, &
+                        xmi6, qi6, xn6a(i,j), dlg_xnuomg(i,j), &
                         xkti6(i,j), omgci6(i,j), omgp62(i,j), &
                         -lmax, lmax, nzfun, ibessel, &
                         xkxsav(n), xkysav(m), nphi, capr(i), &
@@ -5061,7 +5076,7 @@ end do
 
                         if(eta_slo .ne. 0.0) &
                         call sigmah_slow(i, j, n, m, &
-                        xmi_slo, qi_slo, xna_slo(i,j), xnuomg, &
+                        xmi_slo, qi_slo, xna_slo(i,j), dlg_xnuomg(i,j), &
                         eslow, omgci_slo(i,j), omgp2_slo(i,j), &
                         -lmax, lmax, nzfun, ibessel, &
                         xkxsav(n), xkysav(m), nphi, capr(i), &
@@ -5085,7 +5100,7 @@ end do
                      if (isigma .eq. 0)then ! Cold plasma
 
                         call sigmac_stix(i, j, n, m, &
-                        xme, qe, xnea(i,j), xnuomg, &
+                        xme, qe, xnea(i,j), dlg_xnuomg(i,j), &
                         xkte(i,j), omgce(i,j), omgpe2(i,j), &
                         -lmax, lmax, nzfun, ibessel, &
                         xkxsav(n), xkysav(m), nphi, capr(i), &
@@ -5100,7 +5115,7 @@ end do
                         i_sav, j_sav)
 
                         call sigmac_stix(i, j, n, m, &
-                        xmi1, qi1, xn1a(i,j), xnuomg, &
+                        xmi1, qi1, xn1a(i,j), dlg_xnuomg(i,j), &
                         xkti(i,j), omgci1(i,j), omgp12(i,j), &
                         -lmax, lmax, nzfun, ibessel, &
                         xkxsav(n), xkysav(m), nphi, capr(i), &
@@ -5116,7 +5131,7 @@ end do
 
                         if(eta2 .ne. 0.0) &
                         call sigmac_stix(i, j, n, m, &
-                        xmi2, qi2, xn2a(i,j), xnuomg, &
+                        xmi2, qi2, xn2a(i,j), dlg_xnuomg(i,j), &
                         xkti2(i,j), omgci2(i,j), omgp22(i,j), &
                         -lmax, lmax, nzfun, ibessel, &
                         xkxsav(n), xkysav(m), nphi, capr(i), &
@@ -5132,7 +5147,7 @@ end do
 
                         if(eta3 .ne. 0.0) &
                         call sigmac_stix(i, j, n, m, &
-                        xmi3, qi3, xn3a(i,j), xnuomg, &
+                        xmi3, qi3, xn3a(i,j), dlg_xnuomg(i,j), &
                         xkti3(i,j), omgci3(i,j), omgp32(i,j), &
                         -lmax, lmax, nzfun, ibessel, &
                         xkxsav(n), xkysav(m), nphi, capr(i), &
@@ -5149,7 +5164,7 @@ end do
 
                         if(eta4 .ne. 0.0) &
                         call sigmac_stix(i, j, n, m, &
-                        xmi4, qi4, xn4a(i,j), xnuomg, &
+                        xmi4, qi4, xn4a(i,j), dlg_xnuomg(i,j), &
                         xkti4(i,j), omgci4(i,j), omgp42(i,j), &
                         -lmax, lmax, nzfun, ibessel, &
                         xkxsav(n), xkysav(m), nphi, capr(i), &
@@ -5165,7 +5180,7 @@ end do
 
                         if(eta5 .ne. 0.0) &
                         call sigmac_stix(i, j, n, m, &
-                        xmi5, qi5, xn5a(i,j), xnuomg, &
+                        xmi5, qi5, xn5a(i,j), dlg_xnuomg(i,j), &
                         xkti5(i,j), omgci5(i,j), omgp52(i,j), &
                         -lmax, lmax, nzfun, ibessel, &
                         xkxsav(n), xkysav(m), nphi, capr(i), &
@@ -5181,7 +5196,7 @@ end do
 
                         if(eta6 .ne. 0.0) &
                         call sigmac_stix(i, j, n, m, &
-                        xmi6, qi6, xn6a(i,j), xnuomg, &
+                        xmi6, qi6, xn6a(i,j), dlg_xnuomg(i,j), &
                         xkti6(i,j), omgci6(i,j), omgp62(i,j), &
                         -lmax, lmax, nzfun, ibessel, &
                         xkxsav(n), xkysav(m), nphi, capr(i), &
@@ -5197,30 +5212,31 @@ end do
 
                      end if
 
-                !set_conducting_wall: &
-                !if ( domainMask .and. mask_lim(i,j) == 0 ) then
+                set_conducting_wall: &
+                if ( domainMask .and. mask_lim(i,j) == 0 ) then
 
-                !        sigexx = (5e7,0)
-                !        sigexy = (0,0)
-                !        sigexz = (0,0)
-                !        sigeyx = (0,0)
-                !        sigeyy = (5e7,0)
-                !        sigeyz = (0,0)
-                !        sigezx = (0,0)
-                !        sigezy = (0,0)
-                !        sigezz = (5e7,0)
+                    dlg_wallSig = 1e2
+                    sigexx = cmplx(dlg_limSigma(i,j)*dlg_wallSig,0)
+                    sigexy = (0,0)
+                    sigexz = (0,0)
+                    sigeyx = (0,0)
+                    sigeyy = cmplx(dlg_limSigma(i,j)*dlg_wallSig,0)
+                    sigeyz = (0,0)
+                    sigezx = (0,0)
+                    sigezy = (0,0)
+                    sigezz = cmplx(dlg_limSigma(i,j)*dlg_wallSig,0)
              
-                !        sig1xx = (5e7,0)
-                !        sig1xy = (0,0)
-                !        sig1xz = (0,0)
-                !        sig1yx = (0,0)
-                !        sig1yy = (5e7,0)
-                !        sig1yz = (0,0)
-                !        sig1zx = (0,0)
-                !        sig1zy = (0,0)
-                !        sig1zz = (5e7,0)
+                    sig1xx = cmplx(dlg_limSigma(i,j)*dlg_wallSig,0)
+                    sig1xy = (0,0)
+                    sig1xz = (0,0)
+                    sig1yx = (0,0)
+                    sig1yy = cmplx(dlg_limSigma(i,j)*dlg_wallSig,0)
+                    sig1yz = (0,0)
+                    sig1zx = (0,0)
+                    sig1zy = (0,0)
+                    sig1zz = cmplx(dlg_limSigma(i,j)*dlg_wallSig,0)
  
-                !endif set_conducting_wall
+                endif set_conducting_wall
 
 
                   sigxx = sigexx + sig1xx + sig2xx + sig3xx &
@@ -6210,7 +6226,7 @@ end do
          uyx, uyy, uyz, &
          uzx, uzy, uzz, &
          myrow, mycol, nprow, npcol, icontxt, desc_amat, dlen_, &
-         xx, yy, isigma, xnuomg, psi, psilim, nboundary, &
+         xx, yy, isigma, dlg_xnuomg, psi, psilim, nboundary, &
          myid, nproc, delta0, gradprlb, bmod, 0, bmod_mid, &
          nupar, nuper, n_psi, &
          n_psi_dim, dfdupere, dfdupare, &
@@ -6234,7 +6250,7 @@ end do
          uyx, uyy, uyz, &
          uzx, uzy, uzz, &
          myrow, mycol, nprow, npcol, icontxt, desc_amat, dlen_, &
-         xx, yy, isigma, xnuomg, psi, psilim, nboundary, &
+         xx, yy, isigma, dlg_xnuomg, psi, psilim, nboundary, &
          myid, nproc, delta0, gradprlb, bmod, ndisti1, bmod_mid, &
          nupar, nuper, n_psi, &
          n_psi_dim, dfduper1, dfdupar1, &
@@ -6257,7 +6273,7 @@ end do
          uyx, uyy, uyz, &
          uzx, uzy, uzz, &
          myrow, mycol, nprow, npcol, icontxt, desc_amat, dlen_, &
-         xx, yy, isigma, xnuomg, psi, psilim, nboundary, &
+         xx, yy, isigma, dlg_xnuomg, psi, psilim, nboundary, &
          myid, nproc, delta0, gradprlb, bmod, ndisti2, bmod_mid, &
          nupar, nuper, n_psi, &
          n_psi_dim, dfduper2, dfdupar2, &
@@ -6280,7 +6296,7 @@ end do
          uyx, uyy, uyz, &
          uzx, uzy, uzz, &
          myrow, mycol, nprow, npcol, icontxt, desc_amat, dlen_, &
-         xx, yy, isigma, xnuomg, psi, psilim, nboundary, &
+         xx, yy, isigma, dlg_xnuomg, psi, psilim, nboundary, &
          myid, nproc, delta0, gradprlb, bmod, ndisti3, bmod_mid, &
          nupar, nuper, n_psi, &
          n_psi_dim, dfduper3, dfdupar3, &
@@ -6303,7 +6319,7 @@ end do
          uyx, uyy, uyz, &
          uzx, uzy, uzz, &
          myrow, mycol, nprow, npcol, icontxt, desc_amat, dlen_, &
-         xx, yy, isigma, xnuomg, psi, psilim, nboundary, &
+         xx, yy, isigma, dlg_xnuomg, psi, psilim, nboundary, &
          myid, nproc, delta0, gradprlb, bmod, ndisti4, bmod_mid, &
          nupar, nuper, n_psi, &
          n_psi_dim, dfduper4, dfdupar4, &
@@ -6326,7 +6342,7 @@ end do
          uyx, uyy, uyz, &
          uzx, uzy, uzz, &
          myrow, mycol, nprow, npcol, icontxt, desc_amat, dlen_, &
-         xx, yy, isigma, xnuomg, psi, psilim, nboundary, &
+         xx, yy, isigma, dlg_xnuomg, psi, psilim, nboundary, &
          myid, nproc, delta0, gradprlb, bmod, ndisti5, bmod_mid, &
          nupar, nuper, n_psi, &
          n_psi_dim, dfduper5, dfdupar5, &
@@ -6349,7 +6365,7 @@ end do
          uyx, uyy, uyz, &
          uzx, uzy, uzz, &
          myrow, mycol, nprow, npcol, icontxt, desc_amat, dlen_, &
-         xx, yy, isigma, xnuomg, psi, psilim, nboundary, &
+         xx, yy, isigma, dlg_xnuomg, psi, psilim, nboundary, &
          myid, nproc, delta0, gradprlb, bmod, ndisti6, bmod_mid, &
          nupar, nuper, n_psi, &
          n_psi_dim, dfduper6, dfdupar6, &
@@ -6373,8 +6389,9 @@ end do
          uyx, uyy, uyz, &
          uzx, uzy, uzz, &
          myrow, mycol, nprow, npcol, icontxt, desc_amat, dlen_, &
-         xx, yy, isigma, xnuomg, psi, psilim, nboundary, &
-         xkte, zeffcd, myid, nproc)
+         xx, yy, isigma, dlg_xnuomg, psi, psilim, nboundary, &
+         xkte, zeffcd, myid, nproc, &
+         zi, eps0, v0i, omgrf, xk0, kperp_max, i_sav, j_sav)
 
 
 
@@ -6629,7 +6646,7 @@ end do
          uyx, uyy, uyz, &
          uzx, uzy, uzz, &
          myrow, mycol, nprow, npcol, icontxt, desc_amat, dlen_, &
-         xx, yy, isigma, xnuomg, psi, psilim, nboundary, &
+         xx, yy, isigma, dlg_xnuomg, psi, psilim, nboundary, &
          myid, nproc, delta0, gradprlb, bmod, 0, bmod_mid, &
          nupar, nuper, n_psi, &
          n_psi_dim, dfdupere, dfdupare, &
@@ -6658,7 +6675,7 @@ end do
          uyx, uyy, uyz, &
          uzx, uzy, uzz, &
          myrow, mycol, nprow, npcol, icontxt, desc_amat, dlen_, &
-         xx, yy, isigma, xnuomg, psi, psilim, nboundary, &
+         xx, yy, isigma, dlg_xnuomg, psi, psilim, nboundary, &
          myid, nproc, delta0, gradprlb, bmod, ndisti1, bmod_mid, &
          nupar, nuper, n_psi, &
          n_psi_dim, dfduper1, dfdupar1, &
@@ -6687,7 +6704,7 @@ end do
          uyx, uyy, uyz, &
          uzx, uzy, uzz, &
          myrow, mycol, nprow, npcol, icontxt, desc_amat, dlen_, &
-         xx, yy, isigma, xnuomg, psi, psilim, nboundary, &
+         xx, yy, isigma, dlg_xnuomg, psi, psilim, nboundary, &
          myid, nproc, delta0, gradprlb, bmod, ndisti2, bmod_mid, &
          nupar, nuper, n_psi, &
          n_psi_dim, dfduper2, dfdupar2, &
@@ -6716,7 +6733,7 @@ end do
          uyx, uyy, uyz, &
          uzx, uzy, uzz, &
          myrow, mycol, nprow, npcol, icontxt, desc_amat, dlen_, &
-         xx, yy, isigma, xnuomg, psi, psilim, nboundary, &
+         xx, yy, isigma, dlg_xnuomg, psi, psilim, nboundary, &
          myid, nproc, delta0, gradprlb, bmod, ndisti3, bmod_mid, &
          nupar, nuper, n_psi, &
          n_psi_dim, dfduper3, dfdupar3, &
@@ -6748,7 +6765,7 @@ end do
          uyx, uyy, uyz, &
          uzx, uzy, uzz, &
          myrow, mycol, nprow, npcol, icontxt, desc_amat, dlen_, &
-         xx, yy, isigma, xnuomg, psi, psilim, nboundary, &
+         xx, yy, isigma, dlg_xnuomg, psi, psilim, nboundary, &
          myid, nproc, delta0, gradprlb, bmod, ndisti4, bmod_mid, &
          nupar, nuper, n_psi, &
          n_psi_dim, dfduper4, dfdupar4, &
@@ -6778,7 +6795,7 @@ end do
          uyx, uyy, uyz, &
          uzx, uzy, uzz, &
          myrow, mycol, nprow, npcol, icontxt, desc_amat, dlen_, &
-         xx, yy, isigma, xnuomg, psi, psilim, nboundary, &
+         xx, yy, isigma, dlg_xnuomg, psi, psilim, nboundary, &
          myid, nproc, delta0, gradprlb, bmod, ndisti5, bmod_mid, &
          nupar, nuper, n_psi, &
          n_psi_dim, dfduper5, dfdupar5, &
@@ -6808,7 +6825,7 @@ end do
          uyx, uyy, uyz, &
          uzx, uzy, uzz, &
          myrow, mycol, nprow, npcol, icontxt, desc_amat, dlen_, &
-         xx, yy, isigma, xnuomg, psi, psilim, nboundary, &
+         xx, yy, isigma, dlg_xnuomg, psi, psilim, nboundary, &
          myid, nproc, delta0, gradprlb, bmod, ndisti6, bmod_mid, &
          nupar, nuper, n_psi, &
          n_psi_dim, dfduper6, dfdupar6, &
