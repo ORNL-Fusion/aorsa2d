@@ -2213,13 +2213,7 @@
             by0(i, j) = bz
             bz0(i, j) = bphi
 
-            bmod(i, j) = sqrt(br**2 + bz**2 + bphi**2)
-
-            bxn(i, j) = br / bmod(i, j)
-            byn(i, j) = bz / bmod(i, j)
-            bzn(i, j) = bphi / bmod(i, j)
-
-!            psizz(i, j) = pszz
+    !            psizz(i, j) = pszz
 !            psirr(i,j) = psrr
 !            psirz(i,j) = psrz
 
@@ -2229,6 +2223,30 @@
 
          end do
       end do
+
+
+      !! try smoothing bPhi
+
+      !do i=3,nnodex-2
+      !  do j=3,nnodey-2
+
+      !      bz0(i,j) = sum ( bz0(i-2:i+2,j-2:j+2) ) / 5.0**2 
+
+      !  enddo
+      !enddo
+
+      bmod = sqrt(bx0**2 + by0**2 + bz0**2)
+
+      !! remove poloidal field and increase toroidal 
+      !! field to compensate
+
+      !bx0   = bx0 * 0.001
+      !by0   = by0 * 0.001
+      !bz0   = bz0 * bmod / abs ( bz0 )
+      
+      bxn = bx0 / bmod
+      byn = by0 / bmod
+      bzn = bz0 / bmod
 
 !     --------
 !     Find b0:
