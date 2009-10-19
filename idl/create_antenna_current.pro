@@ -31,6 +31,28 @@ pro over_sample_boundary,  r, z, newR, newz
 	
 end 
 
+pro is_inside, r, z, rBry, zBry, $
+		mask = mask
+
+	mask   = intArr ( size ( r, /dim ) )
+	nR	= n_elements ( r[*,0] )
+	nz	= n_elements ( r[0,*] )
+	
+	for i = 0, nR - 1 do begin
+	    for j = 0, nZ - 1 do begin 
+	
+	        q1_  = n_elements ( where ( ( r[i,j] - rBry gt 0 ) and ( z[i,j] - zBry gt 0 ), q1 ) )
+	        q2_  = n_elements ( where ( ( r[i,j] - rBry gt 0 ) and ( z[i,j] - zBry le 0 ), q2 ) )
+	        q3_  = n_elements ( where ( ( r[i,j] - rBry le 0 ) and ( z[i,j] - zBry gt 0 ), q3 ) )
+	        q4_  = n_elements ( where ( ( r[i,j] - rBry le 0 ) and ( z[i,j] - zBry le 0 ), q4 ) )
+	
+	        if ( q1 gt 0 ) and ( q2 gt 0 ) and ( q3 gt 0 ) and ( q4 gt 0 ) then $
+	            mask[i,j]  = 1
+	               
+	    endfor
+	endfor
+
+end 
 
 pro create_antenna_current, $
 		gridMatch = gridMatch
@@ -202,9 +224,13 @@ pro create_antenna_current, $
 	eqdsk.rLim[*]	= 0.18
    	eqdsk.zLim[*]	= -1.6
 	eqdsk.rlim	= [ 0.18, 1.4, 1.74, 1.74, 1.4, 0.18, 0.18 ]
-	eqdsk.zLim	= [ -1.6, -1.6, -0.3, 0.3, 1.6, 1.6, 1.6 ]
+	eqdsk.zLim	= [ -1.6, -1.6, -0.3, 0.3, 1.6, 1.6, -1.6 ]
 	eqdsk.limitr	= n_elements ( eqdsk.rlim )
-	stop
+
+	;	grow custom limiter
+
+	grow_rlim	= [ 0.1, 1.46, 1.82, 1.82, 1.46, 0.1, 0.1 ]
+	grow_zLim	= [ -1.75, -1.75, -0.32, 0.32, 1.75, 1.75, -1.75 ]
 
 	plot, eqdsk.rlim, eqdsk.zlim, $
 			psym = -4, $
@@ -212,6 +238,10 @@ pro create_antenna_current, $
 	oPlot, eqdsk.rbbbs, eqdsk.zbbbs, $
 			color = 8*16-1
 
+	oplot, grow_rlim, grow_zlim, $
+			psym = -4, $
+			color = 12*16-1 
+	
 	oPlot, antR, antZ, $
 			color = 8*16-1, $
 			thick = 4
@@ -398,6 +428,36 @@ pro create_antenna_current, $
 	endfor
 
 
+	;	create the smooth wall sigma
+
+	over_sample_boundary, (eqdsk.rlim)[*], (eqdsk.zlim)[*], rlim_os, zlim_os
+	is_inside, antGrid_x2D, antGrid_y2D, rlim_os, zlim_os, $
+			mask = mask_innerWall
+
+	over_sample_boundary, grow_rlim, grow_zlim, grow_rlim_os, grow_zlim_os
+	is_inside, antGrid_x2D, antGrid_y2D, grow_rlim_os, grow_zlim_os, $
+			mask = mask_outerWall
+
+	smoothSigma	= fltArr ( nX, nY )
+	wallSigX	= 0.01
+	wallSigY	= 0.02
+	
+	for i=0,nX-1 do begin
+		for j=0,nY-1 do begin
+
+			if mask_outerWall[i,j] ne 1 then begin
+
+				smoothSigma	+= exp ( -( $
+					( antGrid_x2D-antGrid_x2D[i,j] )^2 / wallSigX $
+					+ ( antGrid_y2D-antGrid_y2D[i,j] )^2 / wallSigY ) )
+	
+			endif
+
+		endfor
+	endfor
+
+	smoothSigma	= smoothSigma / max ( smoothSigma )
+
 	loadct, 12, /sil
 	window, 3, ySize = 900
 	!p.multi = [0,2,3]
@@ -437,6 +497,25 @@ pro create_antenna_current, $
 			color = 8*16-1
 
 
+	window, 9, ySize = 1200
+	!p.multi = 0
+	contour, smoothsigma, antgrid_x, antgrid_y, $
+		color = 0, levels = (findgen(10)+1)/10, $
+		c_labels	= fIndGen(10)+1, /iso
+
+	oplot, eqdsk.rlim, eqdsk.zlim, $
+			psym = -4, $
+			color = 0, $
+			thick = 2
+	oPlot, eqdsk.rbbbs, eqdsk.zbbbs, $
+			color = 8*16-1, $
+			thick = 2
+
+	oplot, grow_rlim, grow_zlim, $
+			psym = -4, $
+			color = 12*16-1, $
+			thick = 2
+	
 	!p.multi = 0
 
 ;	save modified rLim/zLim boundary in eqdsk file
