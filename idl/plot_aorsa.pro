@@ -217,10 +217,10 @@ pro plot_aorsa, $
 		   thick = 2, $
 		   color = 0 
    	loadct, 12, /silent
-   	contour, janty, capR, zLoc, $
-		   c_color = 1*16-1, $
-		   /overplot, $ 
-   			levels = fIndGen(10)
+   	contour, sqrt(antj_y^2+antj_x^2+antj_z^2), capR, zLoc, $
+		   	c_color = 1*16-1, $
+		   	/overplot, $ 
+   			levels = fIndGen(10)/10
 	
    	loadct, 13, file = 'davect.tbl', /silent
     contour, (eMinu_real<range)>(-range), capR, zLoc, $

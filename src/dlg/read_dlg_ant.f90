@@ -2,7 +2,7 @@ module dlg_ant
 
 contains
 
-subroutine read_dlg_ant ( capR, y, dlg_jantx, dlg_janty, ncFileNameIn, gridMatch, &
+subroutine read_dlg_ant ( capR, y, dlg_jantx, dlg_janty, dlg_jantz, ncFileNameIn, gridMatch, &
     dlg_limSigma )
 
     use netcdf
@@ -16,20 +16,20 @@ subroutine read_dlg_ant ( capR, y, dlg_jantx, dlg_janty, ncFileNameIn, gridMatch
         R_binCenters_id, z_binCenters_id, &
         R_binEdges_id, z_binEdges_id, &
         jantx_id, janty_id, ncStat, &
-        limSigma_id
+        limSigma_id, jantz_id
     integer ::  nR, nz, k, l
     character(len=*), intent(in), optional :: ncFileNameIn
     logical, intent(inout), optional :: gridMatch
     character(len=100) ::  ncFileName
     real, intent(IN) :: capR(:), y(:)
 
-    real, allocatable :: jantx(:,:), janty(:,:), &
+    real, allocatable :: jantx(:,:), janty(:,:), jantz(:,:), &
         R_bincenters(:), z_binCenters(:), &
         R_binEdges(:), z_binEdges(:), &
         limSigma(:,:)
     integer, allocatable :: R_index(:,:), z_index(:,:)
     integer :: insaneCnt, i, j
-    real, intent(inout) :: dlg_jantx(:,:), dlg_janty(:,:)
+    real, intent(inout) :: dlg_jantx(:,:), dlg_janty(:,:), dlg_jantz(:,:)
     real, intent(inout), optional :: dlg_limSigma(:,:)
     real :: minR, minz, RStep, zStep, RRange, zRange
 
@@ -49,6 +49,7 @@ subroutine read_dlg_ant ( capR, y, dlg_jantx, dlg_janty, ncFileNameIn, gridMatch
     ncStat = nf90_open ( path = ncFileName, mode = nf90_nowrite, ncid = nc_id )
     ncStat = nf90_inq_varId ( nc_id, 'jantx', jantx_id )
     ncStat = nf90_inq_varId ( nc_id, 'janty', janty_id )
+    ncStat = nf90_inq_varId ( nc_id, 'jantz', jantz_id )
     ncStat = nf90_inq_varId ( nc_id, 'limiter_sigma', limSigma_id )
 
     ncStat = nf90_inq_varId ( nc_id, 'R_binCenters', R_binCenters_id )
@@ -61,18 +62,21 @@ subroutine read_dlg_ant ( capR, y, dlg_jantx, dlg_janty, ncFileNameIn, gridMatch
 
     allocate ( jantx ( R_nBins, z_nBins ), &
         janty ( R_nBins, z_nBins ), &
+        jantz ( R_nBins, z_nBins ), &
         R_binCenters ( R_nBins ), &
         z_binCenters ( z_nBins ), &
         limSigma ( R_nBins, z_nBins ) )
 
     jantx = 0.0
     janty = 0.0
+    jantz = 0.0
     limSigma = 0
     dlg_jantx   = 0.0
     dlg_janty   = 0.0
 
     ncStat = nf90_get_var ( nc_id, jantx_id, jantx ) 
     ncStat = nf90_get_var ( nc_id, janty_id, janty ) 
+    ncStat = nf90_get_var ( nc_id, jantz_id, jantz ) 
     ncStat = nf90_get_var ( nc_id, limSigma_id, limSigma ) 
 
     ncStat = nf90_get_var ( nc_id, R_binCenters_id, R_binCenters ) 
@@ -114,6 +118,7 @@ subroutine read_dlg_ant ( capR, y, dlg_jantx, dlg_janty, ncFileNameIn, gridMatch
 
                 dlg_jantx(i,j)  = jantx(i,j)
                 dlg_janty(i,j)  = janty(i,j)
+                dlg_jantz(i,j)  = jantz(i,j)
                 if ( present ( dlg_limSigma ) ) &
                     dlg_limSigma(i,j) = limSigma(i,j)
 
@@ -127,6 +132,7 @@ subroutine read_dlg_ant ( capR, y, dlg_jantx, dlg_janty, ncFileNameIn, gridMatch
 
                     dlg_jantx(i,j)  = jantx(R_index(i,j),z_index(i,j))
                     dlg_janty(i,j)  = janty(R_index(i,j),z_index(i,j))
+                    dlg_jantz(i,j)  = jantz(R_index(i,j),z_index(i,j))
                     if ( present ( dlg_limSigma ) ) &
                         dlg_limSigma(i,j) = limSigma (R_index(i,j),z_index(i,j)) 
 
@@ -151,6 +157,16 @@ subroutine read_dlg_ant ( capR, y, dlg_jantx, dlg_janty, ncFileNameIn, gridMatch
                 write(*,*) dlg_janty(i,j)
                 stop
             endif sanity_check_y
+
+            sanity_check_z: &
+            if ( dlg_jantz(i,j) /= dlg_jantz(i,j) &
+                .or. dlg_jantz(i,j) * 0 /= 0 ) then
+
+                write(*,*) 'ERROR: [z] sanity failure on reading antenna current from netcdf file, NaN, Inf detected'
+                write(*,*) dlg_jantz(i,j)
+                stop
+            endif sanity_check_z
+
 
             if ( present ( dlg_limSigma ) ) then 
                 sanity_check_sigma: &

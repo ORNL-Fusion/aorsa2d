@@ -379,6 +379,35 @@ pro create_antenna_current, $
 
 	antJY_grid	= antJY_grid / max ( antJY_grid )
 
+	;	align direction of J to be perp to b
+
+	ant_byTop = interpolate ( eqdsk.bz, ( xAnt - eqdsk.rleft ) / eqdsk.rdim * (eqdsk.nw-1), $
+    				( 0.4 - min ( eqdsk.z ) ) / eqdsk.zdim * (eqdsk.nh-1) )
+	ant_byBot = interpolate ( eqdsk.bz, ( xAnt - eqdsk.rleft ) / eqdsk.rdim * (eqdsk.nw-1), $
+    				( -0.4 - min ( eqdsk.z ) ) / eqdsk.zdim * (eqdsk.nh-1) )
+	ant_bPhiTop = interpolate ( eqdsk.bPhi, ( xAnt - eqdsk.rleft ) / eqdsk.rdim * (eqdsk.nw-1), $
+    				( 0.4 - min ( eqdsk.z ) ) / eqdsk.zdim * (eqdsk.nh-1) )
+	ant_bPhiBot = interpolate ( eqdsk.bPhi, ( xAnt - eqdsk.rleft ) / eqdsk.rdim * (eqdsk.nw-1), $
+    				( -0.4 - min ( eqdsk.z ) ) / eqdsk.zdim * (eqdsk.nh-1) )
+	ant_by = interpolate ( eqdsk.bz, ( xAnt - eqdsk.rleft ) / eqdsk.rdim * (eqdsk.nw-1), $
+    				( 0.0 - min ( eqdsk.z ) ) / eqdsk.zdim * (eqdsk.nh-1) )
+	ant_bPhi = interpolate ( eqdsk.bPhi, ( xAnt - eqdsk.rleft ) / eqdsk.rdim * (eqdsk.nw-1), $
+    				( 0.0 - min ( eqdsk.z ) ) / eqdsk.zdim * (eqdsk.nh-1) )
+			
+	bAntTop_y	= ant_byTop / sqrt ( ant_byTop^2 + ant_bPhiTop^2 )
+	bAntTop_phi	= ant_bPhiTop / sqrt ( ant_byTop^2 + ant_bPhiTop^2 )
+	bAntBot_y	= ant_byBot / sqrt ( ant_byBot^2 + ant_bPhiBot^2 )
+	bAntBot_phi	= ant_bPhiBot / sqrt ( ant_byBot^2 + ant_bPhiBot^2 )
+	bAnt_y	= ant_by / sqrt ( ant_by^2 + ant_bPhi^2 )
+	bAnt_phi	= ant_bPhi / sqrt ( ant_by^2 + ant_bPhi^2 )
+
+	mean_bY	= mean ( [ bAntTop_y, bAntBot_y, bAnt_y ] )
+	mean_bPhi	= mean ( [ bAntTop_phi, bAntBot_phi, bAnt_phi ] )
+
+	antJY_grid	= antJY_grid * mean_bPhi
+	antJZ_grid	= antJY_grid * mean_by 
+
+stop
 	;iiZeroOut	= where ( antJY_grid lt max(antJY_grid)/100.0*5 )
 
 	;antJY_grid[iiZeroOut]	= 0.0
@@ -563,6 +592,7 @@ pro create_antenna_current, $
 	z_id = nCdf_varDef ( nc_id, 'z_binCenters', [ nz_id ], /float )
 	jantx_id = nCdf_varDef ( nc_id, 'jantx', [nR_id, nz_id], /float )
 	janty_id = nCdf_varDef ( nc_id, 'janty', [nR_id, nz_id], /float )
+	jantz_id = nCdf_varDef ( nc_id, 'jantz', [nR_id, nz_id], /float )
 	limSigma_id = nCdf_varDef ( nc_id, 'limiter_sigma', [nR_id, nz_id], /float )
 
 	nCdf_control, nc_id, /enDef
@@ -571,6 +601,7 @@ pro create_antenna_current, $
 	nCdf_varPut, nc_id, z_id, antGrid_y 
 	nCdf_varPut, nc_id, jantx_id, antJX_grid 
 	nCdf_varPut, nc_id, janty_id, antJY_grid
+	nCdf_varPut, nc_id, jantz_id, antJZ_grid
 	nCdf_varPut, nc_id, limSigma_id, smoothSigma
 
 	nCdf_close, nc_id

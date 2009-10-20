@@ -3001,7 +3001,7 @@
 
     if ( dlgAnt ) then 
 
-        call read_dlg_ant ( capR(1:nnodex), y(1:nnodey), xjx, xjy, &
+        call read_dlg_ant ( capR(1:nnodex), y(1:nnodey), xjx, xjy, xjz, &
             gridMatch = antGridMatch, ncFileNameIn = dlgAntFileName, &
             dlg_limSigma = dlg_limSigma ) 
 
@@ -3227,7 +3227,7 @@ if (iprofile .eq. 3) then
                            ncFileNameIn = dlgProfileFileName, &
                            ncVariableNameIn = 'dlcfs' )
 
-            dlg_xnuomg = dlcfs * 0.1 
+            dlg_xnuomg = dlcfs * 0.01 
             where ( dlg_xnuomg < 0 ) dlg_xnuomg = 0
   
             !xnea    = 3.0e19
