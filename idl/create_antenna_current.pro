@@ -404,10 +404,9 @@ pro create_antenna_current, $
 	mean_bY	= mean ( [ bAntTop_y, bAntBot_y, bAnt_y ] )
 	mean_bPhi	= mean ( [ bAntTop_phi, bAntBot_phi, bAnt_phi ] )
 
-	antJY_grid	= antJY_grid * mean_bPhi
-	antJZ_grid	= antJY_grid * mean_by 
+	;antJY_grid	= antJY_grid * mean_bPhi
+	antJZ_grid	= antJY_grid * mean_by *0
 
-stop
 	;iiZeroOut	= where ( antJY_grid lt max(antJY_grid)/100.0*5 )
 
 	;antJY_grid[iiZeroOut]	= 0.0

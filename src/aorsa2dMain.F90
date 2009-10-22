@@ -3227,7 +3227,7 @@ if (iprofile .eq. 3) then
                            ncFileNameIn = dlgProfileFileName, &
                            ncVariableNameIn = 'dlcfs' )
 
-            dlg_xnuomg = dlcfs * 0.01 
+            dlg_xnuomg = dlcfs * 0.0 
             where ( dlg_xnuomg < 0 ) dlg_xnuomg = 0
   
             !xnea    = 3.0e19
