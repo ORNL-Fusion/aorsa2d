@@ -3,7 +3,8 @@ pro plot_aorsa, $
 		brange = brange, $
 		prange = prange, $
 		rrange = rrange, $
-		flat = flat
+		flat = flat, $
+		cutoff = cutoff
 
 	;eqDskFileName	= 'g123435.00400'
 	;eqDskFileName	= 'eqdsk.122993'
@@ -120,7 +121,7 @@ pro plot_aorsa, $
 		endfor
 	endfor
 
-	if(not keyword_set(range)) then range = max ( ePlus_real ) / 2.0
+	if(not keyword_set(range)) then range = max ( abs(ePlus_real) )
 	if(not keyword_set(brange)) then brange	= max ( bx_wave_real ) / 2.0
 	if(not keyword_set(prange)) then prange	= max ( jedote ) / 2.0
 	if(not keyword_set(rrange)) then rrange	= max ( rho_pla ) / 5.0
@@ -140,8 +141,8 @@ pro plot_aorsa, $
 			/color, $
 			bits_per_pixel = 8
 
-	!p.multi = [0,3,2]
-	!p.charSize = 1.0
+	!p.multi = [0,3,1]
+	!p.charSize = 1.2
 
 	nLevs	= 21
 
@@ -176,7 +177,7 @@ pro plot_aorsa, $
 			/fill, $
 			yRange = yRange, $
 			xRange = xRange, $
-			xSty = 1, ySty = 1
+			xSty = 1, ySty = 1, /iso
 	oPlot, eqdsk.rbbbs, eqdsk.zbbbs, $
 		   thick = 2, $
 		   color = 255 
@@ -192,7 +193,7 @@ pro plot_aorsa, $
 			/fill, $
 			yRange = yRange, $
 			xRange = xRange, $
-			xSty = 1, ySty = 1
+			xSty = 1, ySty = 1, /iso
 	oPlot, eqdsk.rbbbs, eqdsk.zbbbs, $
 		   thick = 2, $
 		   color = 255 
@@ -209,7 +210,7 @@ pro plot_aorsa, $
 			/fill, $
 			yRange = yRange, $
 			xRange = xRange, $
-			xSty = 1, ySty = 1
+			xSty = 1, ySty = 1, /iso
 	oPlot, eqdsk.rbbbs, eqdsk.zbbbs, $
 		   thick = 2, $
 		   color = 0 
@@ -217,10 +218,20 @@ pro plot_aorsa, $
 		   thick = 2, $
 		   color = 0 
    	loadct, 12, /silent
-   	contour, sqrt(antj_y^2+antj_x^2+antj_z^2), capR, zLoc, $
-		   	c_color = 1*16-1, $
-		   	/overplot, $ 
-   			levels = fIndGen(10)/10
+   	;contour, sqrt(antj_y^2+antj_x^2+antj_z^2), capR, zLoc, $
+	;	   	c_color = 1*16-1, $
+	;	   	/overplot, $ 
+   	;		levels = fIndGen(10)/10
+	if keyword_set ( cutOff ) then begin
+
+		restore, '~/code/solps/cutOff_2d.sav'
+		contour, real_part(xkPerp_cold)-imaginary(xkPerp_cold), xMap_R, xMap_z, $
+			levels = [0.0], $
+			c_colors = [8*16-1], $
+			color = 0, /over, $
+			c_lineStyle = [2], $
+			c_thick = 2.0
+	endif
 	
    	loadct, 13, file = 'davect.tbl', /silent
     contour, (eMinu_real<range)>(-range), capR, zLoc, $
@@ -231,7 +242,7 @@ pro plot_aorsa, $
 			/fill, $
 			yRange = yRange, $
 			xRange = xRange, $
-			xSty = 1, ySty = 1
+			xSty = 1, ySty = 1, /iso
 	oPlot, eqdsk.rbbbs, eqdsk.zbbbs, $
 		   thick = 2, $
 		   color = 255 
@@ -247,7 +258,7 @@ pro plot_aorsa, $
 			/fill, $
 			yRange = yRange, $
 			xRange = xRange, $
-			xSty = 1, ySty = 1
+			xSty = 1, ySty = 1, /iso
 	oPlot, eqdsk.rbbbs, eqdsk.zbbbs, $
 		   thick = 2, $
 		   color = 255 
@@ -264,7 +275,7 @@ pro plot_aorsa, $
 			/fill, $
 			yRange = yRange, $
 			xRange = xRange, $
-			xSty = 1, ySty = 1
+			xSty = 1, ySty = 1, /iso
 	oPlot, eqdsk.rbbbs, eqdsk.zbbbs, $
 		   thick = 2, $
 		   color = 0 
@@ -278,7 +289,7 @@ pro plot_aorsa, $
 	;ex	= smooth ( ex,2 )
 	;ey	= smooth ( ey,2 )
 
-
+	!p.multi = [0,3,1]
 	contour, (ex<range)>(-range), capR, zLoc, $
 			color = 255, $
 			levels = levels, $
@@ -287,7 +298,7 @@ pro plot_aorsa, $
 			/fill, $
 			yRange = yRange, $
 			xRange = xRange, $
-			xSty = 1, ySty = 1
+			xSty = 1, ySty = 1, /iso
 	oPlot, eqdsk.rbbbs, eqdsk.zbbbs, $
 		   thick = 2, $
 		   color = 255 
@@ -302,7 +313,7 @@ pro plot_aorsa, $
 			/fill, $
 			yRange = yRange, $
 			xRange = xRange, $
-			xSty = 1, ySty = 1
+			xSty = 1, ySty = 1, /iso
 	oPlot, eqdsk.rbbbs, eqdsk.zbbbs, $
 		   thick = 2, $
 		   color = 255 
@@ -317,7 +328,7 @@ pro plot_aorsa, $
 			/fill, $
 			yRange = yRange, $
 			xRange = xRange, $
-			xSty = 1, ySty = 1
+			xSty = 1, ySty = 1, /iso
 	oPlot, eqdsk.rbbbs, eqdsk.zbbbs, $
 		   thick = 2, $
 		   color = 255 
@@ -373,7 +384,7 @@ pro plot_aorsa, $
 		   thick = 2, $
 		   color = 255 
 
-
+	!p.multi = [0,3,2]
 	contour, (bx_wave_real<brange)>(-brange), capR, zLoc, $
 			color = 255, $
 			levels = blevels, $

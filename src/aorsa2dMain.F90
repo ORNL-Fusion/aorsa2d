@@ -3229,7 +3229,10 @@ if (iprofile .eq. 3) then
 
             dlg_xnuomg = dlcfs * 0.0 
             where ( dlg_xnuomg < 0 ) dlg_xnuomg = 0
-  
+
+            where ( xkti <= 0 ) xkti = 1e-3
+            where ( xkte <= 0 ) xkte = 1e-3 
+ 
             !xnea    = 3.0e19
             !xkte    = 700.0 * q
             !xkti    = 800.0 * q
@@ -3923,11 +3926,13 @@ end do
 
              a = sqrt((x(i)-r0)**2 + (y(j)-z0)**2)
 
+             if (a /= a ) stop
+
                rmaxa = rt + a
                rmina = rt - a
 
                epsa = (rmaxa - rmina) / (rmaxa + rmina)
-             if( epsa .eq. 0.0) epsa = 1.0e-08
+             if( epsa <= 0.0) epsa = 1.0e-08
 
              xnustar = xnuii / (omgti * epsa**1.5)
              nu_star(i, j) = xnustar
@@ -3966,6 +3971,12 @@ end do
 !              poloidal viscosities:
 !              ---------------------
                muhat(i, j) = epsa**2 / taup
+
+               if (muhat(i,j) /= muhat(i,j)) then
+                    write(*,*) 'src/aorsa2dMain.F90:3973-'
+                    write(*,*) epsa, epsa**2, taup, taup_inv, xnustar, omgti, vthe0, vthi0
+                    stop
+               endif
 
           end if
 
@@ -5212,31 +5223,31 @@ end do
 
                      end if
 
-                set_conducting_wall: &
-                if ( domainMask .and. mask_lim(i,j) == 0 ) then
+                !set_conducting_wall: &
+                !if ( domainMask .and. mask_lim(i,j) == 0 ) then
 
-                    dlg_wallSig = 1e2
-                    sigexx = cmplx(dlg_limSigma(i,j)*dlg_wallSig,0)
-                    sigexy = (0,0)
-                    sigexz = (0,0)
-                    sigeyx = (0,0)
-                    sigeyy = cmplx(dlg_limSigma(i,j)*dlg_wallSig,0)
-                    sigeyz = (0,0)
-                    sigezx = (0,0)
-                    sigezy = (0,0)
-                    sigezz = cmplx(dlg_limSigma(i,j)*dlg_wallSig,0)
+                !    dlg_wallSig = 1e2
+                !    sigexx = cmplx(dlg_limSigma(i,j)*dlg_wallSig,0)
+                !    sigexy = (0,0)
+                !    sigexz = (0,0)
+                !    sigeyx = (0,0)
+                !    sigeyy = cmplx(dlg_limSigma(i,j)*dlg_wallSig,0)
+                !    sigeyz = (0,0)
+                !    sigezx = (0,0)
+                !    sigezy = (0,0)
+                !    sigezz = cmplx(dlg_limSigma(i,j)*dlg_wallSig,0)
              
-                    sig1xx = cmplx(dlg_limSigma(i,j)*dlg_wallSig,0)
-                    sig1xy = (0,0)
-                    sig1xz = (0,0)
-                    sig1yx = (0,0)
-                    sig1yy = cmplx(dlg_limSigma(i,j)*dlg_wallSig,0)
-                    sig1yz = (0,0)
-                    sig1zx = (0,0)
-                    sig1zy = (0,0)
-                    sig1zz = cmplx(dlg_limSigma(i,j)*dlg_wallSig,0)
+                !    sig1xx = cmplx(dlg_limSigma(i,j)*dlg_wallSig,0)
+                !    sig1xy = (0,0)
+                !    sig1xz = (0,0)
+                !    sig1yx = (0,0)
+                !    sig1yy = cmplx(dlg_limSigma(i,j)*dlg_wallSig,0)
+                !    sig1yz = (0,0)
+                !    sig1zx = (0,0)
+                !    sig1zy = (0,0)
+                !    sig1zz = cmplx(dlg_limSigma(i,j)*dlg_wallSig,0)
  
-                endif set_conducting_wall
+                !endif set_conducting_wall
 
 
                   sigxx = sigexx + sig1xx + sig2xx + sig3xx &
@@ -8456,6 +8467,22 @@ end do
       ynk(nnoderho) = 0.0
 
       call tridag(ank, bnk, cnk, ynk, xkhat, nnoderho)
+      !if(myid == 0) then
+      !write(*,*) 'src/aorsa2dMain.F90:8459 - ', nnoderho
+      !write(*,*) 'xkhat: ', xkhat(1:nnoderho)
+      !write(*,*) 'ank: ', ank(1:nnoderho)
+      !write(*,*) 'bnk: ', bnk(1:nnoderho)
+      !write(*,*) 'cnk: ', cnk(1:nnoderho)
+      !write(*,*) 'ynk: ', ynk(1:nnoderho)
+      !write(*,*) 'gamma_avg: ', gamma_avg(1:nnoderho)
+      !write(*,*) 'beta_avg: ', beta_avg(1:nnoderho)
+      !write(*,*) 'ipsi_avg: ', ipsi_avg(1:nnoderho)
+      !write(*,*) 'bmod2_avg: ', bmod2_avg(1:nnoderho)
+      !write(*,*) 'muhat_avg: ', muhat_avg(1:nnoderho)
+      !write(*,*) 'muhat: ', muhat(1:nnodex,1:nnodey)
+      !endif
+
+     
 
       do n = 1, nnoderho
              kpsi_avg(n) = 0.0
@@ -10011,7 +10038,7 @@ end do
 
       do n = 1, nnoderho
          favg(n) = 0.0
-         if(vol(n) .ne. 0.0)favg(n) = fvol(n) / vol(n)
+         if(vol(n) > 0.0)favg(n) = fvol(n) / vol(n)
       end do
 
       do n = 2, nnoderho - 1

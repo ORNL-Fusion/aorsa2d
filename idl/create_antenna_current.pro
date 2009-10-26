@@ -216,16 +216,68 @@ pro create_antenna_current, $
 	;antz	= (antz<0.15)>(-0.15)
 
 	eqdsk.rLim[13:23]	= eqdsk.rLim[13:23] + rShift
+
+
+	eqdsk.rLim[8]	= eqdsk.rLim[7]
+	eqdsk.zLim[8]	= eqdsk.zLim[7]
+	eqdsk.rLim[28]	= eqdsk.rLim[29]
+	eqdsk.zLim[28]	= eqdsk.zLim[29]
+
 	;iiShift	= where ( eqdsk.rLim gt 0.6, iiShiftCnt )
 	;eqdsk.rLim[iiShift]	= 1.8
 
-	;	custom limiter
 
-	eqdsk.rLim[*]	= 0.18
-   	eqdsk.zLim[*]	= -1.6
-	eqdsk.rlim	= [ 0.18, 1.4, 1.74, 1.74, 1.4, 0.18, 0.18 ]
-	eqdsk.zLim	= [ -1.6, -1.6, -0.3, 0.3, 1.6, 1.6, -1.6 ]
-	eqdsk.limitr	= n_elements ( eqdsk.rlim )
+
+	;	custom poloidal field
+
+	over_sample_boundary,  (eqdsk.rlim)[*], (eqdsk.zlim)[*], rbbbs_os, zbbbs_os
+   	lim_mask	= is_in_shape ( (eqdsk.r2d)[*], (eqdsk.z2d)[*], rbbbs_os, zbbbs_os ) 	
+	lim_mask	= reform ( lim_mask, eqdsk.nW, eqdsk.nH )
+	lim_mask	= abs ( 1-lim_mask)
+	iiLimOut	= where ( lim_mask gt 0 )
+	iiLimIn		= where ( lim_mask eq 0 )
+
+	psiLev	= fIndGen(100)/100-0.5
+	contour, eqdsk.psizr, eqdsk.r, eqdsk.z, $
+		   color = 0, lev = psiLev
+   	oPlot, eqdsk.rbbbs, eqdsk.zbbbs, color = 8*16-1
+	psizr_bak	= eqdsk.psizr
+	for i = 0, 80 do begin
+		psizr_bak	= smooth ( psizr_bak, 5, /edge )
+		psizr_bak[iiLimIn]	= (eqdsk.psizr)[iiLimIn]
+	endfor
+	for i=0,5 do begin
+		psizr_bak	= smooth ( psizr_bak, 5-i, /edge )
+		psizr_bak[iiLimIn]	= (eqdsk.psizr)[iiLimIn]
+	endfor
+	psizr_bak	= smooth ( psizr_bak, 5, /edge )
+
+	contour, psizr_bak, eqdsk.r, eqdsk.z, $
+		   color = 0, lev = psiLev
+   	oPlot, eqdsk.rbbbs, eqdsk.zbbbs, color = 8*16-1
+
+	;eqdsk.psizr	= psizr_bak
+
+	;;	also need to reset the siMag and siBry variables
+
+	;psiMag = interpolate ( eqdsk.psizr, ( eqdsk.rMaxis - eqdsk.rleft ) / eqdsk.rdim * (eqdsk.nw-1), $
+    ;				( eqdsk.zMaxis - min ( eqdsk.z ) ) / eqdsk.zdim * (eqdsk.nh-1) )
+	;;eqdsk.siMag	= psiMag
+	;eqdsk.siMag	= min ( (eqdsk.psizr)[eqdsk.iiinside])
+
+	;psiBry = interpolate ( eqdsk.psizr, ( eqdsk.rbbbs - eqdsk.rleft ) / eqdsk.rdim * (eqdsk.nw-1), $
+    ;				( eqdsk.zbbbs - min ( eqdsk.z ) ) / eqdsk.zdim * (eqdsk.nh-1) )
+	;eqdsk.siBry	= max(psiBry)
+	
+	stop
+
+	;;	custom limiter
+
+	;eqdsk.rLim[*]	= 0.18
+   	;eqdsk.zLim[*]	= -1.6
+	;eqdsk.rlim	= [ 0.18, 1.1, 1.6, 1.8, 1.85, 1.8, 1.6, 1.1, 0.18, 0.18 ]
+	;eqdsk.zLim	= [ -1.6, -1.6, -1.0, -0.3, 0.0, 0.3, 1.0, 1.6, 1.6, -1.6 ]
+	;eqdsk.limitr	= n_elements ( eqdsk.rlim )
 
 	;	grow custom limiter
 
@@ -296,8 +348,8 @@ pro create_antenna_current, $
 
 ;	put the antenna line on a grid
 
-	nX	= 120 
-	nY	= 120 
+	nX	= 128 
+	nY	= 128 
 
 	rMax	= max ( eqdsk.r )
 	rMin	= -0.2
@@ -334,9 +386,9 @@ pro create_antenna_current, $
 	;	at the moment it requires right angle connectors,
 	;	but this will be changed later
 
-	xAnt	= 1.7
-	yAnt1	= -1.4
-	yAnt2	=  1.4
+	xAnt	= 1.57
+	yAnt1	= -0.4
+	yAnt2	=  0.4
 	iiFeedLength	= where ( antGrid_x ge xAnt, iiFeedCnt )
 	iiAntLength		= where ( antGrid_y ge yAnt1 and antGrid_y le yAnt2, iiAntCnt )
 	bottomFeederX	= nX - indGen ( iiFeedCnt ) -1
@@ -376,6 +428,8 @@ pro create_antenna_current, $
 			( antGrid_x2D-xAnt )^2 / sigX + ( antGrid_y2D-antGrid_y[iiBot] )^2 / sigY ) )
 
 	antJY_grid[*,iiAntYRange]	= exp ( -( antGrid_x[*,iiAntYRange]-xAnt )^2 / sigX )
+
+	antJY_grid	= smooth ( antJY_grid, 5 )
 
 	antJY_grid	= antJY_grid / max ( antJY_grid )
 
