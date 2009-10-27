@@ -2241,7 +2241,7 @@
 
       call read_dlg_bField ( capR, capz, bx0, by0, bz0, &
                 b0 = b0_dlg, rmaxis = rmaxis, zmaxis = zmaxis, &
-                negTor = .true., negPol = .false. )   
+                negTor = .true., negPol = .true. )   
 
       bmod = sqrt(bx0**2 + by0**2 + bz0**2)
 
