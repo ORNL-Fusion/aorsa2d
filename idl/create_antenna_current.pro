@@ -223,6 +223,8 @@ pro create_antenna_current, $
 	eqdsk.rLim[28]	= eqdsk.rLim[29]
 	eqdsk.zLim[28]	= eqdsk.zLim[29]
 
+	eqdsk.rLim[8:28]	= eqdsk.rLim[8:28]+0.3
+
 	;iiShift	= where ( eqdsk.rLim gt 0.6, iiShiftCnt )
 	;eqdsk.rLim[iiShift]	= 1.8
 
@@ -242,20 +244,37 @@ pro create_antenna_current, $
 		   color = 0, lev = psiLev
    	oPlot, eqdsk.rbbbs, eqdsk.zbbbs, color = 8*16-1
 	psizr_bak	= eqdsk.psizr
-	for i = 0, 80 do begin
-		psizr_bak	= smooth ( psizr_bak, 5, /edge )
+	nSmooth = 10
+	for i = 0, 1000 do begin
+		psizr_bak	= smooth ( psizr_bak, nSmooth, /edge )
 		psizr_bak[iiLimIn]	= (eqdsk.psizr)[iiLimIn]
 	endfor
-	for i=0,5 do begin
-		psizr_bak	= smooth ( psizr_bak, 5-i, /edge )
+	for i=0,nSmooth do begin
+		psizr_bak	= smooth ( psizr_bak, nSmooth-i, /edge )
 		psizr_bak[iiLimIn]	= (eqdsk.psizr)[iiLimIn]
 	endfor
-	psizr_bak	= smooth ( psizr_bak, 5, /edge )
-
+	psizr_bak	= smooth ( psizr_bak, nSmooth, /edge )
+	psizr_bak[0,*]	= psizr_bak[2,*]
+	psizr_bak[1,*]	= psizr_bak[2,*]
+	for i = 0,10 do psizr_bak[0:3,*]	= smooth ( psizr_bak[0:3,*], 3 )
+	
 	contour, psizr_bak, eqdsk.r, eqdsk.z, $
 		   color = 0, lev = psiLev
    	oPlot, eqdsk.rbbbs, eqdsk.zbbbs, color = 8*16-1
 
+	psiPoly	= 0.1*((eqdsk.r2d-eqdsk.rmaxis)^2+(eqdsk.z2d-eqdsk.zmaxis)^2)+eqdsk.simag
+
+	plot, eqdsk.r, eqdsk.psizr[*,32], color = 0
+	oplot, eqdsk.r, psiPoly[*,32], color = 0
+	plot, eqdsk.z, eqdsk.psizr[32,*], color = 0
+	oplot, eqdsk.z, psiPoly[32,*], color = 0
+	contour, psiPoly, eqdsk.r, eqdsk.z, $
+		   color = 0, lev = psiLev
+   	oPlot, eqdsk.rbbbs, eqdsk.zbbbs, color = 8*16-1
+
+
+
+stop
 	;eqdsk.psizr	= psizr_bak
 
 	;;	also need to reset the siMag and siBry variables
@@ -386,7 +405,7 @@ pro create_antenna_current, $
 	;	at the moment it requires right angle connectors,
 	;	but this will be changed later
 
-	xAnt	= 1.57
+	xAnt	= 1.57+0.3
 	yAnt1	= -0.4
 	yAnt2	=  0.4
 	iiFeedLength	= where ( antGrid_x ge xAnt, iiFeedCnt )

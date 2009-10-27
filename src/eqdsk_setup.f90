@@ -1198,7 +1198,7 @@
           psi_pol2d, rho_pol2d, rg, zg, psig, psirg, psizg, psirzg, &
           psis, fs, fs1, nxeqdmax, nyeqdmax, nxeqd, nyeqd, ma, psio, &
           qs, qs1, qsafety, r0, b0, psirr, psizz, psirz, &
-          rho_tors, rho_tor2d)
+          rho_tors, rho_tor2d, rmaxis, zmaxis)
 
 
       if (myid .eq. 0) then
@@ -2050,16 +2050,18 @@
          psi, rho, rg, zg, psig, psirg, psizg, psirzg, &
          psis, fs, fs1, nxeqdmax, nyeqdmax, mr, mz, ma, psio, &
          qs, qs1, qsafety, r0, b0, psirr, psizz, psirz, &
-         rho_tors, rho_tor2d)
+         rho_tors, rho_tor2d, rmaxis, zmaxis)
+
+
+      use dlg_bField
 
       implicit none
-
 
       integer i, j, nnodex, nnodey, mode, nxmx, nymx, mr, mz, ma
       integer ihalf, jequat, ir, iz, ipsi, nxeqdmax, nyeqdmax
 
       integer islpsw, islpsw1, ierr
-      real sigma, slp1, slpn
+      real sigma, slp1, slpn, rmaxis, zmaxis
         real zx1(nyeqdmax), zxm(nyeqdmax), zy1(nxeqdmax), zyn(nxeqdmax)
         real zxy11, zxym1, zxy1n, zxymn
       real zp(nxeqdmax, nyeqdmax, 3)
@@ -2068,7 +2070,7 @@
         real temp(nxeqdmax + nxeqdmax + nyeqdmax )
       real surf2, curv2
 
-      real capr(nxmx), capz(nymx), r, z, psio, r0, b0
+      real capr(nxmx), capz(nymx), r, z, psio, r0, b0, b0_dlg
       real bx0(nxmx, nymx), by0(nxmx, nymx), bz0(nxmx, nymx)
       real bxn(nxmx, nymx), byn(nxmx, nymx), bzn(nxmx, nymx)
 
@@ -2235,6 +2237,11 @@
       !  enddo
       !enddo
 
+      ! overwrite b with dlg versions
+
+      call read_dlg_bField ( capR, capz, bx0, by0, bz0, &
+                b0 = b0_dlg, rmaxis = rmaxis, zmaxis = zmaxis )   
+
       bmod = sqrt(bx0**2 + by0**2 + bz0**2)
 
       !! remove poloidal field and increase toroidal 
@@ -2254,6 +2261,8 @@
       a = 1.e-04
       f = curv2(a, ma, psis, fs, ypf, sigma)
       b0 = f / r0
+
+      b0 = b0_dlg
 
 
  1312 format(i10, 1p8e12.4)
