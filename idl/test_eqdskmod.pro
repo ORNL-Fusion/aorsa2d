@@ -51,16 +51,32 @@ oPlot, eqdsk1.rlim, eqdsk1.zlim, color = 8*16-1, thick = 3
 	eqdsk2.br	+= brNew
 	eqdsk2.bz	+= bzNew
 
-	eqdsk2.br	= smooth ( eqdsk2.br, 5, /edge )
-	eqdsk2.bz	= smooth ( eqdsk2.bz, 5, /edge )
+	;eqdsk2.br	= smooth ( eqdsk2.br, 5, /edge )
+	;eqdsk2.bz	= smooth ( eqdsk2.bz, 5, /edge )
 
-	nX	= 512 
-	nY	= 512 
-	brSave	= conGrid ( eqdsk2.br, nX, nY, cubic = -0.5 )
-	bzSave	= conGrid ( eqdsk2.bz, nX, nY, cubic = -0.5 )
-	bPhiSave	= conGrid ( eqdsk2.bPhi, nX, nY, cubic = -0.5 )
-	rSave	= conGrid ( eqdsk2.r, nX, cubic = -0.5 )
-	zSave	= conGrid ( eqdsk2.z, nY, cubic = -0.5 )
+	nX	= 1024 
+	nY	= 1024 
+
+	;cubPar = -0.5 
+	;brSave	= conGrid ( eqdsk2.br, nX, nY, cubic = cubPar, /minu )
+	;bzSave	= conGrid ( eqdsk2.bz, nX, nY, cubic = cubPar, /minu  )
+	;bPhiSave	= conGrid ( eqdsk2.bPhi, nX, nY, cubic = cubPar, /minu )
+	;rSave	= conGrid ( eqdsk2.r, nX, cubic = cubPar, /minu  )
+	;zSave	= conGrid ( eqdsk2.z, nY, cubic = cubPar, /minu  )
+
+	rSave	= eqdsk2.rLeft + fIndGen ( nX ) * ( eqdsk2.rDim / ( nX - 1 ) )
+	zSave	= min(eqdsk2.z) + fIndGen ( nY ) * ( eqdsk2.zDim / ( nY - 1 ) )
+
+	rSave2D	= rebin ( rSave, nX, nY )
+	zSave2D	= transpose ( rebin ( zSave, nY, nX ) )
+
+	brSave = interpolate ( eqdsk2.br, ( rSave2D - eqdsk2.rleft ) / eqdsk2.rdim * (eqdsk2.nw-1), $
+   			( zSave2D + eqdsk2.zmaxis - min ( eqdsk2.z ) ) / eqdsk2.zdim * (eqdsk2.nh-1) )
+	bzSave = interpolate ( eqdsk2.bz, ( rSave2D - eqdsk2.rleft ) / eqdsk2.rdim * (eqdsk2.nw-1), $
+   			( zSave2D + eqdsk2.zmaxis - min ( eqdsk2.z ) ) / eqdsk2.zdim * (eqdsk2.nh-1) )
+	bPhiSave = interpolate ( eqdsk2.bPhi, ( rSave2D - eqdsk2.rleft ) / eqdsk2.rdim * (eqdsk2.nw-1), $
+   			( zSave2D + eqdsk2.zmaxis - min ( eqdsk2.z ) ) / eqdsk2.zdim * (eqdsk2.nh-1) )
+
 
 ;	write this in a netCDF file for use in aorsa
 
@@ -108,7 +124,53 @@ loadct, 12
 oPlot, eqdsk2.rbbbs, eqdsk2.zbbbs, color = 12*16-1, thick = 3
 oPlot, eqdsk2.rlim, eqdsk2.zlim, color = 8*16-1, thick = 3
 
+	cdfId = ncdf_open ( '/home/dg6/scratch/aorsa2d/nstx/bench/output/mchoi_dlg.nc', /noWrite ) 
+	nCdf_varGet, cdfId, 'rho_pla', rho_pla 
+	nCdf_varGet, cdfId, 'rho_ant', rho_ant
+	nCdf_varGet, cdfId, 'antJ_x', antJ_x
+	nCdf_varGet, cdfId, 'antJ_y', antJ_y
+	nCdf_varGet, cdfId, 'antJ_z', antJ_z
+	nCdf_varGet, cdfId, 'plaJ_y', plaJ_x
+	nCdf_varGet, cdfId, 'plaJ_y', plaJ_y
+	nCdf_varGet, cdfId, 'plaJ_y', plaJ_z
+	nCdf_varGet, cdfId, 'antOmega', antOmega
+	nCdf_varGet, cdfId, 'nPhi', nPhi 
+	nCdf_varGet, cdfId, 'bxn', bxn 
+	nCdf_varGet, cdfId, 'byn', byn 
+	nCdf_varGet, cdfId, 'bzn', bzn 
+	nCdf_varGet, cdfId, 'R', choiR 
+	nCdf_varGet, cdfId, 'z', choiz 
 
+
+	ncdf_close, cdfId
+
+	choiR2D	= rebin ( choiR, n_elements(choiR), n_elements(choiz) )
+	choiz2D	= transpose(rebin ( choiz, n_elements(choiz), n_elements(choiR) ))
+
+	brSaveA = interpolate ( eqdsk2.br, ( choiR2D - eqdsk2.rleft ) / eqdsk2.rdim * (eqdsk2.nw-1), $
+   			( choiz2D + eqdsk2.zmaxis - min ( eqdsk2.z ) ) / eqdsk2.zdim * (eqdsk2.nh-1) )
+	bzSaveA = interpolate ( eqdsk2.bz, ( choiR2D - eqdsk2.rleft ) / eqdsk2.rdim * (eqdsk2.nw-1), $
+   			( choiz2D + eqdsk2.zmaxis - min ( eqdsk2.z ) ) / eqdsk2.zdim * (eqdsk2.nh-1) )
+	bPhiSaveA = interpolate ( eqdsk2.bPhi, ( choiR2D - eqdsk2.rleft ) / eqdsk2.rdim * (eqdsk2.nw-1), $
+   			( choiz2D + eqdsk2.zmaxis - min ( eqdsk2.z ) ) / eqdsk2.zdim * (eqdsk2.nh-1) )
+
+
+
+
+	window, 7
+	bModSave	= sqrt ( brSave^2 + bzSave^2 + bPhiSave^2 )
+	bModSaveA	= sqrt ( brSaveA^2 + bzSaveA^2 + bPhiSaveA^2 )
+
+	loadct, 12
+	plot, choiR, bxn[*,42]
+	oplot, choiR, (brSaveA/bModSaveA)[*,42], color = 12*16-1
+	;oplot, rSave, (bRSave/bModSave)[*,42] 
+	plot, choiR, byn[*,42]
+	oplot, choiR, (bzSaveA/bModSaveA)[*,42], color = 12*16-1
+	;oplot, rSave, (bzSave/bModSave)[*,42] 
+	plot, choiR, bzn[*,42], yRange = [0.9,1.0]
+	oplot, choiR, -(bphiSaveA/bModSaveA)[*,42], color = 12*16-1 
+	;oplot, rSave, -(bPhiSave/bModSave)[*,42] 
 
 
 !p.multi = 0

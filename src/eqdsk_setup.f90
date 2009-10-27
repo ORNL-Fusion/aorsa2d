@@ -2052,8 +2052,8 @@
          qs, qs1, qsafety, r0, b0, psirr, psizz, psirz, &
          rho_tors, rho_tor2d, rmaxis, zmaxis)
 
-
       use dlg_bField
+      use aorsa2din_mod, ONLY: use_dlg_bField 
 
       implicit none
 
@@ -2073,6 +2073,7 @@
       real capr(nxmx), capz(nymx), r, z, psio, r0, b0, b0_dlg
       real bx0(nxmx, nymx), by0(nxmx, nymx), bz0(nxmx, nymx)
       real bxn(nxmx, nymx), byn(nxmx, nymx), bzn(nxmx, nymx)
+      real :: bz0_bak(nxmx, nymx)
 
       real psi(nxmx, nymx), rho(nxmx, nymx)
       real qsafety(nxmx, nymx)
@@ -2239,9 +2240,11 @@
 
       ! overwrite b with dlg versions
 
-      call read_dlg_bField ( capR, capz, bx0, by0, bz0, &
+      if ( use_dlg_bField ) & 
+      call read_dlg_bField ( capR, capz, bx0, by0, bz0_bak, &
                 b0 = b0_dlg, rmaxis = rmaxis, zmaxis = zmaxis, &
-                negTor = .true., negPol = .true. )   
+                negTor = .true., negPol = .false. )   
+                
 
       bmod = sqrt(bx0**2 + by0**2 + bz0**2)
 
@@ -2263,7 +2266,7 @@
       f = curv2(a, ma, psis, fs, ypf, sigma)
       b0 = f / r0
 
-      b0 = b0_dlg
+      if ( use_dlg_bField ) b0 = b0_dlg
 
 
  1312 format(i10, 1p8e12.4)

@@ -223,7 +223,7 @@ pro create_antenna_current, $
 	eqdsk.rLim[28]	= eqdsk.rLim[29]
 	eqdsk.zLim[28]	= eqdsk.zLim[29]
 
-	eqdsk.rLim[8:28]	= eqdsk.rLim[8:28]+0.3
+	;eqdsk.rLim[8:28]	= eqdsk.rLim[8:28]+0.3
 
 	;iiShift	= where ( eqdsk.rLim gt 0.6, iiShiftCnt )
 	;eqdsk.rLim[iiShift]	= 1.8

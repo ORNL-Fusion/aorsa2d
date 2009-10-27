@@ -898,7 +898,8 @@
              R_id, z_id, rho_pla_id, rho_ant_id, &
              xjx_id, xjy_id, xjpx_lab_id, xjpy_lab_id, &
              scalar_2_id, antOmega_id, nPhi_id, &
-             xjz_id, xjpz_lab_id
+             xjz_id, xjpz_lab_id, &
+             bxn_id, byn_id, bzn_id
 
 
 
@@ -7542,6 +7543,17 @@ end do
        nf90_def_var ( nc_id, "z", NF90_REAL, &
        (/ nz_id /), z_id ) )
 
+            call check ( &
+       nf90_def_var ( nc_id, "bxn", NF90_REAL, &
+       (/ nR_id, nz_id /), bxn_id ) )
+            call check ( &
+       nf90_def_var ( nc_id, "byn", NF90_REAL, &
+       (/ nR_id, nz_id /), byn_id ) )
+            call check ( &
+       nf90_def_var ( nc_id, "bzn", NF90_REAL, &
+       (/ nR_id, nz_id /), bzn_id ) )
+
+
             call check ( nf90_enddef ( nc_id ) )
 
             call check ( &
@@ -7599,6 +7611,16 @@ end do
             call check ( &
        nf90_put_var ( nc_id, kPer_img_cold_id, &
        aimag ( xkperp_cold(1:nnodex,1:nnodey) ) ) )
+
+            call check ( &
+       nf90_put_var ( nc_id, bxn_id, &
+       bxn(1:nnodex,1:nnodey ) ) )
+            call check ( &
+       nf90_put_var ( nc_id, byn_id, &
+       byn(1:nnodex,1:nnodey ) ) )
+            call check ( &
+       nf90_put_var ( nc_id, bzn_id, &
+       bzn(1:nnodex,1:nnodey ) ) )
 
             call check ( nf90_close ( nc_id ) )
             write (*,*) 'DONE'

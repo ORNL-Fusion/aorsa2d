@@ -147,16 +147,24 @@ subroutine read_dlg_bField ( capR, y, dlg_bR, dlg_bz, dlg_bPhi, &
     flipSignPol: &
     if ( present ( negPol ) ) then
 
-        dlg_bR  = -dlg_bR
-        dlg_bz  = -dlg_bz
+        if ( negPol ) then 
+
+            dlg_bR  = -dlg_bR
+            dlg_bz  = -dlg_bz
+
+        endif   
 
     endif flipSignPol
 
     flipSignTor: &
     if ( present ( negTor ) ) then
 
-        b0  = -b0
-        dlg_bPhi = -dlg_bPhi
+        if ( negTor ) then 
+
+            b0  = -b0
+            dlg_bPhi = -dlg_bPhi
+
+        endif
 
     endif flipSignTor
 
