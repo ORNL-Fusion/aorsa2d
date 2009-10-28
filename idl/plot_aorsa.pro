@@ -11,7 +11,7 @@ pro plot_aorsa, $
 	eqDskFileName = 'eqdsk'
 
 	eqdsk	= readGEQDSK ( eqDskFileName )
-	cdfId = ncdf_open ( 'output/plotData.nc', /noWrite ) 
+	cdfId = ncdf_open ( 'output/plotData_001.nc', /noWrite ) 
 	
 	ncdf_varGet, cdfId, 'rho', rho 
 	ncdf_varGet, cdfId, 'wdote', wdote
@@ -46,7 +46,7 @@ pro plot_aorsa, $
 	nCdf_varGet, cdfId, 'xkperp_imag', xkperp_imag
 	ncdf_close, cdfId
 
-	cdfId = ncdf_open ( 'output/mchoi_dlg.nc', /noWrite ) 
+	cdfId = ncdf_open ( 'output/mchoi_dlg_001.nc', /noWrite ) 
 	nCdf_varGet, cdfId, 'rho_pla', rho_pla 
 	nCdf_varGet, cdfId, 'rho_ant', rho_ant
 	nCdf_varGet, cdfId, 'antJ_x', antJ_x
