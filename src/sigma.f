@@ -7,7 +7,7 @@ c
 
       subroutine sigmad_cql3d(i, j, n, m, rho, rho_a,
      .   gradprlb, bmod, bmod0,
-     .   xm, q, xn, xnuomg,
+     .   xm, q, xn, dlg_xnuomg,
      .   xkt, omgc, omgp2,
      .   lmin, lmax, nzfun, ibessel,
      .   xkxsav, xkysav, nphi, capr,
@@ -53,7 +53,7 @@ c
       real xkprl_eff, fgam, y0, y, sgn_kprl, reson, duperp, dupara
       real xkprl_eff0
       real dzetal(lmin:lmax), descrim
-      real dakbdkb, xnuomg, gradprlb, bmod, bmod0, nu_coll
+      real dakbdkb, dlg_xnuomg, gradprlb, bmod, bmod0, nu_coll
       real akprl,  rho, alpha, eps0, omgrf, v0i, emax
       real gammab(lmin:lmax), gamma_coll(lmin:lmax)
       real a, b, xnurf, pi, delta0, rhol
@@ -148,7 +148,7 @@ c
       alpha = sqrt(2. * xkt / xm)
       rhol = alpha / omgc
       xkphi = nphi / capr
-      omgrfc = omgrf * (1. + zi * xnuomg)
+      omgrfc = omgrf * (1. + zi * dlg_xnuomg)
 
 
       xkalp = uxx * xkxsav + uxy * xkysav + uxz * xkphi
@@ -189,14 +189,14 @@ c
          reson = (omgrf - l * real(omgc)) / omgrf
          if (abs(reson) .lt. 0.02)then
             zetal(l) = (omgrfc - l * omgc) / (xkprl * alpha)
-            dzetal(l) = omgrf * xnuomg / (xkprl * alpha)
+            dzetal(l) = omgrf * dlg_xnuomg / (xkprl * alpha)
          else
             zetal(l) = (omgrf  - l * omgc) / (xkprl * alpha)
             dzetal(l) = 0.0
          end if
 	 
 c	 zetal(l) = (omgrfc - l * omgc) / (xkprl * alpha)
-c         dzetal(l) = omgrf * xnuomg / (xkprl * alpha)
+c         dzetal(l) = omgrf * dlg_xnuomg / (xkprl * alpha)
 
 
          gammab(l) = abs(l * omgc / (2.0 * alpha * xkprl**2)
@@ -855,7 +855,7 @@ c***************************************************************************
 c
 
       subroutine sigmah_slow(i, j, n, m,
-     .   xm, q, xn, xnuomg,
+     .   xm, q, xn, dlg_xnuomg,
      .   eslow, omgc, omgp2,
      .   lmin, lmax, nzfun, ibessel,
      .   xkxsav, xkysav, nphi, capr,
@@ -886,7 +886,7 @@ c
 
       real xkperp, xkprl, xm, q, xn, eslow, omgc, omgp2, xme
       real xkprl_eff, fgam, y0, sgn_kprl
-      real dakbdkb, xnuomg
+      real dakbdkb, dlg_xnuomg
       real akprl, gammab, valpha, eps0, omgrf, v0i
       real a, b, xkte, velect, zeff
       real bx, by, bz
@@ -918,7 +918,7 @@ c
       if (velect .eq. 0.0) return
 
       xkphi = nphi / capr
-      omgrfc = omgrf * (1. + zi * xnuomg)
+      omgrfc = omgrf * (1. + zi * dlg_xnuomg)
 
       xkalp = uxx * xkxsav + uxy * xkysav + uxz * xkphi
       xkbet = uyx * xkxsav + uyy * xkysav + uyz * xkphi
@@ -977,7 +977,7 @@ c
 c***************************************************************************
 c
       subroutine sigmac_stix(i, j, n, m,
-     .   xm, q, xn, xnuomg,
+     .   xm, q, xn, dlg_xnuomg,
      .   xkt, omgc, omgp2,
      .   lmin, lmax, nzfun, ibessel,
      .   xkxsav, xkysav, nphi, capr,
@@ -1010,7 +1010,7 @@ c
       real bx, by, bz
       real xkxsav, xkysav, capr
       real xkphi
-      real xkalp, xkbet, xnuomg, xk0, delta0
+      real xkalp, xkbet, dlg_xnuomg, xk0, delta0
 
       complex zi, omgrfc
 
@@ -1038,7 +1038,7 @@ c
 
       zieps0 = zi * eps0
       xkphi = nphi / capr
-      omgrfc = omgrf * (1. + zi * xnuomg)
+      omgrfc = omgrf * (1. + zi * dlg_xnuomg)
 
 
       xkalp = uxx * xkxsav + uxy * xkysav + uxz * xkphi
