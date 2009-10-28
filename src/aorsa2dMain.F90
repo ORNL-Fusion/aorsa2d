@@ -18,6 +18,7 @@
       use set_edge_density
       use dlg_ant
       use current_module
+      use sigma_module
 
 !------------------------------------------------------------------------------
 !     This version (4/01/03: newlab3) does not solve equations for the points

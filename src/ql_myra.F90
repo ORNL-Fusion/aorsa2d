@@ -6,6 +6,7 @@ module ql_myra_mod
       use netcdf
       use dlg_p_check
       use size_mod
+      use sigma_module
       !use mpi
       include 'mpif.h'
 #     include <pnetcdf.inc>

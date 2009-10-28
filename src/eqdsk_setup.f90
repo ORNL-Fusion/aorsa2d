@@ -11,6 +11,7 @@
 
       use size_mod
       use aorsa2din_mod, ONLY: eqdsk_rRange, eqdsk_zRange
+      use sigma_module
 
       implicit none
 
@@ -504,7 +505,7 @@
       nnodecy = mmodesmax
       lmax = 5
       ibessel = 1
-      xnuomg = 0.0
+      !xnuomg = 0.0
 
       xnuead = 0.0000E+00
       xnu1ad = 0.0000E+00

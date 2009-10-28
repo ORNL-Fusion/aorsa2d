@@ -1,5 +1,7 @@
 module current_module
 
+use sigma_module
+
 contains
 
 !
