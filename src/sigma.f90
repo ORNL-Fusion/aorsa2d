@@ -151,7 +151,6 @@ contains
       alpha = sqrt(2. * xkt / xm)
       rhol = alpha / omgc
       xkphi = nphi / capr
-      write(*,*) 'xnuomg: ', dlg_xnuomg
       omgrfc = omgrf * (1. + zi * dlg_xnuomg)
 
 
