@@ -223,7 +223,7 @@ pro create_antenna_current, $
 	eqdsk.rLim[28]	= eqdsk.rLim[29]
 	eqdsk.zLim[28]	= eqdsk.zLim[29]
 
-	;eqdsk.rLim[8:28]	= eqdsk.rLim[8:28]+0.3
+	eqdsk.rLim[8:28]	= eqdsk.rLim[8:28]+0.2
 
 	;iiShift	= where ( eqdsk.rLim gt 0.6, iiShiftCnt )
 	;eqdsk.rLim[iiShift]	= 1.8
@@ -274,7 +274,6 @@ pro create_antenna_current, $
 
 
 
-stop
 	;eqdsk.psizr	= psizr_bak
 
 	;;	also need to reset the siMag and siBry variables
@@ -405,7 +404,7 @@ stop
 	;	at the moment it requires right angle connectors,
 	;	but this will be changed later
 
-	xAnt	= 1.57+0.3
+	xAnt	= 1.57+0.2
 	yAnt1	= -0.4
 	yAnt2	=  0.4
 	iiFeedLength	= where ( antGrid_x ge xAnt, iiFeedCnt )

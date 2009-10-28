@@ -9978,7 +9978,7 @@ end do
       close (63)
 
       toroidalModeSum: &
-      if ( (myid == 0 .and. nphi_number > 1) .or. nphi_sum_only ) then
+      if ( myid == 0 .and. nphi_number > 1 .and. nphi_sum_only ) then
               t1    = second1 ( dummy )
               call aorsa2dSum ( myId )
               tMin = ( second1 ( dummy ) - t1 ) / 60.0

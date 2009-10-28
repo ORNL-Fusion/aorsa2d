@@ -12,11 +12,11 @@
 !	requires a "make clean" and then "make". 
 !     ---------------------------------------------------
 #if DLGHP 
-      parameter (nmodesmax = 256)
-      parameter (mmodesmax = 256)
+      parameter (nmodesmax = 144)
+      parameter (mmodesmax = 288)
 #else
-      parameter (nmodesmax = 256)
-      parameter (mmodesmax = 256)
+      parameter (nmodesmax = 144)
+      parameter (mmodesmax = 288)
 #endif
 
       end module size_mod
