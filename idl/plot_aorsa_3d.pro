@@ -26,7 +26,9 @@ pro plot_aorsa_3d, $
 	for i = 0, 3 do begin
 
 		loadct, 3, /sil
-		contour, eMod[*,*,i*n_elements(eMod[0,0,*])/4], R, z_, $
+		index	= i*n_elements(eMod[0,0,*])/4
+		print, index
+		contour, eMod[*,*,index], R, z_, $
 			   /iso, lev = eLevs, $
 			   c_col = eCols, /fill, $
 			   color = 0

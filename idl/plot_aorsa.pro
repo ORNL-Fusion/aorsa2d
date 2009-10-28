@@ -286,8 +286,8 @@ pro plot_aorsa, $
    	loadct, 13, file = 'davect.tbl', /silent
    	;window, 1, xSize = 1200, ySize = 600
 
-	;ex	= smooth ( ex,2 )
-	;ey	= smooth ( ey,2 )
+	ex	= smooth ( ex,2 )
+	ey	= smooth ( ey,2 )
 
 	!p.multi = [0,3,1]
 	contour, (ex<range)>(-range), capR, zLoc, $
