@@ -3232,6 +3232,7 @@ if (iprofile .eq. 3) then
 
             dlg_xnuomg = dlcfs * edgeCollisions 
             where ( dlg_xnuomg < 0 ) dlg_xnuomg = 0
+            dlg_xnuomg = edgeCollisions
 
             where ( xkti <= 0 ) xkti = 1e-3
             where ( xkte <= 0 ) xkte = 1e-3 
