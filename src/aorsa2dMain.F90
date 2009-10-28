@@ -872,6 +872,7 @@
         real*8, allocatable, dimension(:) :: dtemp2
         integer, allocatable, dimension(:) :: itemp2, iperm
 
+      character(len=3) :: ntStr
 
 #ifdef  USE_HPL
         integer :: hpl_lld, hpl_ineed 
@@ -1025,6 +1026,7 @@
 
       nphi  = nphi_array(nsum)
       nt = nt + 1
+      write ( ntStr, '(i3.3)' ), nt
 
       time0=second1(dummy)
 
@@ -7471,7 +7473,7 @@ end do
         if ( myId .eq. 0 ) then
 
         write (*,*) 'WRITING output/mchoi_dlg.nc ...'
-        ncFileName = 'output/mchoi_dlg.nc'
+        ncFileName = 'output/mchoi_dlg_' // ntStr // '.nc'
 
             call check ( &
        nf90_create ( ncFileName, nf90_clobber, nc_id ) )
@@ -9416,7 +9418,7 @@ end do
       if (myid.eq.0) then
          t1 = second1(dummy)
 
-       call fieldws(prfin,mask)
+       call fieldws(prfin,mask,ntStr)
 
        tmin = (second1(dummy) - t1) / 60.
        write(6 , 2846) tmin

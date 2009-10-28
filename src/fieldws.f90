@@ -2,13 +2,14 @@ module plot_aorsa2dps
 
 contains
 
-      subroutine fieldws(prfin, mask)
+      subroutine fieldws(prfin, mask, ntStr)
       use netcdf
       use size_mod
 
       implicit none
 
       integer, intent(in) :: mask(:,:)
+      character(len=3), intent(in) :: ntStr
       character*32 title
       character*32 titll
       character*32 titlr
@@ -817,7 +818,7 @@ contains
        !DLG - write nc file for nice plotting
 
         write (*,*) 'WRITING output/plotData.nc ...'
-        ncFileName = 'output/plotData.nc'
+        ncFileName = 'output/plotData_' // ntStr // '.nc'
 
             call check ( &
        nf90_create ( ncFileName, nf90_clobber, nc_id ) )

@@ -12,7 +12,7 @@
 !	requires a "make clean" and then "make". 
 !     ---------------------------------------------------
 #if DLGHP 
-      parameter (nmodesmax = 144)
+      parameter (nmodesmax = 288)
       parameter (mmodesmax = 288)
 #else
       parameter (nmodesmax = 144)
