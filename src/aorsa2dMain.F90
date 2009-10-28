@@ -3230,7 +3230,7 @@ if (iprofile .eq. 3) then
                            ncFileNameIn = dlgProfileFileName, &
                            ncVariableNameIn = 'dlcfs' )
 
-            dlg_xnuomg = dlcfs * 0.1 
+            dlg_xnuomg = dlcfs * edgeCollisions 
             where ( dlg_xnuomg < 0 ) dlg_xnuomg = 0
 
             where ( xkti <= 0 ) xkti = 1e-3

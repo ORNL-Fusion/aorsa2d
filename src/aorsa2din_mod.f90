@@ -53,6 +53,7 @@
       real :: antlc = .0001            !-----antlc = propagation constant along the antenna = c / vphase
       logical :: limiter_boundary = .false. ! use the rLim/zLim boundary from the eqdsk file
       logical :: use_dlg_bField = .false.
+      real :: edgeCollisions = 0.0
       logical :: bbbsMask = .false. ! use rbbbs/zbbbs as boundary instead of rlim/zlim
       logical :: domainMask = .false. ! use rbbbs/zbbbs as boundary instead of rlim/zlim
       real :: gradient = -50.0e16
@@ -395,7 +396,7 @@
      &    ti4_rho2lim, ti5_rho2lim, ti6_rho2lim, eqdsk_zRange, &
      &    gradient, nPhi_sum_only, bbbsMask, dlgAnt, eqdsk_rRange, &
      &    dlgAntFileName, dlgProfileFileName, antGridMatch, domainMask, &
-     &    use_dlg_bField
+     &    use_dlg_bField, edgeCollisions
                 
 
       end module aorsa2din_mod
