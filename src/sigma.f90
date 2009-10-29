@@ -189,16 +189,16 @@ contains
       do l = lmin, lmax
          labs = abs(l)
 
-         reson = (omgrf - l * real(omgc)) / omgrf
-         if (abs(reson) .lt. 0.02)then
-            zetal(l) = (omgrfc - l * omgc) / (xkprl * alpha)
-            dzetal(l) = omgrf * dlg_xnuomg / (xkprl * alpha)
-         else
-            zetal(l) = (omgrf  - l * omgc) / (xkprl * alpha)
-            dzetal(l) = 0.0
-         end if
+         !reson = (omgrfc - l * real(omgc)) / omgrfc
+         !if (abs(reson) .lt. 0.02)then
+         !   zetal(l) = (omgrfc - l * omgc) / (xkprl * alpha)
+         !   !dzetal(l) = omgrf * dlg_xnuomg / (xkprl * alpha)
+         !else
+         !   zetal(l) = (omgrfc  - l * omgc) / (xkprl * alpha)
+         !   !dzetal(l) = 0.0
+         !end if
 
-!       zetal(l) = (omgrfc - l * omgc) / (xkprl * alpha)
+         zetal(l) = (omgrfc - l * omgc) / (xkprl * alpha)
 !         dzetal(l) = omgrf * dlg_xnuomg / (xkprl * alpha)
 
 
@@ -337,7 +337,7 @@ contains
          Emax = 0.5 * xm * vc_mks**2
          Enorm = Emax / 1.6e-19
 
-         W = omgrf
+         W = omgrfc
          K1(1) = xkperp
          K1(2) = 0.0
          K1(3) = xkprl
@@ -588,8 +588,8 @@ contains
 
       end if
 
-      sig1 = sig1 + delta0 * eps0 * omgrf * xkperp**2 / xk0**2
-      sig3 = sig3 + delta0 * eps0 * omgrf * xkperp**2 / xk0**2
+      sig1 = sig1 + delta0 * eps0 * omgrfc * xkperp**2 / xk0**2
+      sig3 = sig3 + delta0 * eps0 * omgrfc * xkperp**2 / xk0**2
 
 
       if (xm .eq. xme) then
