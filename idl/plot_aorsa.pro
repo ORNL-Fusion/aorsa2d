@@ -11,6 +11,7 @@ pro plot_aorsa, $
 	eqDskFileName = 'eqdsk'
 
 	eqdsk	= readGEQDSK ( eqDskFileName )
+
 	cdfId = ncdf_open ( 'output/plotData_001.nc', /noWrite ) 
 	
 	ncdf_varGet, cdfId, 'rho', rho 
@@ -649,6 +650,36 @@ pro plot_aorsa, $
 	!p.multi = 0
   	
    device, /close_file
-stop
 
+
+   set_plot, 'ps'
+eplus	= complex ( ePlus_real, ePlus_imag )
+
+omega = 30e6*2.0*!pi
+dt	= 1/omega*0.1
+
+!p.multi = 0
+for t=0,1000 do begin
+
+   	loadct, 13, file = 'davect.tbl', /sile
+	fName	= 'output/field_movie/'+string(t,format='(i4.4)')+'_aorsa_dlg.eps'
+	device, fileName = fName, $
+			/color, $
+			bits_per_pixel = 8, $
+			xSize = 17, ySize = 24, /encap
+	contour, ePlus*cos(omega*t*dt)-complex(0,1)*ePlus*sin(omega*t*dt), $
+		capR, zLoc, $
+	   	lev = levels, c_colors = colors, /fill, /iso, $
+		color = 255, xRange = [ 0,1.7], yRange = [-1.7,1.7], xSty=1, ySty=1
+	loadct, 12, /sil
+	oPlot, eqdsk.rbbbs, eqdsk.zbbbs, $
+		   thick = 2, $
+		   color = 1*16-1 
+	oPlot, eqdsk.rLim, eqdsk.zLim, $
+		   thick = 2, $
+		   color = 1*16-1 
+   	device, /close_file
+
+endfor
+stop
 end 
