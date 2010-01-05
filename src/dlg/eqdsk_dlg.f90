@@ -11,7 +11,9 @@ module eqdsk_dlg
         pres (:), ffprim (:), pprime (:), qpsi (:), &
         rbbbs (:), zbbbs (:), rlim__ (:), zlim (:), &
         r (:), z (:), bR(:,:), bPhi(:,:), bz__(:,:), &
-        fluxGrid (:), fpolRZ(:,:), bMag__(:,:)
+        fluxGrid (:), fpolRZ(:,:), bMag__(:,:), &
+        fluxGrid_ (:), fpol_ (:)
+    logical :: ascending_flux 
 
 contains
     subroutine read_geqdsk ( eqdsk_fileName, plot )
@@ -44,7 +46,8 @@ contains
         write(*,*) idum, nw, nh 
         allocate ( fpol ( nw ), pres ( nw ), ffprim ( nw ), &
             pprime ( nw ), psizr ( nw, nh ), qpsi ( nw ), &
-            r ( nw ), z ( nh ), fluxGrid ( nw ) )
+            r ( nw ), z ( nh ), fluxGrid ( nw ), fpol_(nw), &
+            fluxGrid_(nw) )
         
         read ( 8, 2020 ) ( fpol (i), i=1, nw ) 
         read ( 8, 2020 ) ( pres (i), i=1, nw ) 
@@ -71,6 +74,10 @@ contains
        
         rStep   = rdim / ( nw - 1 )
         zStep   = zdim / ( nh - 1 )
+
+        ascending_flux = .false.
+        if ( siBry > siMag ) ascending_flux = .true.
+
         fStep   = ( sibry - simag ) / ( nw - 1 )
 
         r   = (/ (i,i=0,nw-1) /) * rStep + rleft
@@ -95,10 +102,21 @@ contains
        
         allocate ( temp(4*nw), fpolRZ(nw,nh), yp_c(nw) ) 
 
-        flux_grid_direction: &
-        if ( fluxGrid(1) > fluxGrid(2) ) then 
+        !   force the fluxGrid to have an ascending order
+        if ( .not. ascending_flux ) then
+            write(*,*) 'NOTE:  Reversing the flux grid for curv1 (PERHAPS AN ITER EQDSK?)'
+            do i=1,nw 
+                fluxGrid_(i)    = fluxGrid(nw-i+1)
+                fpol_(i)    = fpol(nw-i+1)
+            enddo
+            fluxGrid    = fluxGrid_
+            fpol    = fpol_
+        endif
 
-            call curv1 ( nw, -fluxGrid, fpol, spl1, spln, 3, yp_c, temp, sigma, iErr )
+        !flux_grid_direction: &
+        !if ( fluxGrid(1) > fluxGrid(2) ) then 
+
+            call curv1 ( nw, fluxGrid, fpol, spl1, spln, 3, yp_c, temp, sigma, iErr )
             if ( iErr .ne. 0 ) then 
                     write(*,*) 'eqdsk_dlg.f90 [103]: curv1 error', iErr
                     stop
@@ -108,29 +126,29 @@ contains
                     
                     !   curv2 evaluates the spline (fitpack.f)
                     !t   =  ( psizr(i,j) - simag ) / ( sibry - simag )
-                    fPolRZ(i,j) = curv2 ( -psizr(i,j), nw, -fluxGrid, fpol, yp_c, sigma )
-                    bPhi(i,j)   = fpolRZ(i,j) / r(i)
-
-                end do
-            end do
-
-        else
-
-            call curv1 ( nw, fluxGrid, fpol, spl1, spln, 3, yp_c, temp, sigma, iErr )
-            if ( iErr .ne. 0 ) then 
-                    write(*,*) 'eqdsk_dlg.f90 [103]: curv1 error', iErr
-                    stop
-            endif
-            do i=1,nw
-                do j=1,nh
-
                     fPolRZ(i,j) = curv2 ( psizr(i,j), nw, fluxGrid, fpol, yp_c, sigma )
                     bPhi(i,j)   = fpolRZ(i,j) / r(i)
 
                 end do
             end do
 
-        endif flux_grid_direction
+        !else
+
+        !    call curv1 ( nw, fluxGrid, fpol, spl1, spln, 3, yp_c, temp, sigma, iErr )
+        !    if ( iErr .ne. 0 ) then 
+        !            write(*,*) 'eqdsk_dlg.f90 [103]: curv1 error', iErr
+        !            stop
+        !    endif
+        !    do i=1,nw
+        !        do j=1,nh
+
+        !            fPolRZ(i,j) = curv2 ( psizr(i,j), nw, fluxGrid, fpol, yp_c, sigma )
+        !            bPhi(i,j)   = fpolRZ(i,j) / r(i)
+
+        !        end do
+        !    end do
+
+        !endif flux_grid_direction
  
         deallocate ( temp, yp_c ) 
      

@@ -354,7 +354,7 @@ contains
         flux_surf_avg: &
         if ( present ( aorsa_rho ) ) then
 
-            !write(*,*) 'DLG: Creating flux surface average dfdu*'
+            write(*,*) 'read_particle_f.f90[357]: Creating flux surface average dfdu*'
 
             allocate ( f_all(R_nBins * z_nBins, vPerp_nBins, vPar_nBins), &
                    R_all(R_nBins * z_nBins), &
@@ -398,9 +398,25 @@ contains
     
             enddo
 
-    
-            psiRange    = abs ( siMag - siBry )
-            psiNorm_all = ( psi_all - siMag ) / psiRange
+            write(*,*) 'read_particle_f.f90[401]: Determing ascending or descending flux grid' 
+            if ( .not. ascending_flux ) then  
+                psiRange    = siMag - siBry
+                if (psiRange<=0) then 
+                    write(*,*) 'read_particle_f.f90[405]: psiRange <=0', psiRange, &
+                        fluxGrid(1), fluxGrid(2)
+                    stop
+                endif
+                psiNorm_all = ( psi_all - siBry ) / psiRange
+            else
+                psiRange    = siBry - siMag 
+                if (psiRange<=0) then
+                    write(*,*) 'read_particle_f.f90[412]: psiRange <=0', psiRange, &
+                        fluxGrid(1), fluxGrid(2), siBry, siMag
+                    stop
+                endif
+                psiNorm_all = ( psi_all - siMag ) / psiRange
+            endif
+            write(*,*) 'read_particle_f.f90[411]: rho = sqrt ( psi )' 
             rho_all = sqrt ( psiNorm_all )
 
             deallocate ( psi_all )
@@ -417,10 +433,13 @@ contains
             dfduPar_rho = 0
 
             allocate ( rho_binEdges(rho_nBins+1), rho_binCenters(rho_nBins) )
-    
+ 
+            write(*,*) 'read_particle_f.f90[428]: Creating flux grid'
             rho_binEdges  = (/ (i*1.0,i=0,rho_nBins) /) / ( rho_nBins )
-            dRho    = abs(rho_binEdges(1)-rho_binEdges(2))
+            dRho    = rho_binEdges(1)-rho_binEdges(2)
             rho_binCenters  = rho_binEdges(2:) - dRho/2.0
+
+            write(*,*) 'read_particle_f.f90[432]: ', rho_binCenters
 
             allocate ( f_rho_vv ( rho_nBins, vPerp_nBins, vPar_nBins ) )
             allocate ( maskRho ( R_nBins * z_nBins ) )
@@ -428,9 +447,14 @@ contains
    
             minGoodRhoII    = 0 
             do i = 1, rho_nBins 
-   
-                maskRho(1:nFluxAvg) =  rho_all(1:nFluxAvg) >= rho_binCenters(i) &
+  
+                if ( fluxGrid(1) > fluxGrid(2) ) then 
+                    maskRho(1:nFluxAvg) =  rho_all(1:nFluxAvg) <= rho_binCenters(i) &
+                            .and.  rho_all(1:nFluxAvg) > rho_binCenters(i)+dRho
+                else 
+                    maskRho(1:nFluxAvg) =  rho_all(1:nFluxAvg) >= rho_binCenters(i) &
                             .and.  rho_all(1:nFluxAvg) < rho_binCenters(i)+dRho
+                endif
                 rhoCnt  = count ( maskRho )
              
                 !   There is a problem here, need to fill in the case where
@@ -469,10 +493,17 @@ contains
 
             !   Fill in those small rho points that did not have any R,z values
 
+            write(*,*) 'read_particle_f.f90[484]: Fill in empty small rho values'
             do i = 1, rho_nBins 
-   
-                maskRho(1:nFluxAvg) =  rho_all(1:nFluxAvg) >= rho_binCenters(i) &
+ 
+                if ( .not. ascending_flux ) then 
+                    maskRho(1:nFluxAvg) =  rho_all(1:nFluxAvg) <= rho_binCenters(i) &
+                            .and.  rho_all(1:nFluxAvg) > rho_binCenters(i)+dRho
+                else 
+                    maskRho(1:nFluxAvg) =  rho_all(1:nFluxAvg) >= rho_binCenters(i) &
                             .and.  rho_all(1:nFluxAvg) < rho_binCenters(i)+dRho
+                endif
+   
                 rhoCnt  = count ( maskRho )
 
                 if ( rhoCnt .eq. 0 ) then

@@ -7843,7 +7843,7 @@ end do
 
 
 
-         if(eta2 .ne. 0.0 .and. ndisti2 .eq. 1) then
+         if(eta2 .ne. 0.0 .and. ndisti2 .ge. 1) then
 
             vperp = uperp * vc2_mks
           vpara = upara * vc2_mks

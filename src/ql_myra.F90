@@ -1306,6 +1306,7 @@ ip_loop: do ip = start, finish
 !       the flux surface average QL calculation
 
       if ( ndist .eq. 2 ) then
+        write(*,*) 'ql_myra.F90[1309]: Reading particle distribution data ...'
         call dlg_particle_f ( 0.0, 0.0, &
           uPerp, uPara, &
           nuper, nupar, xm, eNormIN, &
