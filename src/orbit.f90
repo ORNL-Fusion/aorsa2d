@@ -64,8 +64,6 @@ contains
 
       fcount = fcount + 1
 
- 1312 format(1p8e12.4)
-
       return
       end subroutine f
 
@@ -74,10 +72,10 @@ contains
 !
 
 
-      subroutine fdtau(dtau, nxdim, nydim, len_x, modb_x, &
+      subroutine fdtau(dtau, len_x, modb_x, &
                      n_theta_max, n_psi_max, norb_dim, sinth2_init, &
                      modb_init, n_theta_, &
-                     i_psi, i, j, nphi_enter, nphi_exit, sgn_vprl)
+                     i_psi, nphi_enter, nphi_exit, sgn_vprl)
 
       implicit none
 
@@ -89,7 +87,7 @@ contains
 
       real sinth2_init(n_theta_max, n_psi_max)
 
-      integer n_theta_(n_psi_max), i, j, nphi_enter, nphi_exit
+      integer n_theta_(n_psi_max), nphi_enter, nphi_exit
 
       real mri, b_ip1, b_i, dl, l_ip1, l_i, sgn_vprl, argi, modb_init
       real costh_i, tanth2_i, sinth2_i, costh2_i

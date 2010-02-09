@@ -5,17 +5,6 @@ module eqdsk_setup_mod
 
     implicit none
 
-    !common/fcom/fcount, bxn, byn, bzn, bmod, bratio, nxmx, nymx, &
-    !     dx, dy, &
-    !     nnodex, nmodesy, rt, xwleft, sgn_vprl, modb, bratio_phi, &
-    !     dxdphi, dydphi, caprx
-
-    !common/spline_com/sigma, zbxn, zbyn, zbzn, zbmod, zbratio, &
-    !     xprime, yprime
-
-    !common/errcom/eps, s_err(100), y_phi(100), nmax
-
-
     integer :: fcount, nmax, i_psi
     real :: dx, dy, xwleft, sgn_vprl, modb, bratio_phi, &
          dxdphi, dydphi, caprx, sigma, eps
@@ -42,8 +31,6 @@ contains
 
       subroutine eqdsk_setup ( myid, eqdsk )
 
-      use sigma_module
-      use eqdsk_plot_mod
       use orbit_mod
       use fitpack
 
@@ -2028,8 +2015,6 @@ contains
          qs, qs1, qsafety, r0, b0, psirr, psizz, psirz, &
          rho_tors, rho_tor2d, rmaxis, zmaxis)
 
-      use dlg_bField
-      use aorsa2din_mod, ONLY: use_dlg_bField 
       use fitpack
 
       implicit none
@@ -2081,21 +2066,6 @@ contains
 
       jequat = nmodesy / 2
       ihalf = nmodesx / 2
-
-!      write(6, 310) (rg(ir), ir = 1, mr)
-!      write(6, 310) (zg(iz), iz = 1, mz)
-
-!      do ir = 1, mr
-!         write(6, 1312)ir, rg(ir), psig(ir, mz/2)
-!      end do
-
-!      write(6, 310) psihigh, psilow, psio
-!      write(6, 310) psisep, psimag
-
-!      do ipsi = 0, ma
-!         write(6, 1312) ipsi, psis(ipsi), fs(ipsi), fs1(ipsi)
-!      end do
-
 
 
 !      ----------------------------------
@@ -2193,45 +2163,12 @@ contains
             by0(i, j) = bz
             bz0(i, j) = bphi
 
-    !            psizz(i, j) = pszz
-!            psirr(i,j) = psrr
-!            psirz(i,j) = psrz
-
-
-
-!            if(j .eq. jequat)write(6, 1312) i, r, br, bz, bphi, f
-
          end do
       end do
 
 
-      !! try smoothing bPhi
-
-      !do i=3,nmodesx-2
-      !  do j=3,nmodesy-2
-
-      !      bz0(i,j) = sum ( bz0(i-2:i+2,j-2:j+2) ) / 5.0**2 
-
-      !  enddo
-      !enddo
-
-      ! overwrite b with dlg versions
-
-      if ( use_dlg_bField ) & 
-      call read_dlg_bField ( capR, capz, bx0, by0, bz0_bak, &
-                b0 = b0_dlg, rmaxis = rmaxis, zmaxis = zmaxis, &
-                negTor = .true., negPol = .false. )   
-                
-
       bmod = sqrt(bx0**2 + by0**2 + bz0**2)
 
-      !! remove poloidal field and increase toroidal 
-      !! field to compensate
-
-      !bx0   = bx0 * 0.001
-      !by0   = by0 * 0.001
-      !bz0   = bz0 * bmod / abs ( bz0 )
-      
       bxn = bx0 / bmod
       byn = by0 / bmod
       bzn = bz0 / bmod
