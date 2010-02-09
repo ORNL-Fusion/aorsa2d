@@ -1,37 +1,25 @@
-module sigma_module
+module sigma_mod
 
 contains
 
-
-!
-!***************************************************************************
-!
-
-      subroutine sigmad_cql3d(i, j, n, m, rho, rho_a, &
+      subroutine sigma_maxwellian(i, j, n, m, &
          gradprlb, bmod, bmod0, &
          xm, q, xn, dlg_xnuomg, &
          xkt, omgc, omgp2, &
-         lmin, lmax, nzfun, ibessel, &
+         lmin, lmax, nzfun, &
          xkxsav, xkysav, nphi, capr, &
-         bx,    by,    bz, &
+         bx, by, bz, &
          uxx, uxy, uxz, &
          uyx, uyy, uyz, &
          uzx, uzy, uzz, &
          sigxx, sigxy, sigxz, &
          sigyx, sigyy, sigyz, &
          sigzx, sigzy, sigzz, &
-         delta0, ndist, nupar, nuper, n_psi, &
-         n_psi_dim, dfduper, dfdupar, &
-         UminPara, UmaxPara, UPERP, UPARA, &
-         vc_mks, df_cql_uprp, df_cql_uprl, nbessj, &
-         nkperp, zi, eps0, v0i, omgrf, xk0, kperp_max, &
-         i_sav, j_sav, upshift, damping, xk_cutoff, zLoc, &
-         eNormIN, write_f_fileIN, iValue )
+         delta0, ndist, &
+         omgrf, xk0, &
+         upshift, damping, xk_cutoff )
 
-      use read_particle_f
-      use netcdf
-      use write_pf
-      use aorsa2din_mod, only: ana_maxwellian, write_f_file
+      use constants
 
 !     ---------------------------------------------------------
 !     This routine uses the modified Z functions Z0, Z1, Z2
@@ -43,9 +31,7 @@ contains
 
       real, dimension(:,:), allocatable :: DFDUPER0, DFDUPAR0
 
-      integer, intent(in), optional :: write_f_fileIN, iValue
-
-      integer lmin, lmax, nzfun, lmaxdim, l, labs, ibessel, &
+      integer lmin, lmax, nzfun, lmaxdim, l, labs, 
           i, j, n, m, nphi, ndist, myid, iflag, nproc, ni, mi, &
           i_sav, j_sav, ni0, mi0, upshift
 
@@ -57,7 +43,7 @@ contains
       real dzetal(lmin:lmax), descrim
       real dakbdkb, gradprlb, bmod, bmod0, nu_coll
       real, intent(in) :: dlg_xnuomg
-      real akprl,  rho, alpha, eps0, omgrf, v0i, emax
+      real akprl,  alpha, eps0, omgrf, emax
       real gammab(lmin:lmax), gamma_coll(lmin:lmax)
       real a, b, xnurf, pi, delta0, rhol
       real bx, by, bz, bratio, denom
@@ -80,7 +66,6 @@ contains
       complex sig0l, sig1l, sig2l, sig3l, sig4l, sig5l
       logical :: l_interp   !new
       logical :: l_first  !new
-      integer :: nkperp
       real :: kperp_max !new
 
 
@@ -103,33 +88,17 @@ contains
          al, bl, cl, &
          gamma, zeta_eff
 
-      integer  :: n_psi_dim
-      integer :: nuper, nupar, n_psi
-
       integer NBESSJ
 
-      real :: UPERP(NUPER),UPARA(NUPAR)
       real :: UPERP0, UPARA0
 
-      real :: DFDUPER(NUPER,NUPAR),DFDUPAR(NUPER,NUPAR)
       real :: W,K1(3),K2(3),KPER1,KPER2,ENORM,ZSPEC,ASPEC,BMAG,DensSPEC
       integer :: NSBESSJ,IFAIL
       COMPLEX WSPEC(3,3)
       complex :: factor
-      real :: UminPara,UmaxPara
-      real :: XI1(NUPER),JNXI1(NUPER, NBESSJ)
-      real :: XI2(NUPER),JNXI2(NUPER, NBESSJ)
-
-
-      real :: df_cql_uprp(NUPER, NUPAR, n_psi_dim)
-      real :: df_cql_uprl(NUPER, NUPAR, n_psi_dim)
-      real :: rho_a(n_psi_dim), vc_mks
-
 
 !DLG:   Define variables
-      real, dimension(nuPer,nuPar) :: p_f_rzvv_, &
-       p_dfduPerp_,p_dfduPar_
-        real :: genunf, zLoc
+        real :: genunf
       character(len=100) :: ncFileName
       integer :: nc_id, n_uper_id, n_upar_id, dfduper_id, scalar_id, &
        dfdupar_id, i_id, j_id, R_id, z_id, uper_id, upar_id, &
@@ -139,11 +108,6 @@ contains
 
 !DLG:   Define more variables
       p_f_rzvv_ = 0.0
-      p_dfduPerp_ = 0.0
-      p_dfduPar_    = 0.0
-
-      allocate( dfduper0(nuper, nupar) )
-      allocate( dfdupar0(nuper, nupar) )
 
       nu_coll =  .01 * omgrf
       xme = 9.11e-31
@@ -175,13 +139,6 @@ contains
       sgn_kprl = sign(1.0, xkprl)
       akprl = abs(xkprl)
 
-
-      if(xkperp .gt. kperp_max)then
-         write (6, *)"xkperp is gt kperp_max", xkperp, kperp_max
-         write (15, *)"xkperp is gt kperp_max", xkperp, kperp_max
-      end if
-
-
 !     ---------------------------------
 !     Calculate zetal(l) and gammab(l)
 !     ---------------------------------
@@ -189,28 +146,14 @@ contains
       do l = lmin, lmax
          labs = abs(l)
 
-         !reson = (omgrfc - l * real(omgc)) / omgrfc
-         !if (abs(reson) .lt. 0.02)then
-         !   zetal(l) = (omgrfc - l * omgc) / (xkprl * alpha)
-         !   !dzetal(l) = omgrf * dlg_xnuomg / (xkprl * alpha)
-         !else
-         !   zetal(l) = (omgrfc  - l * omgc) / (xkprl * alpha)
-         !   !dzetal(l) = 0.0
-         !end if
-
          zetal(l) = (omgrfc - l * omgc) / (xkprl * alpha)
-!         dzetal(l) = omgrf * dlg_xnuomg / (xkprl * alpha)
-
 
          gammab(l) = abs(l * omgc / (2.0 * alpha * xkprl**2) &
                                                  * gradprlb / bmod)
          gamma_coll(l) = nu_coll / (akprl * alpha)
 
-
          if(xm .eq. xme)gammab(l) = 0.0
-!         if(abs(gammab(l)) .gt. 1000.0) gammab(l) = 1000.0
          if(abs(gammab(l)) .lt. .01)gammab(l) = .01
-
 
       enddo
 
@@ -253,65 +196,47 @@ contains
       end if
 
 
-
-
-
-
-
-!     -----------------------
 !     Maxwellian distribution
 !     -----------------------
 
-      if(ndist .eq. 0)then
+    maxwellian: &
+    if ( ndist .eq. 0 ) then
 
-         gamma = 0.5 * xkperp**2 * rhol**2
-         rgamma = real(gamma)
+        gamma = 0.5 * xkperp**2 * rhol**2
+        rgamma = real(gamma)
 
+        if(rgamma .ge. 1.0e-08) &
+        call besiexp(gamma, lmax, exil, exilp, lmaxdim, exilovergam)
 
-         if(rgamma .ge. 1.0e-08) &
-            call besiexp(gamma, lmax, exil, exilp, lmaxdim, exilovergam)
+        if(rgamma .lt. 1.0e-08) &
+        call bes_expand(gamma, lmax, exil, exilp, lmaxdim, exilovergam)
 
-         if(rgamma .lt. 1.0e-08) &
-            call bes_expand(gamma, lmax, exil, exilp, lmaxdim, &
-                                                            exilovergam)
+        sig0 = 0.0
+        sig1 = 0.0
+        sig2 = 0.0
+        sig3 = 0.0
+        sig4 = 0.0
+        sig5 = 0.0
 
+        do l = lmin, lmax
 
-         sig0 = 0.0
-         sig1 = 0.0
-         sig2 = 0.0
-         sig3 = 0.0
-         sig4 = 0.0
-         sig5 = 0.0
-
-
-
-         do l = lmin, lmax
             labs = abs(l)
 
-           if(nzfun .eq. 0) call z_approx(sgn_kprl, zetal(l), 0.0, &
-                                                           z0, z1, z2)
-           if(nzfun .eq. 1) call z_approx(sgn_kprl,zetal(l),gammab(l), &
-                                                           z0, z1, z2)
-           if(nzfun .eq. 2) call z_smithe(sgn_kprl,zetal(l),gammab(l), &
-                                                           z0, z1, z2)
-           if(nzfun .eq. 3) call z_table(sgn_kprl,zetal(l),gammab(l), &
-                                            gamma_coll(l), z0, z1, z2)
-
+            if(nzfun .eq. 0) call z_approx(sgn_kprl, zetal(l), 0.0, z0, z1, z2)
+            if(nzfun .eq. 1) call z_approx(sgn_kprl,zetal(l),gammab(l), z0, z1, z2)
+            if(nzfun .eq. 2) call z_smithe(sgn_kprl,zetal(l),gammab(l), z0, z1, z2)
+            if(nzfun .eq. 3) call z_table(sgn_kprl,zetal(l),gammab(l), gamma_coll(l), z0, z1, z2)
 
             al = 1.0 / (xkprl * alpha) * z0
             bl = 1.0 / (xkprl * alpha) * z1
             cl = 1.0 / (xkprl * alpha) * z2
 
-
-            sig0l = - zieps0 * omgp2 * rhol**2 &
-                                       * (exil(labs) - exilp(labs)) * al
+            sig0l = - zieps0 * omgp2 * rhol**2 * (exil(labs) - exilp(labs)) * al
             sig1l = - zieps0 * omgp2 * l**2 * exilovergam(labs) * al
             sig2l = - eps0 * omgp2 * l * (exil(labs) - exilp(labs)) * al
             sig3l = - zieps0 * omgp2 * 2.0 * exil(labs) * cl
             sig4l = - zieps0 * omgp2 * rhol * l * exilovergam(labs) * bl
-            sig5l = - eps0 * omgp2 * rhol &
-                                       * (exil(labs) - exilp(labs)) * bl
-
+            sig5l = - eps0 * omgp2 * rhol * (exil(labs) - exilp(labs)) * bl
 
             sig0 = sig0 + sig0l
             sig1 = sig1 + sig1l
@@ -320,308 +245,38 @@ contains
             sig4 = sig4 + sig4l
             sig5 = sig5 + sig5l
 
-         end do
+        enddo
 
-      end if
+    endif maxwellian
 
-!     -----------------------------------
-!     Funky METS calls for non Maxwellian:
-!     -----------------------------------
-!DLG:   Adjust if statement for ndist >= 1
-      if (ndist .ge. 1) then
 
-!DLG:   Remove the xkprl = xkprl_eff
-         if ( ndist .lt. 9 ) xkprl = xkprl_eff
+    sig1 = sig1 + delta0 * eps0 * omgrfc * xkperp**2 / xk0**2
+    sig3 = sig3 + delta0 * eps0 * omgrfc * xkperp**2 / xk0**2
 
 
-         Emax = 0.5 * xm * vc_mks**2
-         Enorm = Emax / 1.6e-19
+    if (xm .eq. xme) then
 
-         W = omgrfc
-         K1(1) = xkperp
-         K1(2) = 0.0
-         K1(3) = xkprl
-         K2(1) = K1(1)
-         K2(2) = K1(2)
-         K2(3) = K1(3)
-         KPER1 = xkperp
-         KPER2 = xkperp
+        kr = xkperp / xk_cutoff
+        step = damping * kr**16 / (1. + kr**16)
 
+        sig3 = sig3 * (1.0 + step)
+    end if
 
-         ZSPEC = q / 1.6e-19
-         ASPEC = xm / 1.67e-27
-         BMAG = omgc * (xm / q)
-         NSBESSJ = 2 * NBESSJ + 8
-         DensSPEC = xn
-         bratio = bmod0 / bmod
-       if(bratio .gt. 1.0) bratio = 1.0
 
-       duperp = uperp(nuper) / (nuper - 1)
-       dupara = 2.0 * upara(nupar) / (nupar - 1)
+!   Swanson's rotation (original):
+!   -----------------------------
 
-         if(i .ne. i_sav .or. j .ne. j_sav)then
+    sigxx = sig1 + sig0 * xkbet**2
+    sigxy = sig2 - sig0 * xkbet * xkalp
+    sigxz = sig4 * xkalp + sig5 * xkbet
 
-          dfduper0 = 0.0
-          dfdupar0 = 0.0
+    sigyx = - sig2 - sig0 * xkbet * xkalp
+    sigyy =   sig1 + sig0 * xkalp**2
+    sigyz =   sig4 * xkbet - sig5 * xkalp
 
-!           ------------------------------------------------
-!           get CQL3D distribution function on the midplane
-!           ------------------------------------------------
-            call cql3d_dist(nupar, nuper, n_psi, &
-                       n_psi_dim, rho_a, rho, &
-                       UminPara,UmaxPara, &
-                       df_cql_uprp, df_cql_uprl, &
-                       UPERP, UPARA, DFDUPER0, DFDUPAR0)
-
-
-!           ------------------------------------------------
-!           map CQL3D distribution function off the midplane
-!           ------------------------------------------------
-
-            if(bratio .ge. 0.0)then
-
-             dfduper = 0.0
-             dfdupar = 0.0
-
-               do ni = 1, nuper
-                  do mi = 1, nupar
-
-                     argd = uperp(ni)**2 * (1. - bratio) &
-                                                     + upara(mi)**2
-                     if (argd .le. 0.0) argd = 1.0e-06
-
-                 uperp0 = uperp(ni) * sqrt(bratio)
-                     upara0 = sign(1.0, upara(mi)) * sqrt(argd)
-
-                 dfduper(ni, mi) = 0.0
-                     dfdupar(ni, mi) = 0.0
-
-                 if(upara0 .ge. upara(1) .and. &
-                                         upara0 .le. upara(nupar)) then
-
-                         ni0 = int((uperp0 - uperp(1)) / duperp) + 1
-                  mi0 = int((upara0 - upara(1)) / dupara) + 1
-
-                  dfduper0_intplt = dfduper0(ni0, mi0)
-                  dfdupar0_intplt = dfdupar0(ni0, mi0)
-
-                    if (ni0 .lt. nuper .and. mi0 .lt. nupar) then
-
-                        uperp0_grid = uperp(1) + (ni0 - 1) * duperp
-                  upara0_grid = upara(1) + (mi0 - 1) * dupara
-
-                  zeta = (uperp0 - uperp0_grid) / duperp
-                  eta  = (upara0 - upara0_grid) / dupara
-
-                        ai = dfduper0(ni0, mi0)
-                        bi = dfduper0(ni0+1 ,mi0) - dfduper0(ni0, mi0)
-                        ci = dfduper0(ni0, mi0+1) - dfduper0(ni0, mi0)
-                        di = dfduper0(ni0+1, mi0+1)+ dfduper0(ni0, mi0) &
-                           - dfduper0(ni0+1, mi0) - dfduper0(ni0, mi0+1)
-
-                  dfduper0_intplt = ai + bi * zeta &
-                                           + ci * eta + di * zeta * eta
-
-                        ai = dfdupar0(ni0, mi0)
-                        bi = dfdupar0(ni0+1 ,mi0) - dfdupar0(ni0, mi0)
-                        ci = dfdupar0(ni0, mi0+1) - dfdupar0(ni0, mi0)
-                        di = dfdupar0(ni0+1, mi0+1)+ dfdupar0(ni0, mi0) &
-                           - dfdupar0(ni0+1, mi0) - dfdupar0(ni0, mi0+1)
-
-                  dfdupar0_intplt = ai + bi * zeta &
-                                           + ci * eta + di * zeta * eta
-
-                        end if
-
-
-                  if (upara0 .ne. 0.0)then
-
-                     dfdupar(ni, mi) = dfdupar0_intplt * &
-                              upara(mi) / upara0
-
-                           dfduper(ni, mi) = dfduper0_intplt * &
-                              sqrt(bratio) + dfdupar0_intplt * &
-                              uperp(ni) / upara0 * (1.0 - bratio)
-
-!                          dfdth = upara(mi) * dfduper(ni, mi)
-!     .                           - uperp(ni) * dfdupar(ni, mi)
-
-
-                        end if
-
-                 end if
-
-
-             if ( .not. ana_maxwellian ) go to 5000
-!                    ----------------------------
-!                    optional analytic Maxwellian
-!                    ----------------------------
-                 pi = 3.141592654
-
-                 alpha = sqrt(2.0 * xkt / xm)
-!                     vc_mks = 3.5 * alpha
-                     u0 = vc_mks / alpha
-
-                   fnorm = u0**3 / pi**1.5
-
-                 u2 = uperp(ni)**2 + upara(mi)**2
-
-                     f_cql = exp(-u2 * u0**2) * fnorm
-                   dfduper(ni, mi) = -f_cql * 2. * uperp(ni) * u0**2
-                     dfdupar(ni, mi) = -f_cql * 2. * upara(mi) * u0**2
- 5000                continue
-
-
-                  end do
-               end do
-
-            end if
-
-
-!DLG:   Overwrite the df terms with those from the particle list for sigma
-
-        if ( ndist .eq. 2 .and. (.not. ana_maxwellian ) ) then
-
-        call dlg_particle_f ( capR, zLoc, &
-          uPerp, uPara, &
-          nuper, nupar, xm, eNormIN, &
-          p_f_rzvv_, p_dfduPerp_, p_dfduPar_ )
-
-        dfdupar = 0.0
-        dfduper = 0.0
-
-        dfdupar = p_dfduPar_
-        dfduper = p_dfduPerp_
-
-!        write(*,*) 'sigma.f:489', sum(dfdupar),
-!     .      sum(dfduper), i, j
-
-        end if
-
-        if ( present(write_f_fileIN).and.write_f_file) &
-            call write_pf_dlg2 ( i, j, iValue, &
-                nuPer, nuPar, dfduper, dfdupar )
-
-!!
-!           --------------------------------------
-!           Initialize the interpolation in k_perp:
-!           --------------------------------------
-            if (nkperp .ne. 0) then
-              l_first  = .true.
-               l_interp = .true.
-
-               call GETNONMAXSIGMA_AORSA_NEWi(W, &
-                                ZSPEC,ASPEC,DensSPEC,BMAG, &
-                                K1,XI1,JNXI1, &
-                                K1,XI1,JNXI1,NBESSJ, &
-                                Enorm,UminPara,UmaxPara, &
-                                NUPAR,NUPER,UPERP,UPARA, &
-                                DFDUPER,DFDUPAR, &
-                                WSPEC,IFAIL, &
-                                l_first, l_interp, kperp_max, nkperp, &
-                                xkphi)
-            end if
-
-
-
-            i_sav = i
-            j_sav = j
-
-         end if
-
-
-
-
-
-
-!        ------------------------------------
-!        Complete integrals; no interpolation
-!        ------------------------------------
-         if (nkperp .eq. 0)then
-
-            call WMATPRECALC_AORSA(ZSPEC,ASPEC,ENORM,BMAG,KPER1,UPERP, &
-                         NUPER,NBESSJ,NSBESSJ,XI1,JNXI1,IFAIL)
-
-            call GETNONMAX_SIGMA_AORSA_NEW(W, &
-                                ZSPEC, ASPEC, DensSPEC, BMAG, &
-                                K1, XI1, JNXI1, &
-                                K1, XI1, JNXI1, NBESSJ, &
-                                Enorm, UminPara, UmaxPara, &
-                                NUPAR, NUPER, UPERP, UPARA, &
-                                DFDUPER, DFDUPAR, &
-                                WSPEC, IFAIL)
-
-         else
-!        -----------------
-!        Use interpolation
-!        -----------------
-
-            l_first = .false.
-
-            call GETNONMAXSIGMA_AORSA_NEWi(W, &
-                             ZSPEC,ASPEC,DensSPEC,BMAG, &
-                             K1, XI1, JNXI1, &
-                             K1, XI1, JNXI1, NBESSJ, &
-                             Enorm, UminPara, UmaxPara, &
-                             NUPAR, NUPER, UPERP, UPARA, &
-                             DFDUPER, DFDUPAR, &
-                             WSPEC, IFAIL, &
-                             l_first, l_interp, kperp_max, nkperp, &
-                             xkphi)
-         end if
-
-
-
-         factor = cmplx(0.,-omgrf * eps0)
-
-         sig1 = WSPEC(1,1) * factor
-         sig2 = WSPEC(1,2) * factor
-         sig3 = WSPEC(3,3) * factor
-         sig4 = 0.0
-         sig5 = 0.0
-         sig0 = 0.0
-         if (xkperp .gt. 0.01) then
-            sig4 = WSPEC(3,1) / xkperp * factor
-            sig5 = WSPEC(3,2) / xkperp * factor
-            sig0 = (WSPEC(2,2) * factor - sig1) / xkperp**2
-         endif
-
-      end if
-
-      sig1 = sig1 + delta0 * eps0 * omgrfc * xkperp**2 / xk0**2
-      sig3 = sig3 + delta0 * eps0 * omgrfc * xkperp**2 / xk0**2
-
-
-      if (xm .eq. xme) then
-
-          kr = xkperp / xk_cutoff
-          step = damping * kr**16 / (1. + kr**16)
-
-          sig3 = sig3 * (1.0 + step)
-      end if
-
-
-!     -----------------------------
-!     Swanson's rotation (original):
-!     -----------------------------
-      sigxx = sig1 + sig0 * xkbet**2
-      sigxy = sig2 - sig0 * xkbet * xkalp
-      sigxz = sig4 * xkalp + sig5 * xkbet
-
-      sigyx = - sig2 - sig0 * xkbet * xkalp
-      sigyy =   sig1 + sig0 * xkalp**2
-      sigyz =   sig4 * xkbet - sig5 * xkalp
-
-      sigzx = sig4 * xkalp - sig5 * xkbet
-      sigzy = sig4 * xkbet + sig5 * xkalp
-      sigzz = sig3
-
-
-      deallocate( dfduper0 )
-      deallocate( dfdupar0 )
-
-
-      return
+    sigzx = sig4 * xkalp - sig5 * xkbet
+    sigzy = sig4 * xkbet + sig5 * xkalp
+    sigzz = sig3
 
   101 format(i10, 1p8e12.4)
  1314 format(4i10, 1p9e12.4)
@@ -629,356 +284,10 @@ contains
   100 format('ier = ', i5, 'besic failed')
   102 format(2i10, 1p8e12.4)
   103 format(4i10, 1p8e12.4)
-      end subroutine sigmad_cql3d
 
+end subroutine sigma_maxwellian
 
-!
-!***************************************************************************
-!
 
-
-      subroutine cql3d_dist(nupar, nuper, n_psi, &
-                             n_psi_dim, rho_a, rho, &
-                             UminPara,UmaxPara, &
-                             df_cql_uprp, df_cql_uprl, &
-                             UPERP, UPARA, DFDUPER, DFDUPAR)
-
-      implicit none
-      integer   :: nupar, nuper, n_psi
-      integer   :: n_psi_dim
-
-      real   :: UminPara,UmaxPara
-      real   :: UPERP(NUPER)
-      real   :: UPARA(NUPAR)
-      real   :: DFDUPER(NUPER,NUPAR), &
-                            DFDUPAR(NUPER,NUPAR)
-
-      real   :: df_cql_uprp(NUPER, NUPAR, n_psi_dim)
-      real   :: df_cql_uprl(NUPER, NUPAR, n_psi_dim)
-      real :: f, u2, rho, rho_a(n_psi_dim)
-
-      integer n, m, i_psi, i_psin
-
-      i_psi = 1
-
-
-      do i_psin = 1, n_psi - 1
-         if(rho .ge. rho_a(i_psin)     .and. &
-            rho .lt. rho_a(i_psin + 1)) &
-            i_psi = i_psin
-      end do
-
-
-      if(rho .ge. rho_a(n_psi)) i_psi = n_psi
-
-
-      if(i_psi .lt. n_psi)then
-         do n = 1, nuper
-            do m = 1, nupar
-               DFDUPER(n, m) = df_cql_uprp(n, m, i_psi) &
-                  + (df_cql_uprp(n, m, i_psi + 1) &
-                                           - df_cql_uprp(n, m, i_psi)) &
-                          * (rho              - rho_a(i_psi)) &
-                          / (rho_a(i_psi + 1) - rho_a(i_psi))
-               DFDUPAR(n, m) = df_cql_uprl(n, m, i_psi) &
-                  + (df_cql_uprl(n, m, i_psi + 1) &
-                                           - df_cql_uprl(n, m, i_psi)) &
-                          * (rho              - rho_a(i_psi)) &
-                          / (rho_a(i_psi + 1) - rho_a(i_psi))
-            end do
-         end do
-      end if
-
-
-
-      if(i_psi .eq. n_psi)then
-         do n = 1, nuper
-            do m = 1, nupar
-               DFDUPER(n, m) = df_cql_uprp(n, m, i_psi)
-               DFDUPAR(n, m) = df_cql_uprl(n, m, i_psi)
-            end do
-         end do
-      end if
-
-  310 format(1p6e12.4)
-  311 format(i10, 1p6e12.4)
-
-
-      return
-      end subroutine cql3d_dist
-
-!
-!***************************************************************************
-!
-
-      subroutine midplane(igiven, jgiven, f, fmid, rho, &
-         nxdim, nydim, nnodex, nnodey, capr, r0, f0, jmid)
-
-      implicit none
-
-      integer nxdim, nydim, nnodex, nnodey, i, j, jmid, i0
-      integer igiven, jgiven, istart
-
-      real f(nxdim, nydim), fmid, rho(nxdim, nydim), r0, capr(nxdim)
-      real rhoij, f0
-
-      rhoij = rho(igiven, jgiven)
-
-      fmid =  0.0
-      if (rhoij .gt. 1.0) return
-
-!      jmid  = nnodey / 2
-
-!      write(6, *)"jmid = ", jmid
-
-      do i = 1, nnodex
-         if(capr(i) .ge. r0)then
-          istart = i
-          go to 200
-       end if
-      end do
-
-  200 continue
-
-
-      if(rhoij .ge. rho(istart, jmid)) then
-         do i = istart, nnodex - 1
-            if(rhoij .ge. rho(i,   jmid) .and. &
-               rhoij .lt. rho(i+1, jmid)) i0 = i
-         end do
-         fmid = f(i0, jmid) + (f(i0 + 1, jmid) -   f(i0, jmid)) &
-                          / (rho(i0 + 1, jmid) - rho(i0, jmid)) &
-                          * (rhoij             - rho(i0, jmid))
-      end if
-
-
-      if(rhoij .lt. rho(istart, jmid)) then
-         fmid = f0 &
-          + (f(istart, jmid) - f0) / (rho(istart, jmid) - 0.0) &
-                   * (rhoij - 0.0)
-      end if
-
-
-
-  100 format (1i10, 1p8e12.4)
-  102 format (2i10)
-      return
-      end subroutine midplane
-
-!
-!***************************************************************************
-!
-       subroutine dummy_dist(NUPAR, NUPER, &
-                             UminPara, UmaxPara, &
-                             UPERP, UPARA, DFDUPER, DFDUPAR)
-       implicit none
-
-       integer  ::NUPAR,NUPER
-       real  :: UminPara,UmaxPara
-       real  :: UPERP(NUPER)
-       real  :: UPARA(NUPAR)
-       real  :: DFDUPER(NUPER,NUPAR), &
-                            DFDUPAR(NUPER,NUPAR)
-       real :: pi, fnorm, f, u2
-       integer n,m
-
-       pi = 4.0*atan(1.0)
-       fnorm = pi**1.5
-
-       do n = 1, NUPER
-          UPERP(n) = 3.5*(real(n-1)/real(NUPER-1))
-       end do
-
-       UminPara = -3.5
-       UmaxPara =  3.5
-
-       do m = 1, NUPAR
-          UPARA(m) = 3.5*(-1.0+2.*(real(m-1)/real(NUPAR-1)))
-       end do
-
-       do n = 1, NUPER
-          do m = 1, NUPAR
-             u2 = UPERP(n)**2 + UPARA(m)**2
-             f = exp(-u2) / fnorm
-             DFDUPER(n, m) = f *(-2.0 * UPERP(n))
-             DFDUPAR(n, m) = f *(-2.0 * UPARA(m))
-          end do
-       end do
-
-       return
-       end subroutine dummy_dist
-
-!
-!***************************************************************************
-!
-
-
-       subroutine dummy_dist2(NUPAR,NUPER,UminPara,UmaxPara, &
-                             UPERP,UPARA,DFDUPER,DFDUPAR, fnorm)
-       implicit none
-       integer  :: NUPAR,NUPER
-       real  :: UminPara,UmaxPara
-       real  :: UPERP(NUPER)
-       real  :: UPARA(NUPAR)
-       real  :: DFDUPER(NUPER,NUPAR), &
-                            DFDUPAR(NUPER,NUPAR)
-       real :: pi, fnorm, f, u, u2, u3
-       integer n,m
-
-
-       do n = 1, NUPER
-          UPERP(n) = 3.5*(real(n-1)/real(NUPER-1))
-       end do
-
-       UminPara = -3.5
-       UmaxPara =  3.5
-
-       do m = 1, NUPAR
-          UPARA(m) = 3.5*(-1.0+2.*(real(m-1)/real(NUPAR-1)))
-       end do
-
-       do n = 1, NUPER
-          do m = 1, NUPAR
-             u2 = UPERP(n)**2 + UPARA(m)**2
-             u  = sqrt(u2)
-             u3 = u**3
-             f = fnorm * 1.0 / (1. + u3)
-             DFDUPER(n, m) = -3.0 * f / (1. + u3) * UPERP(n) * u
-             DFDUPAR(n, m) = -3.0 * f / (1. + u3) * UPARA(n) * u
-          end do
-       end do
-
-       return
-       end subroutine dummy_dist2
-
-
-
-!
-!***************************************************************************
-!
-
-      subroutine sigmah_slow(i, j, n, m, &
-         xm, q, xn, dlg_xnuomg, &
-         eslow, omgc, omgp2, &
-         lmin, lmax, nzfun, ibessel, &
-         xkxsav, xkysav, nphi, capr, &
-         bx,    by,    bz, &
-         uxx, uxy, uxz, &
-         uyx, uyy, uyz, &
-         uzx, uzy, uzz, &
-         sigxx, sigxy, sigxz, &
-         sigyx, sigyy, sigyz, &
-         sigzx, sigzy, sigzz, &
-         xkte, zeff, zi, eps0, v0i, omgrf, xk0, kperp_max, &
-         i_sav, j_sav)
-
-
-
-!     ---------------------------------------------------------
-!     This routine uses call sigslo for the Hermitian part of
-!     dispersion tensor for  an arbitrary isotropic
-!     distribution function of a single plasma species
-!     No rotation is made.  Result is in the Stix frame.
-!     ---------------------------------------------------------
-
-      implicit none
-
-      integer lmin, lmax, nzfun, lmaxdim, l, labs, ibessel, &
-          i, j, n, m, nphi, &
-          i_sav, j_sav
-
-      real xkperp, xkprl, xm, q, xn, eslow, omgc, omgp2, xme
-      real xkprl_eff, fgam, y0, sgn_kprl
-      real dakbdkb, dlg_xnuomg
-      real akprl, gammab, valpha, eps0, omgrf, v0i
-      real a, b, xkte, velect, zeff
-      real bx, by, bz
-
-      real xkxsav, xkysav, capr
-      real xkphi
-      real xkalp, xkbet, xk0
-
-      complex zi, omgrfc
-      complex sig0, sig1, sig2, sig3, sig4, sig5
-
-
-      complex sigxx, sigxy, sigxz, &
-              sigyx, sigyy, sigyz, &
-              sigzx, sigzy, sigzz
-
-      real uxx, uxy, uxz, &
-           uyx, uyy, uyz, &
-           uzx, uzy, uzz
-
-      real :: kperp_max !new
-
-
-      xme = 9.11e-31
-
-
-      valpha = sqrt(2. * eslow / xm)
-      velect = sqrt(2.0 * xkte / xme)
-      if (velect .eq. 0.0) return
-
-      xkphi = nphi / capr
-      omgrfc = omgrf * (1. + zi * dlg_xnuomg)
-
-      xkalp = uxx * xkxsav + uxy * xkysav + uxz * xkphi
-      xkbet = uyx * xkxsav + uyy * xkysav + uyz * xkphi
-      xkprl = uzx * xkxsav + uzy * xkysav + uzz * xkphi
-
-      xkperp = sqrt(xkalp**2 + xkbet**2)
-
-      akprl = abs(xkprl)
-      sgn_kprl = 1.0
-      if(akprl .ne. 0.0)sgn_kprl = xkprl / akprl
-
-
-      call sigslo(q, zeff, velect, valpha, omgc, omgp2, omgrf, &
-         sigxx, sigxy, sigxz, &
-         sigyx, sigyy, sigyz, &
-         sigzx, sigzy, sigzz, &
-         xkprl, xkperp, lmin, lmax)
-
-!     -----------------------------
-!     Change to Swanson's notation
-!     -----------------------------
-      sig1 = sigxx
-      sig2 = sigxy
-      sig3 = sigzz
-      sig4 = sigxz / xkperp
-      sig5 = - sigyz / xkperp
-      sig0 = (sigyy - sig1) / xkperp**2
-
-
-!     -----------------------------
-!     Swanson's rotation (original)
-!     -----------------------------
-      sigxx = sig1 + sig0 * xkbet**2
-      sigxy = sig2 - sig0 * xkbet * xkalp
-      sigxz = sig4 * xkalp + sig5 * xkbet
-
-      sigyx = - sig2 - sig0 * xkbet * xkalp
-      sigyy =   sig1 + sig0 * xkalp**2
-      sigyz =   sig4 * xkbet - sig5 * xkalp
-
-      sigzx = sig4 * xkalp - sig5 * xkbet
-      sigzy = sig4 * xkbet + sig5 * xkalp
-      sigzz = sig3
-
-
-      return
-
-  101 format(i10, 1p8e12.4)
- 1314 format(4i10, 1p9e12.4)
- 1312 format(1p9e12.4)
-
-      end subroutine sigmah_slow
-
-
-!
-!***************************************************************************
-!
       subroutine sigmac_stix(i, j, n, m, &
          xm, q, xn, dlg_xnuomg, &
          xkt, omgc, omgp2, &
@@ -1344,4 +653,4 @@ contains
 !
 
 
-end module sigma_module
+end module sigma_mod

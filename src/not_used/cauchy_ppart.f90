@@ -1,5 +1,9 @@
+module cauchy_ppart_mod
+
+contains
+
         subroutine cauchy_ppart2(x,nx,xres,fx,pint)
-	
+
 !     -----------------------------------------------
 !     Returns principal part of int(x,fx/(x-xres))
 !     -----------------------------------------------
@@ -8,7 +12,7 @@
         integer, parameter :: idebug = 0
 
         integer   nx
-        real xres 
+        real xres
         real x(nx), fx(nx)
         real pint
 !       ---------------
@@ -26,7 +30,7 @@
 
 
 !       ------------------------------------------------------------
-!       compute piecewise quadratic over 
+!       compute piecewise quadratic over
 !       [x(i-1), x(i), x(i+1)] as    a0 + a1*(x-xres)+ a2*(x-xres)^2
 !
 !       assume xres is not exactly one of x(1:n)
@@ -116,7 +120,7 @@
 !
 !      sum contributions from a2
 !
-!      int( a2*(x-xres), x=xleft..xright) = 
+!      int( a2*(x-xres), x=xleft..xright) =
 !      = (a2/2) * ( (xright-xres)**2 - (xleft-xres)**2)
 !      = (a2/2) * ( (xright+xleft - 2*xres) * (xright-xleft) )
 !      ----------------------------------------------
@@ -144,16 +148,16 @@
             write(*,*) 'i,v0,v1,v2 ',i,v0,v1,v2
           endif
 
-        enddo 
+        enddo
         value2 = value2*0.5d0
 
 
         pint = value0 + value1 + value2
-          
+
         return
         end subroutine cauchy_ppart2
-	
-	
+
+
 !
 !*************************************************************************
 !
@@ -167,7 +171,7 @@
         integer, parameter :: idebug = 0
 
         integer   nx,nfx
-        real*8 xres 
+        real*8 xres
         real*8 x(nx), fx(nx,nfx)
         real*8 pint(nfx)
         logical  :: is_uniform
@@ -180,7 +184,7 @@
         real*8 :: a0,a1,a2,  x1,x2,x3,  f1,f2,f3
         real*8 :: tmp1,tmp2,  d1,d2,d3,  d31,d21
         real*8 :: d3md1, d2md1
-        real*8, dimension(nfx) :: value0,value1,value2 
+        real*8, dimension(nfx) :: value0,value1,value2
         real*8 :: xleft,xright
         real*8 :: v0,v1,v2
         real*8 :: xc,a,b
@@ -191,7 +195,7 @@
 
 
         logical, parameter :: use_pade = .true.
-        
+
         real*8 ::  h,t,dx,t2, logt
         real*8, parameter :: zero=0.0d0
         real*8, parameter :: one=1.0d0
@@ -206,7 +210,7 @@
 
 
 !       ------------------------------------------------------------
-!       compute piecewise quadratic over 
+!       compute piecewise quadratic over
 !       [x(i-1), x(i), x(i+1)] as    a0 + a1*(x-xres)+ a2*(x-xres)^2
 !
 !       assume xres is not exactly one of x(1:n)
@@ -229,7 +233,7 @@
            vx(ih) = abs( (x3-xres)/(x1-xres) )
         enddo
         call vlog( vlogt, vx, nlog )
-           
+
 
         if (is_uniform) then
 
@@ -237,7 +241,7 @@
         h = dx
 
 
-     
+
         do j=1,nfx
         do ih=1,nlog
            i = 2*ih
@@ -256,7 +260,7 @@
            f2 = fx(i,j)
            f3 = fx(i+1,j)
 
-            
+
 !          --------------------------------------
 !          find a0,a1,a2 such that
 !
@@ -289,7 +293,7 @@
 
              logt = vlogt(ih)
              value0(j) = value0(j) + a0*logt
-             value1(j) = value1(j) + a1 
+             value1(j) = value1(j) + a1
              value2(j) = value2(j) + a2*d2
 
             enddo
@@ -302,7 +306,7 @@
         else
 
 
-        
+
         do j=1,nfx
         do ih=1,nlog
            i = 2*ih
@@ -311,7 +315,7 @@
            x3 = x(i+1)
 
 
-            
+
 !          --------------------------------------
 !          find a0,a1,a2 such that
 !
@@ -341,10 +345,10 @@
              a1 = ((f3-f1) - a2*d31 )/(d3-d1)
              a0 = f1 - a2*d1*d1 - a1*d1
 !
-!         f(x) = a0 + a1*(x-xres) + a2*(x-xres)^2           
+!         f(x) = a0 + a1*(x-xres) + a2*(x-xres)^2
 !
-!         int( f(x)/(x-xres), x=x1..x3 ) = 
-!         a0 * int( 1/(x-xres), x=x1..x3 ) + 
+!         int( f(x)/(x-xres), x=x1..x3 ) =
+!         a0 * int( 1/(x-xres), x=x1..x3 ) +
 !         a1 * int( 1, x=x1..x3)
 !         a2 * int( (x-xres), x=x1..x3 )
 !
@@ -384,7 +388,7 @@
            f2 = fx(nx-1,j)
            f3 = fx(nx,j)
 
-            
+
 !          --------------------------------------
 !          find a0,a1,a2 such that
 !
@@ -403,10 +407,10 @@
              a1 = ((f3-f1) - a2*d31 )/(d3-d1)
              a0 = f1 - a2*d1*d1 - a1*d1
 !
-!         f(x) = a0 + a1*(x-xres) + a2*(x-xres)^2           
+!         f(x) = a0 + a1*(x-xres) + a2*(x-xres)^2
 !
-!         int( f(x)/(x-xres), x=x2..x3 ) = 
-!         a0 * int( 1/(x-xres), x=x2..x3 ) + 
+!         int( f(x)/(x-xres), x=x2..x3 ) =
+!         a0 * int( 1/(x-xres), x=x2..x3 ) +
 !         a1 * int( 1, x=x1..x3)
 !         a2 * int( (x-xres), x=x2..x3 )
 !
@@ -416,7 +420,7 @@
            enddo
 
            endif
-            
+
           value2 = value2 / two
           pint = value0 + value1 + value2
 
@@ -425,5 +429,5 @@
 
         end subroutine cauchy_ppart6
 
-
+end module cauchy_ppart_mod
 

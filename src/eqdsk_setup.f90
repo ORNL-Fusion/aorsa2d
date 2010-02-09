@@ -26,6 +26,7 @@ module eqdsk_setup_mod
     real :: rho_tor2d(nxmx, nymx)
     real :: dldb_tot12(nxmx, nymx)
     real :: dldbavg(nrhomax)
+    real :: xMax, yMax
 
 contains
 
@@ -257,7 +258,7 @@ contains
           amu3, z3, eta3, xnu3ad, &
           xdelta, wdelta, xdelt2, wdelt2, zeffcd, &
           rzoom1, rzoom2, q0, prfin, &
-          alim, grad, qavg0, ymax, &
+          alim, grad, qavg0, &
           rhonorm, ekappa, xiota0, rholim, psilim, psilim_, yant, &
           xwright, psi_lim, &
           rwleft_auto, rwright_auto, ytop_auto, ybottom_auto
@@ -271,7 +272,7 @@ contains
          v0i, vthi10, vthe, vthi, vphase, rnz, xn2, eta2, &
          xk0, shearedge, eta1, xn1, xmi1, xmh, xme, qi1, xmi2, &
          xmi3, t0i, t0i2, t0i3, t0e, q, teedge, clight, xmu0, xlnlam, &
-         omgci10, omgrf, xmax, qe,i3, qi2, pi, eps0, xn3, qi3, &
+         omgci10, omgrf, qe,i3, qi2, pi, eps0, xn3, qi3, &
          costh, sinth, radius, rnx,  rny, rnphi, ti02, ti03, twopi
 
       real xjantx, xjanty, xjantz, xjant

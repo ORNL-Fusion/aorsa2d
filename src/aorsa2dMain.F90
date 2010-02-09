@@ -3,6 +3,9 @@ program aorsa2dMain
     use constants
     use eqdsk_setup_mod
     use eqdsk_dlg
+    use aorsasubs_mod
+    use sigma_mod
+    use fourier_mod
 
     !use ql_myra_mod
     !use profile_mod
@@ -832,11 +835,18 @@ program aorsa2dMain
         ntilda_e ( nxmx, nymx ) )
 
 
-!   setup parallel environment
-!   --------------------------
-
-!    call mpi_init ( info )
-    myid    = 0
+    real :: omgrf, xk0
+    real :: xmi1, xmi2
+    real :: qe, qi1, qi2
+    real :: te, ti1, ti2
+    real, dimension(:,:) :: omgci1, omgci2
+    real, dimension(:,:) :: btau, sqx
+    real, dimension(:,:) :: uxx, uxy, uxz, uyx, uyy, uyz, uzx, uzy, uzz
+    real :: dx, dy
+    real, dimension(:) :: xPrime, x, capR, xkphi
+    real, dimension(:) :: yPrime, y
+    integer :: i, j, m, n
+    real, dimension(:) :: xkxsav, xkysav
 
 
 !   read namelist input data
@@ -845,107 +855,60 @@ program aorsa2dMain
     call read_nameList ()
 
 
-!!   setup blacs environment
-!!   -----------------------
-!
-!    call blacs_pinfo ( myid, nproc )
-!
-!    if ( nproc < 1 ) then
-!        write(*,*) 'aorsa2dMain.F90:865 - blacs_pinfo returns:myid,nproc',myid,nproc
-!        stop '** blacs not setup '
-!    endif
-!
-!    call blacs_get ( -1, 0, icontxt )
-!    call blacs_gridinit ( icontxt, 'column-major', nprow, npcol )
-!    call blacs_gridinfo ( icontxt, nprow, npcol, myrow, mycol )
-!
-!
-!!   initialize HPL 
-!!   --------------
-!
-!#ifdef  USE_HPL
-!
-!    call blacs_barrier ( icontxt,'A')
-!    call HPL_blacsinit ( icontxt )
-!
-!#endif
-
-
 !   read g-eqdsk file
 !   -----------------
 
     call eqdsk_setup ( myid, eqdsk )
     call read_geqdsk ( eqdsk, plot = .false. )
 
-!    call blacs_barrier ( icontxt, 'All' )
-
 
 !   calculate the ion cyclotron freqs
 !   ---------------------------------
 
     omgrf = 2.0 * pi * freqcy
+    xk0 = omgrf / clight
 
     xmi1 = amu1 * xmh
     xmi2 = amu2 * xmh
-    xmi3 = amu3 * xmh
-    xmi4 = amu4 * xmh
-    xmi5 = amu5 * xmh
-    xmi6 = amu6 * xmh
-
+   
     qe = -q
     qi1 = z1 * q
     qi2 = z2 * q
-    qi3 = z3 * q
-    qi4 = z4 * q
-    qi5 = z5 * q
-    qi6 = z6 * q
- 
-    t0e = te0
-    t0i = ti0
-    t0i2 = ti02
-    t0i3 = ti03
-    t0i4 = ti0
-    t0i5 = ti02
-    t0i6 = ti03
- 
-    telimj   = telim  * q
-    tilimj   = tilim  * q
-    ti2limj  = ti2lim * q
-    ti3limj  = ti3lim * q
-    ti4limj  = ti4lim * q
-    ti5limj  = ti5lim * q
-    ti6limj  = ti6lim * q
+    
+    te = 1e3 * q
+    ti1 = 1e3 * q
+    ti2 = 1e3 * q
    
-    omgci10 = qi1 * b0 / xmi1
-    vthi10 = sqrt(2.0 * t0i / xmi1)
-    rhoi10 = vthi10 / omgci10
+    allocate ( &
+        omgci1 ( nmodesx, nmodesy ), & 
+        omgci1 ( nmodesx, nmodesy ) )
 
-    omgci20 = qi2 * b0 / xmi2
-    vthi20 = sqrt(2.0 * t0i2 / xmi2)
-    rhoi20 = vthi20 / omgci20
+    omgci1 = qi1 * b0 / xmi1
+    omgci2 = qi2 * b0 / xmi2
 
-    omgci30 = qi3 * b0 / xmi3
-    vthi30 = sqrt(2.0 * t0i3 / xmi3)
-    rhoi30 = vthi30 / omgci30
-
-    omgci40 = qi4 * b0 / xmi4
-    vthi40 = sqrt(2.0 * t0i4 / xmi4)
-    rhoi40 = vthi40 / omgci40
-
-    omgci50 = qi5 * b0 / xmi5
-    vthi50 = sqrt(2.0 * t0i5 / xmi5)
-    rhoi50 = vthi50 / omgci50
-
-
+    
 !   calculate rotation matrix U
 !   ---------------------------
+
+    allocate ( &
+        btau ( nmodesx, nmodesy ) &
+        sqx ( nmodesx, nmodesy ), )
+
+    allocate ( &
+        uxx( nmodesx, nmodesy ), & 
+        uxy( nmodesx, nmodesy ), &
+        uxz( nmodesx, nmodesy ), &
+        uyx( nmodesx, nmodesy ), & 
+        uyy( nmodesx, nmodesy ), &
+        uyz( nmodesx, nmodesy ), &
+        uzx( nmodesx, nmodesy ), & 
+        uzy( nmodesx, nmodesy ), &
+        uzz( nmodesx, nmodesy ) )
 
     do i = 1, nmodesx
         do j = 1, nmodesy
 
             btau(i,j) = sqrt(bxn(i,j)**2 + byn(i,j)**2)
-            bpol(i,j) = btau(i,j) * bmod(i,j)
-            bzeta(i,j) = bzn(i,j)
 
             sqx = sqrt(1.0 - bxn(i,j)**2)
 
@@ -962,89 +925,19 @@ program aorsa2dMain
         enddo
     enddo
 
-    xwleft = rwleft - rmaxis
-    xwright = rwright - rmaxis
-
-    nnoderho = nmodesx / 2
-    mnodetheta = nmodesy / 2
-
-    if (qavg0 .ne. 0.0) xiota0 = 1./qavg0
-
-    qhat = qavg0
-
-    xlnlam = 20.0
-
-    xkphi0 = nphi / rmaxis
-    if(xkphi0 .eq. 0.0)xkphi0 = 1.0e-05
-
-    vphase = omgrf / xkphi0
-    vthe = sqrt(t0e / xme)
-    vsound = sqrt(teedge / xmi1)
-    wphase = 0.0
-    if(vthe .ne. 0.0)wphase = vphase / vthe
-
-    xkthrho = 0.2
-
-    xkthdx = 1.0
-
-    xk0 = omgrf / clight
-    rnz = xkphi0 / xk0
-
-
-!   allocate arrays for distribution function
-!   ----------------------------------------
-
-    allocate( uPERP(nuper) )
-    allocate( uPARA(nupar) )
-    allocate( vPERP(nuper) )
-    allocate( vPARA(nupar) )
-
-    allocate( uPERP_work(nuper) )
-    allocate( uPARA_work(nupar) )
-
-    allocate( f(nuper, nupar) )
-
-    allocate( dfdupere(nuper, nupar) )
-    allocate( dfdupare(nuper, nupar) )
-
-    allocate( dfduper1(nuper, nupar) )
-    allocate( dfdupar1(nuper, nupar) )
-
-    allocate( dfduper2(nuper, nupar) )
-    allocate( dfdupar2(nuper, nupar) )
-
-    UPERP = 0.0
-    UPARA = 0.0
-    UPERP_work = 0.0
-    UPARA_work = 0.0
-
-    f = 0.0
-
-    dfdupere = 0.0
-    dfdupare = 0.0
-
-    dfduper1 = 0.0
-    dfdupar1 = 0.0
-
-    dfduper2 = 0.0
-    dfdupar2 = 0.0
-
-    if( eNorm_factor_e>0) &
-    vce_mks = sqrt(2d0*1d3*eNorm_factor_e*e/xme)
-    if( eNorm_factor_i1>0) &
-    vc1_mks = sqrt(2d0*1d3*eNorm_factor_i1*e/xmi1)
-    if( eNorm_factor_i2>0) &
-    vc2_mks = sqrt(2d0*1d3*eNorm_factor_i2*e/xmi2)
-    
-    xmax = rwright - rwleft
-    ymax = ytop - ybottom
-
 
 !   define x mesh: x(i), xprime(i), capr(i)
 !   --------------------------------------------
 
     !   xprime: 0 to xmax
     !   x(i) : -xmax / 2.0   to   xmax / 2.0
+
+
+    allocate ( &
+        xPrime ( nmodesx ), &
+        x ( nmodesx ), &
+        capR ( nmodesx ), &
+        xkphi ( nmodesx ) )
 
     dx = xmax / nmodesx
     do i = 1, nmodesx
@@ -1060,18 +953,16 @@ program aorsa2dMain
 
     enddo
 
-    if(rzoom1 .eq. 0.0)rzoom1 = capr(1)
-    if(rzoom2 .eq. 0.0)rzoom2 = capr(nmodesx)
-
-    izoom1 = int((rzoom1 - rwleft - dx / 2.0) / dx) + 1
-    izoom2 = int((rzoom2 - rwleft - dx / 2.0) / dx) + 1
-
 
 !   define y mesh: y(j), yprime(j)
 !---------------------------------
 
     !   yprime: 0 to ymax
     !   y(j) : -ymax / 2.0   to   ymax / 2.0
+
+    allocate ( &
+        yPrime ( nmodesy ), &
+        y ( nmodesy ) )
 
     dy = ymax / nmodesy
     do j = 1, nmodesy
@@ -1084,197 +975,26 @@ program aorsa2dMain
 
     enddo
 
-    if(yzoom1 .eq. 0.0)yzoom1 = ybottom
-    if(yzoom2 .eq. 0.0)yzoom2 = ytop
-
-    jzoom1 = int((yzoom1 - ybottom - dy / 2.0) / dy) + 1
-    jzoom2 = int((yzoom2 - ybottom - dy / 2.0) / dy) + 1
-
-    delta = sqrt(dx**2 + dy**2)
-
-    xant = rant - rmaxis
-    iant=int((rant - rwleft) / dx) + 1
-    if(rant .ne. 0.0)psiant = psi(iant, nmodesy / 2)
-
-    !   note curden is in Amps per meter of toroidal length (2.*pi*rt).
-
-    xjantx = curdnx / dx
-    xjanty = curdny / dx
-    xjantz = curdnz / dx
-    xjant=sqrt(xjantx**2 + xjanty**2 + xjantz**2)
-
-    rlim   = rmaxis + alim
-
-
-!   Antenna current
-!   ---------------
-
-    theta_antr = theta_ant / 180. * pi
-
-    dpsiant = dpsiant0
-    dthetant = dthetant0 / 360. * 2.0 * pi
-    yant_max = antlen / 2.0
-
-    do i = 1, nmodesx
-        do j = 1, nmodesy
-
-            delta_theta = theta0(i,j) - theta_antr
-            gaussantth = exp(-delta_theta**2 / dthetant**2)
-            gausspsi = exp(-(psi(i,j) - psiant)**2 / dpsiant**2)
-
-            shapey = 0.0
-            deltay = y(j) - yant
-
-            if(capr(i) .gt. rmaxis) then
-
-                !   if(i_antenna .eq. 0) antenna current is Gaussian
-                !   ------------------------------------------------
-
-                if (i_antenna .eq. 0) then
-                    shapey = exp(- deltay**2 / yant_max**2)
-                endif
-
-                !   if(i_antenna .eq. 1) antenna current is cos(ky * y)  (DEFAULT)
-                !   ------------------------------------------------ --------------
-
-                if (i_antenna .eq. 1 .and. abs(deltay) .lt. yant_max)then
-                    shapey = cos(xk0 * antlc * deltay)
-                endif
-
-            endif
-
-            xjx(i,j) = 0.0
-            xjy(i,j) = xjanty * shapey  * gausspsi
-            xjz(i,j) = 0.0
-
-       enddo
-    enddo
-
-    
-!   plasma profiles
-!   ----------------
-
-    do i = 1, nmodesx
-        do j = 1, nmodesy
-
-            shapen = 0.0
-            shapen2 = 0.0
-            
-            shapete = 0.0
-            shapeti = 0.0
-            shapeti2 = 0.0
-            
-            if ( rho(i,j) .le. 1.0 ) then
-            
-                shapen  = 1.0 - rho(i,j)**betan
-                shapen2 = 1.0 - rho(i,j)**betan2
-                
-                shapete  = 1.0 - rho(i,j)**betate
-                shapeti  = 1.0 - rho(i,j)**betati
-                shapeti2 = 1.0 - rho(i,j)**betati2
-                
-            endif 
-
-            xnea(i,j) = xnlim  + (xn0 - xnlim)  * shapen**alphan   * flimiter
-            xn2a(i,j) = xn2lim + (xn2 - xn2lim) * shapen2**alphan2 * flimiter
-   
-            xkte(i,j) = telimj + (t0e - telimj) * shapete**alphate * flimiter
-            xkti(i,j) = tilimj + (t0i - tilimj) * shapeti**alphati * flimiter
-            xkti2(i,j) = ti2limj + (t0i2 - ti2limj) * shapeti2**alphati2 * flimiter
-
-        enddo
-    enddo
-
-    xn1a    = (xnea - z2 * xn2a &
-                - z3 * xn3a &
-                - z4 * xn4a &
-                - z5 * xn5a &
-                - z6 * xn6a &
-                - z_slo * xna_slo ) / z1
-
-    where ( xn1a < 1.0e-10 ) xn1a = 1.0e-10
-  
-    eta2 = xn2 / xn0
-    eta3 = xn3 / xn0
-    eta4 = xn4 / xn0
-    eta5 = xn5 / xn0
-    eta6 = xn6 / xn0
-    eta_slo = xnslo / xn0
-    
-    eta1 = 1.0 / z1 * (1.0 - z2 * eta2 - z3 * eta3 &
-               - z4 * eta4 - z5 * eta5 - z6 * eta6 &
-                                       - z_slo * eta_slo)
-    xn1 = eta1 * xn0
-    
-    valfven = sqrt(b0**2/(xmu0 * xn1 * xmi1))
-    kalfven = omgrf / valfven
-
-    kperprhoi1 = 0.0
-    kperprhoi2 = 0.0
-
-    if (eta1 .ne. 0.0) kperprhoi1 = kalfven * rhoi10
-    if (eta2 .ne. 0.0) kperprhoi2 = kalfven * rhoi20
-
-
-!   Calculate the differential volume on half mesh:
-!   ----------------------------------------------
-
-    dvol  = 0.0
-    darea = 1.0e-05
-
-    do i = 1, nmodesx
-        do j = 1, nmodesy
-
-            n = int(rho(i,j) / drho) + 1
-
-            if(n .le. nnoderho)then
-                dvol(n)  =  dvol(n) + dx * dy * 2.0 * pi * capr(i)
-                darea(n) = darea(n) + dx * dy * capr(i) / rmaxis
-            endif
-
-        enddo
-    enddo
-
 
 !   Calculate the integrated volume on even mesh:
 !   --------------------------------------------
 
-    volume = 0.0
-    volume(1) = 0.0
 
-    do n = 1, nnoderho - 1
-        volume(n+1) = volume(n) + dvol(n)
+    allocate ( &
+        xkxsav ( nmodesx + 1 ), &
+        xkysav ( nmodesy ) )
+
+    do m = -nmodesx/2, nmodesx/2
+        xkxsav(m) = 2.0 * pi * m / xmax
     enddo
 
-    do n = -nmodesx /2, nmodesx /2
-        xkxsav(n) = 2.0 * pi * n / xmax
-    enddo
-
-    do m = -nmodesy /2 + 1, nmodesy /2
-        xkysav(m) = 2.0 * pi * m / ymax
+    do n = -nmodesy/2 + 1, nmodesy/2
+        xkysav(n) = 2.0 * pi * n / ymax
     enddo
 
     kperp_max_actual = sqrt(xkxsav(nmodesx /2)**2 + xkysav(nmodesy /2)**2)
     kperp_max = kperp_max_actual * 2.0
     xk_cutoff = kperp_max_actual * xkperp_cutoff
-
-
-!   precompute xx(n,i), yy(m,j)
-!   ---------------------------
-
-    do i = 1, nmodesx
-        do n = -nmodesx /2, nmodesx /2
-            xx(n, i) = exp(zi * xkxsav(n) * xprime(i))
-            xx_inv(n,i) = 1.0/xx(n,i)
-        enddo
-    enddo
-
-    do j = 1, nmodesy
-        do m = -nmodesy /2 + 1, nmodesy /2
-            yy(m, j) = exp(zi * xkysav(m) * yprime(j))
-            yy_inv(m,j) = 1.0/yy(m,j)
-        enddo
-    enddo
 
 
 !   Take numerical derivatives
@@ -1377,95 +1097,14 @@ program aorsa2dMain
 !   Load x, y and z equations for spatial point (i,j) and mode number (n,m)
 !   ------------------------------------------------------------------------
 
-    nnb = nprow*npcol*mmb
-
-    nia_loop: &
-    do niastart=1,desc_amat(M_),nnb
-
-        niaend = min(desc_amat(M_), niastart+nnb-1)
-        niasize = niaend-niastart+1
-        if (niasize.le.0) exit
-
-        !   determine what rows need to be computed for
-        !   (irow,icol) processor
-        !   -------------------------------------------
-
-        nia = niastart
-        do icol=0,(npcol-1)
-            do irow=0,(nprow-1)
-                niabegin_all(irow,icol) = nia
-                isize_all(irow,icol) = max(0,min(mmb, niasize))
-
-                nia = nia + isize_all(irow,icol)
-                niasize = niasize - isize_all(irow,icol)
-            enddo
-        enddo
-
-        ni_loop: &
-        do ni=1,isize_all(myrow,mycol),3
-
-            !   construct the entire row of original matrix
-            !   -------------------------------------------
-
-            nia = (ni-1) + niabegin_all(myrow,mycol)
-            ia = new_to_org( nia )
-
-            ja_loop: &
-            do ja=1,org_ncol,3
-
-
-                !   (ia,ja) are all local indices in a single block
-                !
-                !   note each ia and ja loop has increment by 3
-                !   to match the original code
-                !   -----------------------------------------------
-                
-                !   obtain (i,j,m,n) from (ia,ja)
-                !   ------------------------------
-
-                i = itable(ia)
-                j = jtable(ia)
-                m = mtable(ja)
-                n = ntable(ja)
-
-
-                isok = (1.le.i).and.(i.le.nmodesx)  .and. &
-                    (1.le.j).and.(j.le.nmodesy)  .and. &
-                    (-nmodesx /2.le.n).and.(n.le.nmodesx /2) .and. &
-                    (-nmodesy /2 + 1.le.m).and.(m.le.nmodesy /2)
-
-                !   double check
-                !   ------------
-
-                irnc = (j-1) * 3 + (i-1) * nmodesy * 3 + 1
-                icnc = (n - (-nmodesx /2)) * 3 * nmodesy + (m - (-nmodesy /2) + 1) * 3 + 1
-
-                isok = (irnc.eq.ia).and.(icnc.eq.ja)
-            
-                !   local matrix entry is at
-                !   ipos = lrindx + (lcindx-1)*desc_amat(LLD_)
-                !   ------------------------------------------
-
-                lrindx = (ia-iastart) + lrindx_base
-                lcindx = (ja-jastart) + lcindx_base
-
-                if (idebug.ge.2) then
-
-                    call infog2l(ia,ja, desc_amat,nprow,npcol, &
-                        myrow,mycol, lrindx1,lcindx1, rsrc,csrc)
-
-                    isok = (lrindx.eq.lrindx1).and.(lcindx.eq.lcindx1) &
-                        .and. (rsrc.eq.myrow).and.(csrc.eq.mycol)
-
-                endif
-
-                !   copy variable to be compatible with previous code
-                !   -------------------------------------------------
-
-                irnc1 = irnc
-                icnc1 = icnc
-                rsrc1 = myrow
-                csrc1 = mycol
+    i_loop: &
+    do i=1,nmodesx
+        j_loop: &
+        do j=1,nmodesy
+            m_loop: &
+            do m=1,nmodesx
+                n_loop: &
+                do n=1,nmodesy
 
                 cexpkxky = xx(n, i) * yy(m, j)
 
@@ -1485,11 +1124,11 @@ program aorsa2dMain
                 hot_plasma: &
                 if (isigma .eq. 1)then
 
-                    call sigmad_cql3d(i, j, n, m, rho(i,j), rho_a, &
+                    call sigma_maxwellian(i, j, n, m, &
                         gradprlb(i,j), bmod(i,j), bmod_mid(i,j), &
-                        xme, qe, xnea(i,j), dlg_xnuomg(i,j), &
+                        xme, qe, xnea(i,j), xnuomg, &
                         xkte(i,j), omgce(i,j), omgpe2(i,j), &
-                        -lmax, lmax, nzfun, ibessel, &
+                        -lmax, lmax, nzfun, &
                         xkxsav(n), xkysav(m), nphi, capr(i), &
                         bxn(i,j), byn(i,j), bzn(i,j), &
                         uxx(i,j), uxy(i,j), uxz(i,j), &
@@ -1498,19 +1137,14 @@ program aorsa2dMain
                         sigexx, sigexy, sigexz, &
                         sigeyx, sigeyy, sigeyz, &
                         sigezx, sigezy, sigezz, &
-                        delta0, 0, nupar, nuper, n_psi, &
-                        n_psi_dim, dfdupere, dfdupare, &
-                        UminPara, UmaxPara, UPERP, UPARA, &
-                        vce_mks, dfe_cql_uprp, dfe_cql_uprl, lmax + 2, &
-                        nkperp, zi, eps0, v0i, omgrf, xk0, kperp_max, &
-                        i_sav, j_sav, upshift, damping, xk_cutoff,y(j), &
-                        eNorm_factor_e)
+                        delta0, 0, omgrf, xk0, &
+                        upshift, damping, xk_cutoff )
 
-                    call sigmad_cql3d(i, j, n, m, rho(i,j), rho_a, &
+                    call sigma_maxwellian(i, j, n, m,  &
                         gradprlb(i,j), bmod(i,j), bmod_mid(i,j), &
-                        xmi1, qi1, xn1a(i,j), dlg_xnuomg(i,j), &
+                        xmi1, qi1, xn1a(i,j), xnuomg, &
                         xkti(i,j), omgci1(i,j), omgp12(i,j), &
-                        -lmax, lmax, nzfun, ibessel, &
+                        -lmax, lmax, nzfun, &
                         xkxsav(n), xkysav(m), nphi, capr(i), &
                         bxn(i,j), byn(i,j), bzn(i,j), &
                         uxx(i,j), uxy(i,j), uxz(i,j), &
@@ -1519,20 +1153,14 @@ program aorsa2dMain
                         sig1xx, sig1xy, sig1xz, &
                         sig1yx, sig1yy, sig1yz, &
                         sig1zx, sig1zy, sig1zz, &
-                        delta0, ndisti1, nupar, nuper, n_psi, &
-                        n_psi_dim, dfduper1, dfdupar1, &
-                        UminPara, UmaxPara, UPERP, UPARA, &
-                        vc1_mks, df1_cql_uprp, df1_cql_uprl, lmax + 2, &
-                        nkperp, zi, eps0, v0i, omgrf, xk0, kperp_max, &
-                        i_sav1,j_sav1,upshift,damping,xk_cutoff,y(j), &
-                        eNorm_factor_i1)
+                        delta0, 0, omgrf, xk0, &
+                        upshift,damping,xk_cutoff )
 
-                    if(eta2 .ne. 0.0) &
-                    call sigmad_cql3d(i, j, n, m, rho(i,j), rho_a, &
+                    call sigma_maxwellian(i, j, n, m, &
                         gradprlb(i,j), bmod(i,j), bmod_mid(i,j), &
                         xmi2, qi2, xn2a(i,j), dlg_xnuomg(i,j), &
                         xkti2(i,j), omgci2(i,j), omgp22(i,j), &
-                        -lmax, lmax, nzfun, ibessel, &
+                        -lmax, lmax, nzfun, &
                         xkxsav(n), xkysav(m), nphi, capr(i), &
                         bxn(i,j), byn(i,j), bzn(i,j), &
                         uxx(i,j), uxy(i,j), uxz(i,j), &
@@ -1541,13 +1169,8 @@ program aorsa2dMain
                         sig2xx, sig2xy, sig2xz, &
                         sig2yx, sig2yy, sig2yz, &
                         sig2zx, sig2zy, sig2zz, &
-                        delta0, ndisti2, nupar, nuper, n_psi, &
-                        n_psi_dim, dfduper2, dfdupar2, &
-                        UminPara, UmaxPara, UPERP, UPARA, &
-                        vc2_mks, df2_cql_uprp, df2_cql_uprl, lmax + 2, &
-                        nkperp, zi, eps0, v0i, omgrf, xk0, kperp_max, &
-                        i_sav2,j_sav2,upshift,damping,xk_cutoff,y(j), &
-                        eNorm_factor_i2 )
+                        delta0, 0, omgrf, xk0, &
+                        upshift,damping,xk_cutoff )
 
                 endif hot_plasma
 
@@ -1602,27 +1225,17 @@ program aorsa2dMain
 
                 endif cold_plasma
 
-                sigxx = sigexx + sig1xx + sig2xx + sig3xx &
-                            + sig4xx + sig5xx + sig6xx + sigsloxx
-                sigxy = sigexy + sig1xy + sig2xy + sig3xy &
-                            + sig4xy + sig5xy + sig6xy + sigsloxy
-                sigxz = sigexz + sig1xz + sig2xz + sig3xz &
-                            + sig4xz + sig5xz + sig6xz + sigsloxz
+                sigxx = sigexx + sig1xx + sig2xx 
+                sigxy = sigexy + sig1xy + sig2xy 
+                sigxz = sigexz + sig1xz + sig2xz 
 
-                sigyx = sigeyx + sig1yx + sig2yx + sig3yx &
-                               + sig4yx + sig5yx + sig6yx + sigsloyx
-                sigyy = sigeyy + sig1yy + sig2yy + sig3yy &
-                               + sig4yy + sig5yy + sig6yy + sigsloyy
-                sigyz = sigeyz + sig1yz + sig2yz + sig3yz &
-                               + sig4yz + sig5yz + sig6yz + sigsloyz
+                sigyx = sigeyx + sig1yx + sig2yx 
+                sigyy = sigeyy + sig1yy + sig2yy 
+                sigyz = sigeyz + sig1yz + sig2yz 
 
-                sigzx = sigezx + sig1zx + sig2zx + sig3zx &
-                               + sig4zx + sig5zx + sig6zx + sigslozx
-                sigzy = sigezy + sig1zy + sig2zy + sig3zy &
-                               + sig4zy + sig5zy + sig6zy + sigslozy
-                sigzz = sigezz + sig1zz + sig2zz + sig3zz &
-                               + sig4zz + sig5zz + sig6zz + sigslozz
-
+                sigzx = sigezx + sig1zx + sig2zx 
+                sigzy = sigezy + sig1zy + sig2zy 
+                sigzz = sigezz + sig1zz + sig2zz 
 
                 xkxx = 1.0 + zi / (eps0 * omgrf) * sigxx
                 xkxy =       zi / (eps0 * omgrf) * sigxy
@@ -1635,7 +1248,6 @@ program aorsa2dMain
                 xkzx =       zi / (eps0 * omgrf) * sigzx
                 xkzy =       zi / (eps0 * omgrf) * sigzy
                 xkzz = 1.0 + zi / (eps0 * omgrf) * sigzz
-
 
                 rnx = xkxsav(n) / xk0
                 rny = xkysav(m) / xk0
@@ -1759,269 +1371,78 @@ program aorsa2dMain
                 fqk = dzy * cexpkxky
                 fsk = dzz * cexpkxky
 
-                !   not sure what this is for yet ???
-                if(i .eq. nmodesx / 2 .and. j .eq. nmodesy / 2)then
+                enddo n_loop
+            enddo m_loop 
+        enddo j_loop
+    enddo i_loop 
 
-                    fdksav(n, m) = fdk
-                    feksav(n, m) = fek
-                    ffksav(n, m) = ffk
 
-                    fgksav(n, m) = fgk
-                    faksav(n, m) = fak
-                    fpksav(n, m) = fpk
+!   Antenna current
+!   ---------------
 
-                    frksav(n, m) = frk
-                    fqksav(n, m) = fqk
-                    fsksav(n, m) = fsk
+    xant    = rant - rmaxis
+    iant    = int((rant - rwleft) / dx) + 1
 
-                endif
+    !   note curden is in Amps per meter of toroidal length (2.*pi*rt).
 
-                !   copy the value into local array
-                !   -------------------------------
+    xjantx = curdnx / dx
+    xjanty = curdny / dx
+    xjantz = curdnz / dx
+    xjant=sqrt(xjantx**2 + xjanty**2 + xjantz**2)
 
-                Btmp(ni,  ja) = fdk
-                Btmp(ni+1,ja) = fgk
-                Btmp(ni+2,ja) = frk
+    theta_antr = theta_ant / 180. * pi
 
-                Btmp(ni,  ja+1) = fek
-                Btmp(ni+1,ja+1) = fak
-                Btmp(ni+2,ja+1) = fqk
-
-                Btmp(ni,  ja+2) = ffk
-                Btmp(ni+1,ja+2) = fpk
-                Btmp(ni+2,ja+2) = fsk
-
-                if (ja.eq.1) then
-
-                    brhs(ni,1)   = xb(i,j)
-                    brhs(ni+1,1) = xc(i,j)
-                    brhs(ni+2,1) = xd(i,j)
-
-                endif
-
-            enddo ja_loop 
-        enddo ni_loop
-
-
-        !   perform transformation to real space
-        !   -------------------------------------
-
-        do ni=1,isize_all(myrow,mycol)
-
-            row(1:org_ncol) = Btmp(ni,1:org_ncol)
-
-            call convert2d_row(row, rowk, &
-                xmax, ymax, nmodesx, nmodesy, &
-                nxmx, nymx, nkdim1, nkdim2, mkdim1, mkdim2, &
-                -nmodesx /2, nmodesx /2, -nmodesy /2 + 1, nmodesy /2, &
-                xx, yy, dx, dy, ndfmax, &
-                nmodesx, nmodesy,use_fft)
-
-            !   select only subset of variables in plasma
-            !   -----------------------------------------
-
-            do nja=1,ncol
-
-                ja = new_to_org(nja)
-                Btmp(ni,nja) = rowk(ja)
-
-            enddo
-
-        enddo
-
-        !   ready to copy into p_amat
-        !   -------------------------
-
-        do icol=0,(npcol-1)
-            do irow=0,(nprow-1)
-
-                mm = isize_all(irow,icol)
-                if (mm.le.0) cycle
-
-                nn = ncol
-                nia = niabegin_all(irow,icol)
-                nja = 1
-                descBtmp(:) = descBtmp_all(:,irow,icol)
-                call pzgecopy( mm,nn, &
-                    Btmp, 1,1, descBtmp, &
-                    p_amat, nia,nja,desc_amat )
-
-                descbrhs(:) = descbrhs_all(:,irow,icol)
-                call pzgecopy( mm,1, &
-                    brhs, 1,1, descbrhs, &
-                    p_brhs, nia,1, desc_brhs )
-
-            enddo
-        enddo
-
-    enddo nia_loop 
-
-
-
-
-    do n = -nmodesx /2, nmodesx /2
-        do m = -nmodesy /2 + 1, nmodesy /2
-
-            fdksav2d(n - (-nmodesx /2 + 1), m - (-nmodesy /2 + 1) + 1) = fdksav(n,m)
-            feksav2d(n - (-nmodesx /2 + 1), m - (-nmodesy /2 + 1) + 1) = feksav(n,m)
-            ffksav2d(n - (-nmodesx /2 + 1), m - (-nmodesy /2 + 1) + 1) = ffksav(n,m)
-
-            fgksav2d(n - (-nmodesx /2 + 1), m - (-nmodesy /2 + 1) + 1) = fgksav(n,m)
-            faksav2d(n - (-nmodesx /2 + 1), m - (-nmodesy /2 + 1) + 1) = faksav(n,m)
-            fpksav2d(n - (-nmodesx /2 + 1), m - (-nmodesy /2 + 1) + 1) = fpksav(n,m)
-
-            frksav2d(n - (-nmodesx /2 + 1), m - (-nmodesy /2 + 1) + 1) = frksav(n,m)
-            fqksav2d(n - (-nmodesx /2 + 1), m - (-nmodesy /2 + 1) + 1) = fqksav(n,m)
-            fsksav2d(n - (-nmodesx /2 + 1), m - (-nmodesy /2 + 1) + 1) = fsksav(n,m)
-
-        enddo
-    enddo
-
-    
-    do n = -nmodesx /2, nmodesx /2
-        do m = -nmodesy /2 + 1, nmodesy /2
-
-            fdksav(n,m) = fdksav2d(n - (-nmodesx /2 + 1), m - (-nmodesy /2 + 1) + 1)
-            feksav(n,m) = feksav2d(n - (-nmodesx /2 + 1), m - (-nmodesy /2 + 1) + 1)
-            ffksav(n,m) = ffksav2d(n - (-nmodesx /2 + 1), m - (-nmodesy /2 + 1) + 1)
-
-            fgksav(n,m) = fgksav2d(n - (-nmodesx /2 + 1), m - (-nmodesy /2 + 1) + 1)
-            faksav(n,m) = faksav2d(n - (-nmodesx /2 + 1), m - (-nmodesy /2 + 1) + 1)
-            fpksav(n,m) = fpksav2d(n - (-nmodesx /2 + 1), m - (-nmodesy /2 + 1) + 1)
-
-            frksav(n,m) = frksav2d(n - (-nmodesx /2 + 1), m - (-nmodesy /2 + 1) + 1)
-            fqksav(n,m) = fqksav2d(n - (-nmodesx /2 + 1), m - (-nmodesy /2 + 1) + 1)
-            fsksav(n,m) = fsksav2d(n - (-nmodesx /2 + 1), m - (-nmodesy /2 + 1) + 1)
-
-       enddo
-    enddo
-
-
-    !   scale each row by its norm
-    !   --------------------------
-
-    global_col = 1
-    incX = desc_amat(M_)
-
-    do global_row = 1, nrow
-
-        call pdznrm2( ncol, norm2, p_amat, global_row, global_col, &
-            desc_amat, incX )
-
-        alpha = 1.0
-        if (norm2 .ne. 0.0) alpha = 1.0/norm2
-
-        call pzscal ( ncol, alpha, p_amat, global_row, global_col, &
-            desc_amat, incX )
-
-        call pzscal ( 1, alpha, p_brhs, global_row, 1, &
-            desc_brhs, desc_brhs(M_))
-
-    enddo
-
-
-    !   Call scalapack solver
-    !   ---------------------
-
-    call pzgetrf( nrow,ncol, p_amat, 1, 1, desc_amat, p_ipiv, info )
-
-    if (info.ne.0) then
-
-        write(6,*) 'pzgetrf returns info = ', info
-        write(15,*) 'pzgetrf returns info = ', info
-        stop '** error ** '
-
-    endif
-
-    call pzgetrs( 'notrans', nrow, 1, p_amat, 1, 1, desc_amat, &
-        p_ipiv, p_brhs, 1,1,desc_brhs, info )
-
-
-    if (info.ne.0) then
-
-        write(6,*) 'pzgetrs returns info = ', info
-        write(15,*) 'pzgetrs returns info = ', info
-        stop '** error ** '
-
-    endif 
-
-    deallocate(p_amat)
-    deallocate(Btmp)
-
-    !   Operations for complex matrix factor and solve
-    !   ----------------------------------------------
-
-    ops = 8. / 3. * (real(nrow))**3 + 7. * (real(nrow))**2
-
-    gflops  = ops / time / 1.0e+09
-    gflopsp = gflops / nproc
-    tmin = time / 60.
-
-    !   broadcast solution
-    !   ------------------
-
-    brhs2(:) = 0.0
-    brhsk(:) = 0.0
-    brhs_tmp(:) = 0.0
-
-
-    icnc = 1
-    do irnc=1,nrow
-
-        call infog2l( irnc, icnc, desc_brhs, nprow,npcol, &
-                myrow,mycol, lrindx, lcindx, rsrc,csrc )
-        ismine = (rsrc .eq. myrow) .and. (csrc .eq. mycol)
-
-        if (ismine) then
-
-            ipos = lrindx + (lcindx-1)*desc_amat(LLD_)
-            brhs_tmp(irnc) =  p_brhs(ipos)
-
-        endif
-
-    enddo
-
-    call zgsum2d(icontxt, 'All', ' ', nrow, 1, brhs_tmp, nrow, -1, -1)
-
-
-    !   expand solution to original size
-    !   --------------------------------
-
-    do nia=1,nrow
-
-        ia = new_to_org(nia)
-        brhs2(ia) = brhs_tmp(nia)
-
-    enddo
-
-    !   adjust problem size
-    !   -------------------
-
-    nrow = org_nrow
-    ncol = nrow
+    dpsiant = dpsiant0
+    dthetant = dthetant0 / 360. * 2.0 * pi
+    yant_max = antlen / 2.0
 
     do i = 1, nmodesx
-       do j = 1, nmodesy
+        do j = 1, nmodesy
 
-            irnc = (i - 1) * 3 * nmodesy + (j - 1) * 3 + 1
-            ealpha(i, j) = brhs2(irnc)
+            delta_theta = theta0(i,j) - theta_antr
+            gaussantth = exp(-delta_theta**2 / dthetant**2)
+            gausspsi = exp(-(psi(i,j) - psiant)**2 / dpsiant**2)
 
-            irnc = (i - 1) * 3 * nmodesy + (j - 1) * 3 + 2
-            ebeta(i, j) = brhs2(irnc)
+            shapey = 0.0
+            deltay = y(j) - yant
 
-            irnc = (i - 1) * 3 * nmodesy + (j - 1) * 3 + 3
-            eb(i, j) = brhs2(irnc)
+            if(capr(i) .gt. rmaxis) then
+
+                !   if(i_antenna .eq. 1) antenna current is cos(ky * y)  (DEFAULT)
+                !   ------------------------------------------------ --------------
+
+                if (i_antenna .eq. 1 .and. abs(deltay) .lt. yant_max)then
+                    shapey = cos(xk0 * antlc * deltay)
+                endif
+
+            endif
+
+            xjx(i,j) = 0.0
+            xjy(i,j) = xjanty * shapey  * gausspsi
+            xjz(i,j) = 0.0
 
        enddo
     enddo
 
-!     write out solution in real space
-!     --------------------------------
+
+!   precompute xx(n,i), yy(m,j)
+!   ---------------------------
+
+    do i = 1, nmodesx
+        do n = -nmodesx /2, nmodesx /2
+            xx(n, i) = exp(zi * xkxsav(n) * xprime(i))
+            xx_inv(n,i) = 1.0/xx(n,i)
+        enddo
+    enddo
+
+    do j = 1, nmodesy
+        do m = -nmodesy /2 + 1, nmodesy /2
+            yy(m, j) = exp(zi * xkysav(m) * yprime(j))
+            yy_inv(m,j) = 1.0/yy(m,j)
+        enddo
+    enddo
 
 
-      t1 = second1(dummy)
-
-!     ------------------------------------------
 !     Fourier transform the Stix electric fields:
 !     ------------------------------------------
 
@@ -2079,338 +1500,6 @@ program aorsa2dMain
          end do
       end do
 
-!     deallocate arrays
-!     -----------------
-
-      if(ndisti1   .eq. 0 .and. &
-         ndisti2   .eq. 0 .and. &
-         ndisti3   .eq. 0 .and. &
-         ndisti4   .eq. 0 .and. &
-         ndisti5   .eq. 0 .and. &
-         ndisti6   .eq. 0 .and. &
-         ndiste    .eq. 0)   then
-
-         deallocate( UPERP )
-         deallocate( UPARA )
-         deallocate ( vPerp, vPara )
-         deallocate( UPERP_work )
-         deallocate( UPARA_work )
-
-         deallocate( f )
-
-       deallocate( dfdupere )
-         deallocate( dfdupare )
-
-         deallocate( dfduper1 )
-         deallocate( dfdupar1 )
-
-       deallocate( dfduper2 )
-         deallocate( dfdupar2 )
-
-         deallocate( dfduper3 )
-         deallocate( dfdupar3 )
-
-       deallocate( dfduper4 )
-         deallocate( dfdupar4 )
-
-         deallocate( dfduper5 )
-         deallocate( dfdupar5 )
-
-       deallocate( dfduper6 )
-         deallocate( dfdupar6 )
-
-         deallocate( bqlavg_e )
-         deallocate( cqlavg_e )
-         deallocate( eqlavg_e )
-         deallocate( fqlavg_e )
-
-         deallocate( bqlavg_i1 )
-         deallocate( cqlavg_i1 )
-         deallocate( eqlavg_i1 )
-         deallocate( fqlavg_i1 )
-
-         deallocate ( bqlavg_work, cqlavg_work, eqlavg_work, fqlavg_work )
-
-         if(eta2 .ne. 0.0) then
-            deallocate( bqlavg_i2 )
-            deallocate( cqlavg_i2 )
-            deallocate( eqlavg_i2 )
-            deallocate( fqlavg_i2 )
-       endif
-
-         if(eta3 .ne. 0.0) then
-          deallocate( bqlavg_i3 )
-            deallocate( cqlavg_i3 )
-            deallocate( eqlavg_i3 )
-            deallocate( fqlavg_i3 )
-       endif
-
-       if(eta4 .ne. 0.0) then
-            deallocate( bqlavg_i4 )
-            deallocate( cqlavg_i4 )
-            deallocate( eqlavg_i4 )
-            deallocate( fqlavg_i4 )
-       endif
-
-       if(eta5 .ne. 0.0) then
-          deallocate( bqlavg_i5 )
-            deallocate( cqlavg_i5 )
-            deallocate( eqlavg_i5 )
-            deallocate( fqlavg_i5 )
-       endif
-
-       if(eta6 .ne. 0.0) then
-          deallocate( bqlavg_i6 )
-            deallocate( cqlavg_i6 )
-            deallocate( eqlavg_i6 )
-            deallocate( fqlavg_i6 )
-       endif
-
-      endif
-
-      if(ndisti1   .ne. 0 .or. &
-         ndisti2   .ne. 0 .or. &
-         ndisti3   .ne. 0 .or. &
-         ndisti4   .ne. 0 .or. &
-         ndisti5   .ne. 0 .or. &
-         ndisti6   .ne. 0 .or. &
-         ndiste    .ne. 0)   then
-
-         deallocate( UPERP )
-         deallocate( UPARA )
-         deallocate( UPERP_work )
-         deallocate( UPARA_work )
-
-         deallocate( f )
-
-       deallocate( dfdupere )
-         deallocate( dfdupare )
-
-         deallocate( dfduper1 )
-         deallocate( dfdupar1 )
-
-       deallocate( dfduper2 )
-         deallocate( dfdupar2 )
-
-         deallocate( dfduper3 )
-         deallocate( dfdupar3 )
-
-       deallocate( dfduper4 )
-         deallocate( dfdupar4 )
-
-         deallocate( dfduper5 )
-         deallocate( dfdupar5 )
-
-       deallocate( dfduper6 )
-         deallocate( dfdupar6 )
-
-         deallocate( dfe_cql_uprp )
-         deallocate( dfe_cql_uprl )
-
-         deallocate( df1_cql_uprp )
-         deallocate( df1_cql_uprl )
-
-         deallocate( df2_cql_uprp )
-         deallocate( df2_cql_uprl )
-
-         deallocate( df3_cql_uprp )
-         deallocate( df3_cql_uprl )
-
-         deallocate( df4_cql_uprp )
-         deallocate( df4_cql_uprl )
-
-         deallocate( df5_cql_uprp )
-         deallocate( df5_cql_uprl )
-
-         deallocate( df6_cql_uprp )
-         deallocate( df6_cql_uprl )
-
-         deallocate( bqlavg_e )
-         deallocate( cqlavg_e )
-         deallocate( eqlavg_e )
-         deallocate( fqlavg_e )
-
-         deallocate( bqlavg_i1 )
-         deallocate( cqlavg_i1 )
-         deallocate( eqlavg_i1 )
-         deallocate( fqlavg_i1 )
-
-         if(eta2 .ne. 0.0) then
-            deallocate( bqlavg_i2 )
-            deallocate( cqlavg_i2 )
-            deallocate( eqlavg_i2 )
-            deallocate( fqlavg_i2 )
-       endif
-
-         if(eta3 .ne. 0.0) then
-          deallocate( bqlavg_i3 )
-            deallocate( cqlavg_i3 )
-            deallocate( eqlavg_i3 )
-            deallocate( fqlavg_i3 )
-       endif
-
-       if(eta4 .ne. 0.0) then
-            deallocate( bqlavg_i4 )
-            deallocate( cqlavg_i4 )
-            deallocate( eqlavg_i4 )
-            deallocate( fqlavg_i4 )
-       endif
-
-       if(eta5 .ne. 0.0) then
-          deallocate( bqlavg_i5 )
-            deallocate( cqlavg_i5 )
-            deallocate( eqlavg_i5 )
-            deallocate( fqlavg_i5 )
-       endif
-
-       if(eta6 .ne. 0.0) then
-          deallocate( bqlavg_i6 )
-            deallocate( cqlavg_i6 )
-            deallocate( eqlavg_i6 )
-            deallocate( fqlavg_i6 )
-       endif
-
-      endif
-
-      deallocate( new_to_org )
-
-      deallocate(niabegin_all )
-      deallocate( isize_all )
-
-!     deallocate(Btmp)
-      deallocate(brhs)
-
-      deallocate( descBtmp_all )
-      deallocate( descbrhs_all )
-
-      deallocate( p_brhs )
-      deallocate( p_ipiv )
-
-      deallocate( itable )
-      deallocate( jtable )
-      deallocate( mtable )
-      deallocate( ntable )
-
- !     endif
-
-!    -----------------------
-!     End of loop over nphi's
-!     ------------------------
-
-      deallocate (xjpxe_lab, xjpye_lab, xjpze_lab)
-      deallocate ( ntilda_e, ntilda_e_real )
-
-!     -------------------------
-!     stop parallel environment
-!     -------------------------
-
-      call blacs_barrier(icontxt, 'All')
-
-      call blacs_gridexit( icontxt )
-      call blacs_exit(0)
-
-
-      end
-
-!
-!*************************************************************************
-!
-
-        subroutine pzgecopy( m,n, A,ia,ja,descA, B,ib,jb,descB)
-        integer m,n,  ia,ja,descA(*), ib,jb,descB(*)
-        complex A(*), B(*)
-
-        complex alpha,beta
-
-        alpha = 1.0
-        beta = 0.0
-!       ----------------------------------------------------
-!       pzgeadd is new capability found in PBLAS V2 or later
-!       otherwise, it can be implmented less efficiently by
-!       repeated calls to pzcopy
-!       ----------------------------------------------------
-        call pzgeadd( 'N', m,n, alpha, A,ia,ja,descA, &
-              beta, B,ib,jb,descB )
-        return
-        end
-
-!
-!***************************************************************************
-!
-
-
-      subroutine fluxavg(f, favg, rho, nxmx, nymx, nrhodim, &
-         nmodesx, nmodesy, nnoderho, drho, dx, dy, capr, rmaxis, vol, fvol)
-
-      implicit none
-
-      integer nxmx, nymx, nrhodim, nmodesx, nmodesy, nnoderho
-      integer n, i, j
-
-      real f(nxmx, nymx), favg(nrhodim), rho(nxmx, nymx), rmaxis, &
-         drho, dx, dy, fvol(nrhodim), vol(nrhodim), capr(nxmx), pi
-
-      fvol = 0.0
-      vol = 0.0
-      favg = 0.0
-
-      do i = 1, nmodesx
-         do j = 1, nmodesy
-            n = int(rho(i,j) / drho) + 1
-            if(n .le. nnoderho)then
-               fvol(n) = fvol(n) + dx * dy * 2*pi * capr(i) * f(i,j)
-               vol(n) =  vol(n)  + dx * dy * 2*pi * capr(i)
-            endif
-         end do
-      end do
-
-
-      do n = 1, nnoderho
-         favg(n) = 0.0
-         if(vol(n) > 0.0)favg(n) = fvol(n) / vol(n)
-      end do
-
-      do n = 2, nnoderho - 1
-         if(favg(n) .eq. 0.0)then
-            favg(n) = (favg(n-1) + favg(n+1)) / 2.0
-         endif
-      end do
-
-      if (favg(1) .eq. 0.0) favg(1) = favg(2)
-      if (favg(nnoderho) .eq. 0.0) favg(nnoderho) = favg(nnoderho - 1)
-
-
-  100 format (1i10, 1p8e12.4)
-  102 format (2i10)
-      return
-      end
-
-
-!
-!***************************************************************************
-!
-
-      subroutine rhograte(x, f, nx1, nx2, ans, nxmx, dvol)
-
-      implicit none
-
-      integer n, nx1, nx2, nxmx
-
-      real f(nxmx), x(nxmx), ans(nxmx), dvol(nxmx)
-
-      ans(nx1) = 0.0
-
-      do n = nx1, nx2 - 1
-
-       ans(n+1) = ans(n) + f(n) * dvol(n)
-
-      end do
-
-
-  100 format (1i10, 1p8e12.4)
-  102 format (2i10)
-      return
-      end
-
+end program aorsa2dMain
 
 

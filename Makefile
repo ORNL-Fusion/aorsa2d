@@ -17,8 +17,8 @@ OBJ_CQL3D := $(patsubst src/cql3d/%,obj/%.o,$(basename $(wildcard src/cql3d/*.*)
 BLACS = 
 BLAS = 
 SCALAPACK = 
-NETCDF_DIR = 
-NETCDF = 
+NETCDF_DIR = /home/dg6/code/netcdf/netcdf_gnu64
+NETCDF = -I ${NETCDF_DIR}/include -L ${NETCDF_DIR}/lib -lnetcdf 
 
 LIBS = $(SCALAPACK) $(BLACS) $(BLAS) ${NETCDF}
 INC_DIR = 
@@ -27,6 +27,7 @@ BOUNDS = -fbounds-check
 WARN = -Wall
 DEBUG = -pg -g -fbacktrace -fsignaling-nans #-ffpe-trap=zero,invalid#,overflow#,underflow
 F90 = gfortran
+LINK = gfortran
 MOD_LOC = -Jmod
 F90FLAGS = ${WARN} ${DEBUG} ${BOUNDS} ${MOD_LOC}
 LD_FLAGS =
@@ -34,7 +35,7 @@ LD_FLAGS =
 .PHONY: depend clean
 
 $(EXEC): $(OBJ_FILES) $(OBJ_FFT) $(OBJ_CQL3D_SETUP) $(OBJ_DLG) 
-	$(LOAD) -o $(EXEC) $(OBJ_FILES) $(OBJ_FFT) $(OBJ_CQL3D) $(OBJ_DLG) $(LIBS) ${LINK_FLAGS}
+	$(LINK) -o $(EXEC) $(OBJ_FILES) $(OBJ_FFT) $(OBJ_CQL3D) $(OBJ_DLG) $(LIBS) ${LINK_FLAGS}
 			    		    		     		   			     			     				
 # FFT files
 
@@ -54,23 +55,27 @@ ${OBJ_DIR}/%.o: ${CQL_DIR}/%.*
 # DLG files
 		
 ${OBJ_DIR}/%.o: ${DLG_DIR}/%.*
-	${F90} -c ${F90FLAGS} $< -o $@ ${INC_DIR} ${CPP_DIRECTIVES}
+	${F90} -c ${F90FLAGS} $< -o $@ ${NETCDF} ${INC_DIR} ${CPP_DIRECTIVES}
 
 # Dependencies	
 
 ${OBJ_DIR}/aorsa2dMain.o: \
-	${OBJ_DIR}/constants.o \
-	${OBJ_DIR}/eqdsk_setup.o \
-	${OBJ_DIR}/eqdsk_dlg.o
+		${OBJ_DIR}/constants.o \
+		${OBJ_DIR}/eqdsk_setup.o \
+		${OBJ_DIR}/eqdsk_dlg.o \
+		${OBJ_DIR}/aorsaSubs.o \
+		${OBJ_DIR}/sigma.o \
+		${OBJ_DIR}/fourier.o
 
 ${OBJ_DIR}/eqdsk_setup.o: \
-	${OBJ_DIR}/parameters.o \
-	${OBJ_DIR}/aorsa2din_mod.o \
-	${OBJ_DIR}/fitpack.o \
-	${OBJ_DIR}/orbit.o
+		${OBJ_DIR}/parameters.o \
+		${OBJ_DIR}/orbit.o
+
+${OBJ_DIR}/orbit.o: \
+		${OBJ_DIR}/fitpack.o
 
 ${OBJ_DIR}/eqdsk_dlg.o: \
-	${OBJ_DIR}/dlg.o
+		${OBJ_DIR}/dlg.o
 
 clean:
 	rm $(EXEC) $(OBJ_DIR)/*.o $(MOD_DIR)/*.mod
