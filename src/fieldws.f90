@@ -4,7 +4,8 @@ contains
 
       subroutine fieldws(prfin, mask, ntStr)
       use netcdf
-      use size_mod
+      use nc_check
+      use parameters
 
       implicit none
 
@@ -41,10 +42,10 @@ contains
       real(kind=DBL) :: prfin, prfinMOD
 
       integer pgopen, pgbeg, ier, nmid, mmid
-      integer n_theta_max, n_u_max, n_psi_max
+      integer n_u_max
 
       integer ndisti1, ndisti2, ndisti3, number_points, k, nnodez
-      integer nxmx, nymx, nkdim1, nkdim2, mkdim1, mkdim2, nlevmax
+      integer nlevmax
       integer ibackground, nkx1, nkx2, nky1, nky2, n, m, &
          nkpltdim, mkpltdim, nkxplt, nkyplt, ipage, n1, n2, n3, n4
       integer i_psi, i_psi1, i_psi2, i_psi3, i_psi4, i_psi5, i_psi6
@@ -60,30 +61,30 @@ contains
          ncolln3, ncolbrd, ncolln1, ncollin, ncollab, ncolion, &
          ncolelec, norange
 
-      integer nrhomax, nnoderho, nnoderho2, iflag, nnoderho_half, &
-         nnoderho2_half, mnodetheta, nthetamax
+      integer nnoderho, nnoderho2, iflag, nnoderho_half, &
+         nnoderho2_half, mnodetheta
 
 
       parameter (nlevmax = 101)
 
-      parameter (nxmx = nmodesmax)
-      parameter (nymx = mmodesmax)
+      !parameter (nxmx = nmodesmax)
+      !parameter (nymx = mmodesmax)
 
-      parameter (nrhomax = nxmx)
-      parameter (nthetamax = nymx)
+      !parameter (nrhomax = nxmx)
+      !parameter (nthetamax = nymx)
 
-      parameter (nkdim1 = - nxmx / 2)
-      parameter (nkdim2 =   nxmx / 2)
+      !parameter (nkdim1 = - nxmx / 2)
+      !parameter (nkdim2 =   nxmx / 2)
 
-      parameter (mkdim1 = - nxmx / 2)
-      parameter (mkdim2 =   nxmx / 2)
+      !parameter (mkdim1 = - nxmx / 2)
+      !parameter (mkdim2 =   nxmx / 2)
 
       parameter (nkpltdim = 2 * nkdim2)
       parameter (mkpltdim = 2 * mkdim2)
 
-      parameter (n_theta_max = 150)
+      !parameter (n_theta_max = 150)
       parameter (n_u_max = 150)
-      parameter (n_psi_max = 150)
+      !parameter (n_psi_max = 150)
 
       real u(n_u_max), theta_u(n_theta_max)
       real f_cql(n_theta_max, n_u_max, n_psi_max)
@@ -6471,13 +6472,13 @@ contains
          yg(n, nth+1) = yg(n,1)
       end do
       nth1 = nth + 1
-      call a2dmnmx(xg, nrmax, nthmax, nr, nth, xmin, xmax)
-      call a2dmnmx(yg, nrmax, nthmax, nr, nth, ymin, ymax)
+      call a2dmnmx_r4(xg, nrmax, nthmax, nr, nth, xmin, xmax)
+      call a2dmnmx_r4(yg, nrmax, nthmax, nr, nth, ymin, ymax)
 
 
 
 !--set up contour levels
-      call a2dmnmx(f, nrmax, nthmax, nr, nth, fmin, fmax)
+      call a2dmnmx_r4(f, nrmax, nthmax, nr, nth, fmin, fmax)
       df=abs(fmax-fmin)/float(nlevel0)
 
 !        write (6, *) "df = ", df
@@ -6603,5 +6604,68 @@ contains
 !
 !*********************************************************************
 !
+      subroutine ezplot1_0(title, titll, titlr, x1, y1, nr, nrmax)
 
+      implicit none
+
+      real xzmax,xzmin,xnmin,xnmax,rhomin,rhomax
+      real x1(nrmax), y1(nrmax)
+      real y1max,y2max,y3max,y1min,y2min,y3min
+      real ymin,ymax
+
+      character*32 title
+      character*32 titll
+      character*32 titlr
+      integer nr,nrmax
+
+      integer nplot1,ncollab, ncolion,ncolbox, ncyan, &
+          ncolelec, ncolln2, ncollin, ncolbrd
+      integer nblack,nred,nyellow, ngreen,naqua,npink, &
+         nwheat,ngrey,nbrown,nblue,nblueviolet,ncyan1, &
+         nturquoise,nmagenta,nsalmon,nwhite,ncolln3
+      common/colcom/nblack,nred,nyellow,ngreen,naqua,npink, &
+       nwheat,ngrey,nbrown,nblue,nblueviolet,ncyan, &
+       nturquoise,nmagenta,nsalmon,nwhite,ncolbox,ncolbrd, &
+       ncolion,ncolelec,ncollin,ncolln2,ncollab
+
+      ncolln3=ngreen
+
+      call a1mnmx(y1,nrmax,nr,y1min,y1max)
+      if(y1max .eq. 0.0 .and. y1min .eq. 0.0)return
+
+      ymax = y1max
+      ymin = y1min
+
+      rhomax = x1(nr)
+      rhomin = x1(1)
+      ymax = ymax * 1.1
+      ymin = ymin
+
+      if (ymin .le. 0.0) ymin = ymin * 1.1
+
+      ymin = 0.0
+
+! Advance plotter to a new page, define coordinate range of graph and draw axes
+
+!      call pgenv(rhomin, rhomax, ymin, ymax, 0, 0)
+
+      CALL PGPAGE
+      CALL PGSVP (0.15,0.85,0.15,0.85)
+      CALL PGSWIN (rhomin, rhomax, ymin, ymax)
+      CALL PGBOX  ('BCNST', 0.0, 0, 'BCNST', 0.0, 0)
+
+
+! Label the axes (note use of \u and \d for raising exponent).
+
+      call pglab('rho', titll, title)
+
+! Plot the line graph.
+
+      call pgline(nr, x1, y1)
+
+  300 format (1p9e11.3)
+
+      return
+      end subroutine ezplot1_0
+!
 end module plot_aorsa2dps

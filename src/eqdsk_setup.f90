@@ -1,37 +1,58 @@
-!
-!***************************************************************************
-!
+module eqdsk_setup_mod
 
-      subroutine eqdsk_setup(myid, eqdsk, nmodesx, nmodesy, &
-         rwleft, rwright, ytop, ybottom, &
-         rmaxis, zmaxis, b0, psio, psimag, psi_tor_max, &
-         bxn_eq, byn_eq, bzn_eq, bmod_eq, psi, rho_pol2d, qsafety, &
-         bmod_mid, capr_bpol_mid2, capr_bpol_mid, rho_tor2d, &
-         i_psi, dldb_tot12, dldbavg, n_prof_flux )
+    use parameters
+    use aorsa2din_mod
 
-      use size_mod
-      use aorsa2din_mod, ONLY: eqdsk_rRange, eqdsk_zRange
+    implicit none
+
+    !common/fcom/fcount, bxn, byn, bzn, bmod, bratio, nxmx, nymx, &
+    !     dx, dy, &
+    !     nnodex, nmodesy, rt, xwleft, sgn_vprl, modb, bratio_phi, &
+    !     dxdphi, dydphi, caprx
+
+    !common/spline_com/sigma, zbxn, zbyn, zbzn, zbmod, zbratio, &
+    !     xprime, yprime
+
+    !common/errcom/eps, s_err(100), y_phi(100), nmax
+
+
+    integer :: fcount, nmax, i_psi
+    real :: dx, dy, xwleft, sgn_vprl, modb, bratio_phi, &
+         dxdphi, dydphi, caprx, sigma, eps
+    real, allocatable :: bxn(:,:), byn(:,:), bzn(:,:), &
+            bmod(:,:),  bratio(:,:)
+    real, allocatable  :: zbxn(:,:,:), zbyn(:,:,:), zbzn(:,:,:), &
+            zbmod(:,:,:), zbratio(:,:,:)
+    real, allocatable :: xprime(:), yprime(:) 
+    real :: s_err(100), y_phi(100)
+    real :: rmaxis, zmaxis, &
+        psio, psimag, psi_tor_max
+    real :: bxn_eq(nxmx, nymx), byn_eq(nxmx, nymx), &
+           bzn_eq(nxmx, nymx), bmod_eq(nxmx, nymx)
+    real :: psi(nxmx, nymx), qsafety(nxmx, nymx)
+    real :: bmod_mid(nxmx, nymx)
+    real :: rho_pol2d(nxmx, nymx)
+    real :: capr_bpol_mid2(nxmx, nymx)
+    real :: capr_bpol_mid(nrhomax) 
+    real :: rho_tor2d(nxmx, nymx)
+    real :: dldb_tot12(nxmx, nymx)
+    real :: dldbavg(nrhomax)
+
+contains
+
+      subroutine eqdsk_setup ( myid, eqdsk )
+
       use sigma_module
+      use eqdsk_plot_mod
+      use orbit_mod
+      use fitpack
 
       implicit none
 
-      external f, error
-
-      common/fcom/fcount, bxn, byn, bzn, bmod, bratio, nxdim, nydim, &
-         dx, dy, &
-         nnodex, nnodey, rt, xwleft, sgn_vprl, modb, bratio_phi, &
-         dxdphi, dydphi, caprx
-
-      common/spline_com/sigma, zbxn, zbyn, zbzn, zbmod, zbratio, &
-         xprime, yprime
-
-      common/errcom/eps, s_err(100), y_phi(100), nmax
-
       integer dlg_yRange
       integer jmid
-      integer nmax, mmax, fcount, nxdim, nydim, n_phi, n_phi_max
+      integer  mmax, n_phi, n_phi_max
       integer icell, jcell, icell_prev, jcell_prev, ncell, i_stop
-
       real, allocatable :: rho_ij(:,:), rho_in(:), profile_in(:), &
          profile_out(:,:)
 
@@ -39,14 +60,14 @@
       integer i_box, i_sgn_vprl, i_err, i_sav, j_sav, i0, j0, i_max
       integer imaxis, jmaxis
 
-      real s_err, y_phi, sgn_vprl, modb, bratio_phi, modb_init
-      real xphi, yphi, phi, dy_phi(100), psi_tor_max
-      real h0, eps, delta_b, caprx, r_max, drg, dzg, drg32, dzg32
+      real modb_init
+      real xphi, yphi, phi, dy_phi(100)
+      real h0,  delta_b, r_max, drg, dzg, drg32, dzg32
       real x_extint, y_extint, xprimex, yprimex, &
          xprimex0, yprimex0
       integer norb_dim, nphi_enter, nphi_exit, nphii
       integer islpsw, islpsw1, ierr, nrho
-      real sigma, psix, rmaxis, zmaxis, psix_prev
+      real psix, psix_prev
 
       real betan3, betan_slo, betate, alphati6, betan, betan2, betan5, &
         betan6, betati4, betati, betati2, betan4, alphan3, alphan_slo, &
@@ -60,10 +81,9 @@
         xnslolim, freqcy, xn2lim, ti05, ti06, ti04, ti6lim, psipti4, &
         ti4lim, ti5lim
 
-      integer i_write, n_prof_flux, nphi1, nphi2, nuper, nupar
+      integer i_write, nphi1, nphi2, nuper, nupar
 
       CHARACTER*128 :: netCDF_file
-
 
       parameter (norb_dim = 6000)
 
@@ -74,10 +94,10 @@
       real capr_x0, capz_x0
       real delta_x, delta_y, delta_z, delta_l, xprime_prev, delta_phi, &
          yprime_prev, phi_prev
-      real yprime_want, dxdphi, dydphi, dxdphi_prev, dydphi_prev
+      real yprime_want, dxdphi_prev, dydphi_prev
       real xprime_want
 
-      integer npts, ndim, ndeg, lxdata, iout, lipwr, ndval, lenws
+      integer npts, ndeg, lxdata, iout, lipwr, ndval, lenws
       integer nr, ntheta, nrmax, nthmax, neqdsk, meqdsk, nk, mk
       integer ma, mr, mz, ipsi, iflag_gammab, isolve
 
@@ -85,14 +105,11 @@
       real eslowev, ftrap, z_slo, yzoom1, psimol, yzoom2, &
          amu_slo, eta_slo, fmid
 
-      integer nxmx, nymx, idiag, jdiag, ieq
-      integer ndfmax, &
-          ninteg, nd, izoom1, izoom2, ndf, nmaxe, irnc
+      integer idiag, jdiag, ieq
+      integer ninteg, nd, izoom1, izoom2, ndf, nmaxe, irnc
       integer nrow, ncol, norder
 
-      integer mkdim1, mkdim2
-
-      integer nkdim1, nkdim2, nkx1, nkx2, nldim, nldim3, &
+      integer nkx1, nkx2, &
          nky1, nky2, iant, jant1, jant2
 
       real tmem, tsys, tio, ttotal, time0, time, cpu, dummy, second1
@@ -100,41 +117,10 @@
       real sqx, gausspsi, dpsiant
       real dthetant0, dpsiant0, psiant, psipne, psipte, &
          psipti1, psipti2, psipti3, dtheta, rhomin
-      real rmin, rmax, zmin, zmax, psio, ro, zo
+      real rmin, rmax, zmin, zmax, ro, zo
 
-!      integer nmodesmax, mmodesmax
-      integer nrhomax
-
-      integer n_theta_max, n_u_max, n_psi_max, n_theta_check
-
-
-!-------------------------------------------------------------
-!     450 x 450 modes:
-!     IMPORTANT!! The following dimensions must exactly match
-!     those in subroutine f(x, y, dy) in orbit.f
-!     To run on Carter, you need smaller arrays eg. 256x256
-!-------------------------------------------------------------
-!      parameter (nmodesmax = 450)
-!      parameter (mmodesmax = 450)
-
-      parameter (n_theta_max = 400)
+      integer n_u_max, n_theta_check
       parameter (n_u_max = 300)
-      parameter (n_psi_max = 300)
-
-
-      parameter (nxmx = nmodesmax)
-      parameter (nymx = mmodesmax)
-      parameter (nrhomax = nmodesmax * 2)
-
-      parameter (nkdim1 = - nmodesmax / 2)
-      parameter (nkdim2 =   nmodesmax / 2)
-
-      parameter (mkdim1 = - mmodesmax / 2)
-      parameter (mkdim2 =   mmodesmax / 2)
-
-      parameter (nldim  = nxmx * nymx)
-      parameter (nldim3 = 3 * nldim)
-      parameter (ndfmax = nldim3)
 
       parameter (nrmax = 201)
       parameter (nthmax = 64)
@@ -143,22 +129,14 @@
 
       parameter (lxdata = nxeqdmax * nyeqdmax)
       parameter (lipwr = 10)
-      parameter (ndim = 2)
       parameter (ndeg = 2)
       parameter (lenws = lxdata * (lxdata + 9) &
                         + lipwr * (lxdata + 1) + 2 * ndim)
 
 
-!*** ceez.f arrays:
-
       real zx1(nymx), zxm(nymx), zy1(nxmx), zyn(nxmx)
       real zxy11, zxym1, zxy1n, zxymn
-      real zbxn(nxmx, nymx, 3)
-      real zbyn(nxmx, nymx, 3)
-      real zbzn(nxmx, nymx, 3)
-      real zbmod(nxmx, nymx, 3)
-      real zbratio(nxmx, nymx, 3)
-      real zpsi(nxmx, nymx, 3)
+     real zpsi(nxmx, nymx, 3)
 
       real temp(2 *(nxmx + nymx) )
       real surf2, curv2
@@ -186,13 +164,12 @@
       real dtau_first_12, dtau_tot12
 !      real dtau_ratio(nxmx, nymx, n_theta_max)
 !      real tau_bounce(nxmx, nymx, n_theta_max)
-      real dldb_tot12(nxmx, nymx)
 
       real dtau_tot1(n_theta_max), dtau_first1(n_theta_max)
       real dtau_tot2(n_theta_max), dtau_first2(n_theta_max)
 
       integer n_theta, n_u, n_psi
-      integer i_theta, i_u, i_psi
+      integer i_theta, i_u
       real vc, vc_mks, sinthi, modbi, argi, vprl, dtau_sum, modbh, &
          dtau_tot_sum, dldb_tot_sum, dldb_tot1, dldb_tot2
 
@@ -231,7 +208,7 @@
       real rho_eqdsk(nrmax), &
            theta_eqdsk(nthmax)
 
-      real psisep, psimag, router, z0
+      real psisep, router, z0
       integer nxeqd, nyeqd
 
       real dzdrhok, dzdthk, drdrhok, drdthk, xjacob
@@ -273,7 +250,7 @@
           isigma, itemp, &
           nfreqm,  nkzm, &
           idens,  ibackground, iabsorb, &
-          nzfun, nnodecx, nnodecy, nnodex, nnodey, i, j, &
+          nzfun, nnodecx, nnodecy, i, j, &
           jequat, iflag, liw, lw, nrhs, icenter, nboundary
 
       integer nnoderho
@@ -283,7 +260,7 @@
       real ti0, xnuead, xnu1ad, xnu2ad, xant, te0, &
           delta0, xwall, xnwall, delta, &
           epszet, amu1, amu2, z1, z2, eta, &
-          b0, rt, ytop, ybottom, xnurf, aplasm, xnlim, signbz, &
+          xnurf, aplasm, xnlim, signbz, &
           xn0, flat, b1rat, b2rat, curdnx, curdny, curdnz, &
           xnuabs, xbnch, xleft, xright, &
           telim, tilim, ti2lim, ti3lim, rhoplasm, &
@@ -295,7 +272,7 @@
           rzoom1, rzoom2, q0, prfin, &
           alim, grad, qavg0, ymax, &
           rhonorm, ekappa, xiota0, rholim, psilim, psilim_, yant, &
-          rwleft, rwright, xwleft, xwright, psi_lim, &
+          xwright, psi_lim, &
           rwleft_auto, rwright_auto, ytop_auto, ybottom_auto
 
       real ytop_max, ybottom_max
@@ -315,13 +292,10 @@
       complex xb(nxmx, nymx), xc(nxmx, nymx), xd(nxmx, nymx)
 
       real xprimec(nxmx), caprc(nxmx), xcourse(nxmx), capr(nxmx), &
-         xprime(nxmx), x(nxmx), dx, dxc
+          x(nxmx), dxc
 
 
-      real bxn(nxmx, nymx), byn(nxmx, nymx), bzn(nxmx, nymx), &
-           bmod(nxmx, nymx), bmod_mid(nxmx, nymx), &
-           bratio(nxmx, nymx), &
-           capr_bpol(nxmx, nymx), capr_bpol_mid2(nxmx, nymx)
+      real capr_bpol(nxmx, nymx)
 
       real bxn_eq(nxmx, nymx), byn_eq(nxmx, nymx), &
            bzn_eq(nxmx, nymx), bmod_eq(nxmx, nymx)
@@ -332,7 +306,7 @@
 
       real rhon(nrhomax), wdoti1avg(nrhomax), wdoti2avg(nrhomax), &
          wdoteavg(nrhomax), drho, dvol(nrhomax), fvol(nrhomax), &
-         capr_bpol_mid(nrhomax), bmod_midavg(nrhomax), dldbavg(nrhomax)
+         bmod_midavg(nrhomax)
 
       real dvol_xy(nrhomax), dvol_dl(nrhomax)
       real xnavg(nrhomax), fyavg(nrhomax), qhat, omgte, omgti, &
@@ -350,7 +324,7 @@
       real psi_dim(nxmx, nymx)
 
 
-      real psi(nxmx, nymx), rho(nxmx, nymx), theta(nxmx, nymx), &
+      real  rho(nxmx, nymx), theta(nxmx, nymx), &
            theta0(nxmx, nymx), &
            bx(nxmx, nymx), by(nxmx, nymx), bz(nxmx, nymx), &
            btau(nxmx, nymx), bzeta(nxmx, nymx), &
@@ -362,10 +336,9 @@
            omgci1(nxmx, nymx), omgci2(nxmx, nymx), omgci3(nxmx, nymx), &
            omgpe2(nxmx, nymx), &
            omgp12(nxmx, nymx), omgp22(nxmx, nymx), omgp32(nxmx, nymx), &
-           xiota(nxmx, nymx), qsafety(nxmx, nymx), xlprl(nxmx, nymx), &
+           xiota(nxmx, nymx),  xlprl(nxmx, nymx), &
            bpol(nxmx, nymx)
 
-      real rho_tor2d(nxmx, nymx), rho_pol2d(nxmx, nymx)
       real psi_tor2d(nxmx, nymx), psi_pol2d(nxmx, nymx)
 
       real rhomtot(nxmx, nymx), rhome, rhomi1, rhomi2, rhomi3
@@ -450,7 +423,7 @@
       complex sk1, sk2, sk3, sk4, sk5, sk0
 
       real yprimec(nxmx), ycourse(nxmx), &
-           yprime(nxmx), y(nxmx), dy, dyc
+           y(nxmx), dyc
 
 
       CHARACTER*128 :: eqdsk
@@ -487,9 +460,11 @@
       integer rsrc2, csrc2, irnc2, icnc2
       integer rsrc3, csrc3, irnc3, icnc3
 
-      nxdim = nxmx
-      nydim = nymx
-
+      allocate ( bxn(nxmx, nymx), byn(nxmx, nymx), bzn(nxmx, nymx), &
+            bmod(nxmx, nymx),  bratio(nxmx, nymx),  &
+            zbxn(nxmx, nymx, 3), zbyn(nxmx, nymx, 3), zbzn(nxmx, nymx, 3), &
+            zbmod(nxmx, nymx, 3), zbratio(nxmx, nymx, 3), &
+            xprime(nxmx), yprime(nxmx) )
 
 
 
@@ -787,15 +762,15 @@
 
       nkx2 = nmodesx / 2
       nkx1 = - nmodesx / 2 + 1
-      nnodex = nmodesx
-      nnoderho = nnodex / 2
+      nmodesx = nmodesx
+      nnoderho = nmodesx / 2
 
       nky2 = nmodesy / 2
       nky1 = - nmodesy / 2 + 1
-      nnodey = nmodesy
+      nmodesy = nmodesy
 
-!      jequat  = nnodey / 2
-      icenter = nnodex / 2
+!      jequat  = nmodesy / 2
+      icenter = nmodesx / 2
 
       if (qavg0 .ne. 0.0) xiota0 = 1./qavg0
 
@@ -882,19 +857,19 @@
       eta2 = xn2 / xn0
       xn3 = xn0 * eta3
 
-      allocate(rho_ij(nnodex,nnodey))
+      allocate(rho_ij(nmodesx,nmodesy))
 
 !      write (6, *) "eqdsk = ", eqdsk
-!      write (6, *) "nnodex = ", nnodex
-!      write (6, *) "nnodey = ", nnodey
+!      write (6, *) "nmodesx = ", nnodex
+!      write (6, *) "nmodesy = ", nmodesy
 !      write (6, *) "rwleft = ", rwleft
 !      write (6, *) "rwright = ", rwright
 !      write (6, *) "ytop = ", ytop
 !      write (6, *) "ybottom = ", ybottom
 
 !      write (115, *) "eqdsk = ", eqdsk
-!      write (115, *) "nnodex = ", nnodex
-!      write (115, *) "nnodey = ", nnodey
+!      write (115, *) "nmodesx = ", nnodex
+!      write (115, *) "nmodesy = ", nmodesy
 !      write (115, *) "rwleft = ", rwleft
 !      write (115, *) "rwright = ", rwright
 !      write (115, *) "ytop = ", ytop
@@ -1110,11 +1085,11 @@
 !--------------------------------------------
 !--   xprime: 0 to xmax
 !--   x(i) : -xmax / 2.0   to   xmax / 2.0
-      dx = xmax / nnodex
+      dx = xmax / nmodesx
 
       diffmin = 1.0e+05
 
-      do i = 1, nnodex
+      do i = 1, nmodesx
          xprime(i) = (i - 1) * dx &
             + dx / 2.0
 !--   Note: the code gives slightly smoother results with dx/2.0 added
@@ -1141,10 +1116,10 @@
 !-----------------------------------
 !--   yprime: 0 to ymax
 !--   y(j) : -ymax / 2.0   to   ymax / 2.0
-      dy = ymax / nnodey
+      dy = ymax / nmodesy
 
 
-      do j = 1, nnodey
+      do j = 1, nmodesy
          yprime(j) = (j - 1) * dy &
             + dy / 2.0
 !--      Note: the code gives slightly smoother results with dy/2.0 added
@@ -1162,8 +1137,8 @@
       jmid = j0
       jequat = jmid
 
-      if(myId==0)write(*,'(16f6.3)') capR(1:nnodex)
-      if(myId==0)write(*,'(16f6.3)') y(1:nnodey)
+      if(myId==0)write(*,'(16f6.3)') capR(1:nmodesx)
+      if(myId==0)write(*,'(16f6.3)') y(1:nmodesy)
       if(myId==0)write(*,'(16f6.3)') rmin,rmax,zmin,zmax,dx,dy
 
 !      write(6, *)"jequat = ", jequat
@@ -1194,7 +1169,7 @@
 !    Interpolate to AORSA grid:
 !------------------------------
 
-      call aorsa_grid(nnodex, nnodey, capr, y, nxmx, nymx, &
+      call aorsa_grid(nmodesx, nmodesy, capr, y, nxmx, nymx, &
           psisep, psimag, bx, by, bz, bxn, byn, bzn, bmod, &
           psi_pol2d, rho_pol2d, rg, zg, psig, psirg, psizg, psirzg, &
           psis, fs, fs1, nxeqdmax, nyeqdmax, nxeqd, nyeqd, ma, psio, &
@@ -1210,7 +1185,7 @@
       end if
 
       j = jequat
-      do i = 1, nnodex
+      do i = 1, nmodesx
          if (myid .eq. 0) then
             write(6, 2163)i, capr(i), x(i), bx(i, j), by(i,j), bz(i,j)
             write(15,2163)i, capr(i), x(i), bx(i, j), by(i,j), bz(i,j)
@@ -1223,8 +1198,8 @@
 !        Default:  if n_prof_flux equals 0, use poloidal flux
 !        ----------------------------------------------------
 
-            do i = 1, nnodex
-               do j = 1, nnodey
+            do i = 1, nmodesx
+               do j = 1, nmodesy
                 rho(i,j) = rho_pol2d(i,j)
                 psi(i,j) = psi_pol2d(i,j)
                   psi_dim(i,j) = psi(i,j) * psio
@@ -1238,8 +1213,8 @@
 !                       and poloidal flux outside rho_pol = 1.0!!
 !        --------------------------------------------------------------
          if(n_prof_flux .ne. 0)then
-            do i = 1, nnodex
-               do j = 1, nnodey
+            do i = 1, nmodesx
+               do j = 1, nmodesy
                 psi_tor2d(i,j) = rho_tor2d(i,j)**2
 
               if(rho(i,j) .lt. 1.0)then
@@ -1259,7 +1234,7 @@
        write(6, *)  "psi_tor_max = ", psi_tor_max
        write(15, *) "psi_tor_max = ", psi_tor_max
 
-         do i = 1, nnodex
+         do i = 1, nmodesx
             write(6,  1312)i, capr(i), rho(i,16)
             write(15, 1312)i, capr(i), rho(i,16)
          end do
@@ -1284,8 +1259,8 @@
 !      write (115, *) "psisep = ", psisep, "Webers/rad"
 !      write (115, *) "psi_tor_max = ", psi_tor_max, "Webers/rad"
 
-      do i = 1, nnodex
-         do j = 1, nnodey
+      do i = 1, nmodesx
+         do j = 1, nmodesy
             btau(i,j) = sqrt(bxn(i,j)**2 + byn(i,j)**2)
           bpol(i,j) = btau(i,j) * bmod(i,j)
             bzeta(i,j) = bzn(i,j)
@@ -1296,24 +1271,24 @@
 !     -------------------------------------
 !     Calculate capr * bpol in the midplane
 !     -------------------------------------
-      do i = 1, nnodex
-         do j = 1, nnodey
+      do i = 1, nmodesx
+         do j = 1, nmodesy
           capr_bpol(i,j) = capr(i) * bpol(i,j)
 
        end do
       end do
 
-      do i = 1, nnodex
-         do j = 1, nnodey
+      do i = 1, nmodesx
+         do j = 1, nmodesy
             call midplane(i, j, capr_bpol, capr_bpol_mid2(i,j), &
-                rho, nxmx, nymx, nnodex, nnodey, capr, rt, 0.0, jmid)
+                rho, nxmx, nymx, nmodesx, nmodesy, capr, rt, 0.0, jmid)
               end do
       end do
 
 
       call polavg(capr_bpol_mid2, capr_bpol_mid, rho, nxmx, nymx, &
          nrhomax, &
-         nnodex, nnodey, nnoderho, drho, dx, dy, capr, rt, dvol, fvol)
+         nmodesx, nmodesy, nnoderho, drho, dx, dy, capr, rt, dvol, fvol)
 
 
       if (myid .eq. 0)then
@@ -1332,7 +1307,7 @@
          write(6, *)  "     i    capr  rhoij  capr_bpol  capr_bpol_mid2"
          write(6, *)
 
-         do i = 1, nnodex
+         do i = 1, nmodesx
             write(6,  1312)i, capr(i), rho(i, jequat), &
                         capr_bpol(i,  jequat), capr_bpol_mid2(i, jequat)
             write(15, 1312)i, capr(i), rho(i, jequat), &
@@ -1356,16 +1331,16 @@
 !     -----------------------
 !     Calculate bmod_mid(i,j)
 !     -----------------------
-      do i = 1, nnodex
-         do j = 1, nnodey
+      do i = 1, nmodesx
+         do j = 1, nmodesy
             call midplane(i, j, bmod, bmod_mid(i,j), rho, &
-                      nxmx, nymx, nnodex, nnodey, capr, rt, b0, jmid)
+                      nxmx, nymx, nmodesx, nmodesy, capr, rt, b0, jmid)
          end do
       end do
 
       call polavg(bmod_mid, bmod_midavg, rho, nxmx, nymx, &
          nrhomax, &
-         nnodex, nnodey, nnoderho, drho, dx, dy, capr, rt, dvol, fvol)
+         nmodesx, nmodesy, nnoderho, drho, dx, dy, capr, rt, dvol, fvol)
 
 
 !      if (myid .eq. 0)then
@@ -1386,8 +1361,8 @@
 
 
 
-      do i = 1, nnodex
-         do j = 1, nnodey
+      do i = 1, nmodesx
+         do j = 1, nmodesy
             bratio(i,j) = bmod_mid(i,j) / bmod(i,j)
 !            if(bratio(i,j) .gt. 1.0)
 !            if(bratio(i,j) .lt. 0.0)
@@ -1419,8 +1394,8 @@
 !      write(6, *)
 !      write(115, *)
 
-!      do i = 1, nnodex
-!         do j = 1, nnodey
+!      do i = 1, nmodesx
+!         do j = 1, nmodesy
 !            if(j .eq. jequat) then
 !               write(6,  1312)i, x(i), bmod(i, j), bmod_mid(i, j)
 !               write(115, 1312)i, x(i), bmod(i, j), bmod_mid(i, j)
@@ -1437,54 +1412,54 @@
 
 !      if(myid .eq. 0) then
 
-!         write(40, 309) nnodex, nnodey
+!         write(40, 309) nmodesx, nmodesy
 !         write(40, 310) rwleft, rwright, ytop, ybottom
 !         write(40, 310) rmaxis, zmaxis, b0, psio, psimag, psi_tor_max
-!         write(40, 310) ((bxn(i,j), i = 1, nnodex), j = 1, nnodey)
-!         write(40, 310) ((byn(i,j), i = 1, nnodex), j = 1, nnodey)
-!         write(40, 310) ((bzn(i,j), i = 1, nnodex), j = 1, nnodey)
-!         write(40, 310) ((bmod(i,j),i = 1, nnodex), j = 1, nnodey)
-!         write(40, 310) ((psi(i,j), i = 1, nnodex), j = 1, nnodey)
-!         write(40, 310) ((rho(i,j), i = 1, nnodex), j = 1, nnodey)
-!         write(40, 310) ((qsafety(i,j), i = 1, nnodex), j = 1, nnodey)
-!         write(40, 310) ((bmod_mid(i, j), i = 1, nnodex), j = 1, nnodey)
-!         write(40, 310) ((capr_bpol_mid2(i, j), i = 1,nnodex),j = 1,nnodey)
+!         write(40, 310) ((bxn(i,j), i = 1, nmodesx), j = 1, nmodesy)
+!         write(40, 310) ((byn(i,j), i = 1, nmodesx), j = 1, nmodesy)
+!         write(40, 310) ((bzn(i,j), i = 1, nmodesx), j = 1, nmodesy)
+!         write(40, 310) ((bmod(i,j),i = 1, nmodesx), j = 1, nmodesy)
+!         write(40, 310) ((psi(i,j), i = 1, nmodesx), j = 1, nmodesy)
+!         write(40, 310) ((rho(i,j), i = 1, nmodesx), j = 1, nmodesy)
+!         write(40, 310) ((qsafety(i,j), i = 1, nmodesx), j = 1, nmodesy)
+!         write(40, 310) ((bmod_mid(i, j), i = 1, nmodesx), j = 1, nmodesy)
+!         write(40, 310) ((capr_bpol_mid2(i, j), i = 1,nmodesx),j = 1,nmodesy)
 !         write(40, 310) (capr_bpol_mid(n), n = 1, nnoderho)
-!         write(40, 310) ((rho_tor2d(i, j), i = 1,nnodex),j = 1,nnodey)
+!         write(40, 310) ((rho_tor2d(i, j), i = 1,nmodesx),j = 1,nmodesy)
 
 !      end if
 
 
-      do i = 1, nnodex
-         do j = 1, nnodey
-            call deriv_r(bxn, nxmx, nymx, i, j, nnodex, nnodey, capr, &
+      do i = 1, nmodesx
+         do j = 1, nmodesy
+            call deriv_r(bxn, nxmx, nymx, i, j, nmodesx, nmodesy, capr, &
                dbxdx(i,j), dxxbxn(i,j))
-            call deriv_r(byn, nxmx, nymx, i, j, nnodex, nnodey, capr, &
+            call deriv_r(byn, nxmx, nymx, i, j, nmodesx, nmodesy, capr, &
                dbydx(i,j), dxxbyn(i,j))
-            call deriv_r(bzn, nxmx, nymx, i, j, nnodex, nnodey, capr, &
+            call deriv_r(bzn, nxmx, nymx, i, j, nmodesx, nmodesy, capr, &
                dbzdx(i,j), dxxbzn(i,j))
 
 
-            call deriv_z(bxn, nxmx, nymx, i, j, nnodex, nnodey, y, &
+            call deriv_z(bxn, nxmx, nymx, i, j, nmodesx, nmodesy, y, &
                dbxdy(i,j), dyybxn(i,j))
-            call deriv_z(byn, nxmx, nymx, i, j, nnodex, nnodey, y, &
+            call deriv_z(byn, nxmx, nymx, i, j, nmodesx, nmodesy, y, &
                dbydy(i,j), dyybyn(i,j) )
-            call deriv_z(bzn, nxmx, nymx, i, j, nnodex, nnodey, y, &
+            call deriv_z(bzn, nxmx, nymx, i, j, nmodesx, nmodesy, y, &
                dbzdy(i,j), dyybzn(i,j) )
 
 
-            call deriv_rz(bxn, nxmx, nymx, i, j, nnodex, nnodey, &
+            call deriv_rz(bxn, nxmx, nymx, i, j, nmodesx, nmodesy, &
                capr, y, dxybxn(i,j))
-            call deriv_rz(byn, nxmx, nymx, i, j, nnodex, nnodey, &
+            call deriv_rz(byn, nxmx, nymx, i, j, nmodesx, nmodesy, &
                capr, y, dxybyn(i,j))
-            call deriv_rz(bzn, nxmx, nymx, i, j, nnodex, nnodey, &
+            call deriv_rz(bzn, nxmx, nymx, i, j, nmodesx, nmodesy, &
                capr, y, dxybzn(i,j))
 
-            call deriv_r(bmod, nxmx, nymx, i, j, nnodex, nnodey, capr, &
+            call deriv_r(bmod, nxmx, nymx, i, j, nmodesx, nmodesy, capr, &
                dbdx(i,j), dxxmodb(i,j))
-            call deriv_z(bmod, nxmx, nymx, i, j, nnodex, nnodey, y, &
+            call deriv_z(bmod, nxmx, nymx, i, j, nmodesx, nmodesy, y, &
                dbdy(i,j), dyymodb(i,j) )
-            call deriv_rz(bmod, nxmx, nymx, i, j, nnodex, nnodey, &
+            call deriv_rz(bmod, nxmx, nymx, i, j, nmodesx, nmodesy, &
                capr, y, dxymodb(i,j))
 
 
@@ -1504,34 +1479,34 @@
       islpsw = 255
       islpsw1 = 3
 
-      call surf1 (nnodex, nnodey, xprime, yprime, bxn, nxmx, &
+      call surf1 (nmodesx, nmodesy, xprime, yprime, bxn, nxmx, &
                   zx1, zxm, zy1, zyn, &
                   zxy11, zxym1, zxy1n, zxymn, &
                   islpsw, zbxn, temp, &
                   sigma, ierr)
-      call surf1 (nnodex, nnodey, xprime, yprime, byn, nxmx, &
+      call surf1 (nmodesx, nmodesy, xprime, yprime, byn, nxmx, &
                   zx1, zxm, zy1, zyn, &
                   zxy11, zxym1, zxy1n, zxymn, &
                   islpsw, zbyn, temp, &
                   sigma, ierr)
-      call surf1 (nnodex, nnodey, xprime, yprime, bzn, nxmx, &
+      call surf1 (nmodesx, nmodesy, xprime, yprime, bzn, nxmx, &
                   zx1, zxm, zy1, zyn, &
                   zxy11, zxym1, zxy1n, zxymn, &
                   islpsw, zbzn, temp, &
                   sigma, ierr)
-      call surf1 (nnodex, nnodey, xprime, yprime, bmod, nxmx, &
+      call surf1 (nmodesx, nmodesy, xprime, yprime, bmod, nxmx, &
                   zx1, zxm, zy1, zyn, &
                   zxy11, zxym1, zxy1n, zxymn, &
                   islpsw, zbmod, temp, &
                   sigma, ierr)
 
-      call surf1 (nnodex, nnodey, xprime, yprime, bratio, nxmx, &
+      call surf1 (nmodesx, nmodesy, xprime, yprime, bratio, nxmx, &
                   zx1, zxm, zy1, zyn, &
                   zxy11, zxym1, zxy1n, zxymn, &
                   islpsw, zbratio, temp, &
                   sigma, ierr)
 
-      call surf1 (nnodex, nnodey, xprime, yprime, psi, nxmx, &
+      call surf1 (nmodesx, nmodesy, xprime, yprime, psi, nxmx, &
                   zx1, zxm, zy1, zyn, &
                   zxy11, zxym1, zxy1n, zxymn, &
                   islpsw, zpsi, temp, &
@@ -1543,7 +1518,7 @@
 
 
     i0Loop: &
-    do i = i0, nnodex - 1
+    do i = i0, nmodesx - 1
     
         j0Loop: &
         do j = j0, j0
@@ -1559,7 +1534,7 @@
             
             psix_prev = psix
             
-            psix =surf2(xprimex0, yprimex0, nnodex, nnodey, &
+            psix =surf2(xprimex0, yprimex0, nmodesx, nmodesy, &
                xprime, yprime, &
                psi, nxmx, zpsi, sigma)
             
@@ -1783,9 +1758,9 @@
 
       nrho = i_max - i0 + 1
 
-      rho_ij = rho(1:nnodex, 1:nnodey)
+      rho_ij = rho(1:nmodesx, 1:nmodesy)
       allocate (rho_in(nrho), profile_in(nrho), &
-                                         profile_out(nnodex, nnodey))
+                                         profile_out(nmodesx, nmodesy))
 
       profile_in = dldb_tot12(i0:i_max, j0)
       rho_in =            rho(i0:i_max, j0)
@@ -1796,16 +1771,16 @@
 !     -----------------------------
 !     deposit dldb on 2D flux grid:
 !     -----------------------------
-      call flux_to_rz(nnodex, nnodey, profile_in, &
+      call flux_to_rz(nmodesx, nmodesy, profile_in, &
          profile_out, rho_in, nrho, rho_ij)
 
-      dldb_tot12(1:nnodex, 1:nnodey) = profile_out
+      dldb_tot12(1:nmodesx, 1:nmodesy) = profile_out
 
       call polavg(dldb_tot12, dldbavg, rho, nxmx, nymx, nrhomax, &
-         nnodex, nnodey, nnoderho, drho, dx, dy, capr, rt, dvol, fvol)
+         nmodesx, nmodesy, nnoderho, drho, dx, dy, capr, rt, dvol, fvol)
 
       call volume_xy(rho, nxmx, nymx, nrhomax, &
-         nnodex, nnodey, nnoderho, drho, dx, dy, capr, rt, dvol_xy)
+         nmodesx, nmodesy, nnoderho, drho, dx, dy, capr, rt, dvol_xy)
 
 
 
@@ -1817,78 +1792,78 @@
 
       if(myid .eq. 0)then
 
-      write(138, 309) nnodex, nnodey, nxeqd
+      write(138, 309) nmodesx, nmodesy, nxeqd
       write(138, 310) rholim, rhowall
-      write(138, 310) (x(i), i = 1, nnodex)
-      write(138, 310) (y(j), j = 1, nnodey)
-      write(138, 310) (capr(i), i = 1, nnodex)
-      write(138, 310) ((theta(i, j), i = 1, nnodex), j = 1, nnodey)
-      write(138, 310) ((bmod(i, j),i = 1, nnodex),j = 1,nnodey)
-      write(138, 310) ((rho(i, j), i = 1, nnodex),j = 1,nnodey)
-      write(138, 310) ((psi(i, j), i = 1, nnodex),j = 1, nnodey)
-      write(138, 310) ((qsafety(i,j), i = 1, nnodex), j = 1, nnodey)
-      write(138, 310) ((btau(i, j), i = 1, nnodex), j = 1, nnodey)
-      write(138, 310) ((bzeta(i, j), i = 1, nnodex), j = 1, nnodey)
+      write(138, 310) (x(i), i = 1, nmodesx)
+      write(138, 310) (y(j), j = 1, nmodesy)
+      write(138, 310) (capr(i), i = 1, nmodesx)
+      write(138, 310) ((theta(i, j), i = 1, nmodesx), j = 1, nmodesy)
+      write(138, 310) ((bmod(i, j),i = 1, nmodesx),j = 1,nmodesy)
+      write(138, 310) ((rho(i, j), i = 1, nmodesx),j = 1,nmodesy)
+      write(138, 310) ((psi(i, j), i = 1, nmodesx),j = 1, nmodesy)
+      write(138, 310) ((qsafety(i,j), i = 1, nmodesx), j = 1, nmodesy)
+      write(138, 310) ((btau(i, j), i = 1, nmodesx), j = 1, nmodesy)
+      write(138, 310) ((bzeta(i, j), i = 1, nmodesx), j = 1, nmodesy)
 
-      write(138, 310) ((dbxdx(i, j), i = 1, nnodex), j = 1, nnodey)
-      write(138, 310) ((dbydx(i, j), i = 1, nnodex), j = 1, nnodey)
-      write(138, 310) ((dbzdx(i, j), i = 1, nnodex), j = 1, nnodey)
+      write(138, 310) ((dbxdx(i, j), i = 1, nmodesx), j = 1, nmodesy)
+      write(138, 310) ((dbydx(i, j), i = 1, nmodesx), j = 1, nmodesy)
+      write(138, 310) ((dbzdx(i, j), i = 1, nmodesx), j = 1, nmodesy)
 
-      write(138, 310) ((dbxdy(i, j), i = 1, nnodex), j = 1, nnodey)
-      write(138, 310) ((dbydy(i, j), i = 1, nnodex), j = 1, nnodey)
-      write(138, 310) ((dbzdy(i, j), i = 1, nnodex), j = 1, nnodey)
+      write(138, 310) ((dbxdy(i, j), i = 1, nmodesx), j = 1, nmodesy)
+      write(138, 310) ((dbydy(i, j), i = 1, nmodesx), j = 1, nmodesy)
+      write(138, 310) ((dbzdy(i, j), i = 1, nmodesx), j = 1, nmodesy)
 
-      write(138, 310) ((dbdx(i, j), i = 1, nnodex), j = 1, nnodey)
-      write(138, 310) ((dbdy(i, j), i = 1, nnodex), j = 1, nnodey)
+      write(138, 310) ((dbdx(i, j), i = 1, nmodesx), j = 1, nmodesy)
+      write(138, 310) ((dbdy(i, j), i = 1, nmodesx), j = 1, nmodesy)
 
-      write(138, 310) ((psizz(i, j), i = 1, nnodex), j = 1, nnodey)
-      write(138, 310) ((psirr(i, j), i = 1, nnodex), j = 1, nnodey)
-      write(138, 310) ((psirz(i, j), i = 1, nnodex), j = 1, nnodey)
+      write(138, 310) ((psizz(i, j), i = 1, nmodesx), j = 1, nmodesy)
+      write(138, 310) ((psirr(i, j), i = 1, nmodesx), j = 1, nmodesy)
+      write(138, 310) ((psirz(i, j), i = 1, nmodesx), j = 1, nmodesy)
 
       write(138, 310) (psigrid(i), i = 1, nxeqd)
       write(138, 310) (rhoeqdsk(i), i = 1, nxeqd)
       write(138, 310) (qpsi(i), i = 1, nxeqd)
 
-      write(138, 310) ((dxxbxn(i, j), i = 1, nnodex), j = 1, nnodey)
-      write(138, 310) ((dxxbyn(i, j), i = 1, nnodex), j = 1, nnodey)
-      write(138, 310) ((dxxbzn(i, j), i = 1, nnodex), j = 1, nnodey)
+      write(138, 310) ((dxxbxn(i, j), i = 1, nmodesx), j = 1, nmodesy)
+      write(138, 310) ((dxxbyn(i, j), i = 1, nmodesx), j = 1, nmodesy)
+      write(138, 310) ((dxxbzn(i, j), i = 1, nmodesx), j = 1, nmodesy)
 
-      write(138, 310) ((dxybxn(i, j), i = 1, nnodex), j = 1, nnodey)
-      write(138, 310) ((dxybyn(i, j), i = 1, nnodex), j = 1, nnodey)
-      write(138, 310) ((dxybzn(i, j), i = 1, nnodex), j = 1, nnodey)
+      write(138, 310) ((dxybxn(i, j), i = 1, nmodesx), j = 1, nmodesy)
+      write(138, 310) ((dxybyn(i, j), i = 1, nmodesx), j = 1, nmodesy)
+      write(138, 310) ((dxybzn(i, j), i = 1, nmodesx), j = 1, nmodesy)
 
-      write(138, 310) ((dyybxn(i, j), i = 1, nnodex), j = 1, nnodey)
-      write(138, 310) ((dyybyn(i, j), i = 1, nnodex), j = 1, nnodey)
-      write(138, 310) ((dyybzn(i, j), i = 1, nnodex), j = 1, nnodey)
+      write(138, 310) ((dyybxn(i, j), i = 1, nmodesx), j = 1, nmodesy)
+      write(138, 310) ((dyybyn(i, j), i = 1, nmodesx), j = 1, nmodesy)
+      write(138, 310) ((dyybzn(i, j), i = 1, nmodesx), j = 1, nmodesy)
 
-      write(138, 310) ((dxxmodb(i, j), i = 1, nnodex), j = 1, nnodey)
-      write(138, 310) ((dxymodb(i, j), i = 1, nnodex), j = 1, nnodey)
-      write(138, 310) ((dyymodb(i, j), i = 1, nnodex), j = 1, nnodey)
+      write(138, 310) ((dxxmodb(i, j), i = 1, nmodesx), j = 1, nmodesy)
+      write(138, 310) ((dxymodb(i, j), i = 1, nmodesx), j = 1, nmodesy)
+      write(138, 310) ((dyymodb(i, j), i = 1, nmodesx), j = 1, nmodesy)
 
-      write(138, 310) ((gradprlb(i, j), i = 1, nnodex), j = 1, nnodey)
+      write(138, 310) ((gradprlb(i, j), i = 1, nmodesx), j = 1, nmodesy)
 
-      write(138, 310) ((bmod_mid(i, j), i = 1, nnodex), j = 1, nnodey)
-      write(138, 310) ((capr_bpol_mid2(i, j), i = 1,nnodex),j= 1,nnodey)
+      write(138, 310) ((bmod_mid(i, j), i = 1, nmodesx), j = 1, nmodesy)
+      write(138, 310) ((capr_bpol_mid2(i, j), i = 1,nmodesx),j= 1,nmodesy)
 
       write(138, 309) nnoderho
       write(138, 310) (rhon(n), n = 1, nnoderho)
       write(138, 310) (capr_bpol_mid(n), n = 1, nnoderho)
       write(138, 310) (bmod_midavg(n), n = 1, nnoderho)
 
-      write(138, 310) ((rho_tor2d(i, j), i = 1, nnodex), j = 1, nnodey)
+      write(138, 310) ((rho_tor2d(i, j), i = 1, nmodesx), j = 1, nmodesy)
 
       write(138, 309) n_phi_max
       write(138, 310) (capr_x(n_phi), n_phi = 1, n_phi_max)
       write(138, 310) (capz_x(n_phi), n_phi = 1, n_phi_max)
 
-      write(138, 310) ((dldb_tot12(i, j), i = 1, nnodex), &
-                                         j = 1, nnodey)
+      write(138, 310) ((dldb_tot12(i, j), i = 1, nmodesx), &
+                                         j = 1, nmodesy)
       write(138, 310) (dldbavg(n), n = 1, nnoderho)
 
 
-      write(138, 310) ((bx(i, j), i = 1, nnodex), j = 1, nnodey)
-      write(138, 310) ((by(i, j), i = 1, nnodex), j = 1, nnodey)
-      write(138, 310) ((bz(i, j), i = 1, nnodex), j = 1, nnodey)
+      write(138, 310) ((bx(i, j), i = 1, nmodesx), j = 1, nmodesy)
+      write(138, 310) ((by(i, j), i = 1, nmodesx), j = 1, nmodesy)
+      write(138, 310) ((bz(i, j), i = 1, nmodesx), j = 1, nmodesy)
 
       close (138)
 
@@ -1971,8 +1946,8 @@
  7016 format(3x,21h         rhoi1 / L = ,1pe12.4,7h       )
  7017 format(3x,21h             rhoi1 = ,1pe12.4,7h m     )
  7217 format(3x,21h             qavg0 = ,1pe12.4,7h       )
- 1020 format(3x,21h            nnodex = ,i12, 7h       / &
-             3x,21h            nnodey = ,i12, 7h       )
+ 1020 format(3x,21h            nmodesx = ,i12, 7h       / &
+             3x,21h            nmodesy = ,i12, 7h       )
 
  3013 format(3x,21h                i0 = ,i12,7h       )
 30131 format(3x,21h             ileft = ,i12,7h       )
@@ -2008,7 +1983,7 @@
 
       return
 
-      end
+      end subroutine eqdsk_setup
 
 !
 !***************************************************************************
@@ -2046,7 +2021,7 @@
 
 
 
-      subroutine aorsa_grid(nnodex, nnodey, capr, capz, nxmx, nymx, &
+      subroutine aorsa_grid(nmodesx, nmodesy, capr, capz, nxmx, nymx, &
          psisep, psimag, bx0, by0, bz0, bxn, byn, bzn, bmod, &
          psi, rho, rg, zg, psig, psirg, psizg, psirzg, &
          psis, fs, fs1, nxeqdmax, nyeqdmax, mr, mz, ma, psio, &
@@ -2055,10 +2030,11 @@
 
       use dlg_bField
       use aorsa2din_mod, ONLY: use_dlg_bField 
+      use fitpack
 
       implicit none
 
-      integer i, j, nnodex, nnodey, mode, nxmx, nymx, mr, mz, ma
+      integer i, j, nmodesx, nmodesy, mode, nxmx, nymx, mr, mz, ma
       integer ihalf, jequat, ir, iz, ipsi, nxeqdmax, nyeqdmax
 
       integer islpsw, islpsw1, ierr
@@ -2103,8 +2079,8 @@
 
 
 
-      jequat = nnodey / 2
-      ihalf = nnodex / 2
+      jequat = nmodesy / 2
+      ihalf = nmodesx / 2
 
 !      write(6, 310) (rg(ir), ir = 1, mr)
 !      write(6, 310) (zg(iz), iz = 1, mz)
@@ -2157,8 +2133,8 @@
       call curv1 (ma, psis, rho_tors, slp1, slpn, islpsw1, &
              yprho, temp1, sigma, ierr)
 
-      do i = 1, nnodex
-         do j = 1, nnodey
+      do i = 1, nmodesx
+         do j = 1, nmodesy
             r = capr(i)
             z = capz(j)
 
@@ -2231,8 +2207,8 @@
 
       !! try smoothing bPhi
 
-      !do i=3,nnodex-2
-      !  do j=3,nnodey-2
+      !do i=3,nmodesx-2
+      !  do j=3,nmodesy-2
 
       !      bz0(i,j) = sum ( bz0(i-2:i+2,j-2:j+2) ) / 5.0**2 
 
@@ -2274,7 +2250,7 @@
   310 format(1p6e12.4)
 
       return
-      end
+      end subroutine aorsa_grid
 
 !
 !***************************************************************************
@@ -2424,7 +2400,7 @@
 
 
       return
-      end
+      end subroutine readeq_ga
 !
 !***************************************************************************
 !
@@ -2455,7 +2431,7 @@
       end if
 
       return
-      end
+      end subroutine deriv_r
 
 !
 !***************************************************************************
@@ -2486,7 +2462,7 @@
       end if
 
       return
-      end
+      end subroutine deriv_z
 
 !
 !***************************************************************************
@@ -2510,7 +2486,7 @@
 
 
       return
-      end
+      end subroutine deriv_rz
 
 !
 !***************************************************************************
@@ -2558,7 +2534,7 @@
 
 
       return
-      end
+      end subroutine deriv_rzOld
 
 !
 !***************************************************************************
@@ -2579,7 +2555,7 @@
          dfdx = (f(j) - f(j-1)) /  (x(j) - x(j-1))
 
       return
-      end
+      end subroutine deriv_x_eq
 
 !
 !***************************************************************************
@@ -2612,22 +2588,22 @@
       end do
 
       return
-      end
+      end subroutine smooth
 
 !
 !***************************************************************************
 !
 
-      subroutine volume_xy(rho, nxdim, nydim, nrhodim, &
-         nnodex, nnodey, nnoderho, drho, dx, dy, capr, r0, vol)
+      subroutine volume_xy(rho, nxmx, nymx, nrhodim, &
+         nmodesx, nmodesy, nnoderho, drho, dx, dy, capr, r0, vol)
 
       implicit none
 
-      integer nxdim, nydim, nrhodim, nnodex, nnodey, nnoderho
+      integer nxmx, nymx, nrhodim, nmodesx, nmodesy, nnoderho
       integer n, i, j
 
-      real rho(nxdim, nydim), r0, drho, dx, dy, vol(nrhodim), &
-         capr(nxdim), pi, twopi
+      real rho(nxmx, nymx), r0, drho, dx, dy, vol(nrhodim), &
+         capr(nxmx), pi, twopi
 
       pi = 3.14159
       twopi = 2.0 * pi
@@ -2636,8 +2612,8 @@
           vol(n) = 0.0
       end do
 
-      do i = 1, nnodex
-         do j = 1, nnodey
+      do i = 1, nmodesx
+         do j = 1, nmodesy
             n = int(rho(i,j) / drho) + 1
             if(n .le. nnoderho)then
                vol(n) =  vol(n) + dx * dy * twopi * capr(i)
@@ -2649,7 +2625,7 @@
   100 format (1i10, 1p8e12.4)
   102 format (2i10)
       return
-      end
+      end subroutine volume_xy
 !
 !***************************************************************************
 !
@@ -2709,9 +2685,9 @@
  8235 format(4(2x,i5))
 
       return
-      end
+      end subroutine plasma_state_eq 
 
 !
 !***************************************************************************
 !
-
+end module eqdsk_setup_mod

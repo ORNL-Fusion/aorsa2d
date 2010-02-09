@@ -1,6 +1,9 @@
-!
+module eqdsk_plot_mod
+
+contains
+
       subroutine eqdsk_plot
-      use size_mod
+      use parameters
       use plot_aorsa2dps
 
       implicit none
@@ -15,7 +18,7 @@
       character*32 titlb
 
       real logmax
-      integer nxmx, nymx, nkdim1, nkdim2, mkdim1, mkdim2, nlevmax
+      integer nlevmax
       integer ibackground, nkx1, nkx2, nky1, nky2, n, m, &
          nkpltdim, mkpltdim, nkxplt, nkyplt
 
@@ -26,7 +29,7 @@
          ncolln3, ncolbrd, ncolln1, ncollin, ncollab, ncolion, &
          ncolelec, norange
 
-      integer nrhomax, nnoderho, iflag, nxeqdmax, nyeqdmax, &
+      integer nnoderho, iflag, nxeqdmax, nyeqdmax, &
           nnoderho_half, nnoderho2_half
 
       integer pgopen, pgbeg, ier
@@ -37,16 +40,16 @@
 !      parameter (nmodesmax = 450)
 !      parameter (mmodesmax = 450)
 
-      parameter (nxmx = nmodesmax)
-      parameter (nymx = mmodesmax)
+      !parameter (nxmx = nmodesmax)
+      !parameter (nymx = mmodesmax)
 
-      parameter (nrhomax = nxmx)
+      !parameter (nrhomax = nxmx)
 
-      parameter (nkdim1 = - nxmx / 2)
-      parameter (nkdim2 =   nxmx / 2)
+      !parameter (nkdim1 = - nxmx / 2)
+      !parameter (nkdim2 =   nxmx / 2)
 
-      parameter (mkdim1 = - nxmx / 2)
-      parameter (mkdim2 =   nxmx / 2)
+      !parameter (mkdim1 = - nxmx / 2)
+      !parameter (mkdim2 =   nxmx / 2)
 
       parameter (nkpltdim = 2 * nkdim2)
       parameter (mkpltdim = 2 * mkdim2)
@@ -911,7 +914,7 @@
    10 format(i10,1p4e10.3,i10,1pe10.3)
 
       return
-      end
+      end subroutine eqdsk_plot
 !
 !********************************************************************
 !
@@ -941,78 +944,6 @@
 
       return
  2201 format(2i5,1p8e12.4)
-      end
+      end subroutine a2dmnmx_eq
 
-
-!
-!***************************************************************************
-!
-
-
-      subroutine ezplot1_0(title, titll, titlr, x1, y1, nr, nrmax)
-      use plot_aorsa2dps
-
-      implicit none
-
-      real xzmax,xzmin,xnmin,xnmax,rhomin,rhomax
-      real x1(nrmax), y1(nrmax)
-      real y1max,y2max,y3max,y1min,y2min,y3min
-      real ymin,ymax
-
-      character*32 title
-      character*32 titll
-      character*32 titlr
-      integer nr,nrmax
-
-      integer nplot1,ncollab, ncolion,ncolbox, ncyan, &
-          ncolelec, ncolln2, ncollin, ncolbrd
-      integer nblack,nred,nyellow, ngreen,naqua,npink, &
-         nwheat,ngrey,nbrown,nblue,nblueviolet,ncyan1, &
-         nturquoise,nmagenta,nsalmon,nwhite,ncolln3
-      common/colcom/nblack,nred,nyellow,ngreen,naqua,npink, &
-       nwheat,ngrey,nbrown,nblue,nblueviolet,ncyan, &
-       nturquoise,nmagenta,nsalmon,nwhite,ncolbox,ncolbrd, &
-       ncolion,ncolelec,ncollin,ncolln2,ncollab
-
-      ncolln3=ngreen
-
-      call a1mnmx(y1,nrmax,nr,y1min,y1max)
-      if(y1max .eq. 0.0 .and. y1min .eq. 0.0)return
-
-      ymax = y1max
-      ymin = y1min
-
-      rhomax = x1(nr)
-      rhomin = x1(1)
-      ymax = ymax * 1.1
-      ymin = ymin
-
-      if (ymin .le. 0.0) ymin = ymin * 1.1
-
-      ymin = 0.0
-
-! Advance plotter to a new page, define coordinate range of graph and draw axes
-
-!      call pgenv(rhomin, rhomax, ymin, ymax, 0, 0)
-
-      CALL PGPAGE
-      CALL PGSVP (0.15,0.85,0.15,0.85)
-      CALL PGSWIN (rhomin, rhomax, ymin, ymax)
-      CALL PGBOX  ('BCNST', 0.0, 0, 'BCNST', 0.0, 0)
-
-
-! Label the axes (note use of \u and \d for raising exponent).
-
-      call pglab('rho', titll, title)
-
-! Plot the line graph.
-
-      call pgline(nr, x1, y1)
-
-  300 format (1p9e11.3)
-
-      return
-      end
-!
-!***************************************************************************
-!
+end module eqdsk_plot_mod

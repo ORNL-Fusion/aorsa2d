@@ -23,6 +23,7 @@ contains
         use dlg
         use eqdsk_dlg
         use interp
+        use fitpack
 
         implicit none
        
@@ -156,7 +157,8 @@ contains
                            zp, temp, sigma, iErr)
                         
                         f_vv(i,j) = surf2 ( capR, y, m, n, &
-                           R_binCenters, z_binCenters, f_rzvv(:,:,i,j), m, zp )
+                           R_binCenters, z_binCenters, f_rzvv(:,:,i,j), m, zp, &
+                           sigma )
                 
                     end do
                 end do
@@ -257,7 +259,8 @@ contains
                                 upara(j) <= maxVal(uPar_binCenters) ) then
      
                             p_f_rzvv(i,j) = surf2 ( uperp(i), upara(j), m, n, &
-                                uPerp_binCenters, uPar_binCenters, f_vv, m, zp )
+                                uPerp_binCenters, uPar_binCenters, f_vv, m, zp, &
+                                sigma )
                 
                             !   Force positive, should only be important down in the 
                             !   noise. Not sure why there are NaNs appearing sometimes 

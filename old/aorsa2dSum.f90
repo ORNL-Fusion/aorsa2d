@@ -1,11 +1,14 @@
-!-----------------------------------------
-!     AORSA2D_SUM: version 15 (02-29-2008)
-!-----------------------------------------
-      subroutine aorsa2dSum(myid)
+module aorsa2dSum_mod
 
-      use size_mod
-      use aorsa2din_mod
+contains
+
+      subroutine aorsa2dSum ( myid )
+
+      use parameters 
+      use aorsa2din_mod, aorsa2din_nPhi => nPhi
       use netcdf
+      use nc_check
+      use plot_mod
 
       implicit none
 
@@ -15,20 +18,20 @@
          nant, nphi3d, n, nphi, nstrpol, nphi_fpm, nt_max
       integer nphi3d_1quarter, nphi3d_half, nphi3d_3quarter
 
-      integer nxmx, nymx, i, j
-      integer nxdim, nydim, myid
+      integer i, j
+      integer myid
       integer nnodex, nnodey, nphi1, nphi2, nphi1_dum, nphi2_dum
       integer nxplot_dim, nyplot_dim
       integer nxplot, nyplot, ir, nt, imax, jmax, kmax
 
       integer pgopen, pgbeg, ier, numb, iflag, nlevmax
-      integer number_points, nrhomax
+      integer number_points
       integer nnoderho
 
       parameter (nlevmax = 101)
-      parameter (nxmx = nmodesmax)
-      parameter (nymx = mmodesmax)
-      parameter (nrhomax = nxmx * 2)
+      !parameter (nxmx = nmodesmax)
+      !parameter (nymx = mmodesmax)
+      !parameter (nrhomax = nxmx * 2)
 
       parameter (nxplot_dim   = 1000)
       parameter (nyplot_dim   = 1000)
@@ -92,7 +95,7 @@
 
 
       complex work(nphmax), zi, csum, curent(nphmax),cn(ntmin : ntmax)
-      complex cur3d(nphimx), jfun, cursum(nphmax), cexpkz
+      complex cur3d(nphimx), cursum(nphmax), cexpkz
       complex div_x, div_y, div_z, div_j
 
 
@@ -234,8 +237,6 @@
         eMod_id, eAlpha_re_id, eAlpha_im_id, &
         R_id, z_id, phi_id
 
-
-      external jfun
 
       t1 = second1(dummy)
 
@@ -1450,15 +1451,11 @@
       write (36, 310) (wdot4sum(n), n = 1, nnoderho)
       write (36, 310) (wdot5sum(n), n = 1, nnoderho)
 
-
-      nxdim = nxmx
-      nydim = nymx
-
       redotjisum = redotj1sum + redotj2sum + redotj3sum &
                  + redotj4sum + redotj5sum + redotj6sum
 
 !      call run_rf2x(nmodesx, nmodesy, rwleft, rwright,
-!     .   ytop, ybottom, myid, nxdim, nydim,
+!     .   ytop, ybottom, myid, nxmx, nymx,
 !     .   rt, b0, rho,
 !     .   redotjesum, redotjisum,
 !     .   redotj1sum, redotj2sum,
@@ -2230,9 +2227,6 @@ endif
       write(16, 8847) tmin
  8847 format('time to sum modes =', f9.3, ' min')
 
-!DLG: commented this call to plot as I don't seem to have it.
-!     I suspect it is a new thing Fred has added.
-
       call plot(ndisti2)
 
       close (16)
@@ -2430,7 +2424,7 @@ endif
 
 
       return
-      end
+      end subroutine aorsa2dSum
 
 !
 !********************************************************************
@@ -2449,7 +2443,7 @@ endif
       real zn, pi, z0, zdiff2, phin, zdiff, zdiff1, &
          z, dphi
 
-      complex zi, fun1
+      complex zi
 
       pi = 3.141592654
       zi = cmplx(0., 1.)
@@ -2483,7 +2477,7 @@ endif
 !      call exit
 
       return
-      end
+      end function jfun
 !
 !***************************************************************************
 !
@@ -2502,7 +2496,7 @@ endif
       if(zabs .gt. xlt/2.)fun1=cmplx(0.0, 0.0)
 
       return
-      end
+      end function fun1 
 
 
 !
@@ -2531,7 +2525,7 @@ endif
       end do
 
       return
-      end
+      end subroutine fftn2
 
 !
 !***************************************************************************
@@ -2544,7 +2538,7 @@ endif
       ans=ans+(f(n)+f(n+1))/2.*(x(n+1)-x(n))
     1 continue
       return
-      end
+      end subroutine dgrate
 
 !
 !
@@ -2573,7 +2567,7 @@ endif
       end do
 
       return
-      end
+      end subroutine fftin2
 
 !
 !***************************************************************************
@@ -2618,7 +2612,7 @@ endif
 
 
       return
-      end
+      end subroutine sgrate_3d
 
 
 !
@@ -2677,7 +2671,7 @@ endif
       ans=ans+(ansz+ansz1)/2.0*dphi
 
       return
-      end
+      end subroutine psigr3
 !
 !***************************************************************************
 !
@@ -2720,7 +2714,7 @@ endif
       dphi=2.*pi-phi(k-1)
       ans=ans+(ansz+ansz1)/2.0*dphi
       return
-      end
+      end subroutine psig3c
 !
 !***************************************************************************
 !
@@ -2749,7 +2743,7 @@ endif
   301 format(2i10)
 !     call exit
       return
-      end
+      end subroutine intplc
 !
 !***************************************************************************
 !
@@ -2778,7 +2772,7 @@ endif
   301 format(2i10)
 !     call exit
       return
-      end
+      end subroutine intp3c
 !
 !***************************************************************************
 !
@@ -2806,7 +2800,7 @@ endif
   301 format(2i10)
 !     call exit
       return
-      end
+      end subroutine intp3d
 !
 !***************************************************************************
 !
@@ -2834,7 +2828,7 @@ endif
   301 format(2i10)
 !     call exit
       return
-      end
+      end subroutine intp2d
 !
 !***************************************************************************
 !
@@ -2874,7 +2868,7 @@ endif
   900 format(1p6e12.4)
   910 format(1p8e12.4)
   920 format(2i10)
-      end
+      end subroutine intplt_real
 
 
 
@@ -2919,7 +2913,7 @@ endif
   900 format(1p6e12.4)
   910 format(1p8e12.4)
   920 format(2i10)
-      end
+      end subroutine intplt_phi
 
 !
 !***************************************************************************
@@ -2940,7 +2934,7 @@ endif
  1000 format(1p8e12.4)
   301 format(2i10)
       return
-      end
+      end subroutine intp1d
 
 
 !
@@ -2970,10 +2964,10 @@ endif
 
       return
  2201 format(2i5,1p8e12.4)
-      end
+      end subroutine a1mnmx_dp
 
 
 !***************************************************************************
 !
 
-
+end module aorsa2dSum_mod

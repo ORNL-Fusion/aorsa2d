@@ -1,6 +1,7 @@
 module current_module
 
 use sigma_module
+use parameters
 
 contains
 
@@ -33,8 +34,6 @@ contains
 !-----------------------------------------------------------------------
 !     This subroutine calculates the plasma current for a single species
 !-----------------------------------------------------------------------
-
-        use size_mod
 
       implicit none
 
@@ -363,8 +362,6 @@ contains
 !     This subroutine calculates the plasma current for a single species
 !-----------------------------------------------------------------------
 
-        use size_mod
-
       implicit none
 
 
@@ -561,7 +558,6 @@ contains
 !     This subroutine calculates the plasma current for a single species
 !-----------------------------------------------------------------------
 
-        use size_mod
       implicit none
 
       logical ismine
@@ -755,7 +751,6 @@ contains
 !     This subroutine calculates the plasma current for a single species
 !-----------------------------------------------------------------------
 
-        use size_mod
       implicit none
 
       logical ismine

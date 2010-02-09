@@ -12,8 +12,10 @@ module interp
 
 contains
     subroutine init_interp ()
-        use gc_terms
+        !use gc_terms
         use eqdsk_dlg
+        use fitpack 
+
         implicit none
  
         integer :: islpsw, iErr
@@ -38,47 +40,47 @@ contains
             zy1, zyn, zxy11, zxym1, zxy1n, zxymn, islpsw, &
             zp_psi, temp, sigma, iErr)
      
-        !   b field
+        !!   b field
 
-        call surf1 ( nw, nh, r, z, bR, nw, zx1, zxm, &
-            zy1, zyn, zxy11, zxym1, zxy1n, zxymn, islpsw, &
-            zp_bR, temp, sigma, iErr)
-        call surf1 ( nw, nh, r, z, bPhi, nw, zx1, zxm, &
-            zy1, zyn, zxy11, zxym1, zxy1n, zxymn, islpsw, &
-            zp_bPhi, temp, sigma, iErr)
-        call surf1 ( nw, nh, r, z, bz__, nw, zx1, zxm, &
-            zy1, zyn, zxy11, zxym1, zxy1n, zxymn, islpsw, &
-            zp_bz, temp, sigma, iErr)
+        !call surf1 ( nw, nh, r, z, bR, nw, zx1, zxm, &
+        !    zy1, zyn, zxy11, zxym1, zxy1n, zxymn, islpsw, &
+        !    zp_bR, temp, sigma, iErr)
+        !call surf1 ( nw, nh, r, z, bPhi, nw, zx1, zxm, &
+        !    zy1, zyn, zxy11, zxym1, zxy1n, zxymn, islpsw, &
+        !    zp_bPhi, temp, sigma, iErr)
+        !call surf1 ( nw, nh, r, z, bz__, nw, zx1, zxm, &
+        !    zy1, zyn, zxy11, zxym1, zxy1n, zxymn, islpsw, &
+        !    zp_bz, temp, sigma, iErr)
  
-        !   curvature 
+        !!   curvature 
     
-        call surf1 ( nw, nh, r, z, bCurvature_R, nw, zx1, zxm, &
-            zy1, zyn, zxy11, zxym1, zxy1n, zxymn, islpsw, &
-            zp_bCurv_R, temp, sigma, iErr)
-        call surf1 ( nw, nh, r, z, bCurvature_phi, nw, zx1, zxm, &
-            zy1, zyn, zxy11, zxym1, zxy1n, zxymn, islpsw, &
-            zp_bCurv_phi, temp, sigma, iErr)
-        call surf1 ( nw, nh, r, z, bCurvature_z, nw, zx1, zxm, &
-            zy1, zyn, zxy11, zxym1, zxy1n, zxymn, islpsw, &
-            zp_bCurv_z, temp, sigma, iErr)
+        !call surf1 ( nw, nh, r, z, bCurvature_R, nw, zx1, zxm, &
+        !    zy1, zyn, zxy11, zxym1, zxy1n, zxymn, islpsw, &
+        !    zp_bCurv_R, temp, sigma, iErr)
+        !call surf1 ( nw, nh, r, z, bCurvature_phi, nw, zx1, zxm, &
+        !    zy1, zyn, zxy11, zxym1, zxy1n, zxymn, islpsw, &
+        !    zp_bCurv_phi, temp, sigma, iErr)
+        !call surf1 ( nw, nh, r, z, bCurvature_z, nw, zx1, zxm, &
+        !    zy1, zyn, zxy11, zxym1, zxy1n, zxymn, islpsw, &
+        !    zp_bCurv_z, temp, sigma, iErr)
 
-        !   gradient
+        !!   gradient
 
-        call surf1 ( nw, nh, r, z, bGradient_R, nw, zx1, zxm, &
-            zy1, zyn, zxy11, zxym1, zxy1n, zxymn, islpsw, &
-            zp_bGrad_R, temp, sigma, iErr)
-        call surf1 ( nw, nh, r, z, bGradient_phi, nw, zx1, zxm, &
-            zy1, zyn, zxy11, zxym1, zxy1n, zxymn, islpsw, &
-            zp_bGrad_phi, temp, sigma, iErr)
-        call surf1 ( nw, nh, r, z, bGradient_z, nw, zx1, zxm, &
-            zy1, zyn, zxy11, zxym1, zxy1n, zxymn, islpsw, &
-            zp_bGrad_z, temp, sigma, iErr)
+        !call surf1 ( nw, nh, r, z, bGradient_R, nw, zx1, zxm, &
+        !    zy1, zyn, zxy11, zxym1, zxy1n, zxymn, islpsw, &
+        !    zp_bGrad_R, temp, sigma, iErr)
+        !call surf1 ( nw, nh, r, z, bGradient_phi, nw, zx1, zxm, &
+        !    zy1, zyn, zxy11, zxym1, zxy1n, zxymn, islpsw, &
+        !    zp_bGrad_phi, temp, sigma, iErr)
+        !call surf1 ( nw, nh, r, z, bGradient_z, nw, zx1, zxm, &
+        !    zy1, zyn, zxy11, zxym1, zxy1n, zxymn, islpsw, &
+        !    zp_bGrad_z, temp, sigma, iErr)
 
-        !   bDotGraB 
+        !!   bDotGraB 
 
-        call surf1 ( nw, nh, r, z, bDotGradB, nw, zx1, zxm, &
-            zy1, zyn, zxy11, zxym1, zxy1n, zxymn, islpsw, &
-            zp_bDotGradB, temp, sigma, iErr)
+        !call surf1 ( nw, nh, r, z, bDotGradB, nw, zx1, zxm, &
+        !    zy1, zyn, zxy11, zxym1, zxy1n, zxymn, islpsw, &
+        !    zp_bDotGradB, temp, sigma, iErr)
  
 
     end subroutine init_interp

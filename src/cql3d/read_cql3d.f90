@@ -3,7 +3,7 @@ module read_CQL3D
        USE CQL_kinds_m
        implicit none
 
-       integer :: n_theta_max  ! max number of pitch angles
+       integer :: n_theta_max__  ! max number of pitch angles
        integer :: n_u          ! Number of normalized velocities
        integer :: n_psi        ! Number of flux surfaces
        integer :: n_t          ! Number of cql3d time steps 
@@ -202,43 +202,43 @@ module read_CQL3D
     ALLOCATE( iy_(lrz), stat=istat )
        IF (istat /= 0 ) THEN
        WRITE (*,'("read_CQL3D: allocate failed for iy_")')
-       PAUSE
+       stop
        END IF
 
     ALLOCATE( y(iy, lrz), stat=istat )
        IF (istat /= 0 ) THEN
        WRITE (*,'("read_CQL3D: allocate failed for y")')
-       PAUSE
+       stop
        END IF
 
     ALLOCATE( x(jx), stat=istat )
        IF (istat /= 0 ) THEN
        WRITE (*,'("read_CQL3D: allocate failed for x")')
-       PAUSE
+       stop
        END IF
 
     ALLOCATE( rya(lrz), stat=istat )
        IF (istat /= 0 ) THEN
        WRITE (*,'("read_CQL3D: allocate failed for rya")')
-       PAUSE
+       stop
        END IF
 
     ALLOCATE( f(iy, jx, lrz), stat=istat )
        IF (istat /= 0 ) THEN
        WRITE (*,'("read_CQL3D: allocate failed for f")')
-       PAUSE
+       stop
        END IF
        
     ALLOCATE( wperp(lrz, nt), stat=istat )
        IF (istat /= 0 ) THEN
        WRITE (*,'("read_CQL3D: allocate failed for wperp")')
-       PAUSE
+       stop
        END IF 
        
     ALLOCATE( wpar(lrz, nt), stat=istat )
        IF (istat /= 0 ) THEN
        WRITE (*,'("read_CQL3D: allocate failed for wpar")')
-       PAUSE
+       stop
        END IF               
        
        
@@ -341,7 +341,7 @@ module read_CQL3D
 !c ************* Allocate space for module arrays.
 !c **************If previously allocated, release space first.
 
-    n_theta_max = iy
+    n_theta_max__ = iy
     n_u = jx
     n_psi = lrz
     n_t = nt
@@ -352,32 +352,32 @@ module read_CQL3D
     ALLOCATE( n_theta_(n_psi), stat=istat )
        IF (istat /= 0 ) THEN
        WRITE (*,'("read_CQL3D: allocate failed for n_theta_")')
-       PAUSE
+       stop
        END IF
 
-    ALLOCATE( theta(n_theta_max, n_psi), stat=istat )
+    ALLOCATE( theta(n_theta_max__, n_psi), stat=istat )
        IF (istat /= 0 ) THEN
        WRITE (*,'("read_CQL3D: allocate failed for theta")')
-       PAUSE
+       stop
        END IF
 
     ALLOCATE( u(n_u), stat=istat )
        IF (istat /= 0 ) THEN
        WRITE (*,'("read_CQL3D: allocate failed for u")')
-       PAUSE
+       stop
        END IF
 
     ALLOCATE( rho_a(n_psi), stat=istat )
        IF (istat /= 0 ) THEN
        WRITE (*,'("read_CQL3D: allocate failed for rho_a")')
-       PAUSE
+       stop
        END IF
 
-    ALLOCATE( f_CQL(n_theta_max, n_u, n_psi), stat=istat )
-      ALLOCATE( f_cql_2d(n_u, n_theta_max),     stat=istat )
+    ALLOCATE( f_CQL(n_theta_max__, n_u, n_psi), stat=istat )
+      ALLOCATE( f_cql_2d(n_u, n_theta_max__),     stat=istat )
        IF (istat /= 0 ) THEN
        WRITE (*,'("read_CQL3D: allocate failed for f_CQL")')
-       PAUSE
+       stop
        END IF
        
        
@@ -385,13 +385,13 @@ module read_CQL3D
        ALLOCATE( wperp_cql(n_psi, n_t),    stat=istat )
        IF (istat /= 0 ) THEN
        WRITE (*,'("read_CQL3D: allocate failed for wperp_CQL")')
-       PAUSE
+       stop
        END IF  
        
        ALLOCATE( wpar_cql(n_psi, n_t),    stat=istat )
        IF (istat /= 0 ) THEN
        WRITE (*,'("read_CQL3D: allocate failed for wpar_CQL")')
-       PAUSE
+       stop
        END IF              
        
 

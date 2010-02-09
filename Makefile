@@ -1,13 +1,3 @@
-#
-#	Makefile for Jaguar xt4, Franklin xt4 & dlghp
-#
-#	IMPORTANT: load modules with 
-#		"module load netcdf" 
-#		"module load pgplot"
-#
-#	For performance data, load the following before compiling:
-#		"module load papi"
-#	
 #	1. Set machine with enviroment variable
 #
 #	MACHINE = set in ~/.bashrc or ~/.bashrc.ext
@@ -54,55 +44,13 @@ endif
 
 
 EXEC = xaorsa2d.$(MACHINE)
-
 SRC_DIR = src
-
 OBJ_DIR = obj
-
 MOD_DIR = mod
-
 FFT_DIR = $(SRC_DIR)/fftpack
-
 CQL_DIR = $(SRC_DIR)/cql3d
-
 INCLUDE_DIR = $(SRC_DIR)/cql3d
-
 DLG_DIR = $(SRC_DIR)/dlg
-
-OBJ_FILES = \
- $(OBJ_DIR)/cauchy_mod.o \
- $(OBJ_DIR)/size_mod.o \
- $(OBJ_DIR)/aorsa2din_mod.o \
- $(OBJ_DIR)/swim_global_data_mod.o \
- $(OBJ_DIR)/precision_mod.o \
- $(OBJ_DIR)/profile_mod.o\
- $(OBJ_DIR)/qlsum.o \
- $(OBJ_DIR)/ql_myra.o \
- $(OBJ_DIR)/mets2aorsa.o \
- $(OBJ_DIR)/cauchy_ppart.o \
- $(OBJ_DIR)/vlog.o \
- $(OBJ_DIR)/aorsaSubs.o \
- $(OBJ_DIR)/sigma.o \
- $(OBJ_DIR)/zfunction.o \
- $(OBJ_DIR)/ztable.o \
- $(OBJ_DIR)/current.o \
- $(OBJ_DIR)/mets2aorsa_myra.o \
- $(OBJ_DIR)/slowDown.o \
- $(OBJ_DIR)/fourier.o \
- $(OBJ_DIR)/assert.o \
- $(OBJ_DIR)/setupblacs.o \
- $(OBJ_DIR)/bessel.o \
- $(OBJ_DIR)/check.o \
- $(OBJ_DIR)/rf2x_setup2.o \
- $(OBJ_DIR)/profile_setup.o \
- $(OBJ_DIR)/eqdsk_setup.o \
- $(OBJ_DIR)/orbit.o \
- $(OBJ_DIR)/eqdsk_plot.o \
- $(OBJ_DIR)/fieldws.o \
- $(OBJ_DIR)/dshell.o \
- $(OBJ_DIR)/aorsa2dMain.o \
- ${OBJ_DIR}/aorsa2dSum.o \
- ${OBJ_DIR}/plot.o
 
 ifeq ($(USEGPU),yes)
 OBJ_CUDA = \
@@ -110,36 +58,10 @@ OBJ_CUDA = \
 		   $(OBJ_DIR)/qlsum_gpu_host.o 
 endif
 
-OBJ_FFT = \
- $(OBJ_DIR)/cfftb1.o \
- $(OBJ_DIR)/cfftf1.o \
- $(OBJ_DIR)/cffti1.o \
- $(OBJ_DIR)/passb.o \
- $(OBJ_DIR)/passb2.o \
- $(OBJ_DIR)/passb3.o \
- $(OBJ_DIR)/passb4.o \
- $(OBJ_DIR)/passb5.o \
- $(OBJ_DIR)/passf.o \
- $(OBJ_DIR)/passf2.o \
- $(OBJ_DIR)/passf3.o \
- $(OBJ_DIR)/passf4.o \
- $(OBJ_DIR)/passf5.o \
- $(OBJ_DIR)/zfftb.o \
- $(OBJ_DIR)/zfftf.o \
- $(OBJ_DIR)/zffti.o
- 
-OBJ_CQL3D_SETUP = \
- $(OBJ_DIR)/global_data_m.o \
- $(OBJ_DIR)/basis_functions_m.o \
- $(OBJ_DIR)/f_expanded_m.o \
- $(OBJ_DIR)/CQL_kinds_m.o \
- $(OBJ_DIR)/vector_write_m.o \
- $(OBJ_DIR)/read_cql3d.o \
- $(OBJ_DIR)/fitpack.o \
- $(OBJ_DIR)/cubic_B_splines_v.o \
- $(OBJ_DIR)/cql3d_setup.o
-
+OBJ_FFT := $(patsubst src/fftpack/%,obj/%.o,$(basename $(wildcard src/fftpack/*)))
 OBJ_DLG := $(patsubst src/dlg/%,obj/%.o,$(basename $(wildcard src/dlg/*)))
+OBJ_FILES := $(patsubst src/%,obj/%.o,$(basename $(wildcard src/*.*)))
+OBJ_CQL3D_SETUP := $(patsubst src/cql3d/%,obj/%.o,$(basename $(wildcard src/cql3d/*.*)))
 
 ifeq ($(CRAYXT4),1)
 	OPT_FLAGS = -fast -fastsse ${PGI_PRE_COMPILE_OPTS} #-traceback #-Minfo -mp#-Mlist #-Mconcur=nonuma
@@ -451,24 +373,16 @@ ifeq ($(USEGPU),yes)
 $(OBJ_DIR)/qlsum.o:  $(CUDA_DIR)/qlsum_gpu.f90
 	$(COMPILE_DLG) -o $(OBJ_DIR)/qlsum.o $(CUDA_DIR)/qlsum_gpu.f90 $(NETCDF) ${BOUNDS} ${WARN}
 else
-$(OBJ_DIR)/qlsum.o:  $(SRC_DIR)/qlsum.f90 
-	$(COMPILE_DLG) -o $(OBJ_DIR)/qlsum.o $(SRC_DIR)/qlsum.f90 $(NETCDF) ${BOUNDS} ${WARN}
+$(OBJ_DIR)/qlsum_general.o:  $(SRC_DIR)/qlsum_general.f90 
+	$(COMPILE_DLG) -o $(OBJ_DIR)/qlsum_general.o $(SRC_DIR)/qlsum_general.f90 $(NETCDF) ${BOUNDS} ${WARN}
 endif			
 
 ifeq ($(USEGPU),yes)
-$(OBJ_DIR)/ql_myra.o:	$(CUDA_DIR)/ql_myra_gpu.f $(OBJ_DIR)/read_particle_f.o $(OBJ_DIR)/gc_integrate.o ${OBJ_DIR}/write_pql.o 
+$(OBJ_DIR)/ql_myra.o:	$(CUDA_DIR)/ql_myra_gpu.f $(OBJ_DIR)/read_particle_f.o ${OBJ_DIR}/write_pql.o 
 	$(COMPILE_NOSAVE) ${CPP_DIRECTIVES} -o $(OBJ_DIR)/ql_myra.o $(CUDA_DIR)/ql_myra_gpu.f $(NETCDF) ${BOUNDS} ${PNETCDF}
 else
-$(OBJ_DIR)/ql_myra.o:	$(SRC_DIR)/ql_myra.F90 $(OBJ_DIR)/read_particle_f.o $(OBJ_DIR)/gc_integrate.o ${OBJ_DIR}/write_pql.o 
+$(OBJ_DIR)/ql_myra.o:	$(SRC_DIR)/ql_myra.F90 $(OBJ_DIR)/read_particle_f.o ${OBJ_DIR}/write_pql.o 
 	$(COMPILE90_NOSAVE) ${CPP_DIRECTIVES} -o $(OBJ_DIR)/ql_myra.o $(SRC_DIR)/ql_myra.F90 $(NETCDF) ${BOUNDS} ${PNETCDF}
-endif
-
-ifeq ($(MACHINE),dlghp)
-$(OBJ_DIR)/size_mod.o: $(SRC_DIR)/size_mod.F
-	$(COMPILE90) -DDLGHP=1 -o $(OBJ_DIR)/size_mod.o $(SRC_DIR)/size_mod.F ${BOUNDS} 
-else
-$(OBJ_DIR)/size_mod.o: $(SRC_DIR)/size_mod.F
-	$(COMPILE90) -DDLGHP=0 -o $(OBJ_DIR)/size_mod.o $(SRC_DIR)/size_mod.F ${BOUNDS} 
 endif
 
 $(OBJ_DIR)/aorsa2din_mod.o: $(SRC_DIR)/aorsa2din_mod.f90 $(INC_FILES)
@@ -480,18 +394,9 @@ $(OBJ_DIR)/profile_mod.o: $(SRC_DIR)/profile_mod.f90
 $(OBJ_DIR)/swim_global_data_mod.o: $(SRC_DIR)/swim_global_data_mod.f90
 	$(COMPILE90) -o $(OBJ_DIR)/swim_global_data_mod.o $(SRC_DIR)/swim_global_data_mod.f90 ${BOUNDS}
         
-$(OBJ_DIR)/rf2x_setup2.o: $(SRC_DIR)/rf2x_setup2.f
-	$(COMPILE90_2_NOSAVE) -o $(OBJ_DIR)/rf2x_setup2.o $(SRC_DIR)/rf2x_setup2.f ${BOUNDS}
-                 
 $(OBJ_DIR)/profile_setup.o: $(SRC_DIR)/profile_setup.f
 	$(COMPILE90_2_NOSAVE) -o $(OBJ_DIR)/profile_setup.o $(SRC_DIR)/profile_setup.f 
                  
-$(OBJ_DIR)/orbit.o: $(SRC_DIR)/orbit.f
-	$(COMPILE90_2_NOSAVE) -o $(OBJ_DIR)/orbit.o $(SRC_DIR)/orbit.f         
-
-$(OBJ_DIR)/eqdsk_setup.o: $(SRC_DIR)/eqdsk_setup.f90
-	$(COMPILE_DLG) -o $(OBJ_DIR)/eqdsk_setup.o $(SRC_DIR)/eqdsk_setup.f90 ${BOUNDS}
-
 $(OBJ_DIR)/eqdsk_plot.o: $(SRC_DIR)/eqdsk_plot.f90 ${OBJ_DIR}/fieldws.o
 	$(COMPILE_DLG_R4) -o $(OBJ_DIR)/eqdsk_plot.o $(SRC_DIR)/eqdsk_plot.f90 ${BOUNDS}				     
 			     			     

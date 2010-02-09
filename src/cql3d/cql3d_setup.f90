@@ -1,5 +1,8 @@
+module cql3d_setup_mod
+
+contains
+
       subroutine cql3d_setup(netcdf_file, nuper, nupar, xm, enorm_factor, vc_mks_cql3d)
-      use size_mod   
 
       use netcdf
       USE read_CQL3D
@@ -10,7 +13,8 @@
        read_C_matrix_m, eval_delta_f_exp_m, eval_f_exp_m
       use read_particle_f
       USE basis_functions_m, only : u_fns_name
-    
+      use nc_check    
+      use parameters  
 
       IMPLICIT NONE
       
@@ -29,15 +33,15 @@
 !      integer, parameter :: nmodesmax = 450
 !      integer, parameter :: mmodesmax = 450
 
-      integer, parameter :: nxmx = nmodesmax
-      integer, parameter :: nymx = mmodesmax
-      integer, parameter :: nrhomax = nmodesmax * 2
+      !integer, parameter :: nxmx = nmodesmax
+      !integer, parameter :: nymx = mmodesmax
+      !integer, parameter :: nrhomax = nmodesmax * 2
 
-      integer, parameter :: nkdim1 = - nmodesmax / 2
-      integer, parameter :: nkdim2 =   nmodesmax / 2
+      !integer, parameter :: nkdim1 = - nmodesmax / 2
+      !integer, parameter :: nkdim2 =   nmodesmax / 2
 
-      integer, parameter :: mkdim1 = - mmodesmax / 2
-      integer, parameter :: mkdim2 =   mmodesmax / 2
+      !integer, parameter :: mkdim1 = - mmodesmax / 2
+      !integer, parameter :: mkdim2 =   mmodesmax / 2
 
       real :: UminPara, UmaxPara, UmaxPerp, dupara, duperp, drho, drho10
       real fb, dfb_du, dfb_dtheta, xn_alpha, xne, dfdth
@@ -130,7 +134,7 @@
          vc_mks, u0, alpha, e, u_dbb, u_norm_mks
 
 !DLG:   Define variables
-     integer :: nc_id, n_u_id, n_theta_max_id, n_psi_id, scalar_id, &
+     integer :: nc_id, n_u_id, n_theta_max___id, n_psi_id, scalar_id, &
         f_cql_id, u_id, theta_id, vc_mks_id, fnorm_id, xkt_id, Enorm_id, &
         dfduper_id, dfdupar_id, f_cql_cart_id, n_uper_id, n_upar_id, n_psi_dim_id, &
         uPara_id, uPerp_id, p_f_rzvv_id, p_dfduPer_id, p_dfduPar_id
@@ -256,7 +260,7 @@
 !     ---------------
 
     WRITE(6,*)
-    WRITE (6,*) "n_theta_max = ", n_theta_max
+    WRITE (6,*) "n_theta_max__ = ", n_theta_max__
     WRITE (6,*) "n_u = ", n_u
     WRITE (6,*) "n_psi = ", n_psi
     WRITE (6,*) "n_theta_(i) = ", n_theta_
@@ -674,18 +678,18 @@
 
     call check ( nf90_create ( ncFileName, nf90_clobber, nc_id ) )
     call check ( nf90_def_dim ( nc_id, "n_u", n_u, n_u_id ) )
-    call check ( nf90_def_dim ( nc_id, "n_theta_max", n_theta_max, n_theta_max_id ) )
+    call check ( nf90_def_dim ( nc_id, "n_theta_max__", n_theta_max__, n_theta_max___id ) )
     call check ( nf90_def_dim ( nc_id, "n_psi", n_psi, n_psi_id ) )
     call check ( nf90_def_dim ( nc_id, "scalar", 1, scalar_id ) )
     call check ( nf90_def_dim ( nc_id, "n_uper", nuper , n_uper_id ) )
     call check ( nf90_def_dim ( nc_id, "n_upar", nupar , n_upar_id ) )
     call check ( nf90_def_dim ( nc_id, "n_psi_cart", n_psi_dim , n_psi_dim_id ) )
     call check ( nf90_def_var ( nc_id, "f_cql", NF90_REAL, &
-      (/ n_theta_max_id, n_u_id, n_psi_id /), f_cql_id ) )
+      (/ n_theta_max___id, n_u_id, n_psi_id /), f_cql_id ) )
     call check ( nf90_def_var ( nc_id, "u", NF90_REAL, &
       (/ n_u_id /), u_id ) )
     call check ( nf90_def_var ( nc_id, "theta", NF90_REAL, &
-      (/ n_theta_max_id, n_psi_id /), theta_id ) )
+      (/ n_theta_max___id, n_psi_id /), theta_id ) )
     call check ( nf90_def_var ( nc_id, "fnorm", NF90_REAL, &
       (/ n_psi_id /), fnorm_id ) )
     call check ( nf90_def_var ( nc_id, "vc_mks", NF90_REAL, &
@@ -1438,15 +1442,15 @@
 !***********************************************************************
 !
 
-      subroutine cosft(f, theta, a, n_theta_max, n_theta, n_expand)
+      subroutine cosft(f, theta, a, n_theta_max__, n_theta, n_expand)
 
       implicit none
 
-      integer, intent(in) :: n_theta_max, n_theta, n_expand
+      integer, intent(in) :: n_theta_max__, n_theta, n_expand
 
-      real, intent(in) :: f(n_theta_max), theta(n_theta_max)
+      real, intent(in) :: f(n_theta_max__), theta(n_theta_max__)
 
-      real, intent(out) :: a(0: n_theta_max)
+      real, intent(out) :: a(0: n_theta_max__)
 
       real :: pi
       integer n, i
@@ -1472,14 +1476,14 @@
 !***********************************************************************
 !
 
-      subroutine cosft_inv(f, theta, a, n_theta_max, n_theta)
+      subroutine cosft_inv(f, theta, a, n_theta_max__, n_theta)
 
       implicit none
 
-      integer, intent(in) :: n_theta_max, n_theta
-      real, intent(in) :: a(0: n_theta_max), theta(n_theta_max)
+      integer, intent(in) :: n_theta_max__, n_theta
+      real, intent(in) :: a(0: n_theta_max__), theta(n_theta_max__)
 
-      real, intent(out) :: f(n_theta_max)
+      real, intent(out) :: f(n_theta_max__)
 
       integer n, i
 
@@ -1566,7 +1570,7 @@
       end if
 
       return
-      end
+      end subroutine deriv_1
 
 !
 !***************************************************************************
@@ -1603,7 +1607,7 @@
   312 format(i10, 1p8e12.4)
 
       return
-      end
+      end subroutine deriv_2
 
 !
 !***************************************************************************
@@ -1638,7 +1642,7 @@
       ans = ans * 2.0 * pi
 
       return
-      end
+      end subroutine sgrate_cyl
 !
 !***************************************************************************
 !
@@ -1674,7 +1678,7 @@
       ans = ans * 2.0 * pi
 
       return
-      end
+      end subroutine sgrate_sphere
 !
 !***************************************************************************
 !
@@ -1707,25 +1711,6 @@
 
       return
  2201 format(2i5,1p8e12.4)
-      end
-!
-!***************************************************************************
-!
+      end subroutine a2dmnmx
 
-
-
-
-
-subroutine check ( status )
-        use netcdf
-        integer, intent ( in) :: status
-      
-        if(status /= nf90_noerr) then 
-            print *, trim(nf90_strerror(status))
-            stop "Stopped"
-        end if
-
-end subroutine check 
-    
-
-
+end module cql3d_setup_mod

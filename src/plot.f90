@@ -1,9 +1,10 @@
-!
-!--version 1.0 (10/16/2006)
-!
+module plot_mod
+
+contains
+
       subroutine plot(ndisti2)
 
-      use size_mod
+      use parameters
       use plot_aorsa2dps
 
       implicit none
@@ -14,13 +15,13 @@
          nant, nphi3d, n, nstrap, nphi, nstrpol, nphi_fpm, nt_max
       integer nphi3d_1quarter, nphi3d_half, nphi3d_3quarter
 
-      integer nxmx, nymx, i, j
+      integer i, j
       integer nnodex, nnodey, nphi1, nphi2, nphi1_dum, nphi2_dum
       integer nxplot_dim, nyplot_dim
       integer nxplot, nyplot, ir, nt, imax, jmax, kmax
 
       integer pgopen, pgbeg, ier, numb, iflag, nlevmax
-      integer number_points, nrhomax
+      integer number_points
       integer nnoderho
 
 !      integer nmodesmax, mmodesmax
@@ -29,10 +30,10 @@
 
 !      parameter (nxmx   = 500)
 !      parameter (nymx   = 500)
-      parameter (nxmx = nmodesmax)
-      parameter (nymx = mmodesmax)
+      !parameter (nxmx = nmodesmax)
+      !parameter (nymx = mmodesmax)
 
-      parameter (nrhomax = nxmx * 2)
+      !parameter (nrhomax = nxmx * 2)
       parameter (nphimx = 200)
       parameter (nxplot_dim   = 1000)
       parameter (nyplot_dim   = 1000)
@@ -163,7 +164,7 @@
 
       common/boundcom/rhoplasm
 
-      integer nmodesx, nmodesy, nwdot, lmax, ibessel, &
+      integer nwdot, lmax, ibessel, &
           nuper, nupar, &
           inu, iprint, iexact, &
           iroot, iequat, igeom, &
@@ -1470,7 +1471,7 @@
  5000 continue
 
       return
-      end
+      end subroutine plot
 
 !
 !*********************************************************************
@@ -1625,7 +1626,7 @@
 
 
       return
-      end
+      end subroutine boundary_tor
 
 !
 !*********************************************************************
@@ -1725,7 +1726,7 @@
   300 format (1p9e11.3)
 
       return
-      end
+      end subroutine ezplot6
 
 !
 !***************************************************************************
@@ -1812,7 +1813,7 @@
   300 format (1p9e11.3)
 
       return
-      end
+      end subroutine ezplot1_sum
 
 !
 !***************************************************************************
@@ -1900,7 +1901,7 @@
   300 format (1p9e11.3)
 
       return
-      end
+      end subroutine ezplot1_0_sum
 
 !
 !***************************************************************************
@@ -1996,7 +1997,7 @@
 
   300 format (1p9e11.3)
       return
-      end
+      end subroutine ezplot2_sum
 !
 !***************************************************************************
 !
@@ -2150,7 +2151,6 @@
 
 
       return
-      end
-!
-!*********************************************************************
-!
+      end  subroutine ezconc_sum
+
+end module plot_mod

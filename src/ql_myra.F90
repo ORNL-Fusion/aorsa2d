@@ -1,12 +1,12 @@
 module ql_myra_mod
 
-      use qlsum_myra_mod
       use read_particle_f
-      use gc_integrate
+      !use gc_integrate
       use netcdf
       use dlg_p_check
-      use size_mod
+      use parameters
       use sigma_module
+      use qlsum_general
       !use mpi
       include 'mpif.h'
 #     include <pnetcdf.inc>
@@ -652,7 +652,7 @@ ip_loop: do ip = start, finish
             ni_loop2: do ni = 1, nuper
 
           if (ndist .eq. 0) &
-                call QLSUM_MAXWELLIAN(ni, b_sum, c_sum, e_sum, f_sum, &
+                call qlSum(ni, b_sum, c_sum, e_sum, f_sum, &
                      wdot_sum(ni), sum_fx0(ni), sum_fy0(ni), W, ZSPEC, &
                      ASPEC, BMAG, lmax, ENORM, UminPara, UmaxPara, &
                      NUPAR, NUPER, UPERP, UPARA, DFDUPER, DFDUPAR, &
@@ -664,11 +664,11 @@ ip_loop: do ip = start, finish
                      nxdim, nydim, xkxsav, xkysav, xkphi, xx, yy, i, j, &
                      lmaxdim, ndist, nzeta_wdot, &
                      gradprlb(i,j), bmod(i,j), omgc(i,j), alpha, xm, &
-                     upshift, xk_cutoff )
+                     upshift, xk_cutoff, maxwellian = .true. )
 
 !DLG:   Adjust if statement for ndist >= 1
           if (ndist .ge. 1) &
-               call QLSUM_NON_MAXWELLIAN(ni, b_sum, c_sum, e_sum, f_sum, &
+               call qlSum(ni, b_sum, c_sum, e_sum, f_sum, &
                      wdot_sum(ni), sum_fx0(ni), sum_fy0(ni), W, ZSPEC, &
                      ASPEC, BMAG, lmax, ENORM, UminPara, UmaxPara, &
                      NUPAR, NUPER, UPERP, UPARA, DFDUPER, DFDUPAR, &
@@ -680,7 +680,7 @@ ip_loop: do ip = start, finish
                      nxdim, nydim, xkxsav, xkysav, xkphi, xx, yy, i, j, &
                      lmaxdim, ndist, nzeta_wdot, &
                      gradprlb(i,j), bmod(i,j), omgc(i,j), alpha, xm, &
-                     upshift, xk_cutoff, wdot_sum_dlg, wdot_sum_res )
+                     upshift, xk_cutoff, maxwellian = .false. )
 
 
 !!DLG:   Retain vPar wdot sum in array

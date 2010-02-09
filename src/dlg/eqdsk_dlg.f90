@@ -19,6 +19,7 @@ contains
     subroutine read_geqdsk ( eqdsk_fileName, plot )
         !use dislin
         use dlg
+        use fitpack
  
         implicit none
         

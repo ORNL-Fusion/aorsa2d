@@ -192,6 +192,7 @@
           use dlg
           use aorsa2din_mod, only: nModesX, nModesY
           use netcdf
+          use nc_check
 
           implicit none
 

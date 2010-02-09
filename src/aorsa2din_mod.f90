@@ -1,6 +1,6 @@
-      module aorsa2din_mod
+module aorsa2din_mod
       
-      implicit none
+implicit none
 
 !     --------------------------------------------------------
 !     Declarations and defaults for aorsa2d.in input variables
@@ -330,16 +330,13 @@
       integer :: ndisti5 = 0
       integer :: ndisti6 = 0      
 
-      integer :: nphimx 
       integer :: nmodesx = 128            !-----nmodesx=number of modes used in the x direction
       integer :: nmodesy = 128            !-----nmodesy=number of modes used in the y direction
       integer :: izfunc 
       integer :: nnodecx                  !-----nnodecx = number of radial mesh points used for wdot calculation
       integer :: nnodecy                  !-----nnodecy = number of vertical mesh points used for wdot calculation
       
-      integer :: nphi_number = 10           !-----length of nphi_array      
-      parameter (nphimx = 200)            !-----aximum length of nphi_array 
-      integer :: nphi_array(nphimx) = 0   !-----list of nphi's in the nphi_array
+      integer :: nphi = 10           !-----toroidal mode number     
       
       real phase, zmin, zmax, phi0, amplt(20) 
       !common / stpcom / xlt, wd, nstrap, phase, zmin, zmax, phi0, amplt
@@ -385,7 +382,7 @@
      &    ndisti4, ndisti5, ndisti6, nkperp, nzeta_wdot, n_bin, antlen,  &
      &    eqdsk, iql, i_antenna, antlc, n_prof_flux, netcdf_file1,  &
      &    netcdf_file2, upshift, xkperp_cutoff, damping, i_write,  &
-     &    nstrap, xlt, wd, phase_deg, nphi_number, nphi_array, &
+     &    nstrap, xlt, wd, phase_deg, nphi, &
      &    enorm_factor, version_number, enorm_factor_e, &
      &    enorm_factor_i1, enorm_factor_i2, enorm_factor_i3, &
      &    enorm_factor_i4, enorm_factor_i5, enorm_factor_i6, &
@@ -394,10 +391,24 @@
      &    xn3_rho2lim, xn4_rho2lim, xn5_rho2lim, xn6_rho2lim, &
      &    te_rho2lim, ti_rho2lim, ti2_rho2lim, ti3_rho2lim, &
      &    ti4_rho2lim, ti5_rho2lim, ti6_rho2lim, eqdsk_zRange, &
-     &    gradient, nPhi_sum_only, bbbsMask, dlgAnt, eqdsk_rRange, &
+     &    gradient, bbbsMask, dlgAnt, eqdsk_rRange, &
      &    dlgAntFileName, dlgProfileFileName, antGridMatch, domainMask, &
      &    use_dlg_bField, edgeCollisions
                 
+contains
 
-      end module aorsa2din_mod
+    subroutine read_namelist
+
+        implicit none
+        character(len=100) :: nml_fileName
+
+        nml_fileName    = 'aorsa2d.in'
+        
+        open ( unit = 63, file = nml_fileName )
+        read ( unit = 63, nml = aorsa2din )
+        close ( 63 )
+
+    end subroutine read_namelist
+
+end module aorsa2din_mod
 

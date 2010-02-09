@@ -41,19 +41,19 @@ SUBROUTINE read_C_matrix_m
     ALLOCATE( C_matrix(n_psi, n_u_coeffs, n_theta_coeffs) , stat=istat )
     IF (istat /= 0 ) THEN
     WRITE (*,'("read_C_matrix: allocate failed for C_matrix")')
-    PAUSE
+    stop
     END IF
     
     ALLOCATE( dens_Maxwell_psi(n_psi), stat=istat )
     IF (istat /= 0 ) THEN
     WRITE (*,'("read_C_matrix: allocate failed for dens_Maxwell_psi")')
-    PAUSE
+    stop
     END IF
     
     ALLOCATE( T_Maxwell_psi(n_psi), stat=istat )
     IF (istat /= 0 ) THEN
     WRITE (*,'("read_C_matrix: allocate failed for T_Maxwell_psi")')
-    PAUSE
+    stop
     END IF
     
     READ (C_matrix_unit, '(6(1pe16.8))') C_matrix
