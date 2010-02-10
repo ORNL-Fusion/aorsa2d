@@ -98,7 +98,9 @@ implicit none
       real :: rwleft  = 0.0            !-----rwleft = major radius of the left conducting wall
       real :: rwright = 0.0            !-----rwright = major radius of the right conducting wall
       real :: ytop    = 0.0            !-----ytop = location of the upper conducting wall
-      real :: ybottom = 0.0            !-----ybottom = location of the lower conducting wall
+      real :: ybot = 0.0            !-----ybottom = location of the lower conducting wall
+      real :: xLeft_ = 1.0
+      real :: xRight_ = 2.0
       real :: freqcy = 3.2000E+07      !-----freqcy= rf frequency in Hertz
       real :: aplasm = 7.0000E-01      !-----aplasm = not used
       real :: alim = 100.0             !-----alim = location of limiter
@@ -352,7 +354,7 @@ implicit none
      &    psipti4, psipti5, psipti6,  &
      &    iqx, iqprof, iez, nprow, npcol, &
      &    amu1, amu2, z1, z2, eta, izfunc,  &
-     &    b0, rt, ytop, ybottom, freqcy, aplasm,  &
+     &    b0, rt, ytop, ybot, freqcy, aplasm,  &
      &    xnlim, xn2lim, xn3lim, xnslolim, signbz,  &
      &    xn4lim, xn5lim, xn6lim,  &
      &    xn0, xn1, xn2, xn3, xnslo, flat, b1rat, b2rat, curdnx, curdny,  &

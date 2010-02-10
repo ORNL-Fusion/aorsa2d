@@ -1,6 +1,7 @@
 module eqdsk_dlg
+
     implicit none
-    save    
+
     character (len=10) :: case_ ( 6 )
     integer :: idum, nw, nh, nbbbs, limitr
     real :: rdim, zdim, rcentr, rleft, zmid, &
@@ -16,8 +17,8 @@ module eqdsk_dlg
     logical :: ascending_flux 
 
 contains
+
     subroutine read_geqdsk ( eqdsk_fileName, plot )
-        !use dislin
         use dlg
         use fitpack
  
@@ -299,7 +300,7 @@ contains
 
     function is_inside_domain ( rIn, zIn )
 
-        use aorsa2din_mod, only: rwLeft, rwRight, yTop, yBottom
+        use aorsa2din_mod, only: rwLeft, rwRight, yTop, yBot
 
         implicit none
         logical :: is_inside_domain
@@ -313,7 +314,7 @@ contains
         ! create an interpolated limiter boundary
 
         rDomain = (/ rwLeft, rwRight, rwRight, rwLeft, rwLeft /)
-        zDomain = (/ yBottom, yBottom, yTop, yTop, yBottom /)
+        zDomain = (/ yBot, yBot, yTop, yTop, yBot /)
 
         nInterp = 100
         nLim    = size ( rDomain )
@@ -376,7 +377,5 @@ contains
         return
 
     end function is_inside_domain
-
-
 
 end module eqdsk_dlg

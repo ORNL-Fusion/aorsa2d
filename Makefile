@@ -61,21 +61,15 @@ ${OBJ_DIR}/%.o: ${DLG_DIR}/%.*
 
 ${OBJ_DIR}/aorsa2dMain.o: \
 		${OBJ_DIR}/constants.o \
-		${OBJ_DIR}/eqdsk_setup.o \
 		${OBJ_DIR}/eqdsk_dlg.o \
 		${OBJ_DIR}/aorsaSubs.o \
-		${OBJ_DIR}/sigma.o
-
-${OBJ_DIR}/eqdsk_setup.o: \
-		${OBJ_DIR}/parameters.o \
-		${OBJ_DIR}/orbit.o \
-		${OBJ_DIR}/aorsaSubs.o
-
-${OBJ_DIR}/orbit.o: \
-		${OBJ_DIR}/fitpack.o
+		${OBJ_DIR}/sigma.o \
+		${OBJ_DIR}/aorsa2din_mod.o \
+		${OBJ_DIR}/interp.o
 
 ${OBJ_DIR}/eqdsk_dlg.o: \
-		${OBJ_DIR}/dlg.o
+		${OBJ_DIR}/dlg.o \
+		${OBJ_DIR}/fitpack.o
 
 ${OBJ_DIR}/aorsaSubs.o: \
 		${OBJ_DIR}/bessel.o
@@ -88,6 +82,9 @@ ${OBJ_DIR}/zfunction.o: \
 		${OBJ_DIR}/ztable.o \
 		${OBJ_DIR}/aorsaSubs.o
 
+${OBJ_DIR}/interp.o: \
+		${OBJ_DIR}/fitpack.o \
+		${OBJ_DIR}/eqdsk_dlg.o
 
 clean:
 	rm $(EXEC) $(OBJ_DIR)/*.o $(MOD_DIR)/*.mod

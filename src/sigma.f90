@@ -3,7 +3,7 @@ module sigma_mod
 contains
 
       subroutine sigma_maxwellian(i, j, n, m, &
-         gradprlb, bmod, bmod0, &
+         gradprlb, bmod, &
          xm, xn, dlg_xnuomg, &
          xkt, omgc, omgp2, &
          lmin, lmax, nzfun, &
@@ -42,7 +42,7 @@ contains
       real xkprl_eff, fgam, y0, y, sgn_kprl, reson, duperp, dupara
       real xkprl_eff0
       real dzetal(lmin:lmax), descrim
-      real dakbdkb, gradprlb, bmod, bmod0, nu_coll
+      real dakbdkb, gradprlb, bmod, nu_coll
       real, intent(in) :: dlg_xnuomg
       real akprl,  alpha, omgrf, emax
       real gammab(lmin:lmax), gamma_coll(lmin:lmax)

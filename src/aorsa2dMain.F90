@@ -1,27 +1,11 @@
 program aorsa2dMain
     
     use constants
-    use eqdsk_setup_mod
     use eqdsk_dlg
     use aorsasubs_mod
     use sigma_mod
-
-    !use ql_myra_mod
-    !use profile_mod
-    !use aorsa2din_mod
-    !use interp
-    !use write_pf
-    !use plot_aorsa2dps
-    !use netcdf
-    !use read_particle_f
-    !use set_edge_density
-    !use dlg_ant
-    !use current_module
-    !use sigma_module
-    !use parameters
-    !use rf2x_mod
-    !use cql3d_setup_mod
-    !use nc_check 
+    use aorsa2din_mod
+    use interp
         
     implicit none
 
@@ -36,9 +20,9 @@ program aorsa2dMain
     real, allocatable, dimension(:,:) :: btau
     real :: sqx
     real, allocatable, dimension(:,:) :: uxx, uxy, uxz, uyx, uyy, uyz, uzx, uzy, uzz
-    real :: dx, dy
-    real, allocatable, dimension(:) :: xPrime, x, capR, xkphi
-    real, allocatable, dimension(:) :: yPrime, y
+    real :: dx, dy, xRange, yRange
+    real, allocatable, dimension(:) :: capR, xkphi
+    real, allocatable, dimension(:) :: y
     integer :: i, j, m, n, s
     real, allocatable, dimension(:) :: xkxsav, xkysav
     real :: xk_cutOff
@@ -80,6 +64,9 @@ program aorsa2dMain
         fdk, fek, ffk, &
         fgk, fak, fpk, &
         frk, fqk, fsk
+    real, allocatable, dimension(:,:) :: &
+        bMod, bxn, byn, bzn
+    real :: bHere(3)
 
 
 !   read namelist input data
@@ -88,12 +75,64 @@ program aorsa2dMain
     call read_nameList ()
 
 
+!   define x mesh: capr(i)
+!   --------------------------------------------
+
+    allocate ( &
+        capR ( nmodesx ), &
+        xkphi ( nmodesx ) )
+
+    rwLeft   = 1.0
+    rwRight  = 2.0
+    xRange  = rwRight - rwLeft
+    dx = xRange / nModesX
+    do i = 1, nModesX
+
+        capr(i) = (i-1) * dx + xLeft 
+        xkphi(i) = nphi / capr(i)
+
+    enddo
+
+
+!   define y mesh: y(j), yprime(j)
+!---------------------------------
+
+    allocate ( y ( nModesY ) )
+
+    yTop    =  1.0
+    yBot    = -1.0
+    yRange  = yTop - yBot
+    dy = yRange / nmodesy
+    do j = 1, nModesY
+
+        y(j) = (j-1) * dy + yBot
+
+    enddo
+
+
 !   read g-eqdsk file
 !   -----------------
 
-    call eqdsk_setup ()
     call read_geqdsk ( eqdsk, plot = .false. )
+    call init_interp ()
 
+    allocate ( &
+        bMod(nModesX,nModesY), &
+        bxn(nModesX,nModesY), &
+        byn(nModesX,nModesY), &
+        bzn(nModesX,nModesY) )
+
+    do i=1,nModesX
+        do j=1,nModesY
+
+           bHere = dlg_interpB ( (/capR(i),0.0,y(j)/), &
+                        bMagHere = bMod(i,j) )  
+           bxn(i,j) = bHere(1)
+           byn(i,j) = bHere(2)
+           bzn(i,j) = bHere(3)
+
+        enddo
+    enddo
 
 !   calculate the ion cyclotron freqs
 !   ---------------------------------
@@ -109,7 +148,7 @@ program aorsa2dMain
 
     amuSpec     = (/ 0, amu1, amu2 /) 
     mSpec       = amuSpec * xmh
-    mSpec(0)    = xme  
+    mSpec(1)    = xme  
     zSpec       = (/ -1, z1, z2 /)
     qSpec       = zSpec * q 
 
@@ -175,55 +214,6 @@ program aorsa2dMain
     enddo
 
 
-!   define x mesh: x(i), xprime(i), capr(i)
-!   --------------------------------------------
-
-    !   xprime: 0 to xmax
-    !   x(i) : -xmax / 2.0   to   xmax / 2.0
-
-
-    allocate ( &
-        xPrime ( nmodesx ), &
-        x ( nmodesx ), &
-        capR ( nmodesx ), &
-        xkphi ( nmodesx ) )
-
-    dx = xmax / nmodesx
-    do i = 1, nmodesx
-
-        xprime(i) = (i-1) * dx + dx / 2.0
-
-        !   note: the code gives slightly smoother results with dx/2.0 added
-
-        x(i) = xprime(i) + xwleft
-        capr(i) = rmaxis + x(i)
-
-        xkphi(i) = nphi / capr(i)
-
-    enddo
-
-
-!   define y mesh: y(j), yprime(j)
-!---------------------------------
-
-    !   yprime: 0 to ymax
-    !   y(j) : -ymax / 2.0   to   ymax / 2.0
-
-    allocate ( &
-        yPrime ( nmodesy ), &
-        y ( nmodesy ) )
-
-    dy = ymax / nmodesy
-    do j = 1, nmodesy
-
-        yprime(j) = (j-1) * dy + dy / 2.0
-
-        !   note: the code gives slightly smoother results with dy/2.0 added
-
-        y(j) = yprime(j) + ybottom
-
-    enddo
-
 
 !   Calculate the integrated volume on even mesh:
 !   --------------------------------------------
@@ -234,15 +224,15 @@ program aorsa2dMain
     kyR =  nModesY/2
 
     allocate ( &
-        xkxsav ( nmodesx + 1 ), &
-        xkysav ( nmodesy ) )
+        xkxsav (kxL:kxR), &
+        xkysav (kyL:kyR) )
 
     do m = kxL, kxR 
-        xkxsav(m) = 2.0 * pi * m / xmax
+        xkxsav(m) = 2.0 * pi * m / xRange
     enddo
 
     do n = kyL, kyR 
-        xkysav(n) = 2.0 * pi * n / ymax
+        xkysav(n) = 2.0 * pi * n / yRange
     enddo
 
     xk_cutoff   = sqrt ( xkxsav( nmodesx/2 )**2 &
@@ -287,7 +277,7 @@ program aorsa2dMain
             !   Brambilla approximation:
             !   -----------------------
 
-            sinTh = y(j) / sqrt ( x(i)**2 + y(j)**2 )
+            sinTh = y(j) / sqrt ( (capR(i)-rmaxis__)**2 + y(j)**2 )
             gradprlb(i,j) = bmod(i,j) / capr(i) * abs ( btau(i,j) * sinTh )
 
             if (nzfun == 0) gradPrlB(i,j) = 1.0e-10
@@ -341,14 +331,14 @@ program aorsa2dMain
 
     do i = 1, nmodesx
         do m = kxL, kxR 
-            xx(m, i) = exp(zi * xkxsav(m) * xprime(i))
+            xx(m, i) = exp(zi * xkxsav(m) * capR(i))
             xx_inv(m,i) = 1.0/xx(m,i)
         enddo
     enddo
 
     do j = 1, nmodesy
         do n = kyL, kyR 
-            yy(n,j) = exp(zi * xkysav(n) * yprime(j))
+            yy(n,j) = exp(zi * xkysav(n) * y(j))
             yy_inv(n,j) = 1.0/yy(n,j)
         enddo
     enddo
@@ -363,11 +353,13 @@ program aorsa2dMain
         j_loop: &
         do j=1,nmodesy
             m_loop: &
-            do m=1,nmodesx
+            do m=kxL,kxR
                 n_loop: &
-                do n=1,nmodesy
+                do n=kyL,kyR
 
-                cexpkxky = xx(n, i) * yy(m, j)
+                write(*,*) i, j, m, n
+
+                cexpkxky = xx(m, i) * yy(n, j)
 
                 sigxx = 0.0
                 sigxy = 0.0
@@ -388,12 +380,12 @@ program aorsa2dMain
 
                     do s=1,nSpec
 
-                        call sigma_maxwellian(i, j, n, m, &
-                            gradprlb(i,j), bmod(i,j), bmod_mid(i,j), &
+                        call sigma_maxwellian(i, j, m, n, &
+                            gradprlb(i,j), bmod(i,j), &
                             mSpec(s), densitySpec(i,j,s), xnuomg, &
                             ktSpec(i,j,s), omgc(i,j,s), omgp2(i,j,s), &
                             -lmax, lmax, nzfun, &
-                            xkxsav(n), xkysav(m), nphi, capr(i), &
+                            xkxsav(m), xkysav(n), nphi, capr(i), &
                             bxn(i,j), byn(i,j), bzn(i,j), &
                             uxx(i,j), uxy(i,j), uxz(i,j), &
                             uyx(i,j), uyy(i,j), uyz(i,j), &
@@ -425,11 +417,11 @@ program aorsa2dMain
 
                     do s=1,nSpec
 
-                        call sigmac_stix(i, j, n, m, &
+                        call sigmac_stix(i, j, m, n, &
                             mSpec(s), densitySpec(i,j,s), xnuomg, &
                             ktSpec(i,j,s), omgc(i,j,s), omgp2(i,j,s), &
                             -lmax, lmax, nzfun, ibessel, &
-                            xkxsav(n), xkysav(m), nphi, capr(i), &
+                            xkxsav(m), xkysav(n), nphi, capr(i), &
                             bxn(i,j), byn(i,j), bzn(i,j), &
                             uxx(i,j), uxy(i,j), uxz(i,j), &
                             uyx(i,j), uyy(i,j), uyz(i,j), &
@@ -469,8 +461,8 @@ program aorsa2dMain
                 xkzy =       zi / (eps0 * omgrf) * sigzy
                 xkzz = 1.0 + zi / (eps0 * omgrf) * sigzz
 
-                rnx = xkxsav(n) / xk0
-                rny = xkysav(m) / xk0
+                rnx = xkxsav(m) / xk0
+                rny = xkysav(n) / xk0
                 rnPhi = xkphi(i) / xk0
 
                 dxx = (xkxx - rny**2 - rnphi**2) * uxx(i,j) &
