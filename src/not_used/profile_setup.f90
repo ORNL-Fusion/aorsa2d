@@ -6,50 +6,6 @@ contains
 !
 !***************************************************************************
 !
-      subroutine flux_to_rz(nnodex, nnodey, profile_in, &
-         profile_out, rho, nrho, rho_ij)
-
-      implicit none
-
-      real :: profile_in(nrho), profile_out(nnodex,nnodey)
-      real :: rho(nrho), rho_ij(nnodex,nnodey)
-      integer :: nnodex, nnodey, nrho, i, j, k
-
-      do i = 1, nnodex
-         do j = 1, nnodey
-          do k = 1, nrho
-
-             if(rho_ij(i,j) .le. rho(1)) then
-             !  need one sided to the left
-
-!              call flush(6)
-              profile_out(i,j) = profile_in(1) + &
-                  (profile_in(2) - profile_in(1)) / &
-                  (rho(2) - rho(1)) * (rho_ij(i,j) - rho(1))
-
-             elseif(rho_ij(i,j) .ge.rho(nrho)) then
-             ! need one sidded to the right.
-
-                profile_out(i,j) = profile_in(nrho) + &
-                  (profile_in(nrho) - profile_in(nrho - 1)) / &
-                  (rho(nrho) - rho(nrho-1)) * (rho_ij(i,j) - rho(nrho))
-
-               elseif(rho_ij(i,j) - rho(k) .ge. 0.0 .and. &
-                   rho_ij(i,j) -rho(k+1) .lt. 0.0 ) then
-                ! standard  caseprint*, 'last if'
-              profile_out(i,j) = profile_in(k)  + &
-                  (profile_in(k+1) - profile_in(k))/ &
-                  (rho(k+1) - rho(k)) * (rho_ij(i,j) - rho(k))
-               endif
-
-             if (profile_out(i,j) .lt. 0.0) profile_out(i,j) = 1.0e-10
-
-          enddo
-       end do
-      end do
-
-      end subroutine flux_to_rz
-
 !
 !***************************************************************************
 !

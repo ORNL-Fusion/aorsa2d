@@ -22,12 +22,13 @@
 !
          CHARACTER :: ATABLE*10
 !
-      END MODULE ZTABLE_MOD
 !
 ! - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 ! - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 ! - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 !
+contains
+
       SUBROUTINE ZTABLE_ZFUNC(ZETA,ALPHA,GAMMA,ZFUNC)
 !         USE KINDS
          IMPLICIT NONE
@@ -152,7 +153,7 @@
       SUBROUTINE ZTABLE_VALUE(ZETA,ALPHA, &
                               ZFUNC_LOCAL,ZFUNC_NONLOCAL1,ZFUNC_NONLOCAL2)
 !
-         USE ZTABLE_MOD
+         !USE ZTABLE_MOD
 !
 !         USE KINDS
          IMPLICIT NONE
@@ -230,7 +231,7 @@
 !
       SUBROUTINE ZTABLE_SETUP( MYID, IFLAG )
 !
-         USE ZTABLE_MOD
+         !USE ZTABLE_MOD
 !
 !         USE KINDS
          IMPLICIT NONE
@@ -271,7 +272,7 @@
 !
       SUBROUTINE ZTABLE_READ
 !
-         USE ZTABLE_MOD
+         !USE ZTABLE_MOD
 !
 !         USE KINDS
          IMPLICIT NONE
@@ -326,7 +327,7 @@
 !
       SUBROUTINE ZTABLE_WRITE
 !
-         USE ZTABLE_MOD
+         !USE ZTABLE_MOD
 !
 !         USE KINDS
          IMPLICIT NONE
@@ -500,3 +501,4 @@
 ! - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 
 
+END MODULE ZTABLE_MOD

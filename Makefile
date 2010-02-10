@@ -24,7 +24,7 @@ LIBS = $(SCALAPACK) $(BLACS) $(BLAS) ${NETCDF}
 INC_DIR = 
 
 BOUNDS = -fbounds-check
-WARN = -Wall
+WARN = #-Wall
 DEBUG = -pg -g -fbacktrace -fsignaling-nans #-ffpe-trap=zero,invalid#,overflow#,underflow
 F90 = gfortran
 LINK = gfortran
@@ -64,18 +64,30 @@ ${OBJ_DIR}/aorsa2dMain.o: \
 		${OBJ_DIR}/eqdsk_setup.o \
 		${OBJ_DIR}/eqdsk_dlg.o \
 		${OBJ_DIR}/aorsaSubs.o \
-		${OBJ_DIR}/sigma.o \
-		${OBJ_DIR}/fourier.o
+		${OBJ_DIR}/sigma.o
 
 ${OBJ_DIR}/eqdsk_setup.o: \
 		${OBJ_DIR}/parameters.o \
-		${OBJ_DIR}/orbit.o
+		${OBJ_DIR}/orbit.o \
+		${OBJ_DIR}/aorsaSubs.o
 
 ${OBJ_DIR}/orbit.o: \
 		${OBJ_DIR}/fitpack.o
 
 ${OBJ_DIR}/eqdsk_dlg.o: \
 		${OBJ_DIR}/dlg.o
+
+${OBJ_DIR}/aorsaSubs.o: \
+		${OBJ_DIR}/bessel.o
+
+${OBJ_DIR}/sigma.o: \
+		${OBJ_DIR}/bessel.o \
+		${OBJ_DIR}/zfunction.o
+
+${OBJ_DIR}/zfunction.o: \
+		${OBJ_DIR}/ztable.o \
+		${OBJ_DIR}/aorsaSubs.o
+
 
 clean:
 	rm $(EXEC) $(OBJ_DIR)/*.o $(MOD_DIR)/*.mod

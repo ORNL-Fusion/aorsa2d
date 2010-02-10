@@ -76,7 +76,7 @@ implicit none
       real :: psipti6 = .30
       real :: yant = 0.0               !-----yant = location of antenna center in Z (m)
       real :: te0  = 4.2900E+03        !-----te0=central value of eletron temperature in eV
-      real :: ti0  = 7.0700E+03        !-----ti0=central value of ion temperature in eV
+      real :: ti01  = 7.0700E+03        !-----ti0=central value of ion temperature in eV
       real :: ti02 = 7.0700E+03
       real :: ti03 = 7.0700E+03
       real :: ti04 = 7.0700E+03
@@ -86,10 +86,10 @@ implicit none
       real :: delta0 = 0.0000E+00      !-----delta0=numerical damping for Bernstein wave:  about 1.e-04 (dimensionless)
       real :: xwall = 0.0000E+00       !-----xwall = not used
       real :: xnwall = 0.0000E+00      !-----xnwall = density of metal put on last mesh point
-      real :: amu1 = 2.0000E+00        !-----amu1= ratio of majority ion to hydrogen ion mass
-      real :: amu2 = 1.0000E+00        !-----amu2= ratio of minority ion to hydrogen ion mass
-      real :: z1 = 1.0000E+00          !-----z1=ratio of majority ion charge to hydrogen ion charge
-      real :: z2 = 1.0000E+00          !-----z2=ratio of minority ion charge to hydrogen ion charge
+      integer :: amu1 = 2        !-----amu1= ratio of majority ion to hydrogen ion mass
+      integer :: amu2 = 1        !-----amu2= ratio of minority ion to hydrogen ion mass
+      integer :: z1 = 1          !-----z1=ratio of majority ion charge to hydrogen ion charge
+      integer :: z2 = 1          !-----z2=ratio of minority ion charge to hydrogen ion charge
       real :: eta = 0.0                !-----eta=ratio of minority ion density to electron density
       real :: b0 = 2.08                !-----b0=value of magnetic field at x=0 in Tesla
       real :: q0 = 1.0                 !-----q0=value of inverse rotational transform on axis
@@ -99,7 +99,6 @@ implicit none
       real :: rwright = 0.0            !-----rwright = major radius of the right conducting wall
       real :: ytop    = 0.0            !-----ytop = location of the upper conducting wall
       real :: ybottom = 0.0            !-----ybottom = location of the lower conducting wall
-      real :: ymax = 0.0               !-----ymax = radius in vertical (y) direction- in default it is set to awallx
       real :: freqcy = 3.2000E+07      !-----freqcy= rf frequency in Hertz
       real :: aplasm = 7.0000E-01      !-----aplasm = not used
       real :: alim = 100.0             !-----alim = location of limiter
@@ -110,6 +109,7 @@ implicit none
 
       real :: signbz = 1.0000E+00
       real :: xn0 = 3.1100E+19         !-----xn0=electron density at x=0
+      real :: xn1 = 0.0
       real :: xn2 = 0.0
       real :: xn3 = 0.0
       real :: xn4 = 0.0
@@ -342,7 +342,7 @@ implicit none
       !common / stpcom / xlt, wd, nstrap, phase, zmin, zmax, phi0, amplt
                    
       namelist/aorsa2din/nmodesx, nmodesy, nwdot, lmax, ibessel, &
-     &    ti0, xnuead, xnu1ad, xnu2ad, rant, te0, yant,  &
+     &    ti01, xnuead, xnu1ad, xnu2ad, rant, te0, yant,  &
      &    ti02, ti03, ti2lim, ti3lim, nuper, nupar, &
      &    ti04, ti05, ti06, ti4lim, ti5lim, ti6lim,  &
      &    inu, iprint, iexact, delta0, xwall, xnwall,  &
@@ -355,7 +355,7 @@ implicit none
      &    b0, rt, ytop, ybottom, freqcy, aplasm,  &
      &    xnlim, xn2lim, xn3lim, xnslolim, signbz,  &
      &    xn4lim, xn5lim, xn6lim,  &
-     &    xn0, xn2, xn3, xnslo, flat, b1rat, b2rat, curdnx, curdny,  &
+     &    xn0, xn1, xn2, xn3, xnslo, flat, b1rat, b2rat, curdnx, curdny,  &
      &    xn4, xn5, xn6, curdnz,  &
      &    nstep, nabs, xnuabs, xbnch, xleft, xright,  &
      &    isigma, itemp, telim, tilim,  &
@@ -367,7 +367,7 @@ implicit none
      &    amu6, z6, eta6, xnu6ad,  &
      &    xdelta, wdelta, xdelt2, wdelt2, zeffcd, &
      &    rzoom1, rzoom2, yzoom1, yzoom2, ibackground, iabsorb, q0,  &
-     &    prfin, nzfun, alim, grad, qavg0, nnodecx, nnodecy, ymax,  &
+     &    prfin, nzfun, alim, grad, qavg0, nnodecx, nnodecy, &
      &    alphan,  alphan2, alphan3, alphan_slo,  &
      &    alphan4, alphan5, alphan6,  &
      &    alphate,  alphati, alphati2, alphati3,  &

@@ -40,6 +40,8 @@ contains
 
 
       subroutine besjc (z,n,b,ier)
+
+      use bessel_mod
 !
 ! subroutine besjc (z,n,b,ier)
 !
@@ -111,23 +113,25 @@ contains
 !
 !
 !
-      complex         z          ,b(1)
+      complex         z         ! ,b(1)
+      real, allocatable :: b(:,:)
       data iorj/0/,xlarge/1000000./
 !
       nb = n+1
+      allocate ( b(2,nb) )
       call b2slci (real(z),aimag(z),nb,iorj,b,ncalc)
       ier = 0
       if (ncalc .eq. nb) go to 103
       if (ncalc .ge. 0) go to 102
       if (n .ge. 0) go to 101
       ier = 2
-      call uliber (ier,25h in besjc, n out of range,25)
+      call uliber (ier,'in besjc, n out of range')
       go to 103
   101 ier = 1
-      call uliber (ier,25h in besjc, x out of range,25)
+      call uliber (ier,'in besjc, x out of range')
       go to 103
   102 ier = 2+ncalc
-      call uliber (ier,40h in besjc, accuracy lost for some orders,40)
+      call uliber (ier,'in besjc, accuracy lost for some orders')
   103 return
       end subroutine besjc 
 
@@ -271,7 +275,10 @@ contains
       integer j
       real bet, gam(nmax)
 
-      if(b(1) .eq. 0) pause 'tridag: rewrite equations'
+      if(b(1) .eq. 0) then
+             write(*,*) 'tridag: rewrite equations'
+             stop
+     endif
       bet = b(1)
       u(1) = r(1) / bet
 
@@ -305,82 +312,105 @@ contains
 !
 !***************************************************************************
 !
-      subroutine deriv_x(f, id, jd, i, j, imax, jmax, dx, dfdx, d2fdx2)
+    subroutine deriv_x ( f, i, j, dx, dfdx, d2fdx2 )
+    
+        implicit none
+        
+        integer, intent(in) :: i, j
+        real, intent(in) :: f(:,:)
+        real, intent(out), optional :: dfdx, d2fdx2
+        real, intent(in) :: dx
+    
+        integer :: nx, ny
+    
+        nx    = size ( f, dim = 1 )
+        ny    = size ( f, dim = 2 )
+    
+        if(i .ne. 1 .and. i .ne. nx)then
 
-      implicit none
+            dfdx = (f(i+1, j) - f(i-1, j)) / (2.0 * dx)
+            d2fdx2 = (f(i+1, j) - 2.0 * f(i,j) + f(i-1, j)) / dx**2
 
-      integer id, jd, i, j, imax, jmax
-      real f(id, jd), dx, dfdx, d2fdx2
+        endif
+        
+        if(i .eq. 1)then
 
-      if(i .ne. 1 .and. i .ne. imax)then
-         dfdx = (f(i+1, j) - f(i-1, j)) / (2.0 * dx)
-         d2fdx2 = (f(i+1, j) - 2.0 * f(i,j) + f(i-1, j)) / dx**2
-      end if
+            dfdx = (f(i+1, j) - f(i, j)) / dx
+            d2fdx2 = (f(i+2, j) - 2.0 * f(i+1,j) + f(i, j)) / dx**2
 
-      if(i .eq. 1)then
-         dfdx = (f(i+1, j) - f(i, j)) / dx
-         d2fdx2 = (f(i+2, j) - 2.0 * f(i+1,j) + f(i, j)) / dx**2
-      end if
+        endif
+        
+        if(i .eq. nx)then
 
-      if(i .eq. imax)then
-         dfdx = (f(i, j) - f(i-1, j)) / dx
-         d2fdx2 = (f(i, j) - 2.0 * f(i-1,j) + f(i-2, j)) / dx**2
-      end if
+            dfdx = (f(i, j) - f(i-1, j)) / dx
+            d2fdx2 = (f(i, j) - 2.0 * f(i-1,j) + f(i-2, j)) / dx**2
 
-      return
-      end subroutine deriv_x
+        endif
+    
+    end subroutine deriv_x
 
 !
 !***************************************************************************
 !
-      subroutine deriv_y(f, id, jd, i, j, imax, jmax, dy, dfdy, d2fdy2)
+    subroutine deriv_y ( f, i, j, dy, dfdy, d2fdy2 )
 
-      implicit none
+        implicit none
 
-      integer id, jd, i, j, imax, jmax
-      real f(id, jd), dy, dfdy, d2fdy2
+        integer, intent(in) :: i, j
+        real, intent(in) :: f(:,:)
+        real, intent(in) :: dy
+        real, intent(out), optional :: dfdy, d2fdy2
 
-      if(j .ne. 1 .and. j .ne. jmax)then
-         dfdy = (f(i, j+1) - f(i, j-1)) / (2.0 * dy)
-         d2fdy2 = (f(i, j+1) - 2.0 * f(i,j) + f(i, j-1)) / dy**2
-      end if
+        integer :: nx, ny
 
-      if(j .eq. 1)then
-         dfdy = (f(i, j+1) - f(i, j)) / dy
-         d2fdy2 = (f(i, j+2) - 2.0 * f(i,j+1) + f(i, j)) / dy**2
-      end if
+        nx    = size ( f, dim = 1 )
+        ny    = size ( f, dim = 2 )
+
+        if(j .ne. 1 .and. j .ne. ny)then
+            dfdy = (f(i, j+1) - f(i, j-1)) / (2.0 * dy)
+            d2fdy2 = (f(i, j+1) - 2.0 * f(i,j) + f(i, j-1)) / dy**2
+        end if
+
+        if(j .eq. 1)then
+            dfdy = (f(i, j+1) - f(i, j)) / dy
+            d2fdy2 = (f(i, j+2) - 2.0 * f(i,j+1) + f(i, j)) / dy**2
+        end if
 
 
-      if(j .eq. jmax)then
-         dfdy = (f(i, j) - f(i, j-1)) / dy
-         d2fdy2 = (f(i, j) - 2.0 * f(i,j-1) + f(i, j-2)) / dy**2
-      end if
+        if(j .eq. ny)then
+            dfdy = (f(i, j) - f(i, j-1)) / dy
+            d2fdy2 = (f(i, j) - 2.0 * f(i,j-1) + f(i, j-2)) / dy**2
+        end if
 
-      return
       end subroutine deriv_y
 
 !
 !***************************************************************************
 !
-      subroutine deriv_xy(f, id, jd, i, j, imax, jmax, dx, dy, d2fdxy)
+      subroutine deriv_xy ( f, i, j, dx, dy, d2fdxy)
 
       implicit none
 
-      integer id, jd, i, j, imax, jmax
-      real f(id, jd), dx, dy, d2fdxy
+      integer, intent(in) :: i, j
+      real, intent(in) :: f(:,:)
+      real, intent(in) :: dx, dy
+      real, intent(out), optional :: d2fdxy
+
+      integer :: nx, ny
+
+      nx    = size ( f, dim = 1 )
+      ny    = size ( f, dim = 2 )
 
       d2fdxy = 0.0
 
-      if (i .ne. 1 .and. i .ne. imax .and. &
-          j .ne. 1 .and. j .ne. jmax) then
+      if (i .ne. 1 .and. i .ne. nx .and. &
+          j .ne. 1 .and. j .ne. ny) then
 
          d2fdxy = (f(i+1,j+1) - f(i-1,j+1) - f(i+1,j-1) + f(i-1,j-1) ) &
             / (4.0 * dx * dy)
 
-      end if
+      endif
 
-
-      return
       end subroutine deriv_xy
 
 !
@@ -607,7 +637,7 @@ contains
 !  disp1(z) calculates first derivative of disp(z)
 !
       complex function disp1(z)
-      complex z,dp,disp
+      complex z,dp
       complex zz
       zz=z
       dp=disp(z)
@@ -709,30 +739,30 @@ contains
 !
 !***************************************************************************
 !
-      real function second1_old(dummy)
-
-      implicit none
-
-      integer :: v(8)
-!      integer mtime, mclock
-      real dummy
-
-!*****Fortran 90 standard for wall clock time
-!      call date_and_time(values=v)
-!      second1_old=(v(5)*3600)+(v(6)*60)+v(7)+0.001d0*v(8)
-
-!*****FALCON:
-      double precision mpi_wtime
-      external mpi_wtime
-      second1_old = MPI_WTIME()
-
-
-!*****EAGLE:
-!      mtime = mclock()
-!      second1_old  = 0.01 * mtime
-
-      return
-      end function second1_old
+!      real function second1_old(dummy)
+!
+!      implicit none
+!
+!      integer :: v(8)
+!!      integer mtime, mclock
+!      real dummy
+!
+!!*****Fortran 90 standard for wall clock time
+!!      call date_and_time(values=v)
+!!      second1_old=(v(5)*3600)+(v(6)*60)+v(7)+0.001d0*v(8)
+!
+!!*****FALCON:
+!      double precision mpi_wtime
+!      external mpi_wtime
+!      second1_old = MPI_WTIME()
+!
+!
+!!*****EAGLE:
+!!      mtime = mclock()
+!!      second1_old  = 0.01 * mtime
+!
+!      return
+!      end function second1_old
 
 !
 !***************************************************************************
@@ -773,6 +803,104 @@ contains
 
       return
       end function second1
+
+subroutine midplane(igiven, jgiven, f, fmid, rho,&
+    nxdim, nydim, nnodex, nnodey, capr, r0, f0, jmid)
+
+    implicit none
+
+    integer nxdim, nydim, nnodex, nnodey, i, j, jmid, i0
+    integer igiven, jgiven, istart
+
+    real f(nxdim, nydim), fmid, rho(nxdim, nydim), r0, capr(nxdim)
+    real rhoij, f0
+
+    rhoij = rho(igiven, jgiven)
+    fmid =  0.0
+
+    if (rhoij .gt. 1.0) return
+
+    do i = 1, nnodex
+
+        if(capr(i) .ge. r0)then
+            istart = i
+            go to 200
+        endif
+
+    enddo
+
+200 continue
+
+    if(rhoij .ge. rho(istart, jmid)) then
+
+         do i = istart, nnodex - 1
+            if(rhoij .ge. rho(i,   jmid) .and. &
+              rhoij .lt. rho(i+1, jmid)) i0 = i
+         enddo
+
+         fmid = f(i0, jmid) + (f(i0 + 1, jmid) -   f(i0, jmid)) &
+                         / (rho(i0 + 1, jmid) - rho(i0, jmid)) &
+                         * (rhoij             - rho(i0, jmid))
+    endif
+
+
+    if(rhoij .lt. rho(istart, jmid)) then
+
+         fmid = f0 &
+            + (f(istart, jmid) - f0) / (rho(istart, jmid) - 0.0) &
+                  * (rhoij - 0.0)
+    endif
+
+100 format (1i10, 1p8e12.4)
+102 format (2i10)
+
+end subroutine midplane
+
+subroutine flux_to_rz(nnodex, nnodey, profile_in, &
+         profile_out, rho, nrho, rho_ij)
+
+      implicit none
+
+      real :: profile_in(nrho), profile_out(nnodex,nnodey)
+      real :: rho(nrho), rho_ij(nnodex,nnodey)
+      integer :: nnodex, nnodey, nrho, i, j, k
+
+      do i = 1, nnodex
+         do j = 1, nnodey
+          do k = 1, nrho
+
+             if(rho_ij(i,j) .le. rho(1)) then
+             !  need one sided to the left
+
+!              call flush(6)
+              profile_out(i,j) = profile_in(1) + &
+                  (profile_in(2) - profile_in(1)) / &
+                  (rho(2) - rho(1)) * (rho_ij(i,j) - rho(1))
+
+             elseif(rho_ij(i,j) .ge.rho(nrho)) then
+             ! need one sidded to the right.
+
+                profile_out(i,j) = profile_in(nrho) + &
+                  (profile_in(nrho) - profile_in(nrho - 1)) / &
+                  (rho(nrho) - rho(nrho-1)) * (rho_ij(i,j) - rho(nrho))
+
+               elseif(rho_ij(i,j) - rho(k) .ge. 0.0 .and. &
+                   rho_ij(i,j) -rho(k+1) .lt. 0.0 ) then
+                ! standard  caseprint*, 'last if'
+              profile_out(i,j) = profile_in(k)  + &
+                  (profile_in(k+1) - profile_in(k))/ &
+                  (rho(k+1) - rho(k)) * (rho_ij(i,j) - rho(k))
+               endif
+
+             if (profile_out(i,j) .lt. 0.0) profile_out(i,j) = 1.0e-10
+
+          enddo
+       end do
+      end do
+
+      end subroutine flux_to_rz
+
+
 
 end module aorsasubs_mod
 

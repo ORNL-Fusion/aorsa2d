@@ -1,15 +1,15 @@
-c
-c*******************************************************************************
-c
+module zfunction_mod
 
-
+contains
 
       subroutine z_table(sgn_kprl, zeta, gamma, xnu, z0, z1, z2)
 
-*     ----------------------------------------------------
-*     z_table is a wrapper routine for David Smithe's table
-*     lookup Z function
-*     ----------------------------------------------------
+!     ----------------------------------------------------
+!     z_table is a wrapper routine for David Smithe's table
+!     lookup Z function
+!     ----------------------------------------------------
+
+        use ztable_mod
 
       implicit none
 
@@ -31,9 +31,9 @@ c
          call ztable_zfunc( real(zeta), alpha_s, xnu, zfunc )
          z0 = zfunc(0)
          z1 = - 0.5 * zfunc(1) - gamma / (2.0 * zi) * zfunc(2)
-         z2 = 0.5 * zfunc(0) + 0.25 * zfunc(2)
-     .      + gamma / (2.0 * zi) * zfunc(3)
-     .      - gamma**2 / 4. * zfunc(4)
+         z2 = 0.5 * zfunc(0) + 0.25 * zfunc(2) &
+            + gamma / (2.0 * zi) * zfunc(3) &
+            - gamma**2 / 4. * zfunc(4)
 
 
       else if (sgn_kprl .lt. 0.0) then
@@ -41,9 +41,9 @@ c
          call ztable_zfunc( - real(zeta), - alpha_s, - xnu, zfunc )
          z0 = - zfunc(0)
          z1 = - 0.5 * zfunc(1) + gamma / (2.0 * zi) * zfunc(2)
-         z2 = - 0.5 * zfunc(0) - 0.25 * zfunc(2)
-     .      + gamma / (2.0 * zi) * zfunc(3)
-     .      + gamma**2 / 4. * zfunc(4)
+         z2 = - 0.5 * zfunc(0) - 0.25 * zfunc(2) &
+            + gamma / (2.0 * zi) * zfunc(3) &
+            + gamma**2 / 4. * zfunc(4)
 
 
       end if
@@ -54,17 +54,18 @@ c
 
 
 
-c
-c*******************************************************************************
-c
+!
+!*******************************************************************************
+!
 
-      subroutine z_exact(sgn_kprl, zeta, gamma, xnu, z0, z1, z2,
-     .   dz0, dz1, dz2)
+      subroutine z_exact(sgn_kprl, zeta, gamma, xnu, z0, z1, z2, &
+         dz0, dz1, dz2)
 
-*     ----------------------------------------------------
-*     z_exact is a wrapper routine for David Smithe's own
-*     version of "z_smithe"
-*     ----------------------------------------------------
+!     ----------------------------------------------------
+!     z_exact is a wrapper routine for David Smithe's own
+!     version of "z_smithe"
+!     ----------------------------------------------------
+        use ztable_mod
 
       implicit none
 
@@ -85,14 +86,14 @@ c
          call ztable_zfunc( real(zeta), alpha_s, xnu, zfunc )
          z0 = zfunc(0)
          z1 = - 0.5 * zfunc(1) - gamma / (2.0 * zi) * zfunc(2)
-         z2 = 0.5 * zfunc(0) + 0.25 * zfunc(2)
-     .      + gamma / (2.0 * zi) * zfunc(3)
-     .      - gamma**2 / 4. * zfunc(4)
+         z2 = 0.5 * zfunc(0) + 0.25 * zfunc(2) &
+            + gamma / (2.0 * zi) * zfunc(3) &
+            - gamma**2 / 4. * zfunc(4)
 
          dz0 = zfunc(1)
          dz1 = - 0.5 * zfunc(2) - gamma / (2.0 * zi) * zfunc(3)
-c         dz2 = 0.5 * zfunc(1) + 0.25 * zfunc(3)
-c     .      + gamma / (2.0 * zi) * zfunc(4)
+!         dz2 = 0.5 * zfunc(1) + 0.25 * zfunc(3)
+!     .      + gamma / (2.0 * zi) * zfunc(4)
 
 
 
@@ -101,14 +102,14 @@ c     .      + gamma / (2.0 * zi) * zfunc(4)
          call ztable_zfunc( - real(zeta), - alpha_s, - xnu, zfunc )
          z0 = - zfunc(0)
          z1 = - 0.5 * zfunc(1) + gamma / (2.0 * zi) * zfunc(2)
-         z2 = - 0.5 * zfunc(0) - 0.25 * zfunc(2)
-     .      + gamma / (2.0 * zi) * zfunc(3)
-     .      + gamma**2 / 4. * zfunc(4)
+         z2 = - 0.5 * zfunc(0) - 0.25 * zfunc(2) &
+            + gamma / (2.0 * zi) * zfunc(3) &
+            + gamma**2 / 4. * zfunc(4)
 
          dz0 =  zfunc(1)
          dz1 =  0.5 * zfunc(2) - gamma / (2.0 * zi) * zfunc(3)
-c         dz2 =  0.5 * zfunc(1) + 0.25 * zfunc(3)
-c     .      - gamma / (2.0 * zi) * zfunc(4)
+!         dz2 =  0.5 * zfunc(1) + 0.25 * zfunc(3)
+!     .      - gamma / (2.0 * zi) * zfunc(4)
 
       end if
 
@@ -117,18 +118,21 @@ c     .      - gamma / (2.0 * zi) * zfunc(4)
       end subroutine z_exact
 
 
-c
-c***************************************************************************
-c
+!
+!***************************************************************************
+!
 
 
       subroutine z_approx(sgn_kprl, zeta, gamma, z0, z1, z2)
 
+      use ztable_mod
+      use aorsasubs_mod
+
       implicit none
 
-*     ------------------
-*     Finite k_parallel:
-*     ------------------
+!     ------------------
+!     Finite k_parallel:
+!     ------------------
       real gamma, fgam, y0, y, sgn_kprl, descrim
       complex zeta, z0, z1, z2, zfunct, zetat, fzeta
 
@@ -142,12 +146,12 @@ c
 
          if(gamma .gt. 1.0e-05)then
             y = y0
-            fgam = (sqrt(1. +  4. * gamma * y) - 1.)
-     .         / (2. * gamma * y)
+            fgam = (sqrt(1. +  4. * gamma * y) - 1.) &
+               / (2. * gamma * y)
          endif
 
          zetat = fgam * zeta
-c        zfunct = fzeta(zetat)
+!        zfunct = fzeta(zetat)
          call zfun (zetat, zfunct)
          z0 = fgam * zfunct
          z1 = fgam * (1.0 + fgam * zeta * zfunct)
@@ -162,13 +166,13 @@ c        zfunct = fzeta(zetat)
             descrim = 1. - 4. * gamma * y0
             if (descrim .ge. 0.0) y =   y0
             if (descrim .lt. 0.0) y = - y0
-            fgam = (1. - sqrt(1. -  4. * gamma * y) )
-     .         / (2. * gamma * y)
+            fgam = (1. - sqrt(1. -  4. * gamma * y) ) &
+               / (2. * gamma * y)
          endif
 
 
          zetat = - fgam * zeta
-c         zfunct = fzeta( zetat)
+!         zfunct = fzeta( zetat)
          call zfun (zetat, zfunct)
          z0 = - fgam * zfunct
          z1 = y / abs(y) * fgam * (1.0 - fgam * zeta * zfunct)
@@ -177,20 +181,23 @@ c         zfunct = fzeta( zetat)
 
 
       return
-      end
+      end subroutine z_approx
 
-c
-c******************************************************************************
-c
+!
+!******************************************************************************
+!
 
 
       subroutine z_approx_im(sgn_kprl, zeta, gamma, z0, z1, z2)
 
+      use ztable_mod
+      use aorsasubs_mod
+
       implicit none
 
-*     ------------------
-*     Finite k_parallel:
-*     ------------------
+!     ------------------
+!     Finite k_parallel:
+!     ------------------
       real gamma, fgam, y0, y, sgn_kprl, descrim
       complex zeta, z0, z1, z2, zfunct, zetat, fzeta
 
@@ -204,12 +211,12 @@ c
 
          if(gamma .gt. 1.0e-05)then
             y = y0
-            fgam = (sqrt(1. +  4. * gamma * y) - 1.)
-     .         / (2. * gamma * y)
+            fgam = (sqrt(1. +  4. * gamma * y) - 1.) &
+               / (2. * gamma * y)
          endif
 
          zetat = fgam * zeta
-c        zfunct = fzeta(zetat)
+!        zfunct = fzeta(zetat)
          call zfun_im (zetat, zfunct)
          z0 = fgam * zfunct
          z1 = fgam * (1.0 + fgam * zeta * zfunct)
@@ -224,13 +231,13 @@ c        zfunct = fzeta(zetat)
             descrim = 1. - 4. * gamma * y0
             if (descrim .ge. 0.0) y =   y0
             if (descrim .lt. 0.0) y = - y0
-            fgam = (1. - sqrt(1. -  4. * gamma * y) )
-     .         / (2. * gamma * y)
+            fgam = (1. - sqrt(1. -  4. * gamma * y) ) &
+               / (2. * gamma * y)
          endif
 
 
          zetat = - fgam * zeta
-c         zfunct = fzeta( zetat)
+!         zfunct = fzeta( zetat)
          call zfun_im (zetat, zfunct)
          z0 = - fgam * zfunct
          z1 = y / abs(y) * fgam * (1.0 - fgam * zeta * zfunct)
@@ -239,25 +246,28 @@ c         zfunct = fzeta( zetat)
 
 
       return
-      end
+      end subroutine z_approx_im
 
-c
-c******************************************************************************
-c
+!
+!******************************************************************************
+!
 
-      subroutine z_approx0(sgn_kprl, alpha, xkprl_eff, zeta_eff,
-     .   al, bl, cl)
+      subroutine z_approx0(sgn_kprl, alpha, xkprl_eff, zeta_eff, &
+         al, bl, cl)
+
+      use ztable_mod
+      use aorsasubs_mod
 
       implicit none
 
-*     -----------------------
-*     Small k_parallel limit:
-*     -----------------------
+!     -----------------------
+!     Small k_parallel limit:
+!     -----------------------
       real sgn_kprl, alpha, xkprl_eff
       complex zeta_eff, al, bl, cl, zfunct, zetat, fzeta
 
       if(sgn_kprl .ge. 0.0)then
-c        zfunct = fzeta(zeta_eff)
+!        zfunct = fzeta(zeta_eff)
          call zfun (zeta_eff, zfunct)
 
          al = 1. /(xkprl_eff * alpha) * zfunct
@@ -267,7 +277,7 @@ c        zfunct = fzeta(zeta_eff)
 
 
       if(sgn_kprl .lt. 0.0)then
-c        zfunct = fzeta(-zeta_eff)
+!        zfunct = fzeta(-zeta_eff)
          call zfun (-zeta_eff, zfunct)
 
          al = - 1. /(xkprl_eff * alpha) * zfunct
@@ -277,12 +287,12 @@ c        zfunct = fzeta(-zeta_eff)
 
 
       return
-      end
+      end subroutine z_approx0
 
 
-c
-c***************************************************************************
-c
+!
+!***************************************************************************
+!
       subroutine z2pole(zeta, zfunct)
 
       complex zeta, zfunct, zi, znum
@@ -293,12 +303,13 @@ c
       znum = zi*sqpi + g*zeta
       zfunct = znum/(1.0 - zeta*znum)
       return
-      end
-c
-c******************************************************************************
-c
+      end subroutine z2pole
+!
+!******************************************************************************
+!
 
       subroutine z_smithe(sgn_kprl, zeta, gamma, z0, z1, z2)
+        use ztable_mod
 
       implicit none
 
@@ -317,12 +328,12 @@ c
 
       if(zeta_mod .gt. 1.0e+02)then
 
-         z0 = - 1.0 / zeta - 0.5 / zeta**3
-     .                          + 3.0 * gamma / (zi * zeta**4)
-         z1 = - 0.5 / zeta**2 + gamma / (zi * zeta**3)
-     .                                       - 0.75 / zeta**4
-         z2 = - 0.5 / zeta - 0.75 / zeta**3
-     .                          + 4.5 * gamma / (zi * zeta**4)
+         z0 = - 1.0 / zeta - 0.5 / zeta**3 &
+                                + 3.0 * gamma / (zi * zeta**4)
+         z1 = - 0.5 / zeta**2 + gamma / (zi * zeta**3) &
+                                             - 0.75 / zeta**4
+         z2 = - 0.5 / zeta - 0.75 / zeta**3 &
+                                + 4.5 * gamma / (zi * zeta**4)
          return
 
       else
@@ -333,15 +344,15 @@ c
          dx = xmax / (npts - 1)
 
 
-*        ------------
-*        calculate Z0
-*        ------------
+!        ------------
+!        calculate Z0
+!        ------------
          do  j = 1, npts
 
             x(j) = (j-1) * dx
-            cexpx(j) = exp(zi * zeta * x(j)
-     .         - x(j)**2 / 4. * (1. + gamma * x(j))**2
-     .         - xnueff / 8. * x(j)**3   )
+            cexpx(j) = exp(zi * zeta * x(j) &
+               - x(j)**2 / 4. * (1. + gamma * x(j))**2 &
+               - xnueff / 8. * x(j)**3   )
 
             f(j) = zi * cexpx(j)
          end do
@@ -349,9 +360,9 @@ c
          call dgrat1(x, f, 1, npts, z0, nmaxdim)
 
 
-*        ------------
-*        calculate Z1
-*        ------------
+!        ------------
+!        calculate Z1
+!        ------------
          do  j = 1, npts
             f(j) = 0.5 * x(j)* (1.0 + gamma * x(j)) * cexpx(j)
          end do
@@ -359,12 +370,12 @@ c
          call dgrat1(x, f, 1, npts, z1, nmaxdim)
 
 
-*        ------------
-*        calculate Z2
-*        ------------
+!        ------------
+!        calculate Z2
+!        ------------
          do  j = 1, npts
-            f(j) = zi / 2.0 * (1.0 -  x(j)**2 / 2.
-     .           * (1. + gamma * x(j))**2) * cexpx(j)
+            f(j) = zi / 2.0 * (1.0 -  x(j)**2 / 2. &
+                 * (1. + gamma * x(j))**2) * cexpx(j)
          end do
 
          call dgrat1(x, f, 1, npts, z2, nmaxdim)
@@ -375,11 +386,11 @@ c
 
       end if
 
-      end
+      end subroutine z_smithe
 
-c
-c*******************************************************************************
-c
+!
+!*******************************************************************************
+!
 
       subroutine dgrat1(x, f, nx1, nx2, ans, nmaxdim)
 
@@ -397,9 +408,6 @@ c
       end do
 
       return
-      end
+      end subroutine dgrat1
 
-
-c
-c*******************************************************************************
-c
+end module zfunction_mod

@@ -2,17 +2,17 @@ module eqdsk_setup_mod
 
     use parameters
     use aorsa2din_mod
+    use aorsasubs_mod
 
     implicit none
 
     integer :: fcount, nmax, i_psi
-    real :: dx, dy, xwleft, sgn_vprl, modb, bratio_phi, &
+    real :: xwleft, sgn_vprl, modb, bratio_phi, &
          dxdphi, dydphi, caprx, sigma, eps
     real, allocatable :: bxn(:,:), byn(:,:), bzn(:,:), &
             bmod(:,:),  bratio(:,:)
     real, allocatable  :: zbxn(:,:,:), zbyn(:,:,:), zbzn(:,:,:), &
             zbmod(:,:,:), zbratio(:,:,:)
-    real, allocatable :: xprime(:), yprime(:) 
     real :: s_err(100), y_phi(100)
     real :: rmaxis, zmaxis, &
         psio, psimag, psi_tor_max
@@ -30,13 +30,15 @@ module eqdsk_setup_mod
 
 contains
 
-      subroutine eqdsk_setup ( myid, eqdsk )
+      subroutine eqdsk_setup ()
 
       use orbit_mod
       use fitpack
 
       implicit none
 
+      real, allocatable :: xprime(:), yprime(:) 
+      real :: dx, dy
       integer dlg_yRange
       integer jmid
       integer  mmax, n_phi, n_phi_max
@@ -583,8 +585,6 @@ contains
 
 
 
-
-      time0=second1(dummy)
 
       if (myid .eq. 0) then
         open(unit=138,file='out138',status='unknown',form='formatted')
@@ -1860,17 +1860,16 @@ contains
 !     -----------------------
 !     do plotting with pgplot
 !     -----------------------
-      t1 = second1(dummy)
 
-      if(myid .eq. 0)call eqdsk_plot
+!      if(myid .eq. 0)call eqdsk_plot
 
-      tmin = (second1(dummy) - t1) / 60.
+!      tmin = (second1(dummy) - t1) / 60.
 !      write(6 , 2846) tmin
 !      write(115, 2846) tmin
 
  2846 format('time to do plots =', f9.3, ' min')
 
-      if(myid .eq. 0) close (115)
+!      if(myid .eq. 0) close (115)
 
 
 
@@ -1961,9 +1960,9 @@ contains
  1001 format(8e10.3)
 
 
-      time=second1(dummy)-time0
+!      time=second1(dummy)-time0
 
-      ttotal = time/60.
+!      ttotal = time/60.
 
 
   899 format('total cpu time used =',f9.3,4h min)
@@ -2628,4 +2627,6 @@ contains
 !
 !***************************************************************************
 !
+
+
 end module eqdsk_setup_mod

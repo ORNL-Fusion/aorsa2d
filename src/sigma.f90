@@ -4,7 +4,7 @@ contains
 
       subroutine sigma_maxwellian(i, j, n, m, &
          gradprlb, bmod, bmod0, &
-         xm, q, xn, dlg_xnuomg, &
+         xm, xn, dlg_xnuomg, &
          xkt, omgc, omgp2, &
          lmin, lmax, nzfun, &
          xkxsav, xkysav, nphi, capr, &
@@ -20,6 +20,7 @@ contains
          upshift, damping, xk_cutoff )
 
       use constants
+      use zfunction_mod
 
 !     ---------------------------------------------------------
 !     This routine uses the modified Z functions Z0, Z1, Z2
@@ -31,21 +32,21 @@ contains
 
       real, dimension(:,:), allocatable :: DFDUPER0, DFDUPAR0
 
-      integer lmin, lmax, nzfun, lmaxdim, l, labs, 
+      integer lmin, lmax, nzfun, lmaxdim, l, labs, &
           i, j, n, m, nphi, ndist, myid, iflag, nproc, ni, mi, &
-          i_sav, j_sav, ni0, mi0, upshift
+          ni0, mi0, upshift
 
       real u0, u2, fnorm, f_cql, eNormIN
 
-      real xkperp, xkprl, xm, q, xn, xkt, omgc, omgp2, xme
+      real xkperp, xkprl, xm, xn, xkt, omgc, omgp2
       real xkprl_eff, fgam, y0, y, sgn_kprl, reson, duperp, dupara
       real xkprl_eff0
       real dzetal(lmin:lmax), descrim
       real dakbdkb, gradprlb, bmod, bmod0, nu_coll
       real, intent(in) :: dlg_xnuomg
-      real akprl,  alpha, eps0, omgrf, emax
+      real akprl,  alpha, omgrf, emax
       real gammab(lmin:lmax), gamma_coll(lmin:lmax)
-      real a, b, xnurf, pi, delta0, rhol
+      real a, b, xnurf, delta0, rhol
       real bx, by, bz, bratio, denom
       real dfdth, dfdupar_check, dfduper_check, dfdth_check
       real uperp0_grid, upara0_grid, zeta, eta, ai, bi, ci, di
@@ -55,7 +56,7 @@ contains
       real xkphi
       real xkalp, xkbet, xk0, rgamma, xk_cutoff, damping, kr, step
 
-      complex zi, zfunct, fzeta, omgrfc
+      complex zfunct, fzeta, omgrfc
 
       complex zfunct0, zeta0, sig3cold, z0, z1, z2, dz0, dz1, dz2
 
@@ -66,7 +67,6 @@ contains
       complex sig0l, sig1l, sig2l, sig3l, sig4l, sig5l
       logical :: l_interp   !new
       logical :: l_first  !new
-      real :: kperp_max !new
 
 
       complex sigxx, sigxy, sigxz, &
@@ -106,11 +106,7 @@ contains
 
       integer :: i_uperp, i_upara, i_psi
 
-!DLG:   Define more variables
-      p_f_rzvv_ = 0.0
-
       nu_coll =  .01 * omgrf
-      xme = 9.11e-31
       zieps0 = zi * eps0
       alpha = sqrt(2. * xkt / xm)
       rhol = alpha / omgc
@@ -128,10 +124,6 @@ contains
 !     Optional: leave out upshift in xkprl
 !     --------------------------------- --
       if (upshift .eq. 0)         xkprl = uzz * xkphi
-
-      if (upshift .eq. -1) then
-         if (xkperp  .gt. xk_cutoff) xkprl = uzz * xkphi
-      end if
 
       if (xkprl  .eq. 0.0) xkprl  = 1.0e-08
       if (xkperp .eq. 0.0) xkperp = 1.0e-08
@@ -289,7 +281,7 @@ end subroutine sigma_maxwellian
 
 
       subroutine sigmac_stix(i, j, n, m, &
-         xm, q, xn, dlg_xnuomg, &
+         xm, xn, dlg_xnuomg, &
          xkt, omgc, omgp2, &
          lmin, lmax, nzfun, ibessel, &
          xkxsav, xkysav, nphi, capr, &
@@ -300,10 +292,9 @@ end subroutine sigma_maxwellian
          sigxx, sigxy, sigxz, &
          sigyx, sigyy, sigyz, &
          sigzx, sigzy, sigzz, &
-         delta0, zi, eps0, v0i, omgrf, xk0, kperp_max, &
-         i_sav, j_sav)
+         delta0, omgrf, xk0 )
 
-
+        use constants 
 
 !     ----------------------------------------------------
 !     This routine calculates sigma_cold in the Stix frame
@@ -312,19 +303,18 @@ end subroutine sigma_maxwellian
       implicit none
 
       integer lmin, lmax, nzfun, lmaxdim, l, labs, ibessel, &
-          i, j, n, m, nphi, &
-          i_sav, j_sav
+          i, j, n, m, nphi
 
-      real xkperp, xkprl, xm, q, xn, xkt, omgc, omgp2, xkb, akb
+      real xkperp, xkprl, xm, xn, xkt, omgc, omgp2, xkb, akb
       real dakbdkb
-      real akprl, gammab, alpha, eps0, omgrf, v0i
+      real akprl, gammab, alpha, omgrf
       real cosalp, sinalp, a, b
       real bx, by, bz
       real xkxsav, xkysav, capr
       real xkphi
       real xkalp, xkbet, dlg_xnuomg, xk0, delta0
 
-      complex zi, omgrfc
+      complex omgrfc
 
 
       complex sig0, sig1, sig2, sig3, sig4, sig5
@@ -343,7 +333,6 @@ end subroutine sigma_maxwellian
       complex tpl, tml, tplp, tplpp, zetalp, zetalm, zieps0, &
          bl, gamma
 
-      real :: kperp_max !new
 
 
 
@@ -398,6 +387,8 @@ end subroutine sigma_maxwellian
 
       subroutine besiexp(gamma, lmax, expbes, expbesp, lmaxdim, &
          expbesovergam)
+
+        use bessel_mod
 
 !     ----------------------------------------------------------
 !     Calculates exp(-gamma) times the modified bessel functions
@@ -463,10 +454,12 @@ end subroutine sigma_maxwellian
 !     expansion for small argument
 !-------------------------------------------------------------------
 
+        use bessel_mod
+
       implicit none
 
       integer lmax, nmax, ier, l, lmaxdim
-      real factrl, factl
+      real :: factl
       complex gamma, expbes(0:lmaxdim), expbesp(0:lmaxdim), &
          expbesovergam(0:lmaxdim), xilovergam, &
          xil(0:lmaxdim), xilp(0:lmaxdim), exgam
