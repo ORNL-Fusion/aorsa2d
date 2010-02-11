@@ -1132,71 +1132,60 @@ contains
 !*******************************************************************
 !
 
-      subroutine sftinv2d(x, y, xkx, xky, &
-         f, fx, fy, &
-         a, nxdim, nydim, &
-         nkdim1, nkdim2, mkdim1, mkdim2, nnodex, nnodey, &
-         nkx1, nkx2, nky1, nky2, xx, yy, myid, nproc, icontxt)
+    subroutine sftinv2d( xkx, xky, xx, yy, &
+       a, f, fx, fy )
 
+        implicit none
+        
+        real, intent(in) :: xkx(:), xky(:)
+        complex, intent(in) :: xx(:,:), yy(:,:)
+        complex, intent(in) :: a(:,:)
+        complex, intent(out), optional, allocatable :: &
+            f(:,:), fx(:,:), fy(:,:)
 
-      implicit none
+        complex :: cexpkxky
+        integer :: i, j, n, m
+        integer :: nx, ny, kxL, kxR, kyL, kyR
 
-      integer nxdim, nydim, n, m, i, j, &
-         nkdim1, nkdim2, mkdim1, mkdim2, nnodex, nnodey, &
-         nkx1, nkx2, nky1, nky2, myid, nproc, id, ngrid, icontxt
+        nx  = size ( xx, 2 )
+        ny  = size ( yy, 2 )
 
-      real x(nxdim), y(nydim)
-      real xkx(nkdim1 : nkdim2), xky(mkdim1 : mkdim2)
-      complex &
-         f(nxdim, nydim), fx(nxdim, nydim), fy(nxdim, nydim), &
-         a(nkdim1 : nkdim2, mkdim1 : mkdim2)
-      complex cexpkxky
+        kxL = lbound ( xx, 1 )
+        kxR = ubound ( xx, 1 )
 
-      complex xx(nkdim1 : nkdim2, 1 : nxdim), &
-              yy(mkdim1 : mkdim2, 1 : nydim)
+        kyL = lbound ( yy, 1 )
+        kyR = ubound ( yy, 1 )
 
+        if (.not. allocated ( f ) ) allocate ( f(nx,ny) )
+        if (.not. allocated ( fx ) ) allocate ( fx(nx,ny) )
+        if (.not. allocated ( fy ) ) allocate ( fy(nx,ny) )
 
+        do i = 1, nx
+            do j = 1, ny
+        
+                f(i, j) = 0.0
 
-      do i = 1, nnodex
-         do j = 1, nnodey
+                do n = kxL, kxR 
+                    do m = kyL, kyR 
 
-            ngrid = (j - 1) * nnodex + i
-            id = mod(ngrid, nproc)
-            if(id .eq. myid)then
+                      !----------------------------------------------------
+                      !cexpkxky = exp(zi * (xkx(n) * x(i) + xky(m) * y(j)))
+                      !----------------------------------------------------
 
-               f(i, j) = 0.0
-               do n = nkx1, nkx2
-                  do m = nky1, nky2
-!                    ----------------------------------------------------
-!                    cexpkxky = exp(zi * (xkx(n) * x(i) + xky(m) * y(j)))
-!                    ----------------------------------------------------
-                     cexpkxky = xx(n, i) * yy(m, j)
-                     f(i,j) = f(i,j) + a(n,m) * cexpkxky
-                     fx(i,j) = f(i,j) + xkx(n) * a(n,m) * cexpkxky
-                     fy(i,j) = f(i,j) + xky(n) * a(n,m) * cexpkxky
-                  end do
-               end do
-            end if
-         end do
-      end do
+                      cexpkxky = xx(n, i) * yy(m, j)
 
+                      f(i,j) = f(i,j) + a(n,m) * cexpkxky
+                      fx(i,j) = f(i,j) + xkx(n) * a(n,m) * cexpkxky
+                      fy(i,j) = f(i,j) + xky(n) * a(n,m) * cexpkxky
 
-!      f(1:nnodex, 1:nnodey) = matmul(transpose(xx(nkx1:nkx2, 1:nnodex)),
-!     .     matmul(a(nkx1:nkx2, nky1:nky2),  yy(nky1:nky2, 1:nnodey) ))
+                    enddo
+                enddo
 
-      !call blacs_barrier(icontxt, 'All')
-
-      !call zgsum2d(icontxt, 'All', ' ', nnodex, nnodey, f, &
-      !   nxdim, -1, -1)
-      !call zgsum2d(icontxt, 'All', ' ', nnodex, nnodey, fx, &
-      !   nxdim, -1, -1)
-      !call zgsum2d(icontxt, 'All', ' ', nnodex, nnodey, fy, &
-      !   nxdim, -1, -1)
-
-
-
-      return
-      end subroutine sftinv2d
+            enddo
+        enddo
+    
+    
+    end subroutine sftinv2d
 !
 !*******************************************************************
 !
@@ -1399,91 +1388,91 @@ contains
       end subroutine sft2d
 
 !
-!*******************************************************************
+!!*******************************************************************
+!!
 !
-
-      subroutine sft2d_parallel(f, xlen, ylen, nnodex, nnodey, &
-         nxdim, nydim, nkdim1, nkdim2, mkdim1, mkdim2, &
-         nkx1, nkx2, nky1, nky2, xx_inv, yy_inv, fk, dx, dy, &
-         myid, nproc, icontxt)
-
-      implicit none
-
-      integer nnodex, nnodey, nxdim, nydim, nkdim1, nkdim2, &
-          mkdim1, mkdim2, i, j, n, m, nkx1, nkx2, nky1, nky2
-
-      integer  myid, nproc, id, ngrid, icontxt
-
-      real xlen, ylen, dx, dy, fact
-
-      complex fk(nkdim1 : nkdim2, mkdim1 : mkdim2), xint, cexpkxky
-      complex f(nxdim, nydim), fksav(nxdim, nydim)
-      complex xx_inv(nkdim1 : nkdim2, nxdim), &
-              yy_inv(mkdim1 : mkdim2, nydim)
-
-      fksav(:,:) = (0.0,0.0)
-
-      fact = dx / xlen * dy / ylen
-
-!      print*,myid,"fourier: nnodex  nnodey",nnodex,nnodey
-
-      call blacs_barrier(icontxt, 'All')
-
-
-      do n = nkx1, nkx2
-         do m = nky1, nky2
-
-            ngrid = (n - nkx1) * nnodey + (m - nky1 + 1)
-            id = mod(ngrid, nproc)
-            if(id .eq. myid)then
-
-               fksav(n - nkx1 + 1, m - nky1 + 1) = 0.0
-
-               do i = 1, nnodex
-                  do j = 1, nnodey
-
-!                    ----------------------------------------------------------
-!                    cexpkxky = 1.0 / exp(zi * (xkx(n) * x(i) + xky(m) * y(j)))
-!                    ----------------------------------------------------------
-!                     cexpkxky = xx_inv(n, i) * yy_inv(m, j)
+!      subroutine sft2d_parallel(f, xlen, ylen, nnodex, nnodey, &
+!         nxdim, nydim, nkdim1, nkdim2, mkdim1, mkdim2, &
+!         nkx1, nkx2, nky1, nky2, xx_inv, yy_inv, fk, dx, dy, &
+!         myid, nproc, icontxt)
 !
-!                     xint = f(i, j) * cexpkxky
+!      implicit none
 !
-!                     fksav(n - nkx1 + 1, m - nky1 + 1)
-!     .                 = fksav(n - nkx1 + 1, m - nky1 + 1) + xint * fact
-                     fksav(n - nkx1 + 1, m - nky1 + 1) &
-                       = fksav(n - nkx1 + 1, m - nky1 + 1) + &
-                         f(i,j) * xx_inv(n,i) * yy_inv(m,j) *fact
-
-                  end do
-               end do
-
-            end if
-
-         end do
-      end do
-
-      call blacs_barrier(icontxt, 'All')
-
-
-      call zgsum2d(icontxt, 'All', ' ', nnodex, nnodey, fksav, &
-         nxdim, -1, -1)
-
-
-      do n = nkx1, nkx2
-         do m = nky1, nky2
-            fk(n, m) = fksav(n - nkx1 + 1, m - nky1 + 1)
-         end do
-      end do
-
-
-
-
-      return
-      end subroutine sft2d_parallel
-
+!      integer nnodex, nnodey, nxdim, nydim, nkdim1, nkdim2, &
+!          mkdim1, mkdim2, i, j, n, m, nkx1, nkx2, nky1, nky2
 !
-!*******************************************************************
+!      integer  myid, nproc, id, ngrid, icontxt
+!
+!      real xlen, ylen, dx, dy, fact
+!
+!      complex fk(nkdim1 : nkdim2, mkdim1 : mkdim2), xint, cexpkxky
+!      complex f(nxdim, nydim), fksav(nxdim, nydim)
+!      complex xx_inv(nkdim1 : nkdim2, nxdim), &
+!              yy_inv(mkdim1 : mkdim2, nydim)
+!
+!      fksav(:,:) = (0.0,0.0)
+!
+!      fact = dx / xlen * dy / ylen
+!
+!!      print*,myid,"fourier: nnodex  nnodey",nnodex,nnodey
+!
+!      call blacs_barrier(icontxt, 'All')
+!
+!
+!      do n = nkx1, nkx2
+!         do m = nky1, nky2
+!
+!            ngrid = (n - nkx1) * nnodey + (m - nky1 + 1)
+!            id = mod(ngrid, nproc)
+!            if(id .eq. myid)then
+!
+!               fksav(n - nkx1 + 1, m - nky1 + 1) = 0.0
+!
+!               do i = 1, nnodex
+!                  do j = 1, nnodey
+!
+!!                    ----------------------------------------------------------
+!!                    cexpkxky = 1.0 / exp(zi * (xkx(n) * x(i) + xky(m) * y(j)))
+!!                    ----------------------------------------------------------
+!!                     cexpkxky = xx_inv(n, i) * yy_inv(m, j)
+!!
+!!                     xint = f(i, j) * cexpkxky
+!!
+!!                     fksav(n - nkx1 + 1, m - nky1 + 1)
+!!     .                 = fksav(n - nkx1 + 1, m - nky1 + 1) + xint * fact
+!                     fksav(n - nkx1 + 1, m - nky1 + 1) &
+!                       = fksav(n - nkx1 + 1, m - nky1 + 1) + &
+!                         f(i,j) * xx_inv(n,i) * yy_inv(m,j) *fact
+!
+!                  end do
+!               end do
+!
+!            end if
+!
+!         end do
+!      end do
+!
+!      call blacs_barrier(icontxt, 'All')
+!
+!
+!      call zgsum2d(icontxt, 'All', ' ', nnodex, nnodey, fksav, &
+!         nxdim, -1, -1)
+!
+!
+!      do n = nkx1, nkx2
+!         do m = nky1, nky2
+!            fk(n, m) = fksav(n - nkx1 + 1, m - nky1 + 1)
+!         end do
+!      end do
+!
+!
+!
+!
+!      return
+!      end subroutine sft2d_parallel
+!
+!!
+!!*******************************************************************
 !
 
 

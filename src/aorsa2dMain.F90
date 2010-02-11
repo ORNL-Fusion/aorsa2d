@@ -6,6 +6,8 @@ program aorsa2dMain
     use sigma_mod
     use aorsa2din_mod
     use interp
+    use fourier_mod
+    use write_data
         
     implicit none
 
@@ -13,7 +15,7 @@ program aorsa2dMain
 !   -------------
 
     real :: omgrf, xk0
-    real, allocatable, dimension(:) :: mSpec, qSpec
+    real, allocatable, dimension(:) :: mSpec, qSpec, tSpec, dSpec
     integer, allocatable, dimension(:) :: zSpec, amuSpec
     real, allocatable, dimension(:,:,:) :: omgc, omgp2, densitySpec, ktSpec
     integer :: nSpec
@@ -24,6 +26,7 @@ program aorsa2dMain
     real, allocatable, dimension(:) :: capR, xkphi
     real, allocatable, dimension(:) :: y
     integer :: i, j, m, n, s, iRow, iCol
+    integer :: nkx, nky, nRow, nCol
     real, allocatable, dimension(:) :: xkxsav, xkysav
     real :: xk_cutOff
     real :: sinTh
@@ -69,7 +72,19 @@ program aorsa2dMain
     real :: bHere(3)
     complex, allocatable, dimension(:) :: &
         sss, ttt, qqq
-    complex, allocatable :: aMat(:,:)
+    complex, allocatable :: aMat(:,:), brhs(:)
+    real :: antSigX, antSigY
+    complex, allocatable, dimension(:,:) :: &
+        xjx, xjy, xjz
+    integer :: info
+    integer, allocatable, dimension(:) :: ipiv
+    complex, allocatable, dimension(:,:) :: &
+        ealphak, ebetak, eBk
+    complex, allocatable, dimension(:,:) :: &
+       ealpha, ealphax, ealphay, &
+       ebeta, ebetax, ebetay, &
+       eB, eBx, eBy
+
 
 !   read namelist input data
 !   ------------------------
@@ -81,16 +96,16 @@ program aorsa2dMain
 !   --------------------------------------------
 
     allocate ( &
-        capR ( nmodesx ), &
-        xkphi ( nmodesx ) )
+        capR ( nModesX ), &
+        xkphi ( nModesX ) )
 
-    rwLeft   = 1.0
-    rwRight  = 2.0
+    rwLeft   = 0.2
+    rwRight  = 1.7
     xRange  = rwRight - rwLeft
     dx = xRange / nModesX
     do i = 1, nModesX
 
-        capr(i) = (i-1) * dx + xLeft 
+        capr(i) = (i-1) * dx + rwLeft 
         xkphi(i) = nphi / capr(i)
 
     enddo
@@ -104,7 +119,7 @@ program aorsa2dMain
     yTop    =  1.0
     yBot    = -1.0
     yRange  = yTop - yBot
-    dy = yRange / nmodesy
+    dy = yRange / nModesY
     do j = 1, nModesY
 
         y(j) = (j-1) * dy + yBot
@@ -129,9 +144,9 @@ program aorsa2dMain
 
            bHere = dlg_interpB ( (/capR(i),0.0,y(j)/), &
                         bMagHere = bMod(i,j) )  
-           bxn(i,j) = bHere(1)
-           byn(i,j) = bHere(2)
-           bzn(i,j) = bHere(3)
+           bxn(i,j) = bHere(1) / bMod(i,j)
+           byn(i,j) = bHere(2) / bMod(i,j)
+           bzn(i,j) = bHere(3) / bMod(i,j)
 
         enddo
     enddo
@@ -142,29 +157,31 @@ program aorsa2dMain
     omgrf = 2.0 * pi * freqcy
     xk0 = omgrf / clight
 
-    nSpec   = 3
+    nSpec   = 2
 
     allocate ( &
         mSpec(nSpec), zSpec(nSpec), &
-        qSpec(nSpec), amuSpec(nSpec) )
+        qSpec(nSpec), amuSpec(nSpec), &
+        dSpec(nSpec), tSpec(nSpec) )
 
-    amuSpec     = (/ 0, amu1, amu2 /) 
+    amuSpec     = (/ 0, 4 /) 
+    zSpec       = (/ -1, 2 /)
+    tSpec       = (/ 1e3, 1e3 /) ! [eV]
+    dSpec       = (/ 4e18, 2e18 /)
     mSpec       = amuSpec * xmh
     mSpec(1)    = xme  
-    zSpec       = (/ -1, z1, z2 /)
     qSpec       = zSpec * q 
 
     allocate ( &
         densitySpec ( nModesX, nModesY, nSpec ), & 
         ktSpec ( nModesX, nModesY, nSpec ) )
 
-    ktSpec(:,:,1)   = te0 * q 
-    ktSpec(:,:,2)   = ti01 * q 
-    ktSpec(:,:,3)   = ti02 * q 
+    do s=1,nSpec
 
-    densitySpec(:,:,1)   = xn0
-    densitySpec(:,:,2)   = xn1 
-    densitySpec(:,:,3)   = xn2 
+        ktSpec(:,:,s)       = tSpec(s) * q 
+        densitySpec(:,:,s)  = dSpec(s) 
+
+    enddo
 
     allocate ( &
         omgc ( nModesX, nModesY, nSpec ), &
@@ -182,21 +199,21 @@ program aorsa2dMain
 !   calculate rotation matrix U
 !   ---------------------------
 
-    allocate ( btau ( nmodesx, nmodesy ) )
+    allocate ( btau ( nModesX, nModesY ) )
 
     allocate ( &
-        uxx( nmodesx, nmodesy ), & 
-        uxy( nmodesx, nmodesy ), &
-        uxz( nmodesx, nmodesy ), &
-        uyx( nmodesx, nmodesy ), & 
-        uyy( nmodesx, nmodesy ), &
-        uyz( nmodesx, nmodesy ), &
-        uzx( nmodesx, nmodesy ), & 
-        uzy( nmodesx, nmodesy ), &
-        uzz( nmodesx, nmodesy ) )
+        uxx( nModesX, nModesY ), & 
+        uxy( nModesX, nModesY ), &
+        uxz( nModesX, nModesY ), &
+        uyx( nModesX, nModesY ), & 
+        uyy( nModesX, nModesY ), &
+        uyz( nModesX, nModesY ), &
+        uzx( nModesX, nModesY ), & 
+        uzy( nModesX, nModesY ), &
+        uzz( nModesX, nModesY ) )
 
-    do i = 1, nmodesx
-        do j = 1, nmodesy
+    do i = 1, nModesX
+        do j = 1, nModesY
 
             btau(i,j) = sqrt(bxn(i,j)**2 + byn(i,j)**2)
 
@@ -216,72 +233,72 @@ program aorsa2dMain
     enddo
 
 
-
 !   Calculate the integrated volume on even mesh:
 !   --------------------------------------------
 
-    kxL = -nModesx/2
-    kxR =  nModesx/2
-    kyL = -nModesY/2
+    kxL = -nModesX/2+1
+    kxR =  nModesX/2
+    kyL = -nModesY/2+1
     kyR =  nModesY/2
 
     allocate ( &
         xkxsav (kxL:kxR), &
         xkysav (kyL:kyR) )
 
-    write(*,*) shape(xkxsav), nModesX, nModesY, kxL, kxR
+    nkx = size ( xkxsav, 1 )
+    nky = size ( xkysav, 1 )
 
-    do m = kxL, kxR 
-        xkxsav(m) = 2.0 * pi * m / xRange
+    do n = kxL, kxR 
+        xkxsav(n) = 2.0 * pi * n / xRange
     enddo
 
-    do n = kyL, kyR 
-        xkysav(n) = 2.0 * pi * n / yRange
+    do m = kyL, kyR 
+        xkysav(m) = 2.0 * pi * m / yRange
     enddo
 
-    xk_cutoff   = sqrt ( xkxsav( nmodesx/2 )**2 &
-                            + xkysav( nmodesy/2 )**2 ) * xkperp_cutoff
+    xk_cutoff   = sqrt ( xkxsav( kxR )**2 &
+                            + xkysav( kyR )**2 ) * xkperp_cutoff
 
 
 !   Take numerical derivatives
 !   --------------------------
 
-    allocate ( gradPrlB (nmodesx,nmodesy) )
+    allocate ( gradPrlB (nModesX,nModesY) )
 
     allocate ( &  
-        dxuxx(nmodesx,nmodesy), dxxuxx(nmodesx,nmodesy), &
-        dxuxy(nmodesx,nmodesy), dxxuxy(nmodesx,nmodesy), &
-        dxuxz(nmodesx,nmodesy), dxxuxz(nmodesx,nmodesy), &
-        dxuyx(nmodesx,nmodesy), dxxuyx(nmodesx,nmodesy), &
-        dxuyy(nmodesx,nmodesy), dxxuyy(nmodesx,nmodesy), &
-        dxuyz(nmodesx,nmodesy), dxxuyz(nmodesx,nmodesy), &
-        dxuzx(nmodesx,nmodesy), dxxuzx(nmodesx,nmodesy), &
-        dxuzy(nmodesx,nmodesy), dxxuzy(nmodesx,nmodesy), &
-        dxuzz(nmodesx,nmodesy), dxxuzz(nmodesx,nmodesy) )
+        dxuxx(nModesX,nModesY), dxxuxx(nModesX,nModesY), &
+        dxuxy(nModesX,nModesY), dxxuxy(nModesX,nModesY), &
+        dxuxz(nModesX,nModesY), dxxuxz(nModesX,nModesY), &
+        dxuyx(nModesX,nModesY), dxxuyx(nModesX,nModesY), &
+        dxuyy(nModesX,nModesY), dxxuyy(nModesX,nModesY), &
+        dxuyz(nModesX,nModesY), dxxuyz(nModesX,nModesY), &
+        dxuzx(nModesX,nModesY), dxxuzx(nModesX,nModesY), &
+        dxuzy(nModesX,nModesY), dxxuzy(nModesX,nModesY), &
+        dxuzz(nModesX,nModesY), dxxuzz(nModesX,nModesY) )
 
     allocate ( &  
-        dyuxx(nmodesx,nmodesy), dyyuxx(nmodesx,nmodesy), &
-        dyuxy(nmodesx,nmodesy), dyyuxy(nmodesx,nmodesy), &
-        dyuxz(nmodesx,nmodesy), dyyuxz(nmodesx,nmodesy), &
-        dyuyx(nmodesx,nmodesy), dyyuyx(nmodesx,nmodesy), &
-        dyuyy(nmodesx,nmodesy), dyyuyy(nmodesx,nmodesy), &
-        dyuyz(nmodesx,nmodesy), dyyuyz(nmodesx,nmodesy), &
-        dyuzx(nmodesx,nmodesy), dyyuzx(nmodesx,nmodesy), &
-        dyuzy(nmodesx,nmodesy), dyyuzy(nmodesx,nmodesy), &
-        dyuzz(nmodesx,nmodesy), dyyuzz(nmodesx,nmodesy) )
+        dyuxx(nModesX,nModesY), dyyuxx(nModesX,nModesY), &
+        dyuxy(nModesX,nModesY), dyyuxy(nModesX,nModesY), &
+        dyuxz(nModesX,nModesY), dyyuxz(nModesX,nModesY), &
+        dyuyx(nModesX,nModesY), dyyuyx(nModesX,nModesY), &
+        dyuyy(nModesX,nModesY), dyyuyy(nModesX,nModesY), &
+        dyuyz(nModesX,nModesY), dyyuyz(nModesX,nModesY), &
+        dyuzx(nModesX,nModesY), dyyuzx(nModesX,nModesY), &
+        dyuzy(nModesX,nModesY), dyyuzy(nModesX,nModesY), &
+        dyuzz(nModesX,nModesY), dyyuzz(nModesX,nModesY) )
 
     allocate ( &
-        dxyuxx(nmodesx,nmodesy), dxyuxy(nmodesx,nmodesy), dxyuxz(nmodesx,nmodesy), &
-        dxyuyx(nmodesx,nmodesy), dxyuyy(nmodesx,nmodesy), dxyuyz(nmodesx,nmodesy), &
-        dxyuzx(nmodesx,nmodesy), dxyuzy(nmodesx,nmodesy), dxyuzz(nmodesx,nmodesy) )
+        dxyuxx(nModesX,nModesY), dxyuxy(nModesX,nModesY), dxyuxz(nModesX,nModesY), &
+        dxyuyx(nModesX,nModesY), dxyuyy(nModesX,nModesY), dxyuyz(nModesX,nModesY), &
+        dxyuzx(nModesX,nModesY), dxyuzy(nModesX,nModesY), dxyuzz(nModesX,nModesY) )
                 
-    do i = 1, nmodesx
-        do j = 1, nmodesy
+    do i = 1, nModesX
+        do j = 1, nModesY
 
             !   Brambilla approximation:
             !   -----------------------
 
-            sinTh = y(j) / sqrt ( (capR(i)-rmaxis__)**2 + y(j)**2 )
+            sinTh = y(j) / sqrt ( (capR(i)-rmaxis__)**2 + (y(j)-zmaxis__)**2 )
             gradprlb(i,j) = bmod(i,j) / capr(i) * abs ( btau(i,j) * sinTh )
 
             if (nzfun == 0) gradPrlB(i,j) = 1.0e-10
@@ -333,17 +350,17 @@ program aorsa2dMain
         xx(kxL:kxR,nModesX), xx_inv(kxL:kxR,nModesX), &
         yy(kyL:kyR,nModesY), yy_inv(kyL:kyR,nModesY) )
 
-    do i = 1, nmodesx
-        do m = kxL, kxR 
-            xx(m, i) = exp(zi * xkxsav(m) * capR(i))
-            xx_inv(m,i) = 1.0/xx(m,i)
+    do i = 1, nModesX
+        do n = kxL, kxR 
+            xx(n, i) = exp(zi * xkxsav(n) * capR(i))
+            xx_inv(n,i) = 1.0/xx(n,i)
         enddo
     enddo
 
-    do j = 1, nmodesy
-        do n = kyL, kyR 
-            yy(n,j) = exp(zi * xkysav(n) * y(j))
-            yy_inv(n,j) = 1.0/yy(n,j)
+    do j = 1, nModesY
+        do m = kyL, kyR 
+            yy(m,j) = exp(zi * xkysav(m) * y(j))
+            yy_inv(m,j) = 1.0/yy(m,j)
         enddo
     enddo
 
@@ -358,7 +375,13 @@ program aorsa2dMain
         ttt(nModesX*nModesY*3), &
         qqq(nModesX*nModesY*3) )
 
-    allocate ( aMat(nModesX*nModesY*3,nModesX*nModesY*3) ) 
+    allocate ( aMat(nModesX*nModesY*3,nkx*nky*3) ) 
+    allocate ( brhs(nModesX*nModesY*3) )
+
+    write(*,*) 'aorsa2dMain.F90:365'
+    write(*,*) 'aMat details:'
+    write(*,*) shape(aMat), nModesX, nModesY, nkx, nky
+    write(*,*) 'size: ', nModesX*nModesY*3*nkx*nky*3*2*8.0 / 1024.0**2
 
     i_loop: &
     do i=1,nModesX
@@ -367,16 +390,16 @@ program aorsa2dMain
 
             iRow = (j-1) * 3 + (i-1) * nModesY * 3 + 1
 
-            m_loop: &
-            do m=kxL,kxR
-                n_loop: &
-                do n=kyL,kyR
+            n_loop: &
+            do n=kxL,kxR
+                m_loop: &
+                do m=kyL,kyR
 
                     !write(*,*) i, j, m, n
 
-                    iCol = (m-kxL) * 3 * nModesY + (n-kyL) * 3 + 1
+                    iCol = (n-kxL) * 3 * nModesY + (m-kyL) * 3 + 1
 
-                    cexpkxky = xx(m, i) * yy(n, j)
+                    cexpkxky = xx(n, i) * yy(m, j)
 
                     sigxx = 0.0
                     sigxy = 0.0
@@ -397,12 +420,12 @@ program aorsa2dMain
 
                         do s=1,nSpec
 
-                            call sigma_maxwellian(i, j, m, n, &
+                            call sigma_maxwellian(i, j, n, m, &
                                 gradprlb(i,j), bmod(i,j), &
                                 mSpec(s), densitySpec(i,j,s), xnuomg, &
                                 ktSpec(i,j,s), omgc(i,j,s), omgp2(i,j,s), &
                                 -lmax, lmax, nzfun, &
-                                xkxsav(m), xkysav(n), nphi, capr(i), &
+                                xkxsav(n), xkysav(m), nphi, capr(i), &
                                 bxn(i,j), byn(i,j), bzn(i,j), &
                                 uxx(i,j), uxy(i,j), uxz(i,j), &
                                 uyx(i,j), uyy(i,j), uyz(i,j), &
@@ -434,11 +457,11 @@ program aorsa2dMain
 
                         do s=1,nSpec
 
-                            call sigmac_stix(i, j, m, n, &
+                            call sigmac_stix(i, j, n, m, &
                                 mSpec(s), densitySpec(i,j,s), xnuomg, &
                                 ktSpec(i,j,s), omgc(i,j,s), omgp2(i,j,s), &
                                 -lmax, lmax, nzfun, ibessel, &
-                                xkxsav(m), xkysav(n), nphi, capr(i), &
+                                xkxsav(n), xkysav(m), nphi, capr(i), &
                                 bxn(i,j), byn(i,j), bzn(i,j), &
                                 uxx(i,j), uxy(i,j), uxz(i,j), &
                                 uyx(i,j), uyy(i,j), uyz(i,j), &
@@ -477,8 +500,8 @@ program aorsa2dMain
                     xkzy =       zi / (eps0 * omgrf) * sigzy
                     xkzz = 1.0 + zi / (eps0 * omgrf) * sigzz
 
-                    rnx = xkxsav(m) / xk0
-                    rny = xkysav(n) / xk0
+                    rnx = xkxsav(n) / xk0
+                    rny = xkysav(m) / xk0
                     rnPhi = xkphi(i) / xk0
 
                     dxx = (xkxx - rny**2 - rnphi**2) * uxx(i,j) &
@@ -599,6 +622,25 @@ program aorsa2dMain
                     fqk = dzy * cexpkxky
                     fsk = dzz * cexpkxky
 
+                    !   boundary conditions
+                    !   -------------------
+
+                    if ( i==1 .or. i==nModesX &
+                            .or. j==1 .or. j==nModesY ) then
+
+                        fdk = cExpKxKy
+                        fek = 0
+                        ffk = 0
+
+                        fgk = 0
+                        fak = cExpKxKy
+                        fpk = 0
+
+                        frk = 0
+                        fqk = 0
+                        fsk = cExpKxKy
+                    
+                    endif
 
                     sss(iCol)   = fdk
                     sss(iCol+1) = fek
@@ -612,8 +654,8 @@ program aorsa2dMain
                     qqq(iCol+1) = fqk
                     qqq(iCol+2) = fsk
 
-                enddo n_loop
-            enddo m_loop 
+                enddo m_loop
+            enddo n_loop 
 
         
             aMat(iRow,:)    = sss
@@ -625,93 +667,127 @@ program aorsa2dMain
     enddo i_loop 
 
 
-!!   Antenna current
-!!   ---------------
-!
-!    xant    = rant - rmaxis
-!    iant    = int((rant - rwleft) / dx) + 1
-!
-!    !   note curden is in Amps per meter of toroidal length (2.*pi*rt).
-!
-!    xjantx = curdnx / dx
-!    xjanty = curdny / dx
-!    xjantz = curdnz / dx
-!    xjant=sqrt(xjantx**2 + xjanty**2 + xjantz**2)
-!
-!    theta_antr = theta_ant / 180. * pi
-!
-!    dpsiant = dpsiant0
-!    dthetant = dthetant0 / 360. * 2.0 * pi
-!    yant_max = antlen / 2.0
-!
-!    do i = 1, nmodesx
-!        do j = 1, nmodesy
-!
-!            delta_theta = theta0(i,j) - theta_antr
-!            gaussantth = exp(-delta_theta**2 / dthetant**2)
-!            gausspsi = exp(-(psi(i,j) - psiant)**2 / dpsiant**2)
-!
-!            shapey = 0.0
-!            deltay = y(j) - yant
-!
-!            if(capr(i) .gt. rmaxis) then
-!
-!                !   if(i_antenna .eq. 1) antenna current is cos(ky * y)  (DEFAULT)
-!                !   ------------------------------------------------ --------------
-!
-!                if (i_antenna .eq. 1 .and. abs(deltay) .lt. yant_max)then
-!                    shapey = cos(xk0 * antlc * deltay)
-!                endif
-!
-!            endif
-!
-!            xjx(i,j) = 0.0
-!            xjy(i,j) = xjanty * shapey  * gausspsi
-!            xjz(i,j) = 0.0
-!
-!       enddo
-!    enddo
-!
-!
-!
-!!     Fourier transform the Stix electric fields:
-!!     ------------------------------------------
-!
-!      call sft2d_parallel(ealpha, xmax, ymax, nmodesx, nmodesy, &
-!         nxmx, nymx, nkdim1, nkdim2, mkdim1, mkdim2, &
-!         -nmodesx /2, nmodesx /2, -nmodesy /2 + 1, nmodesy /2, xx_inv, yy_inv, ealphak, dx, dy, &
-!         myid, nproc, icontxt)
-!
-!      call sft2d_parallel(ebeta, xmax, ymax, nmodesx, nmodesy, &
-!         nxmx, nymx, nkdim1, nkdim2, mkdim1, mkdim2, &
-!         -nmodesx /2, nmodesx /2, -nmodesy /2 + 1, nmodesy /2, xx_inv, yy_inv, ebetak, dx, dy, &
-!         myid, nproc, icontxt)
-!
-!      call sft2d_parallel(eb, xmax, ymax, nmodesx, nmodesy, &
-!         nxmx, nymx, nkdim1, nkdim2, mkdim1, mkdim2, &
-!         -nmodesx /2, nmodesx /2, -nmodesy /2 + 1, nmodesy /2, xx_inv, yy_inv, ebk, dx, dy, &
-!         myid, nproc, icontxt)
-!
-!
-!
-!      do n = -nmodesx /2, nmodesx /2
-!         do m = -nmodesy /2 + 1, nmodesy /2
-!
-!            ealphakmod(n, m) = sqrt(conjg(ealphak(n, m))* ealphak(n, m))
-!            ebetakmod(n, m) = sqrt(conjg(ebetak(n, m)) * ebetak(n, m))
-!            ebkmod(n, m) = sqrt(conjg(ebk(n, m)) * ebk(n, m))
-!
-!         end do
-!      end do
-!
-!
+!   Antenna current
+!   ---------------
+
+    allocate ( &
+        xjx(nModesX,nModesY), &
+        xjy(nModesX,nModesY), &
+        xjz(nModesX,nModesY) )
+
+    !   note curden is in Amps per meter of toroidal length (2.*pi*rt).
+
+    antSigX = 0.1
+    antSigY = 0.5
+
+    do i = 1, nModesX
+        do j = 1, nModesY
+
+            xjx(i,j) = 0.0
+            xjy(i,j) = 1.0 / dx &
+                * exp ( &
+                -( (capR(i)-rant)**2/antSigX**2 + (y(j)-0.0)**2/antSigY**2 ) &
+                      )
+            xjz(i,j) = 0.0
+
+            !   boundary conditions
+            !   -------------------
+
+            if ( i==1 .or. i==nModesX &
+                    .or. j==1 .or. j==nModesY ) then
+                xjx(i,j)    = 0
+                xjy(i,j)    = 0
+                xjz(i,j)    = 0
+            endif
+
+       enddo
+    enddo
+
+    xjx = -zi / omgrf / eps0 * xjx
+    xjy = -zi / omgrf / eps0 * xjy
+    xjz = -zi / omgrf / eps0 * xjz
+
+    do i = 1, nModesX
+        do j = 1, nModesY
+
+            iRow = (j-1) * 3 + (i-1) * nModesY * 3 + 1
+
+            brhs(iRow)      = xjx(i,j)
+            brhs(iRow+1)    = xjy(i,j)
+            brhs(iRow+2)    = xjz(i,j)
+
+        enddo
+    enddo
+
+!   Write the run input data to disk
+!   --------------------------------
+
+    call write_runData ( 'runData.nc', &
+        capR, y, bxn, byn, bzn, bmod, xjy )
+
+
+!   Solve complex, linear system
+!   ----------------------------
+
+    nRow    = nModesX*nModesY*3
+    nCol    = nkx * nky * 3
+
+    allocate ( ipiv ( nRow ) )
+
+    call cgesv ( nRow, 1, aMat, nRow, ipiv, brhs, nRow, info )
+            
+    write(*,*) 'aorsa2dMain.F90[695]: LAPACK status'
+    write(*,*) 'info: ', info 
+
+
+!   Extract the k coefficents from the solution
+!   for each field component
+!   -------------------------------------------
+
+    allocate ( &
+        ealphak(kxL:kxR,kyL:kyR), &
+        ebetak(kxL:kxR,kyL:kyR), &
+        eBk(kxL:kxR,kyL:kyR) )
+
+    do n=kxL,kxR
+        do m=kyL,kyR
+
+            iRow = (m-kyL) * 3 + (n-kxL) * nModesY * 3 + 1
+    
+            ealphak(n,m)    = brhs(iRow)
+            ebetak(n,m)     = brhs(iRow+1)
+            eBk(n,m)        = brhs(iRow+2)
+
+        enddo
+    enddo
+
+
+!   Inverse Fourier transform the k coefficents
+!   to real space
+!   -------------------------------------------
+
+    call sftinv2d ( xkxsav, xkysav, xx, yy, &
+       ealphak, f = ealpha, fx = ealphax, fy = ealphay )
+    call sftinv2d ( xkxsav, xkysav, xx, yy, &
+       ebetak, f = ebeta, fx = ebetax, fy = ebetay )
+    call sftinv2d ( xkxsav, xkysav, xx, yy, &
+       eBk, f = eB, fx = eBx, fy = eBy )
+
+
+!   Write data to file
+!   ------------------
+
+    call write_solution ( 'solution.nc', ealpha, ebeta, eB )
+
+
+
 !
 !!     ----------------------------------------------
 !!     Calculate E in the Lab frame and eplus, eminus
 !!     ----------------------------------------------
 !      isq2 = SQRT(0.5)
-!      do i = 1, nmodesx
-!         do j = 1, nmodesy
+!      do i = 1, nModesX
+!         do j = 1, nModesY
 !
 !            ex(i,j)   = uxx(i,j) * ealpha(i,j) &
 !                      + uyx(i,j) * ebeta(i,j) &

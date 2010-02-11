@@ -1,4 +1,3 @@
-HOME = /home/dg6/code
 EXEC = xaorsa2d
 SRC_DIR = src
 OBJ_DIR = obj
@@ -15,12 +14,13 @@ OBJ_FILES := $(patsubst src/%,obj/%.o,$(basename $(wildcard src/*.*)))
 OBJ_CQL3D := $(patsubst src/cql3d/%,obj/%.o,$(basename $(wildcard src/cql3d/*.*)))
 
 BLACS = 
-BLAS = 
 SCALAPACK = 
+BLAS = ${HOME}/code/goto_blas/GotoBLAS2/libgoto2.a -pthread
+LAPACK = ${HOME}/code/lapack/lapack-3.1.1/lapack_LINUX.a 
 NETCDF_DIR = /home/dg6/code/netcdf/netcdf_gnu64
 NETCDF = -I ${NETCDF_DIR}/include -L ${NETCDF_DIR}/lib -lnetcdf 
 
-LIBS = $(SCALAPACK) $(BLACS) $(BLAS) ${NETCDF}
+LIBS = ${BLAS} ${LAPACK} ${NETCDF}
 INC_DIR = 
 
 BOUNDS = -fbounds-check
@@ -65,7 +65,9 @@ ${OBJ_DIR}/aorsa2dMain.o: \
 		${OBJ_DIR}/aorsaSubs.o \
 		${OBJ_DIR}/sigma.o \
 		${OBJ_DIR}/aorsa2din_mod.o \
-		${OBJ_DIR}/interp.o
+		${OBJ_DIR}/interp.o \
+		${OBJ_DIR}/fourier.o \
+		${OBJ_DIR}/write_data.o
 
 ${OBJ_DIR}/eqdsk_dlg.o: \
 		${OBJ_DIR}/dlg.o \
