@@ -116,8 +116,8 @@ program aorsa2dMain
 
     allocate ( y ( nModesY ) )
 
-    yTop    =  1.0
-    yBot    = -1.0
+    yTop    =  1.1
+    yBot    = -1.1
     yRange  = yTop - yBot
     dy = yRange / nModesY
     do j = 1, nModesY
@@ -145,8 +145,8 @@ program aorsa2dMain
            bHere = dlg_interpB ( (/capR(i),0.0,y(j)/), &
                         bMagHere = bMod(i,j) )  
            bxn(i,j) = bHere(1) / bMod(i,j)
-           byn(i,j) = bHere(2) / bMod(i,j)
-           bzn(i,j) = bHere(3) / bMod(i,j)
+           byn(i,j) = bHere(3) / bMod(i,j)
+           bzn(i,j) = -bHere(2) / bMod(i,j)
 
         enddo
     enddo
@@ -164,10 +164,11 @@ program aorsa2dMain
         qSpec(nSpec), amuSpec(nSpec), &
         dSpec(nSpec), tSpec(nSpec) )
 
-    amuSpec     = (/ 0, 4 /) 
     zSpec       = (/ -1, 2 /)
+    amuSpec     = (/ 0, 4 /) 
     tSpec       = (/ 1e3, 1e3 /) ! [eV]
-    dSpec       = (/ 4e18, 2e18 /)
+    dSpec       = (/ 8e18, 4e18 /)
+
     mSpec       = amuSpec * xmh
     mSpec(1)    = xme  
     qSpec       = zSpec * q 
@@ -190,7 +191,7 @@ program aorsa2dMain
     do i=1,nModesX
         do j=1,nModesY
 
-            omgc(i,j,:) = qSpec * b0 / mSpec
+            omgc(i,j,:) = qSpec * bMod(i,j) / mSpec
             omgp2(i,j,:)    = densitySpec(i,j,:) * qSpec**2 / ( eps0 * mSpec )
 
         enddo
@@ -299,7 +300,7 @@ program aorsa2dMain
             !   -----------------------
 
             sinTh = y(j) / sqrt ( (capR(i)-rmaxis__)**2 + (y(j)-zmaxis__)**2 )
-            gradprlb(i,j) = bmod(i,j) / capr(i) * abs ( btau(i,j) * sinTh )
+            gradprlb(i,j) = bMod(i,j) / capr(i) * abs ( btau(i,j) * sinTh )
 
             if (nzfun == 0) gradPrlB(i,j) = 1.0e-10
 

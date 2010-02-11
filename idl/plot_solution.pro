@@ -5,6 +5,7 @@ pro plot_solution
 		nCdf_varGet, cdfId, 'y', y 
 		nCdf_varGet, cdfId, 'jy_re', jy_re 
 		nCdf_varGet, cdfId, 'jy_im', jy_im 
+		nCdf_varGet, cdfId, 'bmod', bmod 
 	ncdf_close, cdfId
 
 
@@ -18,7 +19,7 @@ pro plot_solution
 	ncdf_close, cdfId
 
 	!p.multi = [0,3,2]
-	scale = 1e0
+	scale = max ( abs ( [ealpha_re[*],ebeta_re[*],eb_re[*]] ) ) 
 	nLevs	=21 
 	device, decomposed = 0
 	loadct, 13, file = 'davect.tbl'
