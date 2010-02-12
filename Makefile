@@ -25,7 +25,7 @@ INC_DIR =
 
 BOUNDS = -fbounds-check
 WARN = #-Wall
-DEBUG = -pg -g -fbacktrace -fsignaling-nans #-ffpe-trap=zero,invalid#,overflow#,underflow
+DEBUG = -pg -g -fbacktrace -fsignaling-nans -ffpe-trap=zero,invalid#,overflow#,underflow
 F90 = gfortran
 LINK = gfortran
 MOD_LOC = -Jmod
@@ -82,11 +82,15 @@ ${OBJ_DIR}/sigma.o: \
 
 ${OBJ_DIR}/zfunction.o: \
 		${OBJ_DIR}/ztable.o \
-		${OBJ_DIR}/aorsaSubs.o
+		${OBJ_DIR}/aorsaSubs.o \
+		${OBJ_DIR}/Zfun.o
 
 ${OBJ_DIR}/interp.o: \
 		${OBJ_DIR}/fitpack.o \
 		${OBJ_DIR}/eqdsk_dlg.o
+
+${OBJ_DIR}/Zfun.o: \
+		${OBJ_DIR}/constants.o
 
 clean:
 	rm $(EXEC) $(OBJ_DIR)/*.o $(MOD_DIR)/*.mod

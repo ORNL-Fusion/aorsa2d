@@ -151,6 +151,7 @@ program aorsa2dMain
         enddo
     enddo
 
+
 !   calculate the ion cyclotron freqs
 !   ---------------------------------
 
@@ -166,7 +167,7 @@ program aorsa2dMain
 
     zSpec       = (/ -1, 2 /)
     amuSpec     = (/ 0, 4 /) 
-    tSpec       = (/ 1e3, 1e3 /) ! [eV]
+    tSpec       = (/ 400.0, 400.0 /) ! [eV]
     dSpec       = (/ 8e18, 4e18 /)
 
     mSpec       = amuSpec * xmh

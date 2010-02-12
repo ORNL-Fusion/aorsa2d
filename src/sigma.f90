@@ -4,7 +4,7 @@ contains
 
       subroutine sigma_maxwellian(i, j, n, m, &
          gradprlb, bmod, &
-         xm, xn, dlg_xnuomg, &
+         xm, xn, xnuomg, &
          xkt, omgc, omgp2, &
          lmin, lmax, nzfun, &
          xkxsav, xkysav, nphi, capr, &
@@ -43,7 +43,7 @@ contains
       real xkprl_eff0
       real dzetal(lmin:lmax), descrim
       real dakbdkb, gradprlb, bmod, nu_coll
-      real, intent(in) :: dlg_xnuomg
+      real, intent(in) :: xnuomg
       real akprl,  alpha, omgrf, emax
       real gammab(lmin:lmax), gamma_coll(lmin:lmax)
       real a, b, xnurf, delta0, rhol
@@ -79,14 +79,14 @@ contains
 
       parameter (lmaxdim = 99)
 
-      complex xil(0: lmaxdim), xilp(0: lmaxdim)
-      complex exil(0: lmaxdim), exilp(0: lmaxdim), &
-                          exilovergam(0: lmaxdim)
+      complex, allocatable, dimension(:) :: &
+        exil, exilp, exilovergam
+
 
       complex zetal(lmin:lmax)
       complex  zieps0, arg, &
          al, bl, cl, &
-         gamma, zeta_eff
+         gamma_, zeta_eff
 
       integer NBESSJ
 
@@ -111,8 +111,7 @@ contains
       alpha = sqrt(2. * xkt / xm)
       rhol = alpha / omgc
       xkphi = nphi / capr
-      omgrfc = omgrf * (1. + zi * dlg_xnuomg)
-
+      omgrfc = omgrf * (1. + zi * xnuomg)
 
       xkalp = uxx * xkxsav + uxy * xkysav + uxz * xkphi
       xkbet = uyx * xkxsav + uyy * xkysav + uyz * xkphi
@@ -120,43 +119,38 @@ contains
       xkperp = sqrt(xkalp**2 + xkbet**2)
 
 
-!     ------------------------------------
 !     Optional: leave out upshift in xkprl
 !     --------------------------------- --
-      if (upshift .eq. 0)         xkprl = uzz * xkphi
 
+      if (upshift .eq. 0)  xkprl = uzz * xkphi
       if (xkprl  .eq. 0.0) xkprl  = 1.0e-08
       if (xkperp .eq. 0.0) xkperp = 1.0e-08
 
       sgn_kprl = sign(1.0, xkprl)
       akprl = abs(xkprl)
 
-!     ---------------------------------
+
 !     Calculate zetal(l) and gammab(l)
 !     ---------------------------------
 
       do l = lmin, lmax
+
          labs = abs(l)
-
          zetal(l) = (omgrfc - l * omgc) / (xkprl * alpha)
-
          gammab(l) = abs(l * omgc / (2.0 * alpha * xkprl**2) &
                                                  * gradprlb / bmod)
          gamma_coll(l) = nu_coll / (akprl * alpha)
-
          if(xm .eq. xme)gammab(l) = 0.0
          if(abs(gammab(l)) .lt. .01)gammab(l) = .01
 
       enddo
 
 
-
-!     ------------------------------------------------
 !     Calculate Brambillas xkrpl_eff using l = 1 only
 !     ------------------------------------------------
+
       y0 = 1.5
       y = y0
-
 
       if(sgn_kprl .ge. 0.0)then
          fgam = 1.0
@@ -169,7 +163,7 @@ contains
 
          xkprl_eff = xkprl / fgam
 
-      end if
+      endif
 
 
       if(sgn_kprl .lt. 0.0)then
@@ -185,7 +179,7 @@ contains
 
          xkprl_eff = xkprl / fgam
 
-      end if
+      endif
 
 
 !     Maxwellian distribution
@@ -194,14 +188,18 @@ contains
     maxwellian: &
     if ( ndist .eq. 0 ) then
 
-        gamma = 0.5 * xkperp**2 * rhol**2
-        rgamma = real(gamma)
+        gamma_ = 0.5 * xkperp**2 * rhol**2
+        rgamma = real(gamma_)
+        
+        if (.not. allocated(exil) ) &
+        allocate ( exil(0:lMax), exilp(0:lMax), exilOverGam(0:lMax) )
 
         if(rgamma .ge. 1.0e-08) &
-        call besiexp(gamma, lmax, exil, exilp, lmaxdim, exilovergam)
+        call besiexp(gamma_, lmax, exil, exilp, lmaxdim, exilovergam)
 
         if(rgamma .lt. 1.0e-08) &
-        call bes_expand(gamma, lmax, exil, exilp, lmaxdim, exilovergam)
+        call bes_expand(gamma_, lmax, exil, exilp, lmaxdim, exilovergam)
+
 
         sig0 = 0.0
         sig1 = 0.0
@@ -237,14 +235,14 @@ contains
             sig4 = sig4 + sig4l
             sig5 = sig5 + sig5l
 
+            !write(*,*) l, sig0, sig1, sig2, sig3, sig4, sig5
         enddo
-
+        
     endif maxwellian
 
 
     sig1 = sig1 + delta0 * eps0 * omgrfc * xkperp**2 / xk0**2
     sig3 = sig3 + delta0 * eps0 * omgrfc * xkperp**2 / xk0**2
-
 
     if (xm .eq. xme) then
 
@@ -253,6 +251,7 @@ contains
 
         sig3 = sig3 * (1.0 + step)
     end if
+
 
 
 !   Swanson's rotation (original):
@@ -270,18 +269,11 @@ contains
     sigzy = sig4 * xkbet + sig5 * xkalp
     sigzz = sig3
 
-  101 format(i10, 1p8e12.4)
- 1314 format(4i10, 1p9e12.4)
- 1312 format(1p9e12.4)
-  100 format('ier = ', i5, 'besic failed')
-  102 format(2i10, 1p8e12.4)
-  103 format(4i10, 1p8e12.4)
-
 end subroutine sigma_maxwellian
 
 
       subroutine sigmac_stix(i, j, n, m, &
-         xm, xn, dlg_xnuomg, &
+         xm, xn, xnuomg, &
          xkt, omgc, omgp2, &
          lmin, lmax, nzfun, ibessel, &
          xkxsav, xkysav, nphi, capr, &
@@ -312,7 +304,7 @@ end subroutine sigma_maxwellian
       real bx, by, bz
       real xkxsav, xkysav, capr
       real xkphi
-      real xkalp, xkbet, dlg_xnuomg, xk0, delta0
+      real xkalp, xkbet, xnuomg, xk0, delta0
 
       complex omgrfc
 
@@ -333,13 +325,9 @@ end subroutine sigma_maxwellian
       complex tpl, tml, tplp, tplpp, zetalp, zetalm, zieps0, &
          bl, gamma
 
-
-
-
-
       zieps0 = zi * eps0
       xkphi = nphi / capr
-      omgrfc = omgrf * (1. + zi * dlg_xnuomg)
+      omgrfc = omgrf * (1. + zi * xnuomg)
 
 
       xkalp = uxx * xkxsav + uxy * xkysav + uxz * xkphi
@@ -385,7 +373,7 @@ end subroutine sigma_maxwellian
 !
 
 
-      subroutine besiexp(gamma, lmax, expbes, expbesp, lmaxdim, &
+      subroutine besiexp(gamma_, lmax, expbes, expbesp, lmaxdim, &
          expbesovergam)
 
         use bessel_mod
@@ -398,19 +386,23 @@ end subroutine sigma_maxwellian
       implicit none
 
       integer lmax, nmax, ier, l, lmaxdim
+      complex, intent(in) :: gamma_
+      complex, intent(out) :: &
+        expbes(:), expbesp(:), expbesovergam(:)
+
+      complex, allocatable, dimension(:) :: &
+        xil, xilp, b
+      complex :: exgam
       real gammod
-      complex gamma, expbes(0: lmaxdim), expbesp(0: lmaxdim), &
-         expbesovergam(0: lmaxdim), &
-         xil(0: lmaxdim), xilp(0: lmaxdim), exgam
 
-      complex b(100)
+      allocate ( xil(0:lMax), xilp(0:lMax), b(lMax+1) )
 
-      exgam = exp(-gamma)
-      gammod = cabs(gamma)
+      exgam = exp(-gamma_)
+      gammod = cabs(gamma_)
 
       if(gammod .le. 700.)then
          nmax = lmax + 1
-         call besic(gamma, nmax, b, ier)
+         call besic(gamma_, nmax, b, ier)
          if(ier .ne. 0)write(6,100) ier
 
          do l = 0, lmax
@@ -419,24 +411,26 @@ end subroutine sigma_maxwellian
 
          do l = 0, lmax
            if(l .eq. 0) xilp(0) = xil(1)
-           if(l .ne. 0) xilp(l) = xil(l-1) - l / gamma * xil(l)
-           expbes(l) = exgam * xil(l)
-           expbesp(l) = exgam * xilp(l)
+           if(l .ne. 0) xilp(l) = xil(l-1) - l / gamma_ * xil(l)
+           expbes(l+1) = exgam * xil(l)
+           expbesp(l+1) = exgam * xilp(l)
          end do
       end if
 
       if(gammod .gt. 700.)then
          do l = 0, lmax
-            call bes_asym(gamma, l, expbes(l), expbesp(l))
+            call bes_asym(gamma_, l, expbes(l+1), expbesp(l+1))
          end do
       end if
 
       do l = 0, lmax
-         expbesovergam(l) = expbes(l) / gamma
+         expbesovergam(l+1) = expbes(l+1) / gamma_
       end do
 
   100 format('ier = ', i5, 'besic failed')
-      return
+
+      deallocate ( xil, xilp, b )
+
       end subroutine besiexp
 
 

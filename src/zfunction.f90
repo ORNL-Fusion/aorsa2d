@@ -123,17 +123,18 @@ contains
 !
 
 
-      subroutine z_approx(sgn_kprl, zeta, gamma, z0, z1, z2)
+      subroutine z_approx(sgn_kprl, zeta, gamma_, z0, z1, z2)
 
       use ztable_mod
       use aorsasubs_mod
+      use hammett, zfun_hammett => zfun
 
       implicit none
 
 !     ------------------
 !     Finite k_parallel:
 !     ------------------
-      real gamma, fgam, y0, y, sgn_kprl, descrim
+      real gamma_, fgam, y0, y, sgn_kprl, descrim
       complex zeta, z0, z1, z2, zfunct, zetat, fzeta
 
 
@@ -142,42 +143,47 @@ contains
 
 
       if(sgn_kprl .ge. 0.0)then
-         fgam = 1.0
 
-         if(gamma .gt. 1.0e-05)then
+         fgam = 1.0
+         if(gamma_ .gt. 1.0e-05)then
             y = y0
-            fgam = (sqrt(1. +  4. * gamma * y) - 1.) &
-               / (2. * gamma * y)
+            fgam = (sqrt(1. +  4. * gamma_ * y) - 1.) &
+               / (2. * gamma_ * y)
          endif
 
          zetat = fgam * zeta
 !        zfunct = fzeta(zetat)
-         call zfun (zetat, zfunct)
+!         call zfun (zetat, zfunct)
+         zfunct =  zfun_hammett (zetat)
+
+
          z0 = fgam * zfunct
          z1 = fgam * (1.0 + fgam * zeta * zfunct)
          z2 =  fgam**2 * zeta * (1.0 + fgam * zeta * zfunct)
-      end if
 
+      else
 
-      if(sgn_kprl .lt. 0.0)then
          fgam = 1.0
 
-         if(gamma .gt. 1.0e-05)then
-            descrim = 1. - 4. * gamma * y0
+         if(gamma_ .gt. 1.0e-05)then
+            descrim = 1. - 4. * gamma_ * y0
             if (descrim .ge. 0.0) y =   y0
             if (descrim .lt. 0.0) y = - y0
-            fgam = (1. - sqrt(1. -  4. * gamma * y) ) &
-               / (2. * gamma * y)
+            fgam = (1. - sqrt(1. -  4. * gamma_ * y) ) &
+               / (2. * gamma_ * y)
          endif
 
 
          zetat = - fgam * zeta
 !         zfunct = fzeta( zetat)
-         call zfun (zetat, zfunct)
+!         call zfun (zetat, zfunct)
+         zfunct = zfun_hammett (zetat)
+
          z0 = - fgam * zfunct
          z1 = y / abs(y) * fgam * (1.0 - fgam * zeta * zfunct)
          z2 =  fgam**2 * zeta * (1.0 - fgam * zeta * zfunct)
-      end if
+
+      endif
 
 
       return
