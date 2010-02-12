@@ -25,7 +25,7 @@ program aorsa2dMain
     real :: dx, dy, xRange, yRange
     real, allocatable, dimension(:) :: capR, xkphi
     real, allocatable, dimension(:) :: y
-    integer :: i, j, m, n, s, iRow, iCol
+    integer :: i, j, m, n, s, iRow, iCol, p
     integer :: nkx, nky, nRow, nCol
     real, allocatable, dimension(:) :: xkxsav, xkysav
     real :: xk_cutOff
@@ -170,7 +170,7 @@ program aorsa2dMain
     zSpec       = (/ -1, 2 /)
     amuSpec     = (/ 0, 4 /) 
     tSpec       = (/ 400.0, 400.0 /) ! [eV]
-    dSpec       = (/ 8e18, 4e18 /)
+    dSpec       = (/ 0.6e18, 0.3e18 /)
 
     mSpec       = amuSpec * xmh
     mSpec(1)    = xme  
@@ -390,6 +390,15 @@ program aorsa2dMain
 
     i_loop: &
     do i=1,nModesX
+
+        !   progress indicator
+        !   ------------------
+
+        do p=1,7 
+            write(*,'(a)',advance='no') char(8)
+        enddo
+        write(*,'(1x,f5.1,a)',advance='no') real(i)/nModesX*100, '%'
+
         j_loop: &
         do j=1,nModesY
 
@@ -642,7 +651,7 @@ program aorsa2dMain
 
         enddo j_loop
     enddo i_loop 
-
+    write(*,*)
 
 !   Antenna current
 !   ---------------

@@ -23,14 +23,14 @@ pro plot_solution
 	nLevs	=21 
 	device, decomposed = 0
 	loadct, 13, file = 'davect.tbl'
-	levels	= (fIndGen(nLevs)-nLevs/2)/nLevs/2 * scale
+	levels	= (fIndGen(nLevs)/(nLevs-1)-0.5) * 2.0 * scale * 1.1
 	colors	= bytScl ( levels, top = 253 )+1
-	contour, ealpha_re,x, y, levels = levels, c_colors=colors
-	contour, ebeta_re,x, y, levels = levels, c_colors=colors
-	contour, eb_re,x, y, levels = levels*1e-2, c_colors=colors
-	contour, ealpha_im,x, y, levels = levels, c_colors=colors
-	contour, ebeta_im,x, y, levels = levels, c_colors=colors
-	contour, eb_im,x, y, levels = levels*1e-2, c_colors=colors
+	contour, ealpha_re,x, y, levels = levels, c_colors=colors, /fill
+	contour, ebeta_re,x, y, levels = levels, c_colors=colors, /fill
+	contour, eb_re,x, y, levels = levels*1e-2, c_colors=colors, /fill
+	contour, ealpha_im,x, y, levels = levels, c_colors=colors, /fill
+	contour, ebeta_im,x, y, levels = levels, c_colors=colors, /fill
+	contour, eb_im,x, y, levels = levels*1e-2, c_colors=colors, /fill
 
 
 stop
