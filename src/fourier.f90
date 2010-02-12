@@ -1176,7 +1176,7 @@ contains
 
                       f(i,j) = f(i,j) + a(n,m) * cexpkxky
                       fx(i,j) = f(i,j) + xkx(n) * a(n,m) * cexpkxky
-                      fy(i,j) = f(i,j) + xky(n) * a(n,m) * cexpkxky
+                      fy(i,j) = f(i,j) + xky(m) * a(n,m) * cexpkxky
 
                     enddo
                 enddo

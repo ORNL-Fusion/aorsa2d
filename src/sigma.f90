@@ -2,13 +2,12 @@ module sigma_mod
 
 contains
 
-      subroutine sigma_maxwellian(i, j, n, m, &
+      subroutine sigmaHot_maxwellian(i, j, n, m, &
          gradprlb, bmod, &
          xm, xn, xnuomg, &
          xkt, omgc, omgp2, &
          lmin, lmax, nzfun, &
          xkxsav, xkysav, nphi, capr, &
-         bx, by, bz, &
          uxx, uxy, uxz, &
          uyx, uyy, uyz, &
          uzx, uzy, uzz, &
@@ -47,7 +46,7 @@ contains
       real akprl,  alpha, omgrf, emax
       real gammab(lmin:lmax), gamma_coll(lmin:lmax)
       real a, b, xnurf, delta0, rhol
-      real bx, by, bz, bratio, denom
+      real bratio, denom
       real dfdth, dfdupar_check, dfduper_check, dfdth_check
       real uperp0_grid, upara0_grid, zeta, eta, ai, bi, ci, di
       real dfduper0_intplt, dfdupar0_intplt
@@ -253,7 +252,6 @@ contains
     end if
 
 
-
 !   Swanson's rotation (original):
 !   -----------------------------
 
@@ -269,104 +267,78 @@ contains
     sigzy = sig4 * xkbet + sig5 * xkalp
     sigzz = sig3
 
-end subroutine sigma_maxwellian
+end subroutine sigmaHot_maxwellian
 
 
-      subroutine sigmac_stix(i, j, n, m, &
-         xm, xn, xnuomg, &
-         xkt, omgc, omgp2, &
-         lmin, lmax, nzfun, ibessel, &
-         xkxsav, xkysav, nphi, capr, &
-         bx,    by,    bz, &
-         uxx, uxy, uxz, &
-         uyx, uyy, uyz, &
-         uzx, uzy, uzz, &
-         sigxx, sigxy, sigxz, &
-         sigyx, sigyy, sigyz, &
-         sigzx, sigzy, sigzz, &
-         delta0, omgrf, xk0 )
+    subroutine sigmaCold_stix( &
+        xnuomg, &
+        omgc, omgp2, &
+        xkxsav, xkysav, nphi, capr, &
+        uxx, uxy, uxz, &
+        uyx, uyy, uyz, &
+        uzx, uzy, uzz, &
+        sigxx, sigxy, sigxz, &
+        sigyx, sigyy, sigyz, &
+        sigzx, sigzy, sigzz, &
+        omgrf )
 
         use constants 
 
-!     ----------------------------------------------------
-!     This routine calculates sigma_cold in the Stix frame
-!     ----------------------------------------------------
+        !     This routine calculates sigma_cold in the Stix frame
+        !     ----------------------------------------------------
 
-      implicit none
+        implicit none
 
-      integer lmin, lmax, nzfun, lmaxdim, l, labs, ibessel, &
-          i, j, n, m, nphi
+        integer nphi
+        real xkperp, xkprl, omgc, omgp2, xkb, akb
+        real dakbdkb
+        real akprl, alpha, omgrf
+        real cosalp, sinalp, a, b
+        real xkxsav, xkysav, capr
+        real xkphi
+        real xkalp, xkbet, xnuomg
+        complex omgrfc
+        complex sig0, sig1, sig2, sig3, sig4, sig5
+        complex sigxx, sigxy, sigxz, &
+                sigyx, sigyy, sigyz, &
+                sigzx, sigzy, sigzz
+        real uxx, uxy, uxz, &
+             uyx, uyy, uyz, &
+             uzx, uzy, uzz
+        complex zetalp, zetalm, zieps0, bl
 
-      real xkperp, xkprl, xm, xn, xkt, omgc, omgp2, xkb, akb
-      real dakbdkb
-      real akprl, gammab, alpha, omgrf
-      real cosalp, sinalp, a, b
-      real bx, by, bz
-      real xkxsav, xkysav, capr
-      real xkphi
-      real xkalp, xkbet, xnuomg, xk0, delta0
+        zieps0 = zi * eps0
+        xkphi = nphi / capr
+        omgrfc = omgrf * (1. + zi * xnuomg)
 
-      complex omgrfc
+        xkalp = uxx * xkxsav + uxy * xkysav + uxz * xkphi
+        xkbet = uyx * xkxsav + uyy * xkysav + uyz * xkphi
+        xkprl = uzx * xkxsav + uzy * xkysav + uzz * xkphi
 
-
-      complex sig0, sig1, sig2, sig3, sig4, sig5
-
-      complex sigxx, sigxy, sigxz, &
-              sigyx, sigyy, sigyz, &
-              sigzx, sigzy, sigzz
-
-      real uxx, uxy, uxz, &
-           uyx, uyy, uyz, &
-           uzx, uzy, uzz
-
-
-      parameter (lmaxdim = 99)
-
-      complex tpl, tml, tplp, tplpp, zetalp, zetalm, zieps0, &
-         bl, gamma
-
-      zieps0 = zi * eps0
-      xkphi = nphi / capr
-      omgrfc = omgrf * (1. + zi * xnuomg)
+        sig0 = 0.0
+        sig1 = zieps0 * omgrfc * omgp2 / (omgrfc**2 - omgc**2)
+        sig2 = - eps0 * omgc   * omgp2 / (omgrfc**2 - omgc**2)
+        sig3 = zieps0 * omgp2 / omgrfc
+        sig4 = 0.0
+        sig5 = 0.0
 
 
-      xkalp = uxx * xkxsav + uxy * xkysav + uxz * xkphi
-      xkbet = uyx * xkxsav + uyy * xkysav + uyz * xkphi
-      xkprl = uzx * xkxsav + uzy * xkysav + uzz * xkphi
+        !     Swanson's rotation:
+        !     -------------------
 
+        sigxx = sig1 + sig0 * xkbet**2
+        sigxy = sig2 - sig0 * xkbet * xkalp
+        sigxz = sig4 * xkalp + sig5 * xkbet
 
+        sigyx = - sig2 - sig0 * xkbet * xkalp
+        sigyy =   sig1 + sig0 * xkalp**2
+        sigyz =   sig4 * xkbet - sig5 * xkalp
 
-      sig0 = 0.0
-      sig1 = zieps0 * omgrfc * omgp2 / (omgrfc**2 - omgc**2)
-      sig2 = - eps0 * omgc   * omgp2 / (omgrfc**2 - omgc**2)
-      sig3 = zieps0 * omgp2 / omgrfc
-      sig4 = 0.0
-      sig5 = 0.0
+        sigzx = sig4 * xkalp - sig5 * xkbet
+        sigzy = sig4 * xkbet + sig5 * xkalp
+        sigzz = sig3
 
-
-!     -------------------
-!     Swanson's rotation:
-!     -------------------
-      sigxx = sig1 + sig0 * xkbet**2
-      sigxy = sig2 - sig0 * xkbet * xkalp
-      sigxz = sig4 * xkalp + sig5 * xkbet
-
-      sigyx = - sig2 - sig0 * xkbet * xkalp
-      sigyy =   sig1 + sig0 * xkalp**2
-      sigyz =   sig4 * xkbet - sig5 * xkalp
-
-      sigzx = sig4 * xkalp - sig5 * xkbet
-      sigzy = sig4 * xkbet + sig5 * xkalp
-      sigzz = sig3
-
-
-      return
-
-  101 format(i10, 1p8e12.4)
- 1314 format(4i10, 1p9e12.4)
- 1312 format(1p9e12.4)
-  100 format('ier = ', i5, 'besic failed')
-      end subroutine sigmac_stix
+    end subroutine sigmaCold_stix
 
 !
 !***************************************************************************

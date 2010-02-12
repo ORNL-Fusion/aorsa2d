@@ -45,7 +45,6 @@ contains
         read ( 8, 2020 ) current__,simag,xdum,rmaxis__,xdum 
         read ( 8, 2020 ) zmaxis__,xdum,sibry,xdum,xdum 
        
-        write(*,*) idum, nw, nh 
         allocate ( fpol ( nw ), pres ( nw ), ffprim ( nw ), &
             pprime ( nw ), psizr ( nw, nh ), qpsi ( nw ), &
             r ( nw ), z ( nh ), fluxGrid ( nw ), fpol_(nw), &

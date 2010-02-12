@@ -89,6 +89,7 @@ program aorsa2dMain
 !   read namelist input data
 !   ------------------------
 
+    write(*,*) 'Reading namelist'
     call read_nameList ()
 
 
@@ -130,6 +131,7 @@ program aorsa2dMain
 !   read g-eqdsk file
 !   -----------------
 
+    write(*,*) 'Reading eqdsk'
     call read_geqdsk ( eqdsk, plot = .false. )
     call init_interp ()
 
@@ -152,8 +154,8 @@ program aorsa2dMain
     enddo
 
 
-!   calculate the ion cyclotron freqs
-!   ---------------------------------
+!   calculate the cyclotron and plasma freqs
+!   ----------------------------------------
 
     omgrf = 2.0 * pi * freqcy
     xk0 = omgrf / clight
@@ -197,10 +199,12 @@ program aorsa2dMain
 
         enddo
     enddo
-    
+
+
 !   calculate rotation matrix U
 !   ---------------------------
 
+    write(*,*) 'Building rotation matrix U'
     allocate ( btau ( nModesX, nModesY ) )
 
     allocate ( &
@@ -235,8 +239,8 @@ program aorsa2dMain
     enddo
 
 
-!   Calculate the integrated volume on even mesh:
-!   --------------------------------------------
+!   Calculate kx and ky values 
+!   --------------------------
 
     kxL = -nModesX/2+1
     kxR =  nModesX/2
@@ -262,8 +266,10 @@ program aorsa2dMain
                             + xkysav( kyR )**2 ) * xkperp_cutoff
 
 
-!   Take numerical derivatives
-!   --------------------------
+!   Take numerical derivatives of the rotation matrix U
+!   ---------------------------------------------------
+
+    write(*,*) 'Calculating U derivatives'
 
     allocate ( gradPrlB (nModesX,nModesY) )
 
@@ -345,8 +351,8 @@ program aorsa2dMain
     enddo
 
 
-!   precompute xx(n,i), yy(m,j)
-!   ---------------------------
+!   precompute basis functions xx(n,i), yy(m,j)
+!   -------------------------------------------
 
     allocate ( &
         xx(kxL:kxR,nModesX), xx_inv(kxL:kxR,nModesX), &
@@ -371,6 +377,8 @@ program aorsa2dMain
 !   Load x, y and z equations for spatial point (i,j) and mode number (n,m)
 !   ------------------------------------------------------------------------
 
+    write(*,*) 'Filling aMat, size: ', &
+        nModesX*nModesY*3*nkx*nky*3*2*8.0 / 1024.0**2
 
     allocate ( &
         sss(nModesX*nModesY*3), &
@@ -379,11 +387,6 @@ program aorsa2dMain
 
     allocate ( aMat(nModesX*nModesY*3,nkx*nky*3) ) 
     allocate ( brhs(nModesX*nModesY*3) )
-
-    write(*,*) 'aorsa2dMain.F90:365'
-    write(*,*) 'aMat details:'
-    write(*,*) shape(aMat), nModesX, nModesY, nkx, nky
-    write(*,*) 'size: ', nModesX*nModesY*3*nkx*nky*3*2*8.0 / 1024.0**2
 
     i_loop: &
     do i=1,nModesX
@@ -417,78 +420,50 @@ program aorsa2dMain
                     !   interior plasma region:
                     !   ----------------------
 
-                    hot_plasma: &
-                    if (isigma .eq. 1)then
+                    do s=1,nSpec
 
-                        do s=1,nSpec
+                        if (iSigma==1) & ! hot plasma        
+                        call sigmaHot_maxwellian(i, j, n, m, &
+                            gradprlb(i,j), bmod(i,j), &
+                            mSpec(s), densitySpec(i,j,s), xnuomg, &
+                            ktSpec(i,j,s), omgc(i,j,s), omgp2(i,j,s), &
+                            -lmax, lmax, nzfun, &
+                            xkxsav(n), xkysav(m), nphi, capr(i), &
+                            uxx(i,j), uxy(i,j), uxz(i,j), &
+                            uyx(i,j), uyy(i,j), uyz(i,j), &
+                            uzx(i,j), uzy(i,j), uzz(i,j), &
+                            sigxxTmp, sigxyTmp, sigxzTmp, &
+                            sigyxTmp, sigyyTmp, sigyzTmp, &
+                            sigzxTmp, sigzyTmp, sigzzTmp, &
+                            delta0, 0, omgrf, xk0, &
+                            upshift, damping, xk_cutoff )
+                        
+                        if (iSigma==0) & ! cold plasma 
+                        call sigmaCold_stix( &
+                            xnuomg, &
+                            omgc(i,j,s), omgp2(i,j,s), &
+                            xkxsav(n), xkysav(m), nphi, capr(i), &
+                            uxx(i,j), uxy(i,j), uxz(i,j), &
+                            uyx(i,j), uyy(i,j), uyz(i,j), &
+                            uzx(i,j), uzy(i,j), uzz(i,j), &
+                            sigxxTmp, sigxyTmp, sigxzTmp, &
+                            sigyxTmp, sigyyTmp, sigyzTmp, &
+                            sigzxTmp, sigzyTmp, sigzzTmp, &
+                            omgrf )
 
-                            call sigma_maxwellian(i, j, n, m, &
-                                gradprlb(i,j), bmod(i,j), &
-                                mSpec(s), densitySpec(i,j,s), xnuomg, &
-                                ktSpec(i,j,s), omgc(i,j,s), omgp2(i,j,s), &
-                                -lmax, lmax, nzfun, &
-                                xkxsav(n), xkysav(m), nphi, capr(i), &
-                                bxn(i,j), byn(i,j), bzn(i,j), &
-                                uxx(i,j), uxy(i,j), uxz(i,j), &
-                                uyx(i,j), uyy(i,j), uyz(i,j), &
-                                uzx(i,j), uzy(i,j), uzz(i,j), &
-                                sigxxTmp, sigxyTmp, sigxzTmp, &
-                                sigyxTmp, sigyyTmp, sigyzTmp, &
-                                sigzxTmp, sigzyTmp, sigzzTmp, &
-                                delta0, 0, omgrf, xk0, &
-                                upshift, damping, xk_cutoff )
+                        sigxx = sigxx + sigxxTmp 
+                        sigxy = sigxy + sigxyTmp 
+                        sigxz = sigxz + sigxzTmp 
+                                       
+                        sigyx = sigyx + sigyxTmp 
+                        sigyy = sigyy + sigyyTmp 
+                        sigyz = sigyz + sigyzTmp 
+                                       
+                        sigzx = sigzx + sigzxTmp 
+                        sigzy = sigzy + sigzyTmp 
+                        sigzz = sigzz + sigzzTmp 
 
-                            sigxx = sigxx + sigxxTmp 
-                            sigxy = sigxy + sigxyTmp 
-                            sigxz = sigxz + sigxzTmp 
-                                           
-                            sigyx = sigyx + sigyxTmp 
-                            sigyy = sigyy + sigyyTmp 
-                            sigyz = sigyz + sigyzTmp 
-                                           
-                            sigzx = sigzx + sigzxTmp 
-                            sigzy = sigzy + sigzyTmp 
-                            sigzz = sigzz + sigzzTmp 
-
-                        enddo
-
-                    endif hot_plasma
-
-                    cold_plasma: &
-                    if (isigma .eq. 0)then 
-
-                        do s=1,nSpec
-
-                            call sigmac_stix(i, j, n, m, &
-                                mSpec(s), densitySpec(i,j,s), xnuomg, &
-                                ktSpec(i,j,s), omgc(i,j,s), omgp2(i,j,s), &
-                                -lmax, lmax, nzfun, ibessel, &
-                                xkxsav(n), xkysav(m), nphi, capr(i), &
-                                bxn(i,j), byn(i,j), bzn(i,j), &
-                                uxx(i,j), uxy(i,j), uxz(i,j), &
-                                uyx(i,j), uyy(i,j), uyz(i,j), &
-                                uzx(i,j), uzy(i,j), uzz(i,j), &
-                                sigxxTmp, sigxyTmp, sigxzTmp, &
-                                sigyxTmp, sigyyTmp, sigyzTmp, &
-                                sigzxTmp, sigzyTmp, sigzzTmp, &
-                                delta0, omgrf, xk0 )
-
-                            sigxx = sigxx + sigxxTmp 
-                            sigxy = sigxy + sigxyTmp 
-                            sigxz = sigxz + sigxzTmp 
-                                           
-                            sigyx = sigyx + sigyxTmp 
-                            sigyy = sigyy + sigyyTmp 
-                            sigyz = sigyz + sigyzTmp 
-                                           
-                            sigzx = sigzx + sigzxTmp 
-                            sigzy = sigzy + sigzyTmp 
-                            sigzz = sigzz + sigzzTmp 
-
-                        enddo
-
-                    endif cold_plasma
-
+                    enddo
 
                     xkxx = 1.0 + zi / (eps0 * omgrf) * sigxx
                     xkxy =       zi / (eps0 * omgrf) * sigxy
@@ -672,6 +647,8 @@ program aorsa2dMain
 !   Antenna current
 !   ---------------
 
+    write(*,*) 'Building antenna current (brhs)'
+
     allocate ( &
         xjx(nModesX,nModesY), &
         xjy(nModesX,nModesY), &
@@ -680,7 +657,7 @@ program aorsa2dMain
     !   note curden is in Amps per meter of toroidal length (2.*pi*rt).
 
     antSigX = 0.1
-    antSigY = 0.5
+    antSigY = 0.2
 
     do i = 1, nModesX
         do j = 1, nModesY
@@ -724,6 +701,7 @@ program aorsa2dMain
 !   Write the run input data to disk
 !   --------------------------------
 
+    write(*,*) 'Writing run input data to file'
     call write_runData ( 'runData.nc', &
         capR, y, bxn, byn, bzn, bmod, xjy )
 
@@ -731,6 +709,8 @@ program aorsa2dMain
 !   Solve complex, linear system
 !   ----------------------------
 
+    write(*,*) 'Solving complex linear system'
+    
     nRow    = nModesX*nModesY*3
     nCol    = nkx * nky * 3
 
@@ -738,8 +718,7 @@ program aorsa2dMain
 
     call cgesv ( nRow, 1, aMat, nRow, ipiv, brhs, nRow, info )
             
-    write(*,*) 'aorsa2dMain.F90[695]: LAPACK status'
-    write(*,*) 'info: ', info 
+    write(*,*) '    LAPACK status: ', info
 
 
 !   Extract the k coefficents from the solution
@@ -768,6 +747,8 @@ program aorsa2dMain
 !   to real space
 !   -------------------------------------------
 
+    write(*,*) 'Inverse Fourier transforming the k coeffs'
+
     call sftinv2d ( xkxsav, xkysav, xx, yy, &
        ealphak, f = ealpha, fx = ealphax, fy = ealphay )
     call sftinv2d ( xkxsav, xkysav, xx, yy, &
@@ -779,6 +760,7 @@ program aorsa2dMain
 !   Write data to file
 !   ------------------
 
+    write(*,*) 'Writing solution to file'
     call write_solution ( 'solution.nc', ealpha, ebeta, eB )
 
 
