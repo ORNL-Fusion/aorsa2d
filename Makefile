@@ -67,7 +67,13 @@ ${OBJ_DIR}/aorsa2dMain.o: \
 		${OBJ_DIR}/aorsa2din_mod.o \
 		${OBJ_DIR}/interp.o \
 		${OBJ_DIR}/fourier.o \
-		${OBJ_DIR}/write_data.o
+		${OBJ_DIR}/write_data.o \
+		${OBJ_DIR}/grid.o \
+		${OBJ_DIR}/bField.o \
+		${OBJ_DIR}/profiles.o \
+		${OBJ_DIR}/rotation.o \
+		${OBJ_DIR}/mat_fill.o \
+		${OBJ_DIR}/antenna.o
 
 ${OBJ_DIR}/eqdsk_dlg.o: \
 		${OBJ_DIR}/dlg.o \
@@ -91,6 +97,42 @@ ${OBJ_DIR}/interp.o: \
 
 ${OBJ_DIR}/Zfun.o: \
 		${OBJ_DIR}/constants.o
+
+${OBJ_DIR}/bField.o: \
+		${OBJ_DIR}/interp.o \
+		${OBJ_DIR}/aorsa2din_mod.o \
+		${OBJ_DIR}/grid.o
+
+${OBJ_DIR}/profiles.o: \
+		${OBJ_DIR}/bField.o \
+		${OBJ_DIR}/constants.o \
+		${OBJ_DIR}/aorsa2din_mod.o
+
+${OBJ_DIR}/rotation.o: \
+		${OBJ_DIR}/bField.o \
+		${OBJ_DIR}/aorsa2din_mod.o \
+		${OBJ_DIR}/grid.o \
+		${OBJ_DIR}/aorsaSubs.o \
+		${OBJ_DIR}/eqdsk_dlg.o
+
+${OBJ_DIR}/grid.o: \
+		${OBJ_DIR}/constants.o \
+		${OBJ_DIR}/aorsa2din_mod.o
+
+${OBJ_DIR}/mat_fill.o: \
+		${OBJ_DIR}/aorsa2din_mod.o \
+		${OBJ_DIR}/sigma.o \
+		${OBJ_DIR}/grid.o \
+		${OBJ_DIR}/rotation.o \
+		${OBJ_DIR}/constants.o \
+		${OBJ_DIR}/profiles.o \
+		${OBJ_DIR}/bField.o
+
+${OBJ_DIR}/antenna.o: \
+		${OBJ_DIR}/grid.o \
+		${OBJ_DIR}/aorsa2din_mod.o \
+		${OBJ_DIR}/constants.o \
+		${OBJ_DIR}/profiles.o
 
 clean:
 	rm $(EXEC) $(OBJ_DIR)/*.o $(MOD_DIR)/*.mod

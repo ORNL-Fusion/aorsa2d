@@ -2,6 +2,13 @@ module aorsa2din_mod
       
 implicit none
 
+    integer, parameter :: nSpecMax = 5 
+    integer :: zSpecIn(nSpecMax) = (/ -1, 2, 0, 0, 0 /)
+    integer :: amuSpecIn(nSpecMax) = (/ 0, 4, 0, 0, 0 /) 
+    real :: tSpecIn(nSpecMax) = (/ 400.0, 400.0, 0.0, 0.0, 0.0/) ! [eV]
+    real :: dSpecIn(nSpecMax) = (/ 0.6e18, 0.3e18, 0.0, 0.0, 0.0 /)
+    integer :: nSpec = 2
+ 
 !     --------------------------------------------------------
 !     Declarations and defaults for aorsa2d.in input variables
 !     --------------------------------------------------------
@@ -395,7 +402,8 @@ implicit none
      &    ti4_rho2lim, ti5_rho2lim, ti6_rho2lim, eqdsk_zRange, &
      &    gradient, bbbsMask, dlgAnt, eqdsk_rRange, &
      &    dlgAntFileName, dlgProfileFileName, antGridMatch, domainMask, &
-     &    use_dlg_bField, edgeCollisions
+     &    use_dlg_bField, edgeCollisions, nSpec, zSpecIn, amuSpecIn, &
+     &    tSpecIn, dSpecIn
                 
 contains
 
