@@ -119,7 +119,7 @@ contains
                 !   Brambilla approximation:
                 !   -----------------------
 
-                sinTh = y(j) / sqrt ( (capR(i)-rmaxis__)**2 + (y(j)-zmaxis__)**2 )
+                sinTh = y(j) / sqrt ( (capR(i)-r0__)**2 + (y(j)-z0__)**2 )
                 gradprlb(i,j) = bMod(i,j) / capr(i) * abs ( btau(i,j) * sinTh )
 
                 if (nzfun == 0) gradPrlB(i,j) = 1.0e-10

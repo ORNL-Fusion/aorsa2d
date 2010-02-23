@@ -79,7 +79,7 @@ contains
                     m_loop: &
                     do m=kyL,kyR
 
-                        !write(*,*) i, j, m, n
+                        !write(*,*) i, j, m, n, kxL, kxR, kyL, kyR
 
                         iCol = (n-kxL) * 3 * nModesY + (m-kyL) * 3 + 1
 
@@ -103,14 +103,10 @@ contains
 
                             if (iSigma==1) & ! hot plasma        
                             call sigmaHot_maxwellian(i, j, n, m, &
-                                gradprlb(i,j), bmod(i,j), &
                                 mSpec(s), densitySpec(i,j,s), xnuomg, &
                                 ktSpec(i,j,s), omgc(i,j,s), omgp2(i,j,s), &
                                 -lmax, lmax, nzfun, &
                                 xkxsav(n), xkysav(m), nphi, capr(i), &
-                                uxx(i,j), uxy(i,j), uxz(i,j), &
-                                uyx(i,j), uyy(i,j), uyz(i,j), &
-                                uzx(i,j), uzy(i,j), uzz(i,j), &
                                 sigxxTmp, sigxyTmp, sigxzTmp, &
                                 sigyxTmp, sigyyTmp, sigyzTmp, &
                                 sigzxTmp, sigzyTmp, sigzzTmp, &
@@ -118,13 +114,10 @@ contains
                                 upshift, damping, xk_cutoff )
                             
                             if (iSigma==0) & ! cold plasma 
-                            call sigmaCold_stix( &
+                            call sigmaCold_stix(i, j, &
                                 xnuomg, &
                                 omgc(i,j,s), omgp2(i,j,s), &
                                 xkxsav(n), xkysav(m), nphi, capr(i), &
-                                uxx(i,j), uxy(i,j), uxz(i,j), &
-                                uyx(i,j), uyy(i,j), uyz(i,j), &
-                                uzx(i,j), uzy(i,j), uzz(i,j), &
                                 sigxxTmp, sigxyTmp, sigxzTmp, &
                                 sigyxTmp, sigyyTmp, sigyzTmp, &
                                 sigzxTmp, sigzyTmp, sigzzTmp, &
@@ -143,6 +136,24 @@ contains
                             sigzz = sigzz + sigzzTmp 
 
                         enddo
+
+                        !if ( i==1 .or. i==nModesX &
+                        !        .or. j==1 .or. j==nModesY ) then
+
+                        !    sigxx = complex ( 0.0, 1e18 ) 
+                        !    sigxy = 0 
+                        !    sigxz = 0 
+                        !                   
+                        !    sigyx = 0 
+                        !    sigyy = complex ( 0.0, 1e18 )
+                        !    sigyz = 0 
+                        !                   
+                        !    sigzx = 0 
+                        !    sigzy = 0 
+                        !    sigzz = complex ( 0.0, 1e18 )
+
+                        !endif
+
 
                         xkxx = 1.0 + zi / (eps0 * omgrf) * sigxx
                         xkxy =       zi / (eps0 * omgrf) * sigxy

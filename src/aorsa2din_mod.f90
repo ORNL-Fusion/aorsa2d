@@ -345,7 +345,7 @@ implicit none
       integer :: nnodecx                  !-----nnodecx = number of radial mesh points used for wdot calculation
       integer :: nnodecy                  !-----nnodecy = number of vertical mesh points used for wdot calculation
       
-      integer :: nphi = 10           !-----toroidal mode number     
+      integer :: nphi = 0           !-----toroidal mode number     
       
       real phase, zmin, zmax, phi0, amplt(20) 
       !common / stpcom / xlt, wd, nstrap, phase, zmin, zmax, phi0, amplt

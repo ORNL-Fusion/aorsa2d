@@ -29,7 +29,7 @@ DEBUG = -pg -g -fbacktrace -fsignaling-nans -ffpe-trap=zero,invalid#,overflow#,u
 F90 = gfortran
 LINK = gfortran
 MOD_LOC = -Jmod
-F90FLAGS = ${WARN} ${DEBUG} ${BOUNDS} ${MOD_LOC} -fbackslash
+F90FLAGS = ${WARN} ${DEBUG} ${BOUNDS} ${MOD_LOC} -r8
 LD_FLAGS =
 
 .PHONY: depend clean
@@ -84,7 +84,9 @@ ${OBJ_DIR}/aorsaSubs.o: \
 
 ${OBJ_DIR}/sigma.o: \
 		${OBJ_DIR}/bessel.o \
-		${OBJ_DIR}/zfunction.o
+		${OBJ_DIR}/zfunction.o \
+		${OBJ_DIR}/bField.o \
+		${OBJ_DIR}/rotation.o
 
 ${OBJ_DIR}/zfunction.o: \
 		${OBJ_DIR}/ztable.o \

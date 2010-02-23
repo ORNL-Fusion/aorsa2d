@@ -1150,11 +1150,11 @@ contains
         nx  = size ( xx, 2 )
         ny  = size ( yy, 2 )
 
-        kxL = lbound ( xx, 1 )
-        kxR = ubound ( xx, 1 )
+        kxL = lbound ( xx, 1 ) !+ nx/3
+        kxR = ubound ( xx, 1 ) !- nx/3
 
-        kyL = lbound ( yy, 1 )
-        kyR = ubound ( yy, 1 )
+        kyL = lbound ( yy, 1 ) !+ ny/3
+        kyR = ubound ( yy, 1 ) !- ny/3
 
         if (.not. allocated ( f ) ) allocate ( f(nx,ny) )
         if (.not. allocated ( fx ) ) allocate ( fx(nx,ny) )

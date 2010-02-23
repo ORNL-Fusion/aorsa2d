@@ -46,9 +46,10 @@ program aorsa2dMain
 !   -----------------
 
     write(*,*) 'Reading eqdsk'
-    call read_geqdsk ( eqdsk, plot = .false. )
-    call init_interp ()
-    call bFieldEqdsk ()
+    !call read_geqdsk ( eqdsk, plot = .false. )
+    !call init_interp ()
+    !call bFieldEqdsk ()
+    call bFieldAnalytical ()
 
 !   setup profiles
 !   --------------
@@ -90,7 +91,8 @@ program aorsa2dMain
 
     write(*,*) 'Writing run input data to file'
     call write_runData ( 'runData.nc', &
-        capR, y, bxn, byn, bzn, bmod, xjy )
+        capR, y, bxn, byn, bzn, bmod, xjy, &
+        xkxsav, xkysav )
 
 
 !   Solve complex, linear system
@@ -148,7 +150,9 @@ program aorsa2dMain
 !   ------------------
 
     write(*,*) 'Writing solution to file'
-    call write_solution ( 'solution.nc', ealpha, ebeta, eB )
+    call write_solution ( 'solution.nc', &
+        ealpha, ebeta, eB, &
+        ealphak, ebetak, eBk )
 
 
 
