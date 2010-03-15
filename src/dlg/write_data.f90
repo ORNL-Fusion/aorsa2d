@@ -149,6 +149,39 @@ contains
 
     end subroutine write_solution 
 
+    subroutine write_amat ( fName )
+
+        use mat_fill 
+
+        implicit none
+
+        character(len=*), intent(in) :: fName 
+
+        integer :: nc_id, nX_id, nY_id
+        integer :: nX, nY
+        integer :: amat_re_id, amat_im_id
+
+        nX  = size ( aMat, 1 )
+        nY  = size ( aMat, 2 )
+
+        call check ( nf90_create ( fName, nf90_clobber, nc_id ) )
+        call check ( nf90_def_dim ( nc_id, "nX", nX, nX_id ) )
+        call check ( nf90_def_dim ( nc_id, "nY", nY, nY_id ) )
+
+        call check ( nf90_def_var ( nc_id, "amat_re", NF90_REAL, &
+            (/nX_id,nY_id/), amat_re_id ) ) 
+        call check ( nf90_def_var ( nc_id, "amat_im", NF90_REAL, &
+            (/nX_id,nY_id/), amat_im_id ) ) 
+ 
+        call check ( nf90_enddef ( nc_id ) )
+
+        call check ( nf90_put_var ( nc_id, amat_re_id, real ( aMat ) ) )
+        call check ( nf90_put_var ( nc_id, amat_im_id, aimag ( aMat ) ) )
+
+        call check ( nf90_close ( nc_id ) )
+
+    end subroutine write_amat
+
 
     subroutine check ( status )
 

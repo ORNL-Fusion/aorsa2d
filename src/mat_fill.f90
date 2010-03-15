@@ -154,7 +154,6 @@ contains
 
                         !endif
 
-
                         xkxx = 1.0 + zi / (eps0 * omgrf) * sigxx
                         xkxy =       zi / (eps0 * omgrf) * sigxy
                         xkxz =       zi / (eps0 * omgrf) * sigxz
@@ -277,41 +276,37 @@ contains
                             + 1. / xk0**2  * (dxxuzz(i,j) + dyyuzz(i,j))
 
 
-                        fdk = dxx * cexpkxky
-                        fek = dxy * cexpkxky
-                        ffk = dxz * cexpkxky
+                        fdk = cexpkxky !* dxx  
+                        fek = cexpkxky !* dxy  
+                        ffk = cexpkxky !* dxz  
+                                       !       
+                        fgk = cexpkxky !* dyx  
+                        fak = cexpkxky !* dyy  
+                        fpk = cexpkxky !* dyz  
+                                       !       
+                        frk = cexpkxky !* dzx  
+                        fqk = cexpkxky !* dzy  
+                        fsk = cexpkxky !* dzz  
 
-                        fgk = dyx * cexpkxky
-                        fak = dyy * cexpkxky
-                        fpk = dyz * cexpkxky
+                        !!   boundary conditions
+                        !!   -------------------
 
-                        frk = dzx * cexpkxky
-                        fqk = dzy * cexpkxky
-                        fsk = dzz * cexpkxky
+                        !if ( i==1 .or. i==nModesX &
+                        !        .or. j==1 .or. j==nModesY ) then
 
-                        write(*,*) dxx, dxy, dxz
-                        write(*,*) dyx, dyy, dyz
-                        write(*,*) dzx, dzy, dzz
+                        !    fdk = cExpKxKy
+                        !    fek = 0
+                        !    ffk = 0
 
-                        !   boundary conditions
-                        !   -------------------
+                        !    fgk = 0
+                        !    fak = cExpKxKy
+                        !    fpk = 0
 
-                        if ( i==1 .or. i==nModesX &
-                                .or. j==1 .or. j==nModesY ) then
-
-                            fdk = cExpKxKy
-                            fek = 0
-                            ffk = 0
-
-                            fgk = 0
-                            fak = cExpKxKy
-                            fpk = 0
-
-                            frk = 0
-                            fqk = 0
-                            fsk = cExpKxKy
-                        
-                        endif
+                        !    frk = 0
+                        !    fqk = 0
+                        !    fsk = cExpKxKy
+                        !
+                        !endif
 
                         sss(iCol)   = fdk
                         sss(iCol+1) = fek
@@ -337,6 +332,7 @@ contains
             enddo j_loop
         enddo i_loop 
         write(*,*)
+
     end subroutine amat_fill
 
 end module mat_fill

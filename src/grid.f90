@@ -38,14 +38,15 @@ contains
             rwLeft   = 0.2
             rwRight  = 1.7
             xRange  = rwRight - rwLeft
-            dx = xRange / nModesX
+            dx = xRange / (nModesX-1)
             do i = 1, nModesX
         
                 capr(i) = (i-1) * dx + rwLeft 
                 xkphi(i) = nPhi / capr(i)
         
             enddo
-        
+            write(*,*) xRange
+            write(*,*) capR-minVal(capR)
         
         !   define y mesh: y(j), yprime(j)
         !---------------------------------
@@ -55,12 +56,13 @@ contains
             yTop    =  1.1
             yBot    = -1.1
             yRange  = yTop - yBot
-            dy = yRange / nModesY
+            dy = yRange / (nModesY-1)
             do j = 1, nModesY
         
                 y(j) = (j-1) * dy + yBot
         
             enddo
+            write(*,*) y
 
 
     end subroutine init_grid
@@ -88,13 +90,18 @@ contains
         nkx = size ( xkxsav, 1 )
         nky = size ( xkysav, 1 )
 
+        write(*,*) 'nkx: ', nkx
+        write(*,*) 'nky: ', nky
+
         do n = kxL, kxR 
-            xkxsav(n) = 2.0 * pi * n / xRange
+            xkxsav(n) = 2.0 * pi * n / xRange 
         enddo
 
         do m = kyL, kyR 
-            xkysav(m) = 2.0 * pi * m / yRange
+            xkysav(m) = 2.0 * pi * m / yRange 
         enddo
+
+        !write(*,*) 'WARNING: Running with /4 on the mode resolution'
 
         xk_cutoff   = sqrt ( xkxsav( kxR )**2 &
                                 + xkysav( kyR )**2 ) * xkperp_cutoff
@@ -118,17 +125,19 @@ contains
 
         do i = 1, nModesX
             do n = kxL, kxR 
-                xx(n, i) = exp(zi * xkxsav(n) * capR(i))
+                xx(n, i) = exp(zi * xkxsav(n) * (capR(i)-minVal(capR)))
                 xx_inv(n,i) = 1.0/xx(n,i)
             enddo
         enddo
+        write(*,*) xx(1,:)
 
         do j = 1, nModesY
             do m = kyL, kyR 
-                yy(m,j) = exp(zi * xkysav(m) * y(j))
+                yy(m,j) = exp(zi * xkysav(m) * (y(j)-minVal(y)))
                 yy_inv(m,j) = 1.0/yy(m,j)
             enddo
         enddo
+        write(*,*) yy(1,:)
 
     end subroutine init_basis_functions 
 

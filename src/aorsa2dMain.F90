@@ -79,6 +79,8 @@ program aorsa2dMain
 !   ------------------------------------------------------------------------
 
     call aMat_fill ()
+    call write_amat ( 'amat.nc' )
+
 
 !   Antenna current
 !   ---------------
