@@ -1,3 +1,5 @@
+.SUFFIXES : .o .f90 .f .F90
+
 EXEC = xaorsa2d
 SRC_DIR = src
 OBJ_DIR = obj
@@ -13,38 +15,50 @@ OBJ_DLG := $(patsubst src/dlg/%,obj/%.o,$(basename $(wildcard src/dlg/*)))
 OBJ_FILES := $(patsubst src/%,obj/%.o,$(basename $(wildcard src/*.*)))
 OBJ_CQL3D := $(patsubst src/cql3d/%,obj/%.o,$(basename $(wildcard src/cql3d/*.*)))
 
-BLACS = 
-SCALAPACK = 
 BLAS = ${HOME}/code/goto_blas/GotoBLAS2/libgoto2.a -pthread
 LAPACK = ${HOME}/code/lapack/lapack-3.1.1/lapack_LINUX.a 
 NETCDF_DIR = /home/dg6/code/netcdf/netcdf_gnu64
 NETCDF = -I ${NETCDF_DIR}/include -L ${NETCDF_DIR}/lib -lnetcdf 
-
-LIBS = ${BLAS} ${LAPACK} ${NETCDF}
-INC_DIR = 
-
 BOUNDS = -fbounds-check
 WARN = #-Wall
 DEBUG = -pg -g -fbacktrace -fsignaling-nans -ffpe-trap=zero,invalid#,overflow#,underflow
 F90 = gfortran
-LINK = gfortran
 MOD_LOC = -Jmod
+
+#FRANKLIN
+ifeq (${HOME},/global/homes/g/greendl1)
+BLAS = 
+LAPACK =  
+NETCDF = ${NETCDF_INCLUDE_OPTS} ${NETCDF_POST_LINK_OPTS} -lnetcdf 
+BOUNDS = 
+WARN = 
+DEBUG = -g
+F90 = ftn
+MOD_LOC = -module mod
+endif
+
+LIBS = ${BLAS} ${LAPACK} ${NETCDF}
+INC_DIR = 
+
 F90FLAGS = ${WARN} ${DEBUG} ${BOUNDS} ${MOD_LOC} 
 LD_FLAGS =
 
 .PHONY: depend clean
 
 $(EXEC): $(OBJ_FILES) $(OBJ_FFT) $(OBJ_CQL3D_SETUP) $(OBJ_DLG) 
-	$(LINK) -o $(EXEC) $(OBJ_FILES) $(OBJ_FFT) $(OBJ_CQL3D) $(OBJ_DLG) $(LIBS) ${LINK_FLAGS}
+	$(F90) -o $(EXEC) $(OBJ_FILES) $(OBJ_FFT) $(OBJ_CQL3D) $(OBJ_DLG) $(LIBS) ${LINK_FLAGS}
 			    		    		     		   			     			     				
 # FFT files
 
-${OBJ_DIR}/%.o: ${FFT_DIR}/%.*
+${OBJ_DIR}/%.o: ${FFT_DIR}/%.f
 	${F90} -c ${F90FLAGS} $< -o $@ 
 				
 # SRC files
 
-${OBJ_DIR}/%.o: ${SRC_DIR}/%.*
+${OBJ_DIR}/%.o: ${SRC_DIR}/%.f90
+	${F90} -c ${F90FLAGS} $< -o $@ ${BOUNDS} ${NETCDF} ${CPP_DIRECTIVES} ${INC_DIR}
+
+${OBJ_DIR}/%.o: ${SRC_DIR}/%.F90
 	${F90} -c ${F90FLAGS} $< -o $@ ${BOUNDS} ${NETCDF} ${CPP_DIRECTIVES} ${INC_DIR}
 
 # CQL files
@@ -54,8 +68,12 @@ ${OBJ_DIR}/%.o: ${CQL_DIR}/%.*
 
 # DLG files
 		
-${OBJ_DIR}/%.o: ${DLG_DIR}/%.*
+${OBJ_DIR}/%.o: ${DLG_DIR}/%.f90
 	${F90} -c ${F90FLAGS} $< -o $@ ${NETCDF} ${INC_DIR} ${CPP_DIRECTIVES}
+
+${OBJ_DIR}/%.o: ${DLG_DIR}/%.F90
+	${F90} -c ${F90FLAGS} $< -o $@ ${NETCDF} ${INC_DIR} ${CPP_DIRECTIVES}
+
 
 # Dependencies	
 

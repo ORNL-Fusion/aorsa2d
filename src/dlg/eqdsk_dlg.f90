@@ -28,7 +28,7 @@ contains
         character(len=*), intent(IN) :: eqdsk_fileName
         logical, intent(IN), optional :: plot
         real, allocatable :: yp(:), xp(:), temp(:), ss(:), yp_c(:)
-        real :: spl1 = 0.0, spln = 0.0, t, curv2, sigma = 0.0
+        real :: spl1 = 0.0, spln = 0.0, t, sigma = 0.0
 
         !!   Plotting variables
     
