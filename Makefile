@@ -29,7 +29,7 @@ DEBUG = -pg -g -fbacktrace -fsignaling-nans -ffpe-trap=zero,invalid#,overflow#,u
 F90 = gfortran
 LINK = gfortran
 MOD_LOC = -Jmod
-F90FLAGS = ${WARN} ${DEBUG} ${BOUNDS} ${MOD_LOC} -r8
+F90FLAGS = ${WARN} ${DEBUG} ${BOUNDS} ${MOD_LOC} 
 LD_FLAGS =
 
 .PHONY: depend clean

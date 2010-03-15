@@ -289,6 +289,10 @@ contains
                         fqk = dzy * cexpkxky
                         fsk = dzz * cexpkxky
 
+                        write(*,*) dxx, dxy, dxz
+                        write(*,*) dyx, dyy, dyz
+                        write(*,*) dzx, dzy, dzz
+
                         !   boundary conditions
                         !   -------------------
 
