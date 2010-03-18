@@ -35,7 +35,7 @@ contains
         use aorsa2din_mod, &
         only: nModesX, nModesY, upShift, damping, &
             lmax, delta0, nPhi, nSpec, nZFun, &
-            iSigma, xnuomg
+            iSigma, xnuomg, nPtsX, nPtsY
         use grid
         use sigma_mod
         use rotation
@@ -49,17 +49,17 @@ contains
 
 
         write(*,*) 'Filling aMat, size: ', &
-            nModesX*nModesY*3*nkx*nky*3*2*8.0 / 1024.0**2
+            nPtsX*nPtsY*3*nModesX*nModesY*3*2*8.0 / 1024.0**2
 
         allocate ( &
             sss(nModesX*nModesY*3), &
             ttt(nModesX*nModesY*3), &
             qqq(nModesX*nModesY*3) )
 
-        allocate ( aMat(nModesX*nModesY*3,nkx*nky*3) ) 
+        allocate ( aMat(nPtsX*nPtsY*3,nModesX*nModesY*3) ) 
 
         i_loop: &
-        do i=1,nModesX
+        do i=1,nPtsX
 
             !   progress indicator
             !   ------------------
@@ -67,12 +67,12 @@ contains
             do p=1,7 
                 write(*,'(a)',advance='no') char(8)
             enddo
-            write(*,'(1x,f5.1,a)',advance='no') real(i)/nModesX*100, '%'
+            write(*,'(1x,f5.1,a)',advance='no') real(i)/nPtsX*100, '%'
 
             j_loop: &
-            do j=1,nModesY
+            do j=1,nPtsY
 
-                iRow = (j-1) * 3 + (i-1) * nModesY * 3 + 1
+                iRow = (i-1) * 3 * nPtsY + (j-1) * 3 + 1
 
                 n_loop: &
                 do n=kxL,kxR
@@ -169,6 +169,44 @@ contains
                         rnx = xkxsav(n) / xk0
                         rny = xkysav(m) / xk0
                         rnPhi = xkphi(i) / xk0
+
+                        dxuxx   = 0
+                        dxuxy   = 0
+                        dxuxz   = 0
+                        dxuyx   = 0
+                        dxuyy   = 0
+                        dxuyz   = 0
+                        dxuzx   = 0
+                        dxuzy   = 0
+                        dxuzz   = 0
+
+                        dxyuxy  = 0
+                        dxyuyy  = 0
+                        dxyuzy  = 0
+
+                        dxyuxx  = 0
+                        dxyuyx  = 0
+                        dxyuzx  = 0
+
+                        dyyuxx  = 0
+                        dyyuyx  = 0
+                        dyyuzx  = 0
+                        dyyuxy  = 0
+                        dyyuyy  = 0
+                        dyyuzy  = 0
+                        dyyuxz  = 0
+                        dyyuyz  = 0
+                        dyyuzz  = 0
+
+                        dxxuxx  = 0
+                        dxxuxy  = 0
+                        dxxuxz  = 0
+                        dxxuyx  = 0
+                        dxxuyy  = 0
+                        dxxuyz  = 0
+                        dxxuzx  = 0
+                        dxxuzy  = 0
+                        dxxuzz  = 0
 
                         dxx = (xkxx - rny**2 - rnphi**2) * uxx(i,j) &
                             +  xkyx * uyx(i,j) &
@@ -276,17 +314,17 @@ contains
                             + 1. / xk0**2  * (dxxuzz(i,j) + dyyuzz(i,j))
 
 
-                        fdk = cexpkxky !* dxx  
-                        fek = cexpkxky !* dxy  
-                        ffk = cexpkxky !* dxz  
-                                       !       
-                        fgk = cexpkxky !* dyx  
-                        fak = cexpkxky !* dyy  
-                        fpk = cexpkxky !* dyz  
-                                       !       
-                        frk = cexpkxky !* dzx  
-                        fqk = cexpkxky !* dzy  
-                        fsk = cexpkxky !* dzz  
+                        !fdk = cexpkxky !* dxx  
+                        !fek = cexpkxky !* dxy  
+                        !ffk = cexpkxky !* dxz  
+                        !               !       
+                        !fgk = cexpkxky !* dyx  
+                        !fak = cexpkxky !* dyy  
+                        !fpk = cexpkxky !* dyz  
+                        !               !       
+                        !frk = cexpkxky !* dzx  
+                        !fqk = cexpkxky !* dzy  
+                        !fsk = cexpkxky !* dzz  
 
                         !!   boundary conditions
                         !!   -------------------
@@ -308,26 +346,58 @@ contains
                         !
                         !endif
 
-                        sss(iCol)   = fdk
-                        sss(iCol+1) = fek
-                        sss(iCol+2) = ffk
+                        aMat(iRow+0,iCol+0) = cexpkxky * dxx  
+                        aMat(iRow+1,iCol+0) = cexpkxky * dxy  
+                        aMat(iRow+2,iCol+0) = cexpkxky * dxz  
+                                        
+                        aMat(iRow+0,iCol+1) = cexpkxky * dyx  
+                        aMat(iRow+1,iCol+1) = cexpkxky * dyy  
+                        aMat(iRow+2,iCol+1) = cexpkxky * dyz  
+                                      
+                        aMat(iRow+0,iCol+2) = cexpkxky * dzx  
+                        aMat(iRow+1,iCol+2) = cexpkxky * dzy  
+                        aMat(iRow+2,iCol+2) = cexpkxky * dzz  
 
-                        ttt(iCol)   = fgk
-                        ttt(iCol+1) = fak
-                        ttt(iCol+2) = fpk
+                        !!   boundary conditions
+                        !!   -------------------
 
-                        qqq(iCol)   = frk
-                        qqq(iCol+1) = fqk
-                        qqq(iCol+2) = fsk
+                        !if ( i==1 .or. i==nModesX &
+                        !        .or. j==1 .or. j==nModesY ) then
+
+                        !    aMat(iRow+0,iCol+0) = cexpkxky  
+                        !    aMat(iRow+0,iCol+1) = 0  
+                        !    aMat(iRow+0,iCol+2) = 0 
+                        !                    
+                        !    aMat(iRow+1,iCol+0) = 0  
+                        !    aMat(iRow+1,iCol+1) = cexpkxky   
+                        !    aMat(iRow+1,iCol+2) = 0  
+                        !                  
+                        !    aMat(iRow+2,iCol+0) = 0  
+                        !    aMat(iRow+2,iCol+1) = 0  
+                        !    aMat(iRow+2,iCol+2) = cexpkxky   
+                        !
+                        !endif
+
+
+                        !sss(iCol)   = fdk
+                        !sss(iCol+1) = fek
+                        !sss(iCol+2) = ffk
+
+                        !ttt(iCol)   = fgk
+                        !ttt(iCol+1) = fak
+                        !ttt(iCol+2) = fpk
+
+                        !qqq(iCol)   = frk
+                        !qqq(iCol+1) = fqk
+                        !qqq(iCol+2) = fsk
+
 
                     enddo m_loop
                 enddo n_loop 
 
-            
-                aMat(iRow,:)    = sss
-                aMat(iRow+1,:)  = ttt
-                aMat(iRow+2,:)  = qqq
-
+                !aMat(iRow,:)    = sss
+                !aMat(iRow+1,:)  = ttt
+                !aMat(iRow+2,:)  = qqq
 
             enddo j_loop
         enddo i_loop 

@@ -1135,6 +1135,11 @@ contains
     subroutine sftinv2d( xkx, xky, xx, yy, &
        a, f, fx, fy )
 
+        use aorsa2din_mod, &
+        only: nPtsX, nPtsY, nModesX, nModesY
+        use grid, &
+        only: kxL, kxR, kyL, kyR
+ 
         implicit none
         
         real, intent(in) :: xkx(:), xky(:)
@@ -1145,28 +1150,18 @@ contains
 
         complex :: cexpkxky
         integer :: i, j, n, m
-        integer :: nx, ny, kxL, kxR, kyL, kyR
 
-        nx  = size ( xx, 2 )
-        ny  = size ( yy, 2 )
+        if (.not. allocated ( f ) ) allocate ( f(nPtsX,nPtsY) )
+        if (.not. allocated ( fx ) ) allocate ( fx(nPtsX,nPtsY) )
+        if (.not. allocated ( fy ) ) allocate ( fy(nPtsX,nPtsY) )
 
-        kxL = lbound ( xx, 1 ) !+ nx/3
-        kxR = ubound ( xx, 1 ) !- nx/3
-
-        kyL = lbound ( yy, 1 ) !+ ny/3
-        kyR = ubound ( yy, 1 ) !- ny/3
-
-        if (.not. allocated ( f ) ) allocate ( f(nx,ny) )
-        if (.not. allocated ( fx ) ) allocate ( fx(nx,ny) )
-        if (.not. allocated ( fy ) ) allocate ( fy(nx,ny) )
-
-        do i = 1, nx
-            do j = 1, ny
+        do i = 1, nPtsX
+            do j = 1, nPtsY
         
                 f(i, j) = 0.0
 
-                do n = kxL, kxR 
-                    do m = kyL, kyR 
+                do n = kxL-kxL+1, kxR-kxL+1
+                    do m = kyL-kyL+1, kyR-kyL+1 
 
                       !----------------------------------------------------
                       !cexpkxky = exp(zi * (xkx(n) * x(i) + xky(m) * y(j)))

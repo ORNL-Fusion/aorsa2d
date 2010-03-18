@@ -8,7 +8,6 @@ real, allocatable, dimension(:) :: y
 real :: dx, dy, xRange, yRange
 
 !   init_k
-integer :: nkx, nky, nRow, nCol
 real, allocatable, dimension(:) :: xkxsav, xkysav
 real :: xk_cutOff
 integer :: kxL, kxR, kyL, kyR
@@ -22,48 +21,44 @@ contains
 
         use aorsa2din_mod, &
         only: rwLeft, rwRight, yTop, yBot, &
-                nPhi, nModesX, nModesY
+                nPhi, nModesX, nModesY, nPtsX, nPtsY
 
         implicit none
 
         integer :: i, j
 
         !   define x mesh: capr(i)
-        !   --------------------------------------------
+        !   ----------------------
         
             allocate ( &
-                capR ( nModesX ), &
-                xkphi ( nModesX ) )
+                capR ( nPtsX ), &
+                xkphi ( nPtsX ) )
         
             rwLeft   = 0.2
             rwRight  = 1.7
             xRange  = rwRight - rwLeft
-            dx = xRange / (nModesX-1)
-            do i = 1, nModesX
+            dx = xRange / (nPtsX-1)
+            do i = 1, nPtsX
         
                 capr(i) = (i-1) * dx + rwLeft 
                 xkphi(i) = nPhi / capr(i)
         
             enddo
-            write(*,*) xRange
-            write(*,*) capR-minVal(capR)
         
-        !   define y mesh: y(j), yprime(j)
-        !---------------------------------
+        !   define y mesh: y(j)
+        !----------------------
         
-            allocate ( y ( nModesY ) )
+            allocate ( y ( nPtsY ) )
         
             yTop    =  1.1
             yBot    = -1.1
             yRange  = yTop - yBot
-            dy = yRange / (nModesY-1)
-            do j = 1, nModesY
+            dy = yRange / (nPtsY-1)
+            do j = 1, nPtsY
         
                 y(j) = (j-1) * dy + yBot
         
             enddo
-            write(*,*) y
-
 
     end subroutine init_grid
 
@@ -78,20 +73,17 @@ contains
 
         integer :: n, m
 
-        kxL = -nModesX/2+1
+        kxL = -nModesX/2
         kxR =  nModesX/2
-        kyL = -nModesY/2+1
+        kyL = -nModesY/2
         kyR =  nModesY/2
+
+        write(*,*) 'kx: ', kxL, kxR
+        write(*,*) 'ky: ', kyL, kyR
 
         allocate ( &
             xkxsav (kxL:kxR), &
             xkysav (kyL:kyR) )
-
-        nkx = size ( xkxsav, 1 )
-        nky = size ( xkysav, 1 )
-
-        write(*,*) 'nkx: ', nkx
-        write(*,*) 'nky: ', nky
 
         do n = kxL, kxR 
             xkxsav(n) = 2.0 * pi * n / xRange 
@@ -112,7 +104,7 @@ contains
     subroutine init_basis_functions ()
 
         use aorsa2din_mod, &
-        only: nModesX, nModesY
+        only: nModesX, nModesY, nPtsX, nPtsY
         use constants
 
         implicit none
@@ -120,24 +112,22 @@ contains
         integer :: i, j, n, m
 
         allocate ( &
-            xx(kxL:kxR,nModesX), xx_inv(kxL:kxR,nModesX), &
-            yy(kyL:kyR,nModesY), yy_inv(kyL:kyR,nModesY) )
+            xx(kxL:kxR,nPtsX), xx_inv(kxL:kxR,nPtsX), &
+            yy(kyL:kyR,nPtsY), yy_inv(kyL:kyR,nPtsY) )
 
-        do i = 1, nModesX
+        do i = 1, nPtsX
             do n = kxL, kxR 
                 xx(n, i) = exp(zi * xkxsav(n) * (capR(i)-minVal(capR)))
                 xx_inv(n,i) = 1.0/xx(n,i)
             enddo
         enddo
-        write(*,*) xx(1,:)
 
-        do j = 1, nModesY
+        do j = 1, nPtsY
             do m = kyL, kyR 
                 yy(m,j) = exp(zi * xkysav(m) * (y(j)-minVal(y)))
                 yy_inv(m,j) = 1.0/yy(m,j)
             enddo
         enddo
-        write(*,*) yy(1,:)
 
     end subroutine init_basis_functions 
 

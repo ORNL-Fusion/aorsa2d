@@ -29,22 +29,26 @@ pro plot_solution
 		nCdf_varGet, cdfId, 'ebetak_im', ebetak_im 
 		nCdf_varGet, cdfId, 'eBk_im', eBk_im 
 
+		ealpha	= complex ( ealpha_re, ealpha_im )
+		ebeta	= complex ( ebeta_re, ebeta_im )
+		eb	= complex ( eb_re, eb_im )
+
 	ncdf_close, cdfId
 
 	window, 0
 	!p.multi = [0,3,2]
-	scale = max ( abs ( [ealpha_re[*],ebeta_re[*],eb_re[*]] ) ) 
+	scale = max ( abs ( [ealpha[*],ebeta[*],eb[*]] ) ) 
 	nLevs	=101 
 	device, decomposed = 0
 	loadct, 13, file = 'davect.tbl'
 	levels	= (fIndGen(nLevs)/(nLevs-1)-0.5) * 2.0 * scale * 1.1
 	colors	= bytScl ( levels, top = 253 )+1
-	contour, ealpha_re,x, y, levels = levels, c_colors=colors, /fill
-	contour, ebeta_re,x, y, levels = levels, c_colors=colors, /fill
-	contour, eb_re,x, y, levels = levels*1e-2, c_colors=colors, /fill
-	contour, ealpha_im,x, y, levels = levels, c_colors=colors, /fill
-	contour, ebeta_im,x, y, levels = levels, c_colors=colors, /fill
-	contour, eb_im,x, y, levels = levels*1e-2, c_colors=colors, /fill
+	contour, ealpha,x, y, levels = levels, c_colors=colors, /fill
+	contour, ebeta,x, y, levels = levels, c_colors=colors, /fill
+	contour, eb,x, y, levels = levels*1e-2, c_colors=colors, /fill
+	contour, imaginary(ealpha),x, y, levels = levels, c_colors=colors, /fill
+	contour, imaginary(ebeta),x, y, levels = levels, c_colors=colors, /fill
+	contour, imaginary(eb),x, y, levels = levels*1e-2, c_colors=colors, /fill
 
 	window, 1
 	!p.multi = [0,3,2]

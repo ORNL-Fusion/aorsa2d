@@ -339,8 +339,10 @@ implicit none
       integer :: ndisti5 = 0
       integer :: ndisti6 = 0      
 
-      integer :: nmodesx = 128            !-----nmodesx=number of modes used in the x direction
-      integer :: nmodesy = 128            !-----nmodesy=number of modes used in the y direction
+      integer :: nPtsX  = 64
+      integer :: nPtsY  = 128
+      integer :: nModesX = 32            !-----nmodesx=number of modes used in the x direction
+      integer :: nModesY = 64            !-----nmodesy=number of modes used in the y direction
       integer :: izfunc 
       integer :: nnodecx                  !-----nnodecx = number of radial mesh points used for wdot calculation
       integer :: nnodecy                  !-----nnodecy = number of vertical mesh points used for wdot calculation
@@ -350,7 +352,7 @@ implicit none
       real phase, zmin, zmax, phi0, amplt(20) 
       !common / stpcom / xlt, wd, nstrap, phase, zmin, zmax, phi0, amplt
                    
-      namelist/aorsa2din/nmodesx, nmodesy, nwdot, lmax, ibessel, &
+      namelist/aorsa2din/nmodesx, nmodesy, nPtsX, nPtsY, nwdot, lmax, ibessel, &
      &    ti01, xnuead, xnu1ad, xnu2ad, rant, te0, yant,  &
      &    ti02, ti03, ti2lim, ti3lim, nuper, nupar, &
      &    ti04, ti05, ti06, ti4lim, ti5lim, ti6lim,  &

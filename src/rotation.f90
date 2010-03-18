@@ -27,28 +27,28 @@ contains
     subroutine init_rotation ()
 
         use aorsa2din_mod, &
-        only: nModesX, nModesY
+        only: nPtsX, nPtsY
         use bField
 
         implicit none
 
         integer :: i,j 
 
-        allocate ( btau ( nModesX, nModesY ) )
+        allocate ( btau ( nPtsX, nPtsY ) )
 
         allocate ( &
-            uxx( nModesX, nModesY ), & 
-            uxy( nModesX, nModesY ), &
-            uxz( nModesX, nModesY ), &
-            uyx( nModesX, nModesY ), & 
-            uyy( nModesX, nModesY ), &
-            uyz( nModesX, nModesY ), &
-            uzx( nModesX, nModesY ), & 
-            uzy( nModesX, nModesY ), &
-            uzz( nModesX, nModesY ) )
+            uxx( nPtsX, nPtsY ), & 
+            uxy( nPtsX, nPtsY ), &
+            uxz( nPtsX, nPtsY ), &
+            uyx( nPtsX, nPtsY ), & 
+            uyy( nPtsX, nPtsY ), &
+            uyz( nPtsX, nPtsY ), &
+            uzx( nPtsX, nPtsY ), & 
+            uzy( nPtsX, nPtsY ), &
+            uzz( nPtsX, nPtsY ) )
 
-        do i = 1, nModesX
-            do j = 1, nModesY
+        do i = 1, nPtsX
+            do j = 1, nPtsY
 
                 btau(i,j) = sqrt(bxn(i,j)**2 + byn(i,j)**2)
 
@@ -73,7 +73,7 @@ contains
     subroutine deriv_rotation
 
         use aorsa2din_mod, &
-        only: nModesX, nModesY, nZFun
+        only: nPtsX, nPtsY, nZFun
         use grid
         use aorsasubs_mod, &
         only: deriv_x, deriv_y, deriv_xy
@@ -84,37 +84,37 @@ contains
 
         integer :: i, j
 
-        allocate ( gradPrlB (nModesX,nModesY) )
+        allocate ( gradPrlB (nPtsX,nPtsY) )
 
         allocate ( &  
-            dxuxx(nModesX,nModesY), dxxuxx(nModesX,nModesY), &
-            dxuxy(nModesX,nModesY), dxxuxy(nModesX,nModesY), &
-            dxuxz(nModesX,nModesY), dxxuxz(nModesX,nModesY), &
-            dxuyx(nModesX,nModesY), dxxuyx(nModesX,nModesY), &
-            dxuyy(nModesX,nModesY), dxxuyy(nModesX,nModesY), &
-            dxuyz(nModesX,nModesY), dxxuyz(nModesX,nModesY), &
-            dxuzx(nModesX,nModesY), dxxuzx(nModesX,nModesY), &
-            dxuzy(nModesX,nModesY), dxxuzy(nModesX,nModesY), &
-            dxuzz(nModesX,nModesY), dxxuzz(nModesX,nModesY) )
+            dxuxx(nPtsX,nPtsY), dxxuxx(nPtsX,nPtsY), &
+            dxuxy(nPtsX,nPtsY), dxxuxy(nPtsX,nPtsY), &
+            dxuxz(nPtsX,nPtsY), dxxuxz(nPtsX,nPtsY), &
+            dxuyx(nPtsX,nPtsY), dxxuyx(nPtsX,nPtsY), &
+            dxuyy(nPtsX,nPtsY), dxxuyy(nPtsX,nPtsY), &
+            dxuyz(nPtsX,nPtsY), dxxuyz(nPtsX,nPtsY), &
+            dxuzx(nPtsX,nPtsY), dxxuzx(nPtsX,nPtsY), &
+            dxuzy(nPtsX,nPtsY), dxxuzy(nPtsX,nPtsY), &
+            dxuzz(nPtsX,nPtsY), dxxuzz(nPtsX,nPtsY) )
 
         allocate ( &  
-            dyuxx(nModesX,nModesY), dyyuxx(nModesX,nModesY), &
-            dyuxy(nModesX,nModesY), dyyuxy(nModesX,nModesY), &
-            dyuxz(nModesX,nModesY), dyyuxz(nModesX,nModesY), &
-            dyuyx(nModesX,nModesY), dyyuyx(nModesX,nModesY), &
-            dyuyy(nModesX,nModesY), dyyuyy(nModesX,nModesY), &
-            dyuyz(nModesX,nModesY), dyyuyz(nModesX,nModesY), &
-            dyuzx(nModesX,nModesY), dyyuzx(nModesX,nModesY), &
-            dyuzy(nModesX,nModesY), dyyuzy(nModesX,nModesY), &
-            dyuzz(nModesX,nModesY), dyyuzz(nModesX,nModesY) )
+            dyuxx(nPtsX,nPtsY), dyyuxx(nPtsX,nPtsY), &
+            dyuxy(nPtsX,nPtsY), dyyuxy(nPtsX,nPtsY), &
+            dyuxz(nPtsX,nPtsY), dyyuxz(nPtsX,nPtsY), &
+            dyuyx(nPtsX,nPtsY), dyyuyx(nPtsX,nPtsY), &
+            dyuyy(nPtsX,nPtsY), dyyuyy(nPtsX,nPtsY), &
+            dyuyz(nPtsX,nPtsY), dyyuyz(nPtsX,nPtsY), &
+            dyuzx(nPtsX,nPtsY), dyyuzx(nPtsX,nPtsY), &
+            dyuzy(nPtsX,nPtsY), dyyuzy(nPtsX,nPtsY), &
+            dyuzz(nPtsX,nPtsY), dyyuzz(nPtsX,nPtsY) )
 
         allocate ( &
-            dxyuxx(nModesX,nModesY), dxyuxy(nModesX,nModesY), dxyuxz(nModesX,nModesY), &
-            dxyuyx(nModesX,nModesY), dxyuyy(nModesX,nModesY), dxyuyz(nModesX,nModesY), &
-            dxyuzx(nModesX,nModesY), dxyuzy(nModesX,nModesY), dxyuzz(nModesX,nModesY) )
+            dxyuxx(nPtsX,nPtsY), dxyuxy(nPtsX,nPtsY), dxyuxz(nPtsX,nPtsY), &
+            dxyuyx(nPtsX,nPtsY), dxyuyy(nPtsX,nPtsY), dxyuyz(nPtsX,nPtsY), &
+            dxyuzx(nPtsX,nPtsY), dxyuzy(nPtsX,nPtsY), dxyuzz(nPtsX,nPtsY) )
                     
-        do i = 1, nModesX
-            do j = 1, nModesY
+        do i = 1, nPtsX
+            do j = 1, nPtsY
 
                 !   Brambilla approximation:
                 !   -----------------------

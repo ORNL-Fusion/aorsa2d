@@ -40,7 +40,7 @@ contains
     subroutine flat_profiles ()
 
         use aorsa2din_mod, &
-        only: nModesX, nModesY, nSpec
+        only: nPtsX, nPtsY, nSpec
         use constants
         use bField
 
@@ -52,8 +52,8 @@ contains
         !   --------------
        
         allocate ( &
-            densitySpec ( nModesX, nModesY, nSpec ), & 
-            ktSpec ( nModesX, nModesY, nSpec ) )
+            densitySpec ( nPtsX, nPtsY, nSpec ), & 
+            ktSpec ( nPtsX, nPtsY, nSpec ) )
         
         do s=1,nSpec
         
@@ -66,11 +66,11 @@ contains
         !   ----------------------------------------
         
         allocate ( &
-            omgc ( nModesX, nModesY, nSpec ), &
-            omgp2 ( nModesX, nModesY, nSpec ) )
+            omgc ( nPtsX, nPtsY, nSpec ), &
+            omgp2 ( nPtsX, nPtsY, nSpec ) )
         
-        do i=1,nModesX
-            do j=1,nModesY
+        do i=1,nPtsX
+            do j=1,nPtsY
         
                 omgc(i,j,:) = qSpec * bMod(i,j) / mSpec
                 omgp2(i,j,:)    = densitySpec(i,j,:) * qSpec**2 / ( eps0 * mSpec )
