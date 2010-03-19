@@ -2,13 +2,13 @@ pro plot_solution
 
 	cdfId = ncdf_open ( 'runData.nc', /noWrite ) 
 
-		nCdf_varGet, cdfId, 'x', x 
+		nCdf_varGet, cdfId, 'capR', x 
 		nCdf_varGet, cdfId, 'y', y 
-		nCdf_varGet, cdfId, 'jy_re', jy_re 
-		nCdf_varGet, cdfId, 'jy_im', jy_im 
+		nCdf_varGet, cdfId, 'xjy_re', jy_re 
+		nCdf_varGet, cdfId, 'xjy_im', jy_im 
 		nCdf_varGet, cdfId, 'bmod', bmod 
-		nCdf_varGet, cdfId, 'kx', kx 
-		nCdf_varGet, cdfId, 'ky', ky 
+		nCdf_varGet, cdfId, 'xkxsav', kx 
+		nCdf_varGet, cdfId, 'xkysav', ky 
 
 	ncdf_close, cdfId
 

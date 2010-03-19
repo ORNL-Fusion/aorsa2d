@@ -4,91 +4,92 @@ use netcdf
 
 contains
 
-    subroutine write_runData ( fName, x, y, bx, by, bz, bmod, jy, &
-        kx, ky )
+    subroutine write_runData ( fName )
  
         use aorsa2din_mod, &
-        only: nPtsX, nPtsY, nModesX, nModesY
-   
+        only: nPtsX, nPtsY, nModesX, nModesY, nSpec
+        use bField
+        use antenna, &
+        only: xjx, xjy, xjz
+        use grid, &
+        only: capR, y, xkxsav, xkysav
+        use profiles
+
         implicit none
 
         character(len=*), intent(in) :: fName 
-        real, intent(in), dimension(:) :: &
-            x, y
-        real, intent(in), dimension(:,:) :: &
-            bx, by, bz, bmod
-        complex, intent(in), dimension(:,:) :: &
-            jy
-        real, intent(in), dimension(:) :: &
-            kx, ky
 
-        integer :: nc_id, nX_id, nY_id
-        integer :: nModesX_id, nModesY_id
+        integer :: nc_id, nX_id, nY_id, nc_stat
+        integer :: nModesX_id, nModesY_id, nSpec_id
         integer :: &
             x_id, y_id, &
             bx_id, by_id, bz_id, bmod_id, &
-            jy_re_id, jy_im_id, kx_id, ky_id
+            jy_re_id, jy_im_id, kx_id, ky_id, &
+            dens_id
 
         call check ( nf90_create ( fName, nf90_clobber, nc_id ) )
         call check ( nf90_def_dim ( nc_id, "nPtsX", nPtsX, nX_id ) )
         call check ( nf90_def_dim ( nc_id, "nPtsY", nPtsY, nY_id ) )
         call check ( nf90_def_dim ( nc_id, "nModesX", nModesX, nModesX_id ) )
         call check ( nf90_def_dim ( nc_id, "nModesY", nModesY, nModesY_id ) )
+        call check ( nf90_def_dim ( nc_id, "nSpec", nSpec, nSpec_id ) )
 
-        call check ( nf90_def_var ( nc_id, "x", NF90_REAL, &
+        call check ( nf90_def_var ( nc_id, "capR", NF90_REAL, &
             (/nX_id/), x_id ) ) 
          call check ( nf90_def_var ( nc_id, "y", NF90_REAL, &
             (/nY_id/), y_id ) ) 
  
-        call check ( nf90_def_var ( nc_id, "bx", NF90_REAL, &
+        call check ( nf90_def_var ( nc_id, "bxn", NF90_REAL, &
             (/nX_id,nY_id/), bx_id ) ) 
-        call check ( nf90_def_var ( nc_id, "by", NF90_REAL, &
+        call check ( nf90_def_var ( nc_id, "byn", NF90_REAL, &
             (/nX_id,nY_id/), by_id ) ) 
-        call check ( nf90_def_var ( nc_id, "bz", NF90_REAL, &
+        call check ( nf90_def_var ( nc_id, "bzn", NF90_REAL, &
             (/nX_id,nY_id/), bz_id ) ) 
         call check ( nf90_def_var ( nc_id, "bmod", NF90_REAL, &
             (/nX_id,nY_id/), bmod_id ) ) 
  
-        call check ( nf90_def_var ( nc_id, "jy_re", NF90_REAL, &
+        call check ( nf90_def_var ( nc_id, "xjy_re", NF90_REAL, &
             (/nX_id,nY_id/), jy_re_id ) ) 
-        call check ( nf90_def_var ( nc_id, "jy_im", NF90_REAL, &
+        call check ( nf90_def_var ( nc_id, "xjy_im", NF90_REAL, &
             (/nX_id,nY_id/), jy_im_id ) ) 
 
-        call check ( nf90_def_var ( nc_id, "kx", NF90_REAL, &
+        call check ( nf90_def_var ( nc_id, "xkxsav", NF90_REAL, &
             (/nModesX_id/), kx_id ) ) 
-        call check ( nf90_def_var ( nc_id, "ky", NF90_REAL, &
+        call check ( nf90_def_var ( nc_id, "xkysav", NF90_REAL, &
             (/nModesY_id/), ky_id ) ) 
  
+        nc_stat = nf90_def_var ( nc_id, "densitySpec", NF90_REAL, (/nX_id,nY_id,nSpec_id/), dens_id ) 
+
         call check ( nf90_enddef ( nc_id ) )
         
-        call check ( nf90_put_var ( nc_id, x_id, x ) )
+        call check ( nf90_put_var ( nc_id, x_id, capR ) )
         call check ( nf90_put_var ( nc_id, y_id, y ) )
 
-        call check ( nf90_put_var ( nc_id, bx_id, bx ) )
-        call check ( nf90_put_var ( nc_id, by_id, by ) )
-        call check ( nf90_put_var ( nc_id, bz_id, bz ) )
+        call check ( nf90_put_var ( nc_id, bx_id, bxn ) )
+        call check ( nf90_put_var ( nc_id, by_id, byn ) )
+        call check ( nf90_put_var ( nc_id, bz_id, bzn ) )
         call check ( nf90_put_var ( nc_id, bmod_id, bmod ) )
-        call check ( nf90_put_var ( nc_id, jy_re_id, real(jy) ) )
-        call check ( nf90_put_var ( nc_id, jy_im_id, aimag(jy) ) )
-        call check ( nf90_put_var ( nc_id, kx_id, kx ) )
-        call check ( nf90_put_var ( nc_id, ky_id, ky ) )
+        call check ( nf90_put_var ( nc_id, jy_re_id, real(xjy) ) )
+        call check ( nf90_put_var ( nc_id, jy_im_id, aimag(xjy) ) )
+        call check ( nf90_put_var ( nc_id, kx_id, xkxsav ) )
+        call check ( nf90_put_var ( nc_id, ky_id, xkysav ) )
+        nc_stat = nf90_put_var ( nc_id, dens_id, densitySpec )
 
         call check ( nf90_close ( nc_id ) )
 
     end subroutine write_runData
 
 
-    subroutine write_solution ( fName, e1, e2, e3, &
-        e1k, e2k, e3k )
+    subroutine write_solution ( fName )
 
         use aorsa2din_mod, &
         only: nPtsX, nPtsY, nModesX, nModesY
- 
+        use solve, &
+        only: ealpha, ebeta, eB, ealphak, ebetak, eBk
+
         implicit none
 
         character(len=*), intent(in) :: fName 
-        complex, intent(in) :: e1(:,:), e2(:,:), e3(:,:)
-        complex, intent(in) :: e1k(:,:), e2k(:,:), e3k(:,:)
 
         integer :: nc_id, nX_id, nY_id, nModesX_id, nModesY_id
         integer :: &
@@ -135,19 +136,19 @@ contains
  
         call check ( nf90_enddef ( nc_id ) )
 
-        call check ( nf90_put_var ( nc_id, e1_re_id, real ( e1 ) ) )
-        call check ( nf90_put_var ( nc_id, e1_im_id, aimag ( e1 ) ) )
-        call check ( nf90_put_var ( nc_id, e2_re_id, real ( e2 ) ) )
-        call check ( nf90_put_var ( nc_id, e2_im_id, aimag ( e2 ) ) )
-        call check ( nf90_put_var ( nc_id, e3_re_id, real ( e3 ) ) )
-        call check ( nf90_put_var ( nc_id, e3_im_id, aimag ( e3 ) ) )
+        call check ( nf90_put_var ( nc_id, e1_re_id, real ( ealpha ) ) )
+        call check ( nf90_put_var ( nc_id, e1_im_id, aimag ( ealpha ) ) )
+        call check ( nf90_put_var ( nc_id, e2_re_id, real ( ebeta ) ) )
+        call check ( nf90_put_var ( nc_id, e2_im_id, aimag ( ebeta ) ) )
+        call check ( nf90_put_var ( nc_id, e3_re_id, real ( eB ) ) )
+        call check ( nf90_put_var ( nc_id, e3_im_id, aimag ( eB ) ) )
 
-        call check ( nf90_put_var ( nc_id, e1k_re_id, real ( e1k ) ) )
-        call check ( nf90_put_var ( nc_id, e1k_im_id, aimag ( e1k ) ) )
-        call check ( nf90_put_var ( nc_id, e2k_re_id, real ( e2k ) ) )
-        call check ( nf90_put_var ( nc_id, e2k_im_id, aimag ( e2k ) ) )
-        call check ( nf90_put_var ( nc_id, e3k_re_id, real ( e3k ) ) )
-        call check ( nf90_put_var ( nc_id, e3k_im_id, aimag ( e3k ) ) )
+        call check ( nf90_put_var ( nc_id, e1k_re_id, real ( ealphak ) ) )
+        call check ( nf90_put_var ( nc_id, e1k_im_id, aimag ( ealphak ) ) )
+        call check ( nf90_put_var ( nc_id, e2k_re_id, real ( ebetak ) ) )
+        call check ( nf90_put_var ( nc_id, e2k_im_id, aimag ( ebetak ) ) )
+        call check ( nf90_put_var ( nc_id, e3k_re_id, real ( eBk ) ) )
+        call check ( nf90_put_var ( nc_id, e3k_im_id, aimag ( eBk ) ) )
 
         call check ( nf90_close ( nc_id ) )
 

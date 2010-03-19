@@ -137,6 +137,10 @@ contains
 
                         enddo
 
+                        !write(*,*) sigxx, sigxy, sigxz
+                        !write(*,*) sigyx, sigyy, sigyz
+                        !write(*,*) sigzx, sigzy, sigzz
+
                         !if ( i==1 .or. i==nModesX &
                         !        .or. j==1 .or. j==nModesY ) then
 
@@ -347,15 +351,15 @@ contains
                         !endif
 
                         aMat(iRow+0,iCol+0) = cexpkxky * dxx  
-                        aMat(iRow+1,iCol+0) = cexpkxky * dxy  
-                        aMat(iRow+2,iCol+0) = cexpkxky * dxz  
+                        aMat(iRow+0,iCol+1) = cexpkxky * dxy  
+                        aMat(iRow+0,iCol+2) = cexpkxky * dxz  
                                         
-                        aMat(iRow+0,iCol+1) = cexpkxky * dyx  
+                        aMat(iRow+1,iCol+0) = cexpkxky * dyx  
                         aMat(iRow+1,iCol+1) = cexpkxky * dyy  
-                        aMat(iRow+2,iCol+1) = cexpkxky * dyz  
+                        aMat(iRow+1,iCol+2) = cexpkxky * dyz  
                                       
-                        aMat(iRow+0,iCol+2) = cexpkxky * dzx  
-                        aMat(iRow+1,iCol+2) = cexpkxky * dzy  
+                        aMat(iRow+2,iCol+0) = cexpkxky * dzx  
+                        aMat(iRow+2,iCol+1) = cexpkxky * dzy  
                         aMat(iRow+2,iCol+2) = cexpkxky * dzz  
 
                         !!   boundary conditions
