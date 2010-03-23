@@ -1,3 +1,16 @@
+pro contour_field, field, x, y, nLevs, scale
+
+	loadct, 1
+	levels	= (fIndGen(nLevs)+1)/(nLevs-1) * scale * 1.1
+	colors	= 256-(bytScl ( levels, top = 253 )+1)
+	contour, field,x, y, levels = levels, c_colors=colors, color = 0, /fill
+	loadct, 3
+	levels	= (fIndGen(nLevs)+1)/(nLevs-1) * scale * 1.1
+	colors	= 256-(bytScl ( levels, top = 253 )+1)
+	contour, -field,x, y, levels = levels, c_colors=colors, /over, /fill
+
+end
+
 pro plot_solution
 
 	cdfId = ncdf_open ( 'runData.nc', /noWrite ) 
@@ -33,39 +46,38 @@ pro plot_solution
 		ebeta	= complex ( ebeta_re, ebeta_im )
 		eb	= complex ( eb_re, eb_im )
 
+		ealphak	= complex ( ealphak_re, ealphak_im )
+		ebetak	= complex ( ebetak_re, ebetak_im )
+		ebk	= complex ( ebk_re, eb_im )
+
 	ncdf_close, cdfId
 
 	window, 0
 	!p.multi = [0,3,2]
-	scale = max ( abs ( [ealpha[*],ebeta[*],eb[*]] ) ) 
-	nLevs	=101 
+	!p.background = 255
+	scale = max ( abs ( [ealpha[*],ebeta[*],eb[*]] ) ) * 1.5 
+	nLevs	= 1001 
 	device, decomposed = 0
-	loadct, 13, file = 'davect.tbl'
-	levels	= (fIndGen(nLevs)/(nLevs-1)-0.5) * 2.0 * scale * 1.1
-	colors	= bytScl ( levels, top = 253 )+1
-	contour, ealpha,x, y, levels = levels, c_colors=colors, /fill
-	contour, ebeta,x, y, levels = levels, c_colors=colors, /fill
-	contour, eb,x, y, levels = levels*1e-2, c_colors=colors, /fill
-	contour, imaginary(ealpha),x, y, levels = levels, c_colors=colors, /fill
-	contour, imaginary(ebeta),x, y, levels = levels, c_colors=colors, /fill
-	contour, imaginary(eb),x, y, levels = levels*1e-2, c_colors=colors, /fill
+
+	contour_field, ealpha, x, y, nLevs, scale
+	contour_field, ebeta, x, y, nLevs, scale
+	contour_field, eb, x, y, nLevs, scale
+
+	contour_field, imaginary(ealpha), x, y, nLevs, scale
+	contour_field, imaginary(ebeta), x, y, nLevs, scale
+	contour_field, imaginary(eb), x, y, nLevs, scale
 
 	window, 1
 	!p.multi = [0,3,2]
-	scale = max ( abs ( [ealphak_re[*],ebetak_re[*],ebk_re[*]] ) ) 
+	scale = max ( abs ( [ealphak_re[*],ebetak_re[*],ebk_re[*]] ) ) * 1.5
 	scalePar = max ( abs ( [ebk_re[*]] ) ) 
-	nLevs	= 101
-	device, decomposed = 0
-	loadct, 13, file = 'davect.tbl'
-	levels	= (fIndGen(nLevs)/(nLevs-1)-0.5) * 2.0 * scale * 1.1
-	levelsPar	= (fIndGen(nLevs)/(nLevs-1)-0.5) * 2.0 * scalePar * 1.1
-	colors	= bytScl ( levels, top = 253 )+1
-	contour, ealphak_re,kx, ky, levels = levels, c_colors=colors, /fill
-	contour, ebetak_re,kx, ky, levels = levels, c_colors=colors, /fill
-	contour, ebk_re,kx, ky, levels = levelsPar, c_colors=colors, /fill
-	contour, ealphak_im,kx, ky, levels = levels, c_colors=colors, /fill
-	contour, ebetak_im,kx, ky, levels = levels, c_colors=colors, /fill
-	contour, ebk_im,kx, ky, levels = levelsPar, c_colors=colors, /fill
+	nLevs	= 1001
+	contour_field, ealphak,	kx, ky, nLevs, scale
+	contour_field, ebetak,	kx, ky, nLevs, scale 
+	contour_field, ebk,		kx, ky, nLevs, scale 
+	contour_field, imaginary(ealphak),	kx, ky, nLevs, scale 
+	contour_field, imaginary(ebetak),	kx, ky, nLevs, scale 
+	contour_field, imaginary(ebk),		kx, ky, nLevs, scale 
 
 
 stop

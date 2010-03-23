@@ -174,44 +174,6 @@ contains
                         rny = xkysav(m) / xk0
                         rnPhi = xkphi(i) / xk0
 
-                        dxuxx   = 0
-                        dxuxy   = 0
-                        dxuxz   = 0
-                        dxuyx   = 0
-                        dxuyy   = 0
-                        dxuyz   = 0
-                        dxuzx   = 0
-                        dxuzy   = 0
-                        dxuzz   = 0
-
-                        dxyuxy  = 0
-                        dxyuyy  = 0
-                        dxyuzy  = 0
-
-                        dxyuxx  = 0
-                        dxyuyx  = 0
-                        dxyuzx  = 0
-
-                        dyyuxx  = 0
-                        dyyuyx  = 0
-                        dyyuzx  = 0
-                        dyyuxy  = 0
-                        dyyuyy  = 0
-                        dyyuzy  = 0
-                        dyyuxz  = 0
-                        dyyuyz  = 0
-                        dyyuzz  = 0
-
-                        dxxuxx  = 0
-                        dxxuxy  = 0
-                        dxxuxz  = 0
-                        dxxuyx  = 0
-                        dxxuyy  = 0
-                        dxxuyz  = 0
-                        dxxuzx  = 0
-                        dxxuzy  = 0
-                        dxxuzz  = 0
-
                         dxx = (xkxx - rny**2 - rnphi**2) * uxx(i,j) &
                             +  xkyx * uyx(i,j) &
                             +  xkzx * uzx(i,j) &
@@ -317,94 +279,45 @@ contains
                                (uzz(i,j)/ capr(i) - dxuzz(i,j)) &
                             + 1. / xk0**2  * (dxxuzz(i,j) + dyyuzz(i,j))
 
-
-                        !fdk = cexpkxky !* dxx  
-                        !fek = cexpkxky !* dxy  
-                        !ffk = cexpkxky !* dxz  
-                        !               !       
-                        !fgk = cexpkxky !* dyx  
-                        !fak = cexpkxky !* dyy  
-                        !fpk = cexpkxky !* dyz  
-                        !               !       
-                        !frk = cexpkxky !* dzx  
-                        !fqk = cexpkxky !* dzy  
-                        !fsk = cexpkxky !* dzz  
-
-                        !!   boundary conditions
-                        !!   -------------------
-
-                        !if ( i==1 .or. i==nModesX &
-                        !        .or. j==1 .or. j==nModesY ) then
-
-                        !    fdk = cExpKxKy
-                        !    fek = 0
-                        !    ffk = 0
-
-                        !    fgk = 0
-                        !    fak = cExpKxKy
-                        !    fpk = 0
-
-                        !    frk = 0
-                        !    fqk = 0
-                        !    fsk = cExpKxKy
-                        !
-                        !endif
-
                         aMat(iRow+0,iCol+0) = cexpkxky * dxx  
-                        aMat(iRow+0,iCol+1) = cexpkxky * dxy  
-                        aMat(iRow+0,iCol+2) = cexpkxky * dxz  
+                        aMat(iRow+1,iCol+0) = cexpkxky * dxy  
+                        aMat(iRow+2,iCol+0) = cexpkxky * dxz  
                                         
-                        aMat(iRow+1,iCol+0) = cexpkxky * dyx  
+                        aMat(iRow+0,iCol+1) = cexpkxky * dyx  
                         aMat(iRow+1,iCol+1) = cexpkxky * dyy  
-                        aMat(iRow+1,iCol+2) = cexpkxky * dyz  
+                        aMat(iRow+2,iCol+1) = cexpkxky * dyz  
                                       
-                        aMat(iRow+2,iCol+0) = cexpkxky * dzx  
-                        aMat(iRow+2,iCol+1) = cexpkxky * dzy  
+                        aMat(iRow+0,iCol+2) = cexpkxky * dzx  
+                        aMat(iRow+1,iCol+2) = cexpkxky * dzy  
                         aMat(iRow+2,iCol+2) = cexpkxky * dzz  
 
-                        !!   boundary conditions
-                        !!   -------------------
+                        !   boundary conditions
+                        !   -------------------
 
-                        !if ( i==1 .or. i==nModesX &
-                        !        .or. j==1 .or. j==nModesY ) then
+                        if ( i==1 .or. i==nPtsX &
+                                .or. j==1 .or. j==nPtsY ) then
 
-                        !    aMat(iRow+0,iCol+0) = cexpkxky  
-                        !    aMat(iRow+0,iCol+1) = 0  
-                        !    aMat(iRow+0,iCol+2) = 0 
-                        !                    
-                        !    aMat(iRow+1,iCol+0) = 0  
-                        !    aMat(iRow+1,iCol+1) = cexpkxky   
-                        !    aMat(iRow+1,iCol+2) = 0  
-                        !                  
-                        !    aMat(iRow+2,iCol+0) = 0  
-                        !    aMat(iRow+2,iCol+1) = 0  
-                        !    aMat(iRow+2,iCol+2) = cexpkxky   
-                        !
-                        !endif
-
-
-                        !sss(iCol)   = fdk
-                        !sss(iCol+1) = fek
-                        !sss(iCol+2) = ffk
-
-                        !ttt(iCol)   = fgk
-                        !ttt(iCol+1) = fak
-                        !ttt(iCol+2) = fpk
-
-                        !qqq(iCol)   = frk
-                        !qqq(iCol+1) = fqk
-                        !qqq(iCol+2) = fsk
+                            aMat(iRow+0,iCol+0) = cexpkxky  
+                            aMat(iRow+1,iCol+0) = 0  
+                            aMat(iRow+2,iCol+0) = 0 
+                                            
+                            aMat(iRow+0,iCol+1) = 0  
+                            aMat(iRow+1,iCol+1) = cexpkxky   
+                            aMat(iRow+2,iCol+1) = 0  
+                                          
+                            aMat(iRow+0,iCol+2) = 0  
+                            aMat(iRow+1,iCol+2) = 0  
+                            aMat(iRow+2,iCol+2) = cexpkxky   
+                        
+                        endif
 
 
                     enddo m_loop
                 enddo n_loop 
 
-                !aMat(iRow,:)    = sss
-                !aMat(iRow+1,:)  = ttt
-                !aMat(iRow+2,:)  = qqq
-
             enddo j_loop
         enddo i_loop 
+
         write(*,*)
 
     end subroutine amat_fill

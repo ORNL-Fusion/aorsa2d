@@ -34,8 +34,6 @@ contains
                 capR ( nPtsX ), &
                 xkphi ( nPtsX ) )
         
-            rwLeft   = 0.2
-            rwRight  = 1.7
             xRange  = rwRight - rwLeft
             dx = xRange / (nPtsX-1)
             do i = 1, nPtsX
@@ -50,8 +48,6 @@ contains
         
             allocate ( y ( nPtsY ) )
         
-            yTop    =  1.1
-            yBot    = -1.1
             yRange  = yTop - yBot
             dy = yRange / (nPtsY-1)
             do j = 1, nPtsY
