@@ -288,8 +288,8 @@ implicit none
                                           !-----           if(nboundary .eq. 0) square boundary
                                           !-----           if(nboundary .eq. 2) bbbs boundary from eqdsk
                                           
-      integer :: nprow = 8
-      integer :: npcol = 8
+      integer :: npRow = 8
+      integer :: npCol = 8
 
       integer :: nwdot = 0                !-----nwdot=number of radial modes used in wdot and flow (fy) calculation
 
@@ -361,7 +361,7 @@ implicit none
      &    dthetant0, dpsiant0, psilim, psiant, psimol, psipne, psipte,  &
      &    psipti1, psipti2, psipti3,  &
      &    psipti4, psipti5, psipti6,  &
-     &    iqx, iqprof, iez, nprow, npcol, &
+     &    iqx, iqprof, iez, npRow, npCol, &
      &    amu1, amu2, z1, z2, eta, izfunc,  &
      &    b0, rt, ytop, ybot, freqcy, aplasm,  &
      &    xnlim, xn2lim, xn3lim, xnslolim, signbz,  &

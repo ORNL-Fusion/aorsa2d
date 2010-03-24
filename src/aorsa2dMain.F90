@@ -14,6 +14,7 @@ program aorsa2dMain
     use mat_fill
     use antenna
     use solve
+    use parallel
         
     implicit none
 
@@ -68,12 +69,20 @@ program aorsa2dMain
 
     call init_basis_functions () 
 
+
+!   initialise the parallel env
+!   ---------------------------
+
+    write(*,*) 'Initialising the parallel environment'
+
+    call init_procGrid ()
+
+
 !   Load x, y and z equations for spatial point (i,j) and mode number (n,m)
 !   ------------------------------------------------------------------------
 
     call aMat_fill ()
     call write_amat ( 'amat.nc' )
-
 
 !   Antenna current
 !   ---------------
@@ -95,6 +104,7 @@ program aorsa2dMain
 
     write(*,*) 'Solving complex linear system'
 
+    call init_parallel_aMat ()
     call solve_lsq ()
     call extract_coeffs ()    
 

@@ -66,6 +66,39 @@ contains
     end subroutine solve_lsq
 
 
+    subroutine solve_lsq_parallel ()
+
+        use aorsa2din_mod, &
+        only: nPtsX, nPtsY, nModesX, nModesY
+        use mat_fill, &
+        only: aMat
+        use antenna, &
+        only: brhs
+        use parallel
+
+        implicit none
+
+        character(len=1) :: trans
+        integer :: m, n, nrhs
+        complex :: a
+        integer :: ia, ja
+        complex :: b
+        integer :: ib, jb
+        complex, allocatable :: work(:)
+        integer :: lWork, info
+
+        trans   = 'N'
+
+        allocate ( work ( lWork ) )
+
+        call pcgels ( trans, m, n, nrhs, a, ia, ja, descriptor_aMat, &
+                    b, ib, jb, descriptor_brhs, work, lWork, info ) 
+
+        deallocate ( work )
+
+    end subroutine solve_lsq_parallel
+
+
     subroutine extract_coeffs ()
 
         use grid, &

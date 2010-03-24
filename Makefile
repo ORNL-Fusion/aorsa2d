@@ -10,22 +10,43 @@ CQL_DIR = $(SRC_DIR)/cql3d
 INCLUDE_DIR = $(SRC_DIR)/cql3d
 DLG_DIR = $(SRC_DIR)/dlg
 
+
+# objects
+# -------
+
 OBJ_FFT := $(patsubst src/fftpack/%,obj/%.o,$(basename $(wildcard src/fftpack/*)))
 OBJ_DLG := $(patsubst src/dlg/%,obj/%.o,$(basename $(wildcard src/dlg/*)))
 OBJ_FILES := $(patsubst src/%,obj/%.o,$(basename $(wildcard src/*.*)))
 OBJ_CQL3D := $(patsubst src/cql3d/%,obj/%.o,$(basename $(wildcard src/cql3d/*.*)))
 
+
+# libraries 
+# ---------
+
 BLAS = ${HOME}/code/goto_blas/GotoBLAS2/libgoto2.a -pthread
 LAPACK = ${HOME}/code/lapack/lapack-3.1.1/lapack_LINUX.a 
 NETCDF_DIR = /home/dg6/code/netcdf/netcdf_gnu64
 NETCDF = -I ${NETCDF_DIR}/include -L ${NETCDF_DIR}/lib -lnetcdf 
+BLACS = \
+	${HOME}/code/blacs/blacs_gnu64/LIB/blacs_MPI-LINUX-0.a \
+	${HOME}/code/blacs/blacs_gnu64/LIB/blacsF77init_MPI-LINUX-0.a \
+	${HOME}/code/blacs/blacs_gnu64/LIB/blacs_MPI-LINUX-0.a
+SCALAPACK = ${HOME}/code/scalapack/scalapack_gnu64/libscalapack.a
+
+
+# compile flags
+# -------------
+
 BOUNDS = -fbounds-check
 WARN = #-Wall
 DEBUG = -pg -g -fbacktrace -fsignaling-nans -ffpe-trap=zero,invalid#,overflow#,underflow
-F90 = gfortran
+F90 = mpif90 #gfortran
 MOD_LOC = -Jmod
 
-#FRANKLIN
+
+# franklin
+# --------
+
 ifeq (${HOME},/global/homes/g/greendl1)
 BLAS = 
 LAPACK =  
@@ -37,7 +58,8 @@ F90 = ftn
 MOD_LOC = -module mod
 endif
 
-LIBS = ${BLAS} ${LAPACK} ${NETCDF}
+# the order of linking libs is important
+LIBS = ${SCALAPACK} ${BLACS} ${BLAS} ${LAPACK} ${NETCDF} 
 INC_DIR = 
 
 F90FLAGS = ${WARN} ${DEBUG} ${BOUNDS} ${MOD_LOC} 
@@ -147,7 +169,8 @@ ${OBJ_DIR}/mat_fill.o: \
 		${OBJ_DIR}/rotation.o \
 		${OBJ_DIR}/constants.o \
 		${OBJ_DIR}/profiles.o \
-		${OBJ_DIR}/bField.o
+		${OBJ_DIR}/bField.o \
+		${OBJ_DIR}/parallel.o
 
 ${OBJ_DIR}/antenna.o: \
 		${OBJ_DIR}/grid.o \
@@ -162,6 +185,9 @@ ${OBJ_DIR}/write_data.o: \
 ${OBJ_DIR}/fourier.o: \
 		${OBJ_DIR}/aorsa2din_mod.o \
 		${OBJ_DIR}/grid.o
+
+${OBJ_DIR}/solve.o: \
+		${OBJ_DIR}/parallel.o
 
 clean:
 	rm $(EXEC) $(OBJ_DIR)/*.o $(MOD_DIR)/*.mod
