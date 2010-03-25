@@ -105,7 +105,7 @@ program aorsa2dMain
     write(*,*) 'Solving complex linear system'
 
     call init_parallel_aMat ()
-    call solve_lsq ()
+    call solve_lsq_parallel ()
     call extract_coeffs ()    
 
 

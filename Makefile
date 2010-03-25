@@ -176,7 +176,8 @@ ${OBJ_DIR}/antenna.o: \
 		${OBJ_DIR}/grid.o \
 		${OBJ_DIR}/aorsa2din_mod.o \
 		${OBJ_DIR}/constants.o \
-		${OBJ_DIR}/profiles.o
+		${OBJ_DIR}/profiles.o \
+		${OBJ_DIR}/parallel.o
 
 ${OBJ_DIR}/write_data.o: \
 		${OBJ_DIR}/mat_fill.o \

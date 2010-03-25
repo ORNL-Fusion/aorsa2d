@@ -3,7 +3,7 @@ module parallel
 implicit none
 
 integer :: iContext, nProcs, iAm, myRow, myCol
-integer :: descriptor_aMat( 50 ), descriptor_brhs( 50 )
+integer :: descriptor_aMat( 9 ), descriptor_brhs( 9 )
 integer :: rowStartProc, colStartProc
 integer :: rowBlockSize, colBlockSize
 integer :: nRow, nCol, nRowLocal, nColLocal
@@ -16,6 +16,8 @@ contains
         only: npRow, npCol, nPtsX, nPtsY, nModesX, nModesY
 
         implicit none
+
+        integer, external :: numRoC
 
         nRow    = nPtsX*nPtsY*3
         nCol    = nModesX*nModesY*3
@@ -30,11 +32,6 @@ contains
         rowStartProc    = 0
         colStartProc    = 0
 
-        ! local array sizes
-
-        nRowLocal   = rowBlockSize + mod ( nRow, rowBlockSize )
-        nColLocal   = colBlockSize + mod ( nCol, colBlockSize )
-
         call blacs_pInfo ( iAm, nProcs )
 
         write(*,*) 'proc id: ', iAm, nProcs
@@ -47,10 +44,16 @@ contains
             call blacs_setup ( iAm, nProcs )
 
         endif
-        write(*,*) npRow, npCol
+ 
         call blacs_get ( -1, 0, iContext )
         call blacs_gridInit ( iContext, 'Row-major', npRow, npCol )
         call blacs_gridInfo ( iContext, npRow, npCol, myRow, myCol )
+
+        ! local array sizes as determined by scalapack routine 
+        ! numRoC
+
+        nRowLocal   = numRoC ( nRow, rowBlockSize, myRow, rowStartProc, npRow )
+        nColLocal   = numRoC ( nCol, colBlockSize, myCol, colStartProc, npCol )
 
         if ( myRow == -1 ) then 
 
@@ -63,6 +66,7 @@ contains
         write(*,*) '--------------'
         write(*,*) 'nRow, nCol: ', nRow, nCol
         write(*,*) 'npRow, npCol: ', npRow, npCol
+        write(*,*) 'myRow, myCol: ', myRow, myCol
         write(*,*) 'block size: ', rowBlockSize, colBlockSize 
         write(*,*) 'local amat size: ', nRowLocal, nColLocal
 
@@ -76,21 +80,18 @@ contains
 
         implicit none
 
-        integer :: iRowSrc, iColSrc, info, lld
-
-        iRowSrc = 0
-        iColSrc = 0
+        integer :: info, lld
 
         lld = nRowLocal 
 
         call descInit ( descriptor_aMat, &
             nRow, nCol, rowBlockSize, colBlockSize, &
-            iRowSrc, iColSrc, iContext, lld, info )
+            rowStartProc, colStartProc, iContext, lld, info )
 
         write(*,*) 'init desc amat status: ', info
 
         call descInit ( descriptor_brhs, &
-            nCol, 1, colBlockSize, 1, iRowSrc, iColSrc, &
+            nRow, 1, rowBlockSize, colBlockSize, rowStartProc, colStartProc, &
             iContext, lld, info )
 
         write(*,*) 'init desc brhs status: ', info

@@ -69,7 +69,7 @@ contains
     subroutine solve_lsq_parallel ()
 
         use aorsa2din_mod, &
-        only: nPtsX, nPtsY, nModesX, nModesY
+        only: nPtsX, nPtsY, nModesX, nModesY, npRow, npCol
         use mat_fill, &
         only: aMat
         use antenna, &
@@ -78,22 +78,83 @@ contains
 
         implicit none
 
-        character(len=1) :: trans
+        character :: trans
         integer :: m, n, nrhs
-        complex :: a
         integer :: ia, ja
         complex :: b
         integer :: ib, jb
         complex, allocatable :: work(:)
         integer :: lWork, info
+        integer :: ltau, lwf, lws, MpA0, NqA0, NRHSqB0, MpB0
+        integer :: IROFFA, IAROW, IACOL, IROFFB, IBROW, IBCOL
+        integer :: mb_a, nb_a, csrc_a, csrc_b, icoffa, mb_b
+        integer :: icoffb, nb_b, Npb0, rsrc_a, rsrc_b
+
+        integer, external :: ILCM, NUMROC, INDXG2P
 
         trans   = 'N'
 
+        mb_a    = rowBlockSize
+        nb_a    = colBlockSize
+
+        mb_b    = rowBlockSize
+        nb_b    = 1
+
+        rsrc_a  = rowStartProc
+        csrc_a  = colStartProc
+       
+        rsrc_b  = rowStartProc 
+        csrc_b  = colStartProc
+
+        m   = nRow
+        n   = nCol
+        nrhs    = 1
+        ia  = 1!myRow * rowBlockSize + 1
+        ja  = 1!myCol * colBlockSize + 1 
+        ib  = 1!myRow * rowBlockSize + 1
+        jb  = 1
+
+        iroffa  = mod( ia-1, mb_a )
+        icoffa  = mod( ja-1, nb_a )
+        iarow   = indxg2p( ia, mb_a, myRow, rsrc_a, npRow )
+        iacol   = indxg2p( ja, nb_a, myCol, csrc_a, npCol )
+        MpA0    = numroc( m+iroffa, mb_a, myrow, iarow, nprow )
+        NqA0    = numroc( n+icoffa, nb_a, mycol, iacol, npcol )
+
+        iroffb  = mod( ib-1, mb_b )
+        icoffb  = mod( jb-1, nb_b )
+        ibrow   = indxg2p( ib, mb_b, myRow, rsrc_b, npRow )
+        ibcol   = indxg2p( jb, nb_b, myCol, csrc_b, npCol )
+        Mpb0    = numroc( m+iroffb, mb_b, myRow, ibrow, npRow )
+        Npb0    = numroc( n+iroffb, mb_b, myRow, ibrow, npRow )
+        nrhsqb0 = numroc( nrhs+icoffb, nb_b, myCol, ibcol, npCol )
+
+        ltau    = numroc( ja+min(m,n)-1, nb_a, myCol, csrc_a, npCol )
+        lwf     = nb_a * ( Mpa0 + Nqa0 + nb_a )
+        lws     = max( (nb_a*(nb_a-1))/2, (nrhsqb0 + Mpb0)*nb_a ) + &
+                    nb_a * nb_a
+
+        lWork   = ltau + max ( lwf, lws )
+
+        write(*,*) 'lWork: ', lwork
         allocate ( work ( lWork ) )
 
-        call pcgels ( trans, m, n, nrhs, a, ia, ja, descriptor_aMat, &
-                    b, ib, jb, descriptor_brhs, work, lWork, info ) 
+        write(*,*) trans, m, n, nrhs, ia, ja, ib, jb, lwork
 
+        write(*,*) descriptor_aMat
+        write(*,*) descriptor_brhs
+
+        write(*,*) 'amat-------------------'
+        write(*,*) aMat
+        write(*,*) 'brhs-------------------'
+        write(*,*) brhs
+        write(*,*) '------------------------'
+        call pcgels ( trans, m, n, nrhs, aMat, ia, ja, descriptor_aMat, &
+                    brhs, ib, jb, descriptor_brhs, work, lWork, info ) 
+        
+        write(*,*) 'pcgels status: ', info
+        write(*,*) 'actual/optimal lwork: ', lwork, work(1)
+        write(*,*) brhs
         deallocate ( work )
 
     end subroutine solve_lsq_parallel

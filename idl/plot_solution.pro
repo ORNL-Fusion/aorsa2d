@@ -51,7 +51,7 @@ pro plot_solution
 		ebk	= complex ( ebk_re, eb_im )
 
 	ncdf_close, cdfId
-
+stop
 	window, 0
 	!p.multi = [0,3,2]
 	!p.background = 255

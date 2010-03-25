@@ -52,6 +52,7 @@ contains
         !   see http://www.netlib.org/scalapack/slug/node76.html
 
         integer :: l_sp, m_sp, pr_sp, pc_sp, x_sp, y_sp
+        integer :: localRow, localCol
 
 
         write(*,*) 'Filling aMat, size: ', &
@@ -59,17 +60,18 @@ contains
 
         !allocate ( aMat(nPtsX*nPtsY*3,nModesX*nModesY*3) ) 
         allocate ( aMat(nRowLocal,nColLocal) )
+        aMat    = 0
 
         i_loop: &
         do i=1,nPtsX
 
-            !   progress indicator
-            !   ------------------
+            !!   progress indicator
+            !!   ------------------
 
-            do p=1,7 
-                write(*,'(a)',advance='no') char(8)
-            enddo
-            write(*,'(1x,f5.1,a)',advance='no') real(i)/nPtsX*100, '%'
+            !do p=1,7 
+            !    write(*,'(a)',advance='no') char(8)
+            !enddo
+            !write(*,'(1x,f5.1,a)',advance='no') real(i)/nPtsX*100, '%'
 
             j_loop: &
             do j=1,nPtsY
@@ -92,7 +94,9 @@ contains
 
                                 ! scalapack indicies for 2D block cyclic data format
                                 ! see http://www.netlib.org/scalapack/slug/node76.html
-
+                                !       and
+                                ! http://acts.nersc.gov/scalapack/hands-on/example4.html
+ 
                                 pr_sp   = mod ( rowStartProc + (iRow-1+ii)/rowBlockSize, npRow )
                                 pc_sp   = mod ( colStartProc + (iCol-1+jj)/colBlockSize, npCol )
 
@@ -190,7 +194,7 @@ contains
                                     rny = xkysav(m) / xk0
                                     rnPhi = xkphi(i) / xk0
 
-                                    if (ii==0 .and. jj==0) &
+                                    !if (ii==0 .and. jj==0) &
                                     dxx = (xkxx - rny**2 - rnphi**2) * uxx(i,j) &
                                         +  xkyx * uyx(i,j) &
                                         +  xkzx * uzx(i,j) &
@@ -201,7 +205,7 @@ contains
                                         - zi * rnx / xk0 * dyuxy(i,j) &
                                         + 1. / xk0**2 * (dyyuxx(i,j) - dxyuxy(i,j))
 
-                                    if (ii==1 .and. jj==0) &
+                                    !if (ii==1 .and. jj==0) &
                                     dxy =  xkxy * uxx(i,j) &
                                         + (xkyy - rny**2 - rnphi**2) * uyx(i,j) &
                                         +  xkzy * uzx(i,j) &
@@ -212,7 +216,7 @@ contains
                                         - zi * rnx / xk0 * dyuyy(i,j) &
                                         + 1. / xk0**2 * (dyyuyx(i,j) - dxyuyy(i,j))
 
-                                    if (ii==2 .and. jj==0) &
+                                    !if (ii==2 .and. jj==0) &
                                     dxz =  xkxz * uxx(i,j) &
                                         +  xkyz * uyx(i,j) &
                                         + (xkzz - rny**2 - rnphi**2) * uzx(i,j) &
@@ -223,7 +227,7 @@ contains
                                         - zi * rnx / xk0 * dyuzy(i,j) &
                                         + 1. / xk0**2 * (dyyuzx(i,j) - dxyuzy(i,j))
 
-                                    if (ii==0 .and. jj==1) &
+                                    !if (ii==0 .and. jj==1) &
                                     dyx = (xkxx - rnx**2 - rnphi**2) * uxy(i,j) &
                                         +  xkyx * uyy(i,j) &
                                         +  xkzx * uzy(i,j) &
@@ -236,7 +240,7 @@ contains
                                         + 1. / xk0**2 * (dxxuxy(i,j) - dxyuxx(i,j) &
                                         - dyuxx(i,j)/ capr(i) + dxuxy(i,j) / capr(i))
 
-                                    if (ii==1 .and. jj==1) &
+                                    !if (ii==1 .and. jj==1) &
                                     dyy =  xkxy * uxy(i,j) &
                                         + (xkyy - rnx**2 - rnphi**2) * uyy(i,j) &
                                         +  xkzy * uzy(i,j) &
@@ -249,7 +253,7 @@ contains
                                         + 1. / xk0**2 * (dxxuyy(i,j) - dxyuyx(i,j) &
                                         - dyuyx(i,j)/ capr(i) + dxuyy(i,j) / capr(i))
 
-                                    if (ii==2 .and. jj==1) &
+                                    !if (ii==2 .and. jj==1) &
                                     dyz =  xkxz * uxy(i,j) &
                                         +  xkyz * uyy(i,j) &
                                         + (xkzz - rnx**2 - rnphi**2) * uzy(i,j) &
@@ -262,7 +266,7 @@ contains
                                         + 1. / xk0**2 * (dxxuzy(i,j) - dxyuzx(i,j) &
                                         - dyuzx(i,j)/ capr(i) + dxuzy(i,j) / capr(i))
 
-                                    if (ii==0 .and. jj==2) &
+                                    !if (ii==0 .and. jj==2) &
                                     dzx = (xkxx - rnx**2 - rny**2) * uxz(i,j) &
                                         +  xkyx * uyz(i,j) &
                                         +  xkzx * uzz(i,j) &
@@ -276,7 +280,7 @@ contains
                                            (uxz(i,j)/ capr(i) - dxuxz(i,j)) &
                                         + 1. / xk0**2  * (dxxuxz(i,j) + dyyuxz(i,j))
 
-                                    if (ii==1 .and. jj==2) &
+                                    !if (ii==1 .and. jj==2) &
                                     dzy =  xkxy * uxz(i,j) &
                                         + (xkyy - rnx**2 - rny**2) * uyz(i,j) &
                                         +  xkzy * uzz(i,j) &
@@ -290,7 +294,7 @@ contains
                                            (uyz(i,j)/ capr(i) - dxuyz(i,j)) &
                                         + 1. / xk0**2  * (dxxuyz(i,j) + dyyuyz(i,j))
 
-                                    if (ii==2 .and. jj==2) &
+                                    !if (ii==2 .and. jj==2) &
                                     dzz =  xkxz * uxz(i,j) &
                                         +  xkyz * uyz(i,j) &
                                         + (xkzz - rnx**2 - rny**2) * uzz(i,j) &
@@ -313,17 +317,22 @@ contains
                                     x_sp    = mod ( iRow-1+ii, rowBlockSize ) + 1
                                     y_sp    = mod ( iCol-1+jj, colBlockSize ) + 1
 
-                                    if (ii==0 .and. jj==0) aMat(x_sp,y_sp) = cexpkxky * dxx  
-                                    if (ii==1 .and. jj==0) aMat(x_sp,y_sp) = cexpkxky * dxy  
-                                    if (ii==2 .and. jj==0) aMat(x_sp,y_sp) = cexpkxky * dxz  
+                                    localRow    = l_sp*rowBlockSize+x_sp
+                                    localCol    = m_sp*colBlockSize+y_sp
+
+                                    !write(*,*) iRow+ii, iCol+jj, l_sp, m_sp, pr_sp, pc_sp, x_sp, y_sp, localRow, localCol
+
+                                    if (ii==0 .and. jj==0) aMat(localRow,localCol) = cexpkxky * dxx  
+                                    if (ii==1 .and. jj==0) aMat(localRow,localCol) = cexpkxky * dxy  
+                                    if (ii==2 .and. jj==0) aMat(localRow,localCol) = cexpkxky * dxz  
                                
-                                    if (ii==0 .and. jj==1) aMat(x_sp,y_sp) = cexpkxky * dyx  
-                                    if (ii==1 .and. jj==1) aMat(x_sp,y_sp) = cexpkxky * dyy  
-                                    if (ii==2 .and. jj==1) aMat(x_sp,y_sp) = cexpkxky * dyz  
+                                    if (ii==0 .and. jj==1) aMat(localRow,localCol) = cexpkxky * dyx  
+                                    if (ii==1 .and. jj==1) aMat(localRow,localCol) = cexpkxky * dyy  
+                                    if (ii==2 .and. jj==1) aMat(localRow,localCol) = cexpkxky * dyz  
                                
-                                    if (ii==0 .and. jj==2) aMat(x_sp,y_sp) = cexpkxky * dzx  
-                                    if (ii==1 .and. jj==2) aMat(x_sp,y_sp) = cexpkxky * dzy  
-                                    if (ii==2 .and. jj==2) aMat(x_sp,y_sp) = cexpkxky * dzz  
+                                    if (ii==0 .and. jj==2) aMat(localRow,localCol) = cexpkxky * dzx  
+                                    if (ii==1 .and. jj==2) aMat(localRow,localCol) = cexpkxky * dzy  
+                                    if (ii==2 .and. jj==2) aMat(localRow,localCol) = cexpkxky * dzz  
 
                                     !!   boundary conditions
                                     !!   -------------------
@@ -356,10 +365,10 @@ contains
             enddo j_loop
         enddo i_loop 
 
-        write(*,*) 
-        do i=1,nRowLocal
-            write(*,*) i,aMat(i,:)
-        enddo
+        !write(*,*) 
+        !do i=1,nRowLocal
+        !    write(*,*) real ( aMat(i,:) )
+        !enddo
     end subroutine amat_fill
 
 end module mat_fill

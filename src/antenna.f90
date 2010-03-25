@@ -12,16 +12,25 @@ contains
     subroutine init_brhs ()
 
         use aorsa2din_mod, &
-        only: rAnt, nPtsX, nPtsY
+        only: rAnt, nPtsX, nPtsY, npRow, npCol
         use grid
         use constants
         use profiles
+        use parallel
 
         implicit none
 
-        integer :: i, j, iRow
+        integer :: i, j, iRow, iCol
 
-        allocate ( brhs(nPtsX*nPtsY*3) )
+        ! scalapack index variables
+
+        integer :: pr_sp, pc_sp, l_sp, m_sp, x_sp, y_sp
+        integer :: localRow, localCol, ii, jj
+
+        !allocate ( brhs(nPtsX*nPtsY*3) )
+        allocate ( brhs(nRowLocal) )
+        brhs    = 0
+
         allocate ( &
             xjx(nPtsX,nPtsY), &
             xjy(nPtsX,nPtsY), &
@@ -67,13 +76,44 @@ contains
 
                 iRow = (j-1) * 3 + (i-1) * nPtsY * 3 + 1
 
-                brhs(iRow)      = xjx(i,j)
-                brhs(iRow+1)    = xjy(i,j)
-                brhs(iRow+2)    = xjz(i,j)
+                do ii = 0, 2
+
+                    !   2D (with only 1 col) block cyclic storage, see:
+                    !   http://www.netlib.org/scalapack/slug/node76.html
+                    !       and
+                    !   http://acts.nersc.gov/scalapack/hands-on/example4.html
+                    !
+                    !   note that brhs is distributed only in col 0 of the 
+                    !   process grid. All other columns possess an empty
+                    !   local portion of brhs
+
+                    iCol    = 1 
+                    jj      = 0
+                    l_sp    = ( iRow-1+ii ) / ( npRow * rowBlockSize )
+                    m_sp    = ( iCol-1+jj ) / ( npCol * colBlockSize )
+
+                    pr_sp   = mod ( rowStartProc + (iRow-1+ii)/rowBlockSize, npRow )
+                    pc_sp   = mod ( colStartProc + (iCol-1+jj)/colBlockSize, npCol )
+
+                    x_sp    = mod ( iRow-1+ii, rowBlockSize ) + 1
+                    y_sp    = mod ( iCol-1+jj, colBlockSize ) + 1
+
+                    localRow    = l_sp*rowBlockSize+x_sp
+                    localCol    = m_sp*colBlockSize+y_sp
+
+                    if (myRow==pr_sp .and. myCol==pc_sp) then
+
+                        if (ii==0) brhs(localRow)    = xjx(i,j)
+                        if (ii==1) brhs(localRow)    = xjy(i,j)
+                        if (ii==2) brhs(localRow)    = xjz(i,j)
+
+                    endif
+
+                enddo
 
             enddo
         enddo
-
+        
     end subroutine
 
 end module antenna
