@@ -3,7 +3,7 @@ module antenna
 implicit none
 
 real :: antSigX, antSigY
-complex, allocatable :: brhs(:)
+complex, allocatable :: brhs(:), brhs_global(:)
 complex, allocatable, dimension(:,:) :: &
     xjx, xjy, xjz
 
@@ -27,9 +27,11 @@ contains
         integer :: pr_sp, pc_sp, l_sp, m_sp, x_sp, y_sp
         integer :: localRow, localCol, ii, jj
 
-        !allocate ( brhs(nPtsX*nPtsY*3) )
+        allocate ( brhs_global(nPtsX*nPtsY*3) )
         allocate ( brhs(nRowLocal) )
-        brhs    = 0
+
+        brhs        = 0
+        brhs_global = 0
 
         allocate ( &
             xjx(nPtsX,nPtsY), &

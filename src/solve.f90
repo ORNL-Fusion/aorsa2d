@@ -73,7 +73,7 @@ contains
         use mat_fill, &
         only: aMat
         use antenna, &
-        only: brhs
+        only: brhs, brhs_global
         use parallel
 
         implicit none
@@ -91,6 +91,8 @@ contains
         integer :: icoffb, nb_b, Npb0, rsrc_a, rsrc_b
 
         integer, external :: ILCM, NUMROC, INDXG2P
+
+        integer :: ii, gg
 
         trans   = 'N'
 
@@ -156,6 +158,32 @@ contains
         write(*,*) 'actual/optimal lwork: ', lwork, work(1)
         write(*,*) brhs
         deallocate ( work )
+
+        !   Gather the solution vector from all processors by
+        !   creating a global solution vector of the full, not
+        !   local size, and have each proc fill in its piece.
+        !   Then do a global sum on all procs such that all procs
+        !   will have a complete copy of the solution.
+        !   NOT SURE IF THIS WILL WORK FOR A NON 2x2 grid yet.
+
+        if (myCol==0) then 
+            do ii=1,nRowLocal
+
+                gg   =  myRow*rowBlockSize+1 &
+                        +mod(ii-1,rowBlockSize) &
+                        +(ii-1)/rowBlockSize * npRow*rowBlockSize
+                !write(*,*) nRow, nRowLocal, &
+                !ii, myRow, rowBlockSize, ii/rowBlockSize, &
+                !    mod(ii,rowBlockSize), gg
+                brhs_global(gg) = brhs(ii)
+
+            enddo
+        endif
+
+        call cgSum2D ( iContext, 'All', ' ', nRow, 1, &
+                brhs_global, nRow, -1, -1 )
+
+        write(*,*) brhs_global
 
     end subroutine solve_lsq_parallel
 
