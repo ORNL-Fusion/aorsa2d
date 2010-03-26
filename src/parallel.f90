@@ -34,7 +34,7 @@ contains
 
         call blacs_pInfo ( iAm, nProcs )
 
-        write(*,*) 'proc id: ', iAm, nProcs
+        !write(*,*) 'proc id: ', iAm, nProcs
 
         if ( nProcs <= 1 ) then 
 
@@ -44,7 +44,23 @@ contains
             call blacs_setup ( iAm, nProcs )
 
         endif
+
+        if ( nProcs /= npRow*npCol ) then 
+
+            write(*,*)
+            write(*,*)
+            write(*,*) 'CONFIG ERROR:'
+            write(*,*) '-------------'
+            write(*,*) '    nProcs /= npRow * npCol'
+            write(*,*) '    Please correct and re-run'
+            write(*,*) '    Have a nice day :)'
+            write(*,*)
+            write(*,*)
  
+            return  
+                    
+        endif
+
         call blacs_get ( -1, 0, iContext )
         call blacs_gridInit ( iContext, 'Row-major', npRow, npCol )
         call blacs_gridInfo ( iContext, npRow, npCol, myRow, myCol )
@@ -62,13 +78,14 @@ contains
 
         endif
 
-        write(*,*) 'Parallel info:'
-        write(*,*) '--------------'
-        write(*,*) 'nRow, nCol: ', nRow, nCol
-        write(*,*) 'npRow, npCol: ', npRow, npCol
-        write(*,*) 'myRow, myCol: ', myRow, myCol
-        write(*,*) 'block size: ', rowBlockSize, colBlockSize 
-        write(*,*) 'local amat size: ', nRowLocal, nColLocal
+        if (iAm==0) then 
+            write(*,*) 'Parallel info:'
+            write(*,*) '    nRow, nCol:      ', nRow, nCol
+            write(*,*) '    npRow, npCol:    ', npRow, npCol
+            write(*,*) '    myRow, myCol:    ', myRow, myCol
+            write(*,*) '    block size:      ', rowBlockSize, colBlockSize 
+            write(*,*) '    local amat size: ', nRowLocal, nColLocal
+        endif
 
     end subroutine init_procGrid
 
@@ -88,15 +105,24 @@ contains
             nRow, nCol, rowBlockSize, colBlockSize, &
             rowStartProc, colStartProc, iContext, lld, info )
 
-        write(*,*) 'init desc amat status: ', info
+        !write(*,*) 'init desc amat status: ', info
 
         call descInit ( descriptor_brhs, &
             nRow, 1, rowBlockSize, colBlockSize, rowStartProc, colStartProc, &
             iContext, lld, info )
 
-        write(*,*) 'init desc brhs status: ', info
+        !write(*,*) 'init desc brhs status: ', info
 
     end subroutine init_parallel_aMat 
 
+
+    subroutine release_grid ()
+
+        implicit none
+
+        call blacs_gridExit ( iContext )
+        call blacs_exit ( 0 )
+
+    end subroutine release_grid
 
 end module parallel

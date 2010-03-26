@@ -55,8 +55,11 @@ contains
         integer :: localRow, localCol
 
 
-        write(*,*) 'Filling aMat, size: ', &
-            nPtsX*nPtsY*3*nModesX*nModesY*3*2*8.0 / 1024.0**2
+        if (iAm == 0) &
+        write(*,100), &
+            nPtsX*nPtsY*3*nModesX*nModesY*3*2*8.0 / 1024.0**2, &
+            nRowLocal*nColLocal*2*8.0 / 1024.0**2
+        100 format (' Filling aMat [global size: ',f4.1,' MB, local size: ',f4.1' MB]')
 
         !allocate ( aMat(nPtsX*nPtsY*3,nModesX*nModesY*3) ) 
         allocate ( aMat(nRowLocal,nColLocal) )

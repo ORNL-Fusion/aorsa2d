@@ -64,6 +64,7 @@ contains
         use aorsa2din_mod, &
         only: nModesX, nModesY, xkperp_cutoff
         use constants
+        use parallel
 
         implicit none
 
@@ -74,8 +75,10 @@ contains
         kyL = -nModesY/2
         kyR =  nModesY/2
 
-        write(*,*) 'kx: ', kxL, kxR
-        write(*,*) 'ky: ', kyL, kyR
+        if (iAm==0) then
+            write(*,*) '    kx: ', kxL, kxR
+            write(*,*) '    ky: ', kyL, kyR
+        endif
 
         allocate ( &
             xkxsav (kxL:kxR), &

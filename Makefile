@@ -114,7 +114,8 @@ ${OBJ_DIR}/aorsa2dMain.o: \
 		${OBJ_DIR}/rotation.o \
 		${OBJ_DIR}/mat_fill.o \
 		${OBJ_DIR}/antenna.o \
-		${OBJ_DIR}/solve.o
+		${OBJ_DIR}/solve.o \
+		${OBJ_DIR}/timer.o
 
 ${OBJ_DIR}/eqdsk_dlg.o: \
 		${OBJ_DIR}/dlg.o \

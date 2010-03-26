@@ -138,25 +138,26 @@ contains
 
         lWork   = ltau + max ( lwf, lws )
 
-        write(*,*) 'lWork: ', lwork
         allocate ( work ( lWork ) )
 
-        write(*,*) trans, m, n, nrhs, ia, ja, ib, jb, lwork
+        !write(*,*) trans, m, n, nrhs, ia, ja, ib, jb, lwork
 
-        write(*,*) descriptor_aMat
-        write(*,*) descriptor_brhs
+        !write(*,*) descriptor_aMat
+        !write(*,*) descriptor_brhs
 
-        write(*,*) 'amat-------------------'
-        write(*,*) aMat
-        write(*,*) 'brhs-------------------'
-        write(*,*) brhs
-        write(*,*) '------------------------'
+        !write(*,*) 'amat-------------------'
+        !write(*,*) aMat
+        !write(*,*) 'brhs-------------------'
+        !write(*,*) brhs
+        !write(*,*) '------------------------'
         call pcgels ( trans, m, n, nrhs, aMat, ia, ja, descriptor_aMat, &
                     brhs, ib, jb, descriptor_brhs, work, lWork, info ) 
-        
-        write(*,*) 'pcgels status: ', info
-        write(*,*) 'actual/optimal lwork: ', lwork, work(1)
-        write(*,*) brhs
+       
+        if (iAm==0) then 
+            write(*,*) '    pcgels status: ', info
+            write(*,*) '    actual/optimal lwork: ', lwork, real(work(1))
+        endif
+
         deallocate ( work )
 
         !   Gather the solution vector from all processors by
@@ -183,7 +184,7 @@ contains
         call cgSum2D ( iContext, 'All', ' ', nRow, 1, &
                 brhs_global, nRow, -1, -1 )
 
-        write(*,*) brhs_global
+        !write(*,*) brhs_global
 
     end subroutine solve_lsq_parallel
 
@@ -195,7 +196,7 @@ contains
         use aorsa2din_mod, &
         only: nPtsX, nPtsY, nModesX, nModesY
         use antenna, &
-        only: brhs
+        only: brhs_global
  
         implicit none
 
@@ -215,9 +216,9 @@ contains
 
                 iRow = (m-kyL) * 3 + (n-kxL) * nModesY * 3 + 1
         
-                ealphak(n,m)    = brhs(iRow)
-                ebetak(n,m)     = brhs(iRow+1)
-                eBk(n,m)        = brhs(iRow+2)
+                ealphak(n,m)    = brhs_global(iRow)
+                ebetak(n,m)     = brhs_global(iRow+1)
+                eBk(n,m)        = brhs_global(iRow+2)
 
             enddo
         enddo

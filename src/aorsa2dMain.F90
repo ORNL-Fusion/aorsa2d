@@ -15,20 +15,37 @@ program aorsa2dMain
     use antenna
     use solve
     use parallel
-        
+    use timer_mod
+
     implicit none
+
+    type ( timer ) :: tFill, tSolve, tTotal
+
+    call start_timer ( tTotal )
 
 
 !   read namelist input data
 !   ------------------------
 
+    if (iAm==0) &
     write(*,*) 'Reading namelist'
 
     call read_nameList ()
 
+
+!   initialise the parallel env
+!   ---------------------------
+
+    if (iAm==0) &
+    write(*,*) 'Initialising the parallel environment'
+
+    call init_procGrid ()
+
+
 !   initialise the spatial grid
 !   ---------------------------
 
+    if (iAm==0) &
     write(*,*) 'Creating spatial grid'
 
     call init_grid ()
@@ -36,6 +53,7 @@ program aorsa2dMain
 !   read g-eqdsk file
 !   -----------------
 
+    if (iAm==0) &
     write(*,*) 'Reading eqdsk'
 
     !call read_geqdsk ( eqdsk, plot = .false. )
@@ -46,6 +64,7 @@ program aorsa2dMain
 !   setup profiles
 !   --------------
 
+    if (iAm==0) &
     write(*,*) 'Profile setup'
     
     call init_profiles ()
@@ -54,6 +73,7 @@ program aorsa2dMain
 !   calculate rotation matrix U
 !   ---------------------------
 
+    if (iAm==0) &
     write(*,*) 'Building rotation matrix U'
 
     call init_rotation ()
@@ -70,23 +90,23 @@ program aorsa2dMain
     call init_basis_functions () 
 
 
-!   initialise the parallel env
-!   ---------------------------
-
-    write(*,*) 'Initialising the parallel environment'
-
-    call init_procGrid ()
-
 
 !   Load x, y and z equations for spatial point (i,j) and mode number (n,m)
 !   ------------------------------------------------------------------------
 
+    call start_timer ( tFill )
+
     call aMat_fill ()
+
+    if (iAm==0) &
+    write(*,*) 'Time to fill aMat: ', end_timer ( tFill )
+
     call write_amat ( 'amat.nc' )
 
 !   Antenna current
 !   ---------------
 
+    if (iAm==0) &
     write(*,*) 'Building antenna current (brhs)'
 
     call init_brhs ()
@@ -94,6 +114,7 @@ program aorsa2dMain
 !   Write the run input data to disk
 !   --------------------------------
 
+    if (iAm==0) &
     write(*,*) 'Writing run input data to file'
 
     call write_runData ( 'runData.nc' )
@@ -102,10 +123,20 @@ program aorsa2dMain
 !   Solve complex, linear system
 !   ----------------------------
 
+    if (iAm==0) &
     write(*,*) 'Solving complex linear system'
 
     call init_parallel_aMat ()
+
+    call start_timer ( tSolve )
+
     call solve_lsq_parallel ()
+
+    if (iAm==0) &
+    write(*,*) 'Time to solve: ', end_timer ( tSolve )
+
+    !call blacs_barrier ( iContext, 'A' )
+    call release_grid ()
     call extract_coeffs ()    
 
 
@@ -113,6 +144,7 @@ program aorsa2dMain
 !   to real space
 !   -------------------------------------------
 
+    if (iAm==0) &
     write(*,*) 'Inverse Fourier transforming the k coeffs'
 
     call sftInv2d ( ealphak, f = ealpha )
@@ -123,8 +155,10 @@ program aorsa2dMain
 !   Write data to file
 !   ------------------
 
+    if (iAm==0) &
     write(*,*) 'Writing solution to file'
 
+    if ( iAm == 0 ) &
     call write_solution ( 'solution.nc' )
 
 !
@@ -153,6 +187,10 @@ program aorsa2dMain
 !         end do
 !      end do
 !
+
+    if (iAm==0) &
+    write(*,*) 'Total time: ', end_timer ( tTotal )
+
 end program aorsa2dMain
 
 
