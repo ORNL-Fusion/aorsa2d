@@ -41,7 +41,7 @@ contains
         !   note curden is in Amps per meter of toroidal length (2.*pi*rt).
 
         antSigX = 0.1
-        antSigY = 0.9
+        antSigY = 0.3
 
         do i = 1, nPtsX
             do j = 1, nPtsY
@@ -66,8 +66,8 @@ contains
            enddo
         enddo
 
-        !xjy = 0
-        !xjy(nPtsX/2,nPtsY/2)    = 1
+        xjy = 0
+        xjy(nPtsX/2,nPtsY/2)    = 1
 
         xjx = -zi / omgrf / eps0 * xjx
         xjy = -zi / omgrf / eps0 * xjy

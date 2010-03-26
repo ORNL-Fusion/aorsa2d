@@ -55,8 +55,8 @@ BLACS =
 NETCDF = ${NETCDF_INCLUDE_OPTS} ${NETCDF_POST_LINK_OPTS} -lnetcdf 
 BOUNDS = 
 WARN = 
-DEBUG = -g
-F90 = ftn
+DEBUG = 
+F90 = ftn -fast #-gopt -Mbounds -Mchkfpstk -Mchkptr
 MOD_LOC = -module mod
 endif
 

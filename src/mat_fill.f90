@@ -135,7 +135,11 @@ contains
                                             sigzxTmp, sigzyTmp, sigzzTmp, &
                                             delta0, 0, omgrf, xk0, &
                                             upshift, damping, xk_cutoff )
-                                        
+                                      
+                                        !if(iAm==0) &
+                                        !write(*,*) xnuomg, omgc(i,j,s), omgp2(i,j,s), &
+                                        !    xkxsav(n), xkysav(m), nphi, capr(i), omgrf
+
                                         if (iSigma==0) & ! cold plasma 
                                         call sigmaCold_stix(i, j, &
                                             xnuomg, &
@@ -160,9 +164,11 @@ contains
 
                                     enddo
 
+                                    !if(iAm==0) then
                                     !write(*,*) sigxx, sigxy, sigxz
                                     !write(*,*) sigyx, sigyy, sigyz
                                     !write(*,*) sigzx, sigzy, sigzz
+                                    !endif
 
                                     !if ( i==1 .or. i==nModesX &
                                     !        .or. j==1 .or. j==nModesY ) then
@@ -368,10 +374,12 @@ contains
             enddo j_loop
         enddo i_loop 
 
+        !if(iAm==0) then
         !write(*,*) 
         !do i=1,nRowLocal
         !    write(*,*) real ( aMat(i,:) )
         !enddo
+        !endif
     end subroutine amat_fill
 
 end module mat_fill

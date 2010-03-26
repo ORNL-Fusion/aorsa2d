@@ -27,6 +27,9 @@ contains
         rowBlockSize  = nRow / npRow
         colBlockSize  = nCol / npCol
 
+        if ( rowBlockSize >= 64 ) rowBlockSize = 64 
+        if ( colBlockSize >= 64 ) colBlockSize = 64 
+
         ! proc grid starting locations
 
         rowStartProc    = 0

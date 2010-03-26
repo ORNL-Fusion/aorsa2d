@@ -1,5 +1,7 @@
 module profiles
 
+use constants
+
 implicit none
 
 real :: omgrf, xk0
@@ -13,7 +15,6 @@ contains
 
         use aorsa2din_mod, &
         only: freqcy, nSpec, zSpecIn, amuSpecIn, tSpecIn, dSpecIn
-        use constants
 
         implicit none
 
@@ -41,7 +42,6 @@ contains
 
         use aorsa2din_mod, &
         only: nPtsX, nPtsY, nSpec
-        use constants
         use bField
 
         implicit none
