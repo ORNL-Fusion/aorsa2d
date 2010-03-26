@@ -101,7 +101,7 @@ program aorsa2dMain
     if (iAm==0) &
     write(*,*) 'Time to fill aMat: ', end_timer ( tFill )
 
-    call write_amat ( 'amat.nc' )
+    !call write_amat ( 'amat.nc' )
 
 !   Antenna current
 !   ---------------
@@ -117,6 +117,7 @@ program aorsa2dMain
     if (iAm==0) &
     write(*,*) 'Writing run input data to file'
 
+    if (iAm==0) &
     call write_runData ( 'runData.nc' )
 
 
@@ -136,7 +137,6 @@ program aorsa2dMain
     write(*,*) 'Time to solve: ', end_timer ( tSolve )
 
     !call blacs_barrier ( iContext, 'A' )
-    call release_grid ()
     call extract_coeffs ()    
 
 
@@ -146,7 +146,7 @@ program aorsa2dMain
 
     if (iAm==0) &
     write(*,*) 'Inverse Fourier transforming the k coeffs'
-
+    
     call sftInv2d ( ealphak, f = ealpha )
     call sftInv2d ( ebetak, f = ebeta )
     call sftInv2d ( eBk, f = eB )
@@ -160,6 +160,8 @@ program aorsa2dMain
 
     if ( iAm == 0 ) &
     call write_solution ( 'solution.nc' )
+
+    call release_grid ()
 
 !
 !!     ----------------------------------------------

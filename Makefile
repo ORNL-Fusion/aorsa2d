@@ -50,6 +50,8 @@ MOD_LOC = -Jmod
 ifeq (${HOME},/global/homes/g/greendl1)
 BLAS = 
 LAPACK =  
+SCALAPACK = 
+BLACS = 
 NETCDF = ${NETCDF_INCLUDE_OPTS} ${NETCDF_POST_LINK_OPTS} -lnetcdf 
 BOUNDS = 
 WARN = 
@@ -161,7 +163,8 @@ ${OBJ_DIR}/rotation.o: \
 
 ${OBJ_DIR}/grid.o: \
 		${OBJ_DIR}/constants.o \
-		${OBJ_DIR}/aorsa2din_mod.o
+		${OBJ_DIR}/aorsa2din_mod.o \
+		${OBJ_DIR}/parallel.o
 
 ${OBJ_DIR}/mat_fill.o: \
 		${OBJ_DIR}/aorsa2din_mod.o \

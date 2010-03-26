@@ -1142,7 +1142,7 @@ contains
         implicit none
         
         complex, intent(in) :: a(:,:)
-        complex, intent(out), optional, allocatable :: &
+        complex, intent(inout), optional, allocatable :: &
             f(:,:), fx(:,:), fy(:,:)
 
         complex :: cexpkxky
