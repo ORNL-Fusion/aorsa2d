@@ -66,8 +66,8 @@ contains
            enddo
         enddo
 
-        xjy = 0
-        xjy(nPtsX/2,nPtsY/2)    = 1
+        !xjy = 0
+        !xjy(nPtsX/2,nPtsY/2)    = 1
 
         xjx = -zi / omgrf / eps0 * xjx
         xjy = -zi / omgrf / eps0 * xjy

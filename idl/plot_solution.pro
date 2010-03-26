@@ -55,7 +55,7 @@ stop
 	window, 0
 	!p.multi = [0,3,2]
 	!p.background = 255
-	scale = max ( abs ( [ealpha[*],ebeta[*],eb[*]] ) ) * 1.5 
+	scale = max ( abs ( [ealpha[*],ebeta[*],eb[*]] ) ) * 0.4 
 	nLevs	= 1001 
 	device, decomposed = 0
 
