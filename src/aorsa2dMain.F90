@@ -30,6 +30,9 @@ program aorsa2dMain
     integer :: papi_irc
     real :: papi_rtime, papi_ptime, papi_mflops
     real :: papi_mflops_global
+    real :: papi_rtime_zero, papi_ptime_zero
+    real :: papi_rtime_fill, papi_rtime_solve
+    real :: papi_ptime_fill, papi_ptime_solve
     integer(kind=long) :: papi_flpins
 
     call start_timer ( tTotal )
@@ -115,10 +118,14 @@ program aorsa2dMain
     call start_timer ( tFill )
 
     call PAPIF_flops ( papi_rTime, papi_pTime, papi_flpins, papi_mflops, papi_irc )
+    papi_rTime_zero = papi_rTime
+    papi_pTime_zero = papi_pTime
 
     call aMat_fill ()
 
     call PAPIF_flops ( papi_rTime, papi_pTime, papi_flpins, papi_mflops, papi_irc )
+    papi_rTime_fill = papi_rTime - papi_rTime_zero
+    papi_pTime_fill = papi_pTime - papi_pTime_zero
 
     if (iAm==0) &
     write(*,*) 'Time to fill aMat: ', end_timer ( tFill )
@@ -132,11 +139,11 @@ program aorsa2dMain
     if (iAm==0) then
 
         write(*,*) 'PAPI data for fill'
-        write(*,'(a30,f4.1)') 'real time: ', papi_rTime
-        write(*,'(a30,f4.1)') 'proc time: ', papi_pTime
+        write(*,'(a30,f12.1)') 'real time: ', papi_rTime_fill
+        write(*,'(a30,f12.1)') 'proc time: ', papi_pTime_fill
         write(*,'(a30,i12)') 'total flpin cnt: ', papi_flpins
-        write(*,'(a30,e11.2)') 'iAm Mflops/s: ', papi_mflops
-        write(*,'(a30,e11.2)') 'global Mflops/s: ', papi_mflops_global
+        write(*,'(a30,f12.2)') 'iAm Gflops/s: ', papi_mflops / 1e3
+        write(*,'(a30,f12.2)') 'global Gflops/s: ', papi_mflops_global / 1e3
         write(*,'(a30,i1)') 'status: ', papi_irc
 
     endif
@@ -174,10 +181,14 @@ program aorsa2dMain
     call start_timer ( tSolve )
 
     call PAPIF_flops ( papi_rTime, papi_pTime, papi_flpins, papi_mflops, papi_irc )
+    papi_rTime_zero = papi_rTime
+    papi_pTime_zero = papi_pTime
 
     call solve_lsq_parallel ()
 
     call PAPIF_flops ( papi_rTime, papi_pTime, papi_flpins, papi_mflops, papi_irc )
+    papi_rTime_solve = papi_rTime - papi_rTime_zero
+    papi_pTime_solve = papi_pTime - papi_pTime_zero
 
     if (iAm==0) &
     write(*,*) 'Time to solve: ', end_timer ( tSolve )
@@ -191,11 +202,11 @@ program aorsa2dMain
     if (iAm==0) then
 
         write(*,*) 'PAPI data for solve'
-        write(*,'(a30,f4.1)') 'real time: ', papi_rTime
-        write(*,'(a30,f4.1)') 'proc time: ', papi_pTime
+        write(*,'(a30,f12.1)') 'real time: ', papi_rTime_solve
+        write(*,'(a30,f12.1)') 'proc time: ', papi_pTime_solve
         write(*,'(a30,i12)') 'total flpin cnt: ', papi_flpins
-        write(*,'(a30,e11.2)') 'iAm Mflops/s: ', papi_mflops
-        write(*,'(a30,e11.2)') 'global Mflops/s: ', papi_mflops_global
+        write(*,'(a30,f12.2)') 'iAm Gflops/s: ', papi_mflops / 1e3
+        write(*,'(a30,f12.2)') 'global Gflops/s: ', papi_mflops_global / 1e3
         write(*,'(a30,i1)') 'status: ', papi_irc
 
     endif
