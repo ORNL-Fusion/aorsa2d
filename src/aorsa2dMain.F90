@@ -141,7 +141,6 @@ program aorsa2dMain
         write(*,*) 'PAPI data for fill'
         write(*,'(a30,f12.1)') 'real time: ', papi_rTime_fill
         write(*,'(a30,f12.1)') 'proc time: ', papi_pTime_fill
-        write(*,'(a30,i12)') 'total flpin cnt: ', papi_flpins
         write(*,'(a30,f12.2)') 'iAm Gflops/s: ', papi_mflops / 1e3
         write(*,'(a30,f12.2)') 'global Gflops/s: ', papi_mflops_global / 1e3
         write(*,'(a30,i1)') 'status: ', papi_irc
@@ -204,7 +203,6 @@ program aorsa2dMain
         write(*,*) 'PAPI data for solve'
         write(*,'(a30,f12.1)') 'real time: ', papi_rTime_solve
         write(*,'(a30,f12.1)') 'proc time: ', papi_pTime_solve
-        write(*,'(a30,i12)') 'total flpin cnt: ', papi_flpins
         write(*,'(a30,f12.2)') 'iAm Gflops/s: ', papi_mflops / 1e3
         write(*,'(a30,f12.2)') 'global Gflops/s: ', papi_mflops_global / 1e3
         write(*,'(a30,i1)') 'status: ', papi_irc

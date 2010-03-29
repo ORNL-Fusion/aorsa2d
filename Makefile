@@ -53,6 +53,8 @@ ifeq (${HOME},/global/homes/g/greendl1)
 BLAS = 
 LAPACK =  
 SCALAPACK = 
+PAPI_INC = ${PAPI_INCLUDE_OPTS}  
+PAPI = ${PAPI_POST_LINK_OPTS} 
 BLACS = 
 NETCDF = ${NETCDF_INCLUDE_OPTS} ${NETCDF_POST_LINK_OPTS} -lnetcdf 
 BOUNDS = 
