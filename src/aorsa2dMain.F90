@@ -1,5 +1,5 @@
 program aorsa2dMain
-    
+   
     use constants
     use eqdsk_dlg
     use aorsasubs_mod
@@ -19,7 +19,17 @@ program aorsa2dMain
 
     implicit none
 
+    include "f90papi.h"
+
+    !   Timer variables
+
     type ( timer ) :: tFill, tSolve, tTotal
+
+    !   PAPI variables
+
+    integer :: papi_irc
+    real :: papi_rtime, papi_ptime, papi_mflips
+    integer(kind=long) :: papi_flpins
 
     call start_timer ( tTotal )
 
@@ -96,10 +106,25 @@ program aorsa2dMain
 
     call start_timer ( tFill )
 
+    call PAPIF_flops ( papi_rTime, papi_pTime, papi_flpins, papi_mflips, papi_irc )
+
     call aMat_fill ()
+
+    call PAPIF_flops ( papi_rTime, papi_pTime, papi_flpins, papi_mflips, papi_irc )
 
     if (iAm==0) &
     write(*,*) 'Time to fill aMat: ', end_timer ( tFill )
+
+    if (iAm==0) then
+
+        write(*,*) 'PAPI data for fill'
+        write(*,*) '    real time:      ', papi_rTime
+        write(*,*) '    proc time:      ', papi_pTime
+        write(*,*) '    total flop cnt: ', papi_flpins
+        write(*,*) '    Mflips/s:       ', papi_mflips
+        write(*,*) '    status:         ', papi_irc
+
+    endif
 
     !call write_amat ( 'amat.nc' )
 
@@ -131,10 +156,25 @@ program aorsa2dMain
 
     call start_timer ( tSolve )
 
+    call PAPIF_flops ( papi_rTime, papi_pTime, papi_flpins, papi_mflips, papi_irc )
+
     call solve_lsq_parallel ()
+
+    call PAPIF_flops ( papi_rTime, papi_pTime, papi_flpins, papi_mflips, papi_irc )
 
     if (iAm==0) &
     write(*,*) 'Time to solve: ', end_timer ( tSolve )
+
+    if (iAm==0) then
+
+        write(*,*) 'PAPI data for solve'
+        write(*,*) '    real time:      ', papi_rTime
+        write(*,*) '    proc time:      ', papi_pTime
+        write(*,*) '    total flop cnt: ', papi_flpins
+        write(*,*) '    Mflips/s:       ', papi_mflips
+        write(*,*) '    status:         ', papi_irc
+
+    endif
 
     !call blacs_barrier ( iContext, 'A' )
     call extract_coeffs ()    

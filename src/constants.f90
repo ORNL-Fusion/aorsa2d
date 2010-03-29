@@ -1,6 +1,7 @@
 module constants
 
     integer, parameter :: dbl = selected_real_kind ( p=13 )
+    integer, parameter :: long = selected_real_kind ( p=9 )
     real(kind=dbl), parameter :: eOverAmu = 9.58084e7
     real(kind=dbl), parameter :: mpc2 = 938271998.38
     real(kind=dbl), parameter :: c = 2.99792458e8

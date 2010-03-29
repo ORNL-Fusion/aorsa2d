@@ -32,6 +32,8 @@ BLACS = \
 	${HOME}/code/blacs/blacs_gnu64/LIB/blacsF77init_MPI-LINUX-0.a \
 	${HOME}/code/blacs/blacs_gnu64/LIB/blacs_MPI-LINUX-0.a
 SCALAPACK = ${HOME}/code/scalapack/scalapack_gnu64/libscalapack.a
+PAPI_INC = -I/usr/include 
+PAPI = -lpapi
 
 
 # compile flags
@@ -61,8 +63,8 @@ MOD_LOC = -module mod
 endif
 
 # the order of linking libs is important
-LIBS = ${SCALAPACK} ${BLACS} ${BLAS} ${LAPACK} ${NETCDF} 
-INC_DIR = 
+LIBS = ${SCALAPACK} ${BLACS} ${BLAS} ${LAPACK} ${NETCDF} ${PAPI}
+INC_DIR = ${PAPI_INC}
 
 F90FLAGS = ${WARN} ${DEBUG} ${BOUNDS} ${MOD_LOC} 
 LD_FLAGS =
