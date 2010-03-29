@@ -28,7 +28,8 @@ program aorsa2dMain
     !   PAPI variables
 
     integer :: papi_irc
-    real :: papi_rtime, papi_ptime, papi_mflips
+    real :: papi_rtime, papi_ptime, papi_mflops
+    real :: papi_mflops_global
     integer(kind=long) :: papi_flpins
 
     call start_timer ( tTotal )
@@ -60,6 +61,7 @@ program aorsa2dMain
 
     call init_grid ()
 
+
 !   read g-eqdsk file
 !   -----------------
 
@@ -71,6 +73,7 @@ program aorsa2dMain
     !call bFieldEqdsk ()
     call bFieldAnalytical ()
 
+
 !   setup profiles
 !   --------------
 
@@ -79,6 +82,7 @@ program aorsa2dMain
     
     call init_profiles ()
     call flat_profiles ()
+
 
 !   calculate rotation matrix U
 !   ---------------------------
@@ -89,44 +93,56 @@ program aorsa2dMain
     call init_rotation ()
     call deriv_rotation ()
 
+
 !   Calculate kx and ky values 
 !   --------------------------
 
+    if (iAM==0) &
+    write(*,*) 'Creating k grid'
+
     call init_k ()
 
-!   precompute basis functions xx(n,i), yy(m,j)
+
+!   Precompute basis functions xx(n,i), yy(m,j)
 !   -------------------------------------------
 
     call init_basis_functions () 
 
 
-
-!   Load x, y and z equations for spatial point (i,j) and mode number (n,m)
-!   ------------------------------------------------------------------------
+!   Fill matrix 
+!   -----------
 
     call start_timer ( tFill )
 
-    call PAPIF_flops ( papi_rTime, papi_pTime, papi_flpins, papi_mflips, papi_irc )
+    call PAPIF_flops ( papi_rTime, papi_pTime, papi_flpins, papi_mflops, papi_irc )
 
     call aMat_fill ()
 
-    call PAPIF_flops ( papi_rTime, papi_pTime, papi_flpins, papi_mflips, papi_irc )
+    call PAPIF_flops ( papi_rTime, papi_pTime, papi_flpins, papi_mflops, papi_irc )
 
     if (iAm==0) &
     write(*,*) 'Time to fill aMat: ', end_timer ( tFill )
 
+    !   sum total mflops from all procs
+
+    papi_mflops_global  = papi_mflops
+    call sgSum2D ( iContext, 'All', ' ', 1, 1, &
+                papi_mflops_global, 1, -1, -1 )
+
     if (iAm==0) then
 
         write(*,*) 'PAPI data for fill'
-        write(*,*) '    real time:      ', papi_rTime
-        write(*,*) '    proc time:      ', papi_pTime
-        write(*,*) '    total flop cnt: ', papi_flpins
-        write(*,*) '    Mflips/s:       ', papi_mflips
-        write(*,*) '    status:         ', papi_irc
+        write(*,'(a30,f4.1)') 'real time: ', papi_rTime
+        write(*,'(a30,f4.1)') 'proc time: ', papi_pTime
+        write(*,'(a30,i12)') 'total flpin cnt: ', papi_flpins
+        write(*,'(a30,e11.2)') 'iAm Mflops/s: ', papi_mflops
+        write(*,'(a30,e11.2)') 'global Mflops/s: ', papi_mflops_global
+        write(*,'(a30,i1)') 'status: ', papi_irc
 
     endif
 
     !call write_amat ( 'amat.nc' )
+
 
 !   Antenna current
 !   ---------------
@@ -135,6 +151,7 @@ program aorsa2dMain
     write(*,*) 'Building antenna current (brhs)'
 
     call init_brhs ()
+
 
 !   Write the run input data to disk
 !   --------------------------------
@@ -156,25 +173,33 @@ program aorsa2dMain
 
     call start_timer ( tSolve )
 
-    call PAPIF_flops ( papi_rTime, papi_pTime, papi_flpins, papi_mflips, papi_irc )
+    call PAPIF_flops ( papi_rTime, papi_pTime, papi_flpins, papi_mflops, papi_irc )
 
     call solve_lsq_parallel ()
 
-    call PAPIF_flops ( papi_rTime, papi_pTime, papi_flpins, papi_mflips, papi_irc )
+    call PAPIF_flops ( papi_rTime, papi_pTime, papi_flpins, papi_mflops, papi_irc )
 
     if (iAm==0) &
     write(*,*) 'Time to solve: ', end_timer ( tSolve )
 
+    !   sum total mflops from all procs
+
+    papi_mflops_global  = papi_mflops
+    call sgSum2D ( iContext, 'All', ' ', 1, 1, &
+                papi_mflops_global, 1, -1, -1 )
+
     if (iAm==0) then
 
         write(*,*) 'PAPI data for solve'
-        write(*,*) '    real time:      ', papi_rTime
-        write(*,*) '    proc time:      ', papi_pTime
-        write(*,*) '    total flop cnt: ', papi_flpins
-        write(*,*) '    Mflips/s:       ', papi_mflips
-        write(*,*) '    status:         ', papi_irc
+        write(*,'(a30,f4.1)') 'real time: ', papi_rTime
+        write(*,'(a30,f4.1)') 'proc time: ', papi_pTime
+        write(*,'(a30,i12)') 'total flpin cnt: ', papi_flpins
+        write(*,'(a30,e11.2)') 'iAm Mflops/s: ', papi_mflops
+        write(*,'(a30,e11.2)') 'global Mflops/s: ', papi_mflops_global
+        write(*,'(a30,i1)') 'status: ', papi_irc
 
     endif
+
 
     !call blacs_barrier ( iContext, 'A' )
     call extract_coeffs ()    
