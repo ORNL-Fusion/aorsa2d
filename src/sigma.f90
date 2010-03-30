@@ -2,98 +2,67 @@ module sigma_mod
 
 contains
 
-      subroutine sigmaHot_maxwellian(i, j, n, m, &
-         xm, xn, xnuomg, &
-         xkt, omgc, omgp2, &
-         lmin, lmax, nzfun, &
-         xkxsav, xkysav, nphi, capr, &
-         sigxx, sigxy, sigxz, &
-         sigyx, sigyy, sigyz, &
-         sigzx, sigzy, sigzz, &
-         delta0, ndist, &
-         omgrf, xk0, &
-         upshift, damping, xk_cutoff )
+    subroutine sigmaHot_maxwellian(i, j, &
+        xm, &
+        xkt, omgc, omgp2, &
+        xkxsav, xkysav, nphi, capr, &
+        sigxx, sigxy, sigxz, &
+        sigyx, sigyy, sigyz, &
+        sigzx, sigzy, sigzz, &
+        delta0, &
+        omgrf, xk0, &
+        xk_cutoff )
 
-      use constants
-      use zfunction_mod
-      use rotation
-      use bField
+    use constants
+    use zfunction_mod
+    use rotation
+    use bField
+    use aorsa2din_mod, &
+    only: upshift, nzfun, damping, lmax, xnuomg
 
-!     ---------------------------------------------------------
-!     This routine uses the modified Z functions Z0, Z1, Z2
-!     with the appropriate sign changes for k_parallel < 0.0
-!     No rotation is made.  Result is in the Stix frame.
-!     ---------------------------------------------------------
 
-      implicit none
+!   This routine uses the modified Z functions Z0, Z1, Z2
+!   with the appropriate sign changes for k_parallel < 0.0
+!   No rotation is made.  Result is in the Stix frame.
+!   ---------------------------------------------------------
 
-      real, dimension(:,:), allocatable :: DFDUPER0, DFDUPAR0
+    implicit none
 
-      integer lmin, lmax, nzfun, lmaxdim, l, labs, &
-          i, j, n, m, nphi, ndist, myid, iflag, nproc, ni, mi, &
-          ni0, mi0, upshift
+    integer :: l, labs, i, j, nphi
+    real :: xkperp, xkprl, xm, xkt, omgc, omgp2
+    real :: xkprl_eff, fgam, y0, y, sgn_kprl
+    real :: descrim
+    real :: nu_coll
+    real :: akprl,  alpha, omgrf
+    real :: gammab(-lmax:lmax), gamma_coll(-lmax:lmax)
+    real :: delta0, rhol
+    real :: xkxsav, xkysav, capr
+    real :: xkphi
+    real :: xkalp, xkbet, xk0, rgamma, xk_cutoff, kr, step
+    complex :: omgrfc
+    complex :: z0, z1, z2
+    complex :: sig0, sig1, sig2, sig3, sig4, sig5
+    complex :: sig0l, sig1l, sig2l, sig3l, sig4l, sig5l
+    complex :: sigxx, sigxy, sigxz, &
+            sigyx, sigyy, sigyz, &
+            sigzx, sigzy, sigzz
+    integer, parameter :: lmaxdim = 99
+    complex, allocatable, dimension(:) :: &
+      exil, exilp, exilovergam
+    complex :: zetal(-lmax:lmax)
+    complex  :: zieps0, al, bl, cl, gamma_
 
-      real u0, u2, fnorm, f_cql, eNormIN
-      real xkperp, xkprl, xm, xn, xkt, omgc, omgp2
-      real xkprl_eff, fgam, y0, y, sgn_kprl, reson, duperp, dupara
-      real xkprl_eff0
-      real dzetal(lmin:lmax), descrim
-      real dakbdkb, nu_coll
-      real, intent(in) :: xnuomg
-      real akprl,  alpha, omgrf, emax
-      real gammab(lmin:lmax), gamma_coll(lmin:lmax)
-      real a, b, xnurf, delta0, rhol
-      real bratio, denom
-      real dfdth, dfdupar_check, dfduper_check, dfdth_check
-      real uperp0_grid, upara0_grid, zeta, eta, ai, bi, ci, di
-      real dfduper0_intplt, dfdupar0_intplt
-      real xkxsav, xkysav, capr, argd
-      real xkphi
-      real xkalp, xkbet, xk0, rgamma, xk_cutoff, damping, kr, step
-      complex zfunct, fzeta, omgrfc
-      complex zfunct0, zeta0, sig3cold, z0, z1, z2, dz0, dz1, dz2
-      complex sig0, sig1, sig2, sig3, sig4, sig5
-      complex sig0_a, sig1_a, sig2_a, sig3_a, sig4_a, sig5_a
-      complex sig0_h, sig1_h, sig2_h, sig3_h, sig4_h, sig5_h
-      complex sig0l, sig1l, sig2l, sig3l, sig4l, sig5l
-      logical :: l_interp   !new
-      logical :: l_first  !new
-      complex sigxx, sigxy, sigxz, &
-              sigyx, sigyy, sigyz, &
-              sigzx, sigzy, sigzz
-      parameter (lmaxdim = 99)
-      complex, allocatable, dimension(:) :: &
-        exil, exilp, exilovergam
-      complex zetal(lmin:lmax)
-      complex  zieps0, arg, &
-         al, bl, cl, &
-         gamma_, zeta_eff
-      integer NBESSJ
-      real :: UPERP0, UPARA0
-      real :: W,K1(3),K2(3),KPER1,KPER2,ENORM,ZSPEC,ASPEC,BMAG,DensSPEC
-      integer :: NSBESSJ,IFAIL
-      COMPLEX WSPEC(3,3)
-      complex :: factor
+    nu_coll =  .01 * omgrf
+    zieps0 = zi * eps0
+    alpha = sqrt(2. * xkt / xm)
+    rhol = alpha / omgc
+    xkphi = nphi / capr
+    omgrfc = omgrf * (1. + zi * xnuomg)
 
-!DLG:   Define variables
-      real :: genunf
-      character(len=100) :: ncFileName
-      integer :: nc_id, n_uper_id, n_upar_id, dfduper_id, scalar_id, &
-       dfdupar_id, i_id, j_id, R_id, z_id, uper_id, upar_id, &
-       fvv_id
-      integer :: i_uperp, i_upara, i_psi
-
-      nu_coll =  .01 * omgrf
-      zieps0 = zi * eps0
-      alpha = sqrt(2. * xkt / xm)
-      rhol = alpha / omgc
-      xkphi = nphi / capr
-      omgrfc = omgrf * (1. + zi * xnuomg)
-
-      xkalp = uxx(i,j) * xkxsav + uxy(i,j) * xkysav + uxz(i,j) * xkphi
-      xkbet = uyx(i,j) * xkxsav + uyy(i,j) * xkysav + uyz(i,j) * xkphi
-      xkprl = uzx(i,j) * xkxsav + uzy(i,j) * xkysav + uzz(i,j) * xkphi
-      xkperp = sqrt(xkalp**2 + xkbet**2)
+    xkalp = uxx(i,j) * xkxsav + uxy(i,j) * xkysav + uxz(i,j) * xkphi
+    xkbet = uyx(i,j) * xkxsav + uyy(i,j) * xkysav + uyz(i,j) * xkphi
+    xkprl = uzx(i,j) * xkxsav + uzy(i,j) * xkysav + uzz(i,j) * xkphi
+    xkperp = sqrt(xkalp**2 + xkbet**2)
 
 
 !     Optional: leave out upshift in xkprl
@@ -110,7 +79,7 @@ contains
 !     Calculate zetal(l) and gammab(l)
 !     ---------------------------------
 
-      do l = lmin, lmax
+      do l = -lmax, lmax
 
          labs = abs(l)
          zetal(l) = (omgrfc - l * omgc) / (xkprl * alpha)
@@ -159,65 +128,58 @@ contains
       endif
 
 
-!     Maxwellian distribution
-!     -----------------------
+!   Maxwellian distribution
+!   -----------------------
 
-    maxwellian: &
-    if ( ndist .eq. 0 ) then
+    gamma_ = 0.5 * xkperp**2 * rhol**2
+    rgamma = real(gamma_)
+    
+    if (.not. allocated(exil) ) &
+    allocate ( exil(0:lMax), exilp(0:lMax), exilOverGam(0:lMax) )
 
-        gamma_ = 0.5 * xkperp**2 * rhol**2
-        rgamma = real(gamma_)
+    if(rgamma .ge. 1.0e-08) &
+    call besiexp(gamma_, lmax, exil, exilp, lmaxdim, exilovergam)
+
+    if(rgamma .lt. 1.0e-08) &
+    call bes_expand(gamma_, lmax, exil, exilp, lmaxdim, exilovergam)
+
+
+    sig0 = 0.0
+    sig1 = 0.0
+    sig2 = 0.0
+    sig3 = 0.0
+    sig4 = 0.0
+    sig5 = 0.0
+
+    do l = -lmax, lmax
+
+        labs = abs(l)
+
+        if(nzfun .eq. 0) call z_approx(sgn_kprl, zetal(l), 0.0, z0, z1, z2)
+        if(nzfun .eq. 1) call z_approx(sgn_kprl,zetal(l),gammab(l), z0, z1, z2)
+        if(nzfun .eq. 2) call z_smithe(sgn_kprl,zetal(l),gammab(l), z0, z1, z2)
+        if(nzfun .eq. 3) call z_table(sgn_kprl,zetal(l),gammab(l), gamma_coll(l), z0, z1, z2)
+
+        al = 1.0 / (xkprl * alpha) * z0
+        bl = 1.0 / (xkprl * alpha) * z1
+        cl = 1.0 / (xkprl * alpha) * z2
+
+        sig0l = - zieps0 * omgp2 * rhol**2 * (exil(labs) - exilp(labs)) * al
+        sig1l = - zieps0 * omgp2 * l**2 * exilovergam(labs) * al
+        sig2l = - eps0 * omgp2 * l * (exil(labs) - exilp(labs)) * al
+        sig3l = - zieps0 * omgp2 * 2.0 * exil(labs) * cl
+        sig4l = - zieps0 * omgp2 * rhol * l * exilovergam(labs) * bl
+        sig5l = - eps0 * omgp2 * rhol * (exil(labs) - exilp(labs)) * bl
+
+        sig0 = sig0 + sig0l
+        sig1 = sig1 + sig1l
+        sig2 = sig2 + sig2l
+        sig3 = sig3 + sig3l
+        sig4 = sig4 + sig4l
+        sig5 = sig5 + sig5l
+
+    enddo
         
-        if (.not. allocated(exil) ) &
-        allocate ( exil(0:lMax), exilp(0:lMax), exilOverGam(0:lMax) )
-
-        if(rgamma .ge. 1.0e-08) &
-        call besiexp(gamma_, lmax, exil, exilp, lmaxdim, exilovergam)
-
-        if(rgamma .lt. 1.0e-08) &
-        call bes_expand(gamma_, lmax, exil, exilp, lmaxdim, exilovergam)
-
-
-        sig0 = 0.0
-        sig1 = 0.0
-        sig2 = 0.0
-        sig3 = 0.0
-        sig4 = 0.0
-        sig5 = 0.0
-
-        do l = lmin, lmax
-
-            labs = abs(l)
-
-            if(nzfun .eq. 0) call z_approx(sgn_kprl, zetal(l), 0.0, z0, z1, z2)
-            if(nzfun .eq. 1) call z_approx(sgn_kprl,zetal(l),gammab(l), z0, z1, z2)
-            if(nzfun .eq. 2) call z_smithe(sgn_kprl,zetal(l),gammab(l), z0, z1, z2)
-            if(nzfun .eq. 3) call z_table(sgn_kprl,zetal(l),gammab(l), gamma_coll(l), z0, z1, z2)
-
-            al = 1.0 / (xkprl * alpha) * z0
-            bl = 1.0 / (xkprl * alpha) * z1
-            cl = 1.0 / (xkprl * alpha) * z2
-
-            sig0l = - zieps0 * omgp2 * rhol**2 * (exil(labs) - exilp(labs)) * al
-            sig1l = - zieps0 * omgp2 * l**2 * exilovergam(labs) * al
-            sig2l = - eps0 * omgp2 * l * (exil(labs) - exilp(labs)) * al
-            sig3l = - zieps0 * omgp2 * 2.0 * exil(labs) * cl
-            sig4l = - zieps0 * omgp2 * rhol * l * exilovergam(labs) * bl
-            sig5l = - eps0 * omgp2 * rhol * (exil(labs) - exilp(labs)) * bl
-
-            sig0 = sig0 + sig0l
-            sig1 = sig1 + sig1l
-            sig2 = sig2 + sig2l
-            sig3 = sig3 + sig3l
-            sig4 = sig4 + sig4l
-            sig5 = sig5 + sig5l
-
-            !write(*,*) l, sig0, sig1, sig2, sig3, sig4, sig5
-        enddo
-        
-    endif maxwellian
-
-
     sig1 = sig1 + delta0 * eps0 * omgrfc * xkperp**2 / xk0**2
     sig3 = sig3 + delta0 * eps0 * omgrfc * xkperp**2 / xk0**2
 
@@ -225,8 +187,8 @@ contains
 
         kr = xkperp / xk_cutoff
         step = damping * kr**16 / (1. + kr**16)
-
         sig3 = sig3 * (1.0 + step)
+
     end if
 
 
@@ -249,7 +211,6 @@ end subroutine sigmaHot_maxwellian
 
 
     subroutine sigmaCold_stix(i,j, &
-        xnuomg, &
         omgc, omgp2, &
         xkxsav, xkysav, nphi, capr, &
         sigxx, sigxy, sigxz, &
@@ -259,6 +220,8 @@ end subroutine sigmaHot_maxwellian
 
         use constants 
         use rotation
+        use aorsa2din_mod, &
+        only: xnuomg
 
         !     This routine calculates sigma_cold in the Stix frame
         !     ----------------------------------------------------
@@ -267,19 +230,17 @@ end subroutine sigmaHot_maxwellian
 
         integer nphi
         integer, intent(in) :: i, j
-        real xkperp, xkprl, omgc, omgp2, xkb, akb
-        real dakbdkb
-        real akprl, alpha, omgrf
-        real cosalp, sinalp, a, b
+        real xkprl, omgc, omgp2
+        real omgrf
         real xkxsav, xkysav, capr
         real xkphi
-        real xkalp, xkbet, xnuomg
+        real xkalp, xkbet
         complex omgrfc
         complex sig0, sig1, sig2, sig3, sig4, sig5
         complex sigxx, sigxy, sigxz, &
                 sigyx, sigyy, sigyz, &
                 sigzx, sigzy, sigzz
-        complex zetalp, zetalm, zieps0, bl
+        complex zieps0
 
         zieps0 = zi * eps0
         xkphi = nphi / capr
@@ -398,13 +359,11 @@ end subroutine sigmaHot_maxwellian
 
       implicit none
 
-      integer lmax, nmax, ier, l, lmaxdim
+      integer lmax, l, lmaxdim
       real :: factl
       complex gamma, expbes(0:lmaxdim), expbesp(0:lmaxdim), &
          expbesovergam(0:lmaxdim), xilovergam, &
          xil(0:lmaxdim), xilp(0:lmaxdim), exgam
-
-      complex b(100)
 
       exgam = 1.0 - gamma + gamma**2 / 2.0
 
@@ -425,7 +384,6 @@ end subroutine sigmaHot_maxwellian
 !         write(6, 100)l, expbes(l), expbesp(l)
       end do
 
-  100 format(i10, 1p8e12.4)
 
       return
       end subroutine bes_expand

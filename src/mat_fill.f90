@@ -33,9 +33,9 @@ contains
     subroutine amat_fill
 
         use aorsa2din_mod, &
-        only: nModesX, nModesY, upShift, damping, &
-            lmax, delta0, nPhi, nSpec, nZFun, &
-            iSigma, xnuomg, nPtsX, nPtsY, npRow, npCol
+        only: nModesX, nModesY, &
+            delta0, nPhi, nSpec, &
+            iSigma, nPtsX, nPtsY, npRow, npCol
         use grid
         use sigma_mod
         use rotation
@@ -125,24 +125,22 @@ contains
                                     do s=1,nSpec
 
                                         if (iSigma==1) & ! hot plasma        
-                                        call sigmaHot_maxwellian(i, j, n, m, &
-                                            mSpec(s), densitySpec(i,j,s), xnuomg, &
+                                        call sigmaHot_maxwellian(i, j, &
+                                            mSpec(s), &
                                             ktSpec(i,j,s), omgc(i,j,s), omgp2(i,j,s), &
-                                            -lmax, lmax, nzfun, &
                                             xkxsav(n), xkysav(m), nphi, capr(i), &
                                             sigxxTmp, sigxyTmp, sigxzTmp, &
                                             sigyxTmp, sigyyTmp, sigyzTmp, &
                                             sigzxTmp, sigzyTmp, sigzzTmp, &
-                                            delta0, 0, omgrf, xk0, &
-                                            upshift, damping, xk_cutoff )
+                                            delta0, omgrf, xk0, &
+                                            xk_cutoff )
                                       
                                         !if(iAm==0) &
-                                        !write(*,*) xnuomg, omgc(i,j,s), omgp2(i,j,s), &
+                                        !write(*,*) omgc(i,j,s), omgp2(i,j,s), &
                                         !    xkxsav(n), xkysav(m), nphi, capr(i), omgrf
 
                                         if (iSigma==0) & ! cold plasma 
                                         call sigmaCold_stix(i, j, &
-                                            xnuomg, &
                                             omgc(i,j,s), omgp2(i,j,s), &
                                             xkxsav(n), xkysav(m), nphi, capr(i), &
                                             sigxxTmp, sigxyTmp, sigxzTmp, &
