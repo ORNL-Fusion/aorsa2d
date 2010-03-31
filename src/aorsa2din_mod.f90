@@ -53,7 +53,12 @@ implicit none
       real :: xnuead = 0.0000E+00      !-----xnuead = ad hoc collision frequency for electron in sec-1
       real :: xnu1ad = 0.0000E+00      !-----nu1ad=ad hoc collision frequency for majority ions in sec-1                                      
       real :: xnu2ad = 0.0000E+00      !-----nu2ad=ad hoc collision frequency for minority ions in sec-1
-      real :: rant = 0.0               !-----rant = major radius of antenna in meters (default is 0.0 in which case, psiant = .95)
+
+      real :: rAnt = 0.0               !-----rant = major radius of antenna in meters (default is 0.0 in which case, psiant = .95)
+      real :: zAnt = 0.0               !-----zAnt = location of antenna center in Z (m)
+      real :: antSigX = 0.1
+      real :: antSigY = 0.3
+
       real :: dthetant0 = 40.
       real :: dpsiant0 = .05
       real :: antlen = 1.0
@@ -81,7 +86,6 @@ implicit none
       real :: psipti4 = .30
       real :: psipti5 = .30
       real :: psipti6 = .30
-      real :: yant = 0.0               !-----yant = location of antenna center in Z (m)
       real :: te0  = 4.2900E+03        !-----te0=central value of eletron temperature in eV
       real :: ti01  = 7.0700E+03        !-----ti0=central value of ion temperature in eV
       real :: ti02 = 7.0700E+03
@@ -353,7 +357,8 @@ implicit none
       !common / stpcom / xlt, wd, nstrap, phase, zmin, zmax, phi0, amplt
                    
       namelist/aorsa2din/nmodesx, nmodesy, nPtsX, nPtsY, nwdot, lmax, ibessel, &
-     &    ti01, xnuead, xnu1ad, xnu2ad, rant, te0, yant,  &
+     &    ti01, xnuead, xnu1ad, xnu2ad, rant, te0, zAnt,  &
+     &    antSigX, antSigY, &
      &    ti02, ti03, ti2lim, ti3lim, nuper, nupar, &
      &    ti04, ti05, ti06, ti4lim, ti5lim, ti6lim,  &
      &    inu, iprint, iexact, delta0, xwall, xnwall,  &

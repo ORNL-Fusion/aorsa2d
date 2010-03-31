@@ -50,7 +50,7 @@ contains
     complex, allocatable, dimension(:) :: &
       exil, exilp, exilovergam
     complex :: zetal(-lmax:lmax)
-    complex  :: zieps0, al, bl, cl, gamma_
+    complex :: zieps0, al, bl, cl, gamma_
 
     nu_coll =  .01 * omgrf
     zieps0 = zi * eps0
@@ -292,27 +292,28 @@ end subroutine sigmaHot_maxwellian
 
       implicit none
 
-      integer lmax, nmax, ier, l, lmaxdim
+      integer, intent(in) :: lmax
+      integer :: nmax, ier, l, lmaxdim
       complex, intent(in) :: gamma_
       complex, intent(out) :: &
         expbes(:), expbesp(:), expbesovergam(:)
-
       complex, allocatable, dimension(:) :: &
         xil, xilp, b
       complex :: exgam
-      real gammod
+      real :: gammod
+      integer :: status
 
-      allocate ( xil(0:lMax), xilp(0:lMax), b(lMax+1) )
+      allocate ( xil(0:lMax), xilp(0:lMax), b(lMax+1), stat = status )
 
       exgam = exp(-gamma_)
       gammod = cabs(gamma_)
 
       if(gammod .le. 700.)then
-         nmax = lmax + 1
+         nmax = lmax
          call besic(gamma_, nmax, b, ier)
          if(ier .ne. 0)write(6,100) ier
 
-         do l = 0, lmax
+         do l = 0, lMax
             xil(l) = b(l+1)
          end do
 
@@ -336,8 +337,9 @@ end subroutine sigmaHot_maxwellian
 
   100 format('ier = ', i5, 'besic failed')
 
-      deallocate ( xil, xilp, b )
-
+      deallocate ( b )
+      deallocate ( xil )
+      deallocate ( xilp )
       end subroutine besiexp
 
 

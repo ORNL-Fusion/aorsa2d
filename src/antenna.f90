@@ -12,7 +12,8 @@ contains
     subroutine init_brhs ()
 
         use aorsa2din_mod, &
-        only: rAnt, nPtsX, nPtsY, npRow, npCol
+        only: rAnt, zAnt, nPtsX, nPtsY, npRow, npCol, &
+            antSigX, antSigY
         use grid
         use constants
         use profiles
@@ -40,8 +41,8 @@ contains
 
         !   note curden is in Amps per meter of toroidal length (2.*pi*rt).
 
-        antSigX = 0.1
-        antSigY = 0.3
+        !antSigX = 0.1
+        !antSigY = 0.3
 
         do i = 1, nPtsX
             do j = 1, nPtsY
@@ -49,7 +50,7 @@ contains
                 xjx(i,j) = 0.0
                 xjy(i,j) = 1.0 / dx &
                     * exp ( &
-                    -( (capR(i)-rant)**2/antSigX**2 + (y(j)-0.0)**2/antSigY**2 ) &
+                    -( (capR(i)-rAnt)**2/antSigX**2 + (y(j)-zAnt)**2/antSigY**2 ) &
                           )
                 xjz(i,j) = 0.0
 

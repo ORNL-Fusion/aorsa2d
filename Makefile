@@ -39,10 +39,10 @@ PAPI = -lpapi
 # compile flags
 # -------------
 
-BOUNDS = #-fbounds-check
+BOUNDS = -fbounds-check
 WARN = #-Wall
-DEBUG = #-pg -g -fbacktrace -fsignaling-nans -ffpe-trap=zero,invalid#,overflow#,underflow
-F90 = mpif90 -O3 #gfortran
+DEBUG = -pg -g -fbacktrace -fsignaling-nans -ffpe-trap=zero,invalid#,overflow#,underflow
+F90 = mpif90 #gfortran
 MOD_LOC = -Jmod
 
 
