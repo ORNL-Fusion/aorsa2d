@@ -13,7 +13,7 @@ module eqdsk_dlg
         rbbbs (:), zbbbs (:), rlim__ (:), zlim (:), &
         r (:), z (:), bR(:,:), bPhi(:,:), bz__(:,:), &
         fluxGrid (:), fpolRZ(:,:), bMag__(:,:), &
-        fluxGrid_ (:), fpol_ (:)
+        fluxGrid_ (:), fpol_ (:), rhoNorm (:,:)
     logical :: ascending_flux 
 
 contains
@@ -49,7 +49,7 @@ contains
         allocate ( fpol ( nw ), pres ( nw ), ffprim ( nw ), &
             pprime ( nw ), psizr ( nw, nh ), qpsi ( nw ), &
             r ( nw ), z ( nh ), fluxGrid ( nw ), fpol_(nw), &
-            fluxGrid_(nw) )
+            fluxGrid_(nw), rhoNorm (nw,nh) )
         
         read ( 8, 2020 ) ( fpol (i), i=1, nw ) 
         read ( 8, 2020 ) ( pres (i), i=1, nw ) 
@@ -134,6 +134,14 @@ contains
                 end do
             end do
 
+            rhoNorm = ( psizr - siMag ) / ( siBry - siMag )
+            if(all(rhoNorm>=0)) then
+                rhoNorm = sqrt ( rhoNorm )
+            else
+                write(*,*) 'eqdsk_dlg.f90: ERROR - psiNorm < 0 (A)'
+                stop
+            endif
+
         !else
 
         !    call curv1 ( nw, fluxGrid, fpol, spl1, spln, 3, yp_c, temp, sigma, iErr )
@@ -166,28 +174,6 @@ contains
 !        end do
 
         bMag__    = sqrt ( bR**2 + bPhi**2 + bz__**2 )
-
-        !!   Plotting
-
-        !if ( present ( plot ) ) then
-        !    if ( plot ) then 
-        !        
-        !        call setFil ( 'eqdsk.eps' ) 
-        !        call setPag ( 'DA4P' )
-        !        call metaFl ( 'EPS' )
-        !        call disIni ()
-        !        call graf ( 0.0, 3.0, 0.0, 0.5, -2.0, 2.0, -2.0, 0.5 ) 
-        !        nLevs   = 101 
-        !        levStep    = ( maxVal ( psizr ) - minVal ( psizr ) ) / nLevs
-        !        do i=0,nLevs-1
-        !            lev    = i * levStep - nLevs/2*levStep
-        !            call contur ( r, nw, z, nh, psizr, lev ) 
-        !        end do
-        !        call endGrf ()  
-        !        call disFin ()
-
-        !    end if 
-        !end if
 
     end subroutine read_geqdsk
 

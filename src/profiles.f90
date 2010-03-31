@@ -80,4 +80,15 @@ contains
 
     end subroutine
 
+    
+    subroutine flux_profiles ()
+
+        use aorsa2din_mod, &
+        only: nPtsX, nPtsY, nSpec
+        use bField
+
+        implicit none
+
+    end subroutine flux_profiles
+
 end module profiles

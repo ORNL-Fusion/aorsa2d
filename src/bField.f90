@@ -3,7 +3,7 @@ module bField
 implicit none
 
 real, allocatable, dimension(:,:) :: &
-    bMod, bxn, byn, bzn
+    bMod, bxn, byn, bzn, rho
 
 real :: r0__, z0__
 
@@ -26,13 +26,15 @@ contains
             bMod(nPtsX,nPtsY), &
             bxn(nPtsX,nPtsY), &
             byn(nPtsX,nPtsY), &
-            bzn(nPtsX,nPtsY) )
+            bzn(nPtsX,nPtsY), &
+            rho(nPtsX,nPtsY) )
 
         do i=1,nPtsX
             do j=1,nPtsY
 
                bHere = dlg_interpB ( (/capR(i),0.0,y(j)/), &
-                            bMagHere = bMod(i,j) )  
+                            bMagHere = bMod(i,j), &
+                            rhoHere = rho(i,j) )  
                bxn(i,j) = bHere(1) / bMod(i,j)
                byn(i,j) = bHere(3) / bMod(i,j)
                bzn(i,j) = bHere(2) / bMod(i,j)
