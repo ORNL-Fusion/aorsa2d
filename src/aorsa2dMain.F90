@@ -86,7 +86,12 @@ program aorsa2dMain
     write(*,*) 'Profile setup'
     
     call init_profiles ()
-    call flat_profiles ()
+
+    if (useFluxProfiles) then
+        call flux_profiles ()
+    else
+        call flat_profiles ()
+    endif
 
 
 !   calculate rotation matrix U

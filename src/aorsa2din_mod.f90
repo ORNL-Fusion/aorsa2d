@@ -2,11 +2,18 @@ module aorsa2din_mod
       
 implicit none
 
-    integer, parameter :: nSpecMax = 5 
-    integer :: zSpecIn(nSpecMax) = (/ -1, 2, 0, 0, 0 /)
-    integer :: amuSpecIn(nSpecMax) = (/ 0, 4, 0, 0, 0 /) 
-    real :: tSpecIn(nSpecMax) = (/ 400.0, 400.0, 0.0, 0.0, 0.0/) ! [eV]
-    real :: dSpecIn(nSpecMax) = (/ 0.6e18, 0.3e18, 0.0, 0.0, 0.0 /)
+    integer, parameter :: nSpecMax  = 5 
+    integer :: zSpecIn(nSpecMax)    = (/ -1, 2, 0, 0, 0 /)
+    integer :: amuSpecIn(nSpecMax)  = (/  0, 4, 0, 0, 0 /) 
+    real :: tSpecIn(nSpecMax)       = (/ 400.0, 400.0, 0.0, 0.0, 0.0/) ! [ev]
+    real :: dSpecIn(nSpecMax)       = (/ 0.6e18, 0.3e18, 0.0, 0.0, 0.0 /)
+    real :: tLimIn(nSpecMax)        = (/ 400.0, 400.0, 0.0, 0.0, 0.0/) ! [ev]
+    real :: dLimIn(nSpecmax)        = (/ 0.6e18, 0.3e18, 0.0, 0.0, 0.0 /)
+    real :: dAlphaIn(nSpecMax)      = (/ 1.0, 1.0, 0.0, 0.0, 0.0 /) ! [ev]
+    real :: dBetaIn(nSpecMax)       = (/ 1.0, 1.0, 0.0, 0.0, 0.0 /)
+    real :: tAlphaIn(nSpecMax)      = (/ 1.0, 1.0, 0.0, 0.0, 0.0 /) ! [ev]
+    real :: tBetaIn(nSpecMax)       = (/ 1.0, 1.0, 0.0, 0.0, 0.0 /)
+    logical :: useFluxProfiles = .false.  
     integer :: nSpec = 2
  
 !     --------------------------------------------------------
@@ -411,7 +418,8 @@ implicit none
      &    gradient, bbbsMask, dlgAnt, eqdsk_rRange, &
      &    dlgAntFileName, dlgProfileFileName, antGridMatch, domainMask, &
      &    use_dlg_bField, edgeCollisions, nSpec, zSpecIn, amuSpecIn, &
-     &    tSpecIn, dSpecIn
+     &    tSpecIn, dSpecIn, tLimIn, dLimIn, &
+     &    tAlphaIn, tBetaIn, dAlphaIn, dBetaIn, useFluxProfiles
                 
 contains
 

@@ -10,6 +10,7 @@ pro plot_rundata
 		nCdf_varGet, cdfId, 'byn', by
 		nCdf_varGet, cdfId, 'bzn', bz
 		nCdf_varGet, cdfId, 'densitySpec', densitySpec
+		nCdf_varGet, cdfId, 'tempSpec', tempSpec
 
 	ncdf_close, cdfId
 
@@ -31,6 +32,9 @@ pro plot_rundata
 	!p.multi = [0,2,2]
 	contour, jy_im, x, y
 	contour, bmod, x, y
+	contour, densitySpec[*,*,0], x, y
+	contour, tempSpec[*,*,0], x, y
+
 stop
 	for modeNo=0,n_elements(amat_re[*,0])-1 do begin
 

@@ -355,6 +355,7 @@ contains
         !    write(*,*) real ( aMat(i,:) )
         !enddo
         !endif
+
     end subroutine amat_fill
 
 end module mat_fill

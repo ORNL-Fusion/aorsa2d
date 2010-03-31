@@ -45,6 +45,19 @@ contains
         r0__  = rmaxis__
         z0__  = zmaxis__
 
+
+        !   For regions outside the LCFS apply a correction
+        !   if nessecary 
+
+        where(rho>1)
+            rho = 1
+        endwhere
+
+        where(rho<0)
+            rho = 0
+        endwhere
+
+
     end subroutine bFieldEqdsk
 
 

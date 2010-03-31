@@ -14,6 +14,7 @@ contains
         use grid, &
         only: capR, y, xkxsav, xkysav
         use profiles
+        use constants
 
         implicit none
 
@@ -25,7 +26,7 @@ contains
             x_id, y_id, &
             bx_id, by_id, bz_id, bmod_id, &
             jy_re_id, jy_im_id, kx_id, ky_id, &
-            dens_id
+            dens_id, temp_id
 
         call check ( nf90_create ( fName, nf90_clobber, nc_id ) )
         call check ( nf90_def_dim ( nc_id, "nPtsX", nPtsX, nX_id ) )
@@ -59,6 +60,7 @@ contains
             (/nModesY_id/), ky_id ) ) 
  
         nc_stat = nf90_def_var ( nc_id, "densitySpec", NF90_REAL, (/nX_id,nY_id,nSpec_id/), dens_id ) 
+        nc_stat = nf90_def_var ( nc_id, "tempSpec", NF90_REAL, (/nX_id,nY_id,nSpec_id/), temp_id ) 
 
         call check ( nf90_enddef ( nc_id ) )
         
@@ -74,6 +76,7 @@ contains
         call check ( nf90_put_var ( nc_id, kx_id, xkxsav ) )
         call check ( nf90_put_var ( nc_id, ky_id, xkysav ) )
         nc_stat = nf90_put_var ( nc_id, dens_id, densitySpec )
+        nc_stat = nf90_put_var ( nc_id, temp_id, ktSpec / q )
 
         call check ( nf90_close ( nc_id ) )
 
