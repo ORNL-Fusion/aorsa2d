@@ -14,6 +14,7 @@ implicit none
 !     --------------------------------------------------------
 
       CHARACTER*128 :: eqdsk = 'g1080408021.txt'               ! eqdsk name
+      logical :: useEqdsk = .false.
       CHARACTER*128 :: netCDF_file1 = 'phillips_nstx3.5.2.nc'  !cql3d distribution file name 1
       CHARACTER*128 :: netCDF_file2 = 'phillips_nstx3.5.2.nc'  !cql3d distribution file name 2
 
@@ -396,7 +397,7 @@ implicit none
      &    betati3, taue, theta_ant,  &
      &    ndiste, ndisti1, ndisti2, ndisti3,  &
      &    ndisti4, ndisti5, ndisti6, nkperp, nzeta_wdot, n_bin, antlen,  &
-     &    eqdsk, iql, i_antenna, antlc, n_prof_flux, netcdf_file1,  &
+     &    eqdsk, useEqdsk, iql, i_antenna, antlc, n_prof_flux, netcdf_file1,  &
      &    netcdf_file2, upshift, xkperp_cutoff, damping, i_write,  &
      &    nstrap, xlt, wd, phase_deg, nphi, &
      &    enorm_factor, version_number, enorm_factor_e, &

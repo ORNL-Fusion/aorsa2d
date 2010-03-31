@@ -71,10 +71,13 @@ program aorsa2dMain
     if (iAm==0) &
     write(*,*) 'Reading eqdsk'
 
-    call read_geqdsk ( eqdsk, plot = .false. )
-    call init_interp ()
-    call bFieldEqdsk ()
-    !call bFieldAnalytical ()
+    if (useEqdsk) then
+        call read_geqdsk ( eqdsk, plot = .false. )
+        call init_interp ()
+        call bFieldEqdsk ()
+    else
+        call bFieldAnalytical ()
+    endif
 
 !   setup profiles
 !   --------------
