@@ -19,6 +19,7 @@ module eqdsk_dlg
 contains
 
     subroutine read_geqdsk ( eqdsk_fileName, plot )
+
         use dlg
         use fitpack
  

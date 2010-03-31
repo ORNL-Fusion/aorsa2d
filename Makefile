@@ -41,7 +41,7 @@ PAPI = -lpapi
 
 BOUNDS = -fbounds-check
 WARN = #-Wall
-DEBUG = -pg -g -fbacktrace -fsignaling-nans -ffpe-trap=zero,invalid#,overflow#,underflow
+DEBUG = -pg -g -fbacktrace -fsignaling-nans #-ffpe-trap=zero,invalid#,overflow#,underflow
 F90 = mpif90 #gfortran
 MOD_LOC = -Jmod
 

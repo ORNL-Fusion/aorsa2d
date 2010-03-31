@@ -13,22 +13,24 @@ pro plot_rundata
 
 	ncdf_close, cdfId
 
-	cdfId = ncdf_open ( 'amat.nc', /noWrite ) 
-		nCdf_varGet, cdfId, 'amat_re', amat_re
-		nCdf_varGet, cdfId, 'amat_im', amat_im 
-		nCdf_varGet, cdfId, 'nPtsX', nPtsX 
-		nCdf_varGet, cdfId, 'nPtsY', nPtsY 
-		nCdf_varGet, cdfId, 'nModesX', nModesX 
-		nCdf_varGet, cdfId, 'nModesY', nModesY 
-		nCdf_varGet, cdfId, 'xx_re', xx_re 
-		nCdf_varGet, cdfId, 'xx_im', xx_im
-		nCdf_varGet, cdfId, 'yy_re', yy_re 
-		nCdf_varGet, cdfId, 'yy_im', yy_im 
-		xx	= complex ( xx_re, xx_im )
-		yy	= complex ( yy_re, yy_im )
-	ncdf_close, cdfId
+	;cdfId = ncdf_open ( 'amat.nc', /noWrite ) 
+	;	nCdf_varGet, cdfId, 'amat_re', amat_re
+	;	nCdf_varGet, cdfId, 'amat_im', amat_im 
+	;	nCdf_varGet, cdfId, 'nPtsX', nPtsX 
+	;	nCdf_varGet, cdfId, 'nPtsY', nPtsY 
+	;	nCdf_varGet, cdfId, 'nModesX', nModesX 
+	;	nCdf_varGet, cdfId, 'nModesY', nModesY 
+	;	nCdf_varGet, cdfId, 'xx_re', xx_re 
+	;	nCdf_varGet, cdfId, 'xx_im', xx_im
+	;	nCdf_varGet, cdfId, 'yy_re', yy_re 
+	;	nCdf_varGet, cdfId, 'yy_im', yy_im 
+	;	xx	= complex ( xx_re, xx_im )
+	;	yy	= complex ( yy_re, yy_im )
+	;ncdf_close, cdfId
 
+	!p.multi = [0,2,2]
 	contour, jy_im, x, y
+	contour, bmod, x, y
 stop
 	for modeNo=0,n_elements(amat_re[*,0])-1 do begin
 

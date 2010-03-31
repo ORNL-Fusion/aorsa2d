@@ -341,25 +341,26 @@ contains
                                     if (ii==1 .and. jj==2) aMat(localRow,localCol) = cexpkxky * dzy  
                                     if (ii==2 .and. jj==2) aMat(localRow,localCol) = cexpkxky * dzz  
 
-                                    !!   boundary conditions
-                                    !!   -------------------
 
-                                    !if ( i==1 .or. i==nPtsX &
-                                    !        .or. j==1 .or. j==nPtsY ) then
+                                    !   boundary conditions
+                                    !   -------------------
 
-                                    !    aMat(iRow+0,iCol+0) = cexpkxky  
-                                    !    aMat(iRow+1,iCol+0) = 0  
-                                    !    aMat(iRow+2,iCol+0) = 0 
-                                    !                    
-                                    !    aMat(iRow+0,iCol+1) = 0  
-                                    !    aMat(iRow+1,iCol+1) = cexpkxky   
-                                    !    aMat(iRow+2,iCol+1) = 0  
-                                    !                  
-                                    !    aMat(iRow+0,iCol+2) = 0  
-                                    !    aMat(iRow+1,iCol+2) = 0  
-                                    !    aMat(iRow+2,iCol+2) = cexpkxky   
-                                    !
-                                    !endif
+                                    if ( i==1 .or. i==nPtsX &
+                                            .or. j==1 .or. j==nPtsY ) then
+
+                                        if (ii==0 .and. jj==0) aMat(localRow,localCol) = cexpkxky 
+                                        if (ii==1 .and. jj==0) aMat(localRow,localCol) = 0  
+                                        if (ii==2 .and. jj==0) aMat(localRow,localCol) = 0  
+                               
+                                        if (ii==0 .and. jj==1) aMat(localRow,localCol) = 0  
+                                        if (ii==1 .and. jj==1) aMat(localRow,localCol) = cexpkxky   
+                                        if (ii==2 .and. jj==1) aMat(localRow,localCol) = 0   
+                               
+                                        if (ii==0 .and. jj==2) aMat(localRow,localCol) = 0   
+                                        if (ii==1 .and. jj==2) aMat(localRow,localCol) = 0   
+                                        if (ii==2 .and. jj==2) aMat(localRow,localCol) = cexpkxky   
+
+                                    endif
 
                                 endif myProc
 

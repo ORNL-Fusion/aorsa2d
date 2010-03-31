@@ -228,11 +228,12 @@ end subroutine sigmaHot_maxwellian
 
         implicit none
 
-        integer nphi
+        integer, intent(in) :: nphi
         integer, intent(in) :: i, j
-        real xkprl, omgc, omgp2
+        real, intent(in) :: omgc, omgp2
+        real :: xkprl
         real omgrf
-        real xkxsav, xkysav, capr
+        real, intent(in) :: xkxsav, xkysav, capr
         real xkphi
         real xkalp, xkbet
         complex omgrfc
