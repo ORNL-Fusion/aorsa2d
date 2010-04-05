@@ -29,9 +29,13 @@ pro plot_rundata
 	;	yy	= complex ( yy_re, yy_im )
 	;ncdf_close, cdfId
 
-	!p.multi = [0,2,2]
+	window, 0, xSize = 800, ySize = 800
+	!p.multi = [0,3,3]
 	contour, jy_im, x, y
 	contour, bmod, x, y
+	contour, bx, x, y
+	contour, by, x, y
+	contour, bz, x, y
 	contour, densitySpec[*,*,0], x, y
 	contour, tempSpec[*,*,0], x, y
 

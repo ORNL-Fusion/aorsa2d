@@ -64,17 +64,13 @@ contains
     subroutine bFieldAnalytical ()
 
         use aorsa2din_mod, &
-        only: nPtsX, nPtsY
+        only: nPtsX, nPtsY, r0, b0, &
+            bx_frac, by_frac
         use grid
 
         implicit none
 
-        real :: b0
         integer :: i, j
-
-        r0__ = 1.0
-        z0__ = 0.0
-        b0  = 0.55
 
         allocate ( &
             bMod(nPtsX,nPtsY), &
@@ -85,9 +81,10 @@ contains
         do i=1,nPtsX
             do j=1,nPtsY
 
-               bxn(i,j) = 0.0 
-               byn(i,j) = 0.0
-               bzn(i,j) = b0!r0__ / capR(i) * b0 
+               bzn(i,j) = r0 / capR(i) * b0 
+               bxn(i,j) = bzn(i,j) * bx_frac
+               byn(i,j) = bzn(i,j) * by_frac 
+ 
                bMod(i,j) = sqrt ( bxn(i,j)**2 + byn(i,j)**2 + bzn(i,j)**2 )
 
             enddo

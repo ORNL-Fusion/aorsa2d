@@ -5,7 +5,7 @@ contains
     subroutine sigmaHot_maxwellian(i, j, &
         xm, &
         xkt, omgc, omgp2, &
-        xkxsav, xkysav, nphi, capr, &
+        xkxsav, xkysav, capr, &
         sigxx, sigxy, sigxz, &
         sigyx, sigyy, sigyz, &
         sigzx, sigzy, sigzz, &
@@ -18,7 +18,7 @@ contains
     use rotation
     use bField
     use aorsa2din_mod, &
-    only: upshift, nzfun, damping, lmax, xnuomg
+    only: upshift, nzfun, damping, lmax, xnuomg, nPhi
 
 
 !   This routine uses the modified Z functions Z0, Z1, Z2
@@ -28,7 +28,7 @@ contains
 
     implicit none
 
-    integer :: l, labs, i, j, nphi
+    integer :: l, labs, i, j
     real :: xkperp, xkprl, xm, xkt, omgc, omgp2
     real :: xkprl_eff, fgam, y0, y, sgn_kprl
     real :: descrim
@@ -212,7 +212,7 @@ end subroutine sigmaHot_maxwellian
 
     subroutine sigmaCold_stix(i,j, &
         omgc, omgp2, &
-        xkxsav, xkysav, nphi, capr, &
+        xkxsav, xkysav, capr, &
         sigxx, sigxy, sigxz, &
         sigyx, sigyy, sigyz, &
         sigzx, sigzy, sigzz, &
@@ -221,14 +221,13 @@ end subroutine sigmaHot_maxwellian
         use constants 
         use rotation
         use aorsa2din_mod, &
-        only: xnuomg
+        only: xnuomg, nPhi
 
         !     This routine calculates sigma_cold in the Stix frame
         !     ----------------------------------------------------
 
         implicit none
 
-        integer, intent(in) :: nphi
         integer, intent(in) :: i, j
         real, intent(in) :: omgc, omgp2
         real :: xkprl

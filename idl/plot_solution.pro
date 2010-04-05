@@ -51,7 +51,7 @@ pro plot_solution
 		ebk	= complex ( ebk_re, eb_im )
 
 	ncdf_close, cdfId
-stop
+
 	window, 0
 	!p.multi = [0,3,2]
 	!p.background = 255
@@ -66,7 +66,7 @@ stop
 	contour_field, imaginary(ealpha), x, y, nLevs, scale
 	contour_field, imaginary(ebeta), x, y, nLevs, scale
 	contour_field, imaginary(eb), x, y, nLevs, scale
-
+stop
 	window, 1
 	!p.multi = [0,3,2]
 	scale = max ( abs ( [ealphak_re[*],ebetak_re[*],ebk_re[*]] ) ) * 1.5

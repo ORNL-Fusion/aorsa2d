@@ -15,6 +15,9 @@ implicit none
     real :: tBetaIn(nSpecMax)       = (/ 1.0, 1.0, 0.0, 0.0, 0.0 /)
     logical :: useFluxProfiles = .false.  
     integer :: nSpec = 2
+    real :: r0 = 1.0
+    real :: bx_frac = 0.0
+    real :: by_frac = 0.0
  
 !     --------------------------------------------------------
 !     Declarations and defaults for aorsa2d.in input variables
@@ -359,7 +362,7 @@ implicit none
       integer :: nnodecx                  !-----nnodecx = number of radial mesh points used for wdot calculation
       integer :: nnodecy                  !-----nnodecy = number of vertical mesh points used for wdot calculation
       
-      integer :: nphi = 0           !-----toroidal mode number     
+      real :: nphi = 0.0          !-----toroidal mode number     
       
       real phase, zmin, zmax, phi0, amplt(20) 
       !common / stpcom / xlt, wd, nstrap, phase, zmin, zmax, phi0, amplt
@@ -376,7 +379,7 @@ implicit none
      &    psipti4, psipti5, psipti6,  &
      &    iqx, iqprof, iez, npRow, npCol, &
      &    amu1, amu2, z1, z2, eta, izfunc,  &
-     &    b0, rt, ytop, ybot, freqcy, aplasm,  &
+     &    b0, r0, bx_frac, by_frac, rt, ytop, ybot, freqcy, aplasm,  &
      &    xnlim, xn2lim, xn3lim, xnslolim, signbz,  &
      &    xn4lim, xn5lim, xn6lim,  &
      &    xn0, xn1, xn2, xn3, xnslo, flat, b1rat, b2rat, curdnx, curdny,  &

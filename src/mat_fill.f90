@@ -34,7 +34,7 @@ contains
 
         use aorsa2din_mod, &
         only: nModesX, nModesY, &
-            delta0, nPhi, nSpec, &
+            delta0, nSpec, &
             iSigma, nPtsX, nPtsY, npRow, npCol
         use grid
         use sigma_mod
@@ -117,7 +117,7 @@ contains
                                 call sigmaHot_maxwellian(i, j, &
                                     mSpec(s), &
                                     ktSpec(i,j,s), omgc(i,j,s), omgp2(i,j,s), &
-                                    xkxsav(n), xkysav(m), nphi, capr(i), &
+                                    xkxsav(n), xkysav(m), capr(i), &
                                     sigxxTmp, sigxyTmp, sigxzTmp, &
                                     sigyxTmp, sigyyTmp, sigyzTmp, &
                                     sigzxTmp, sigzyTmp, sigzzTmp, &
@@ -131,7 +131,7 @@ contains
                                 if (iSigma==0) & ! cold plasma 
                                 call sigmaCold_stix(i, j, &
                                     omgc(i,j,s), omgp2(i,j,s), &
-                                    xkxsav(n), xkysav(m), nphi, capr(i), &
+                                    xkxsav(n), xkysav(m), capr(i), &
                                     sigxxTmp, sigxyTmp, sigxzTmp, &
                                     sigyxTmp, sigyyTmp, sigyzTmp, &
                                     sigzxTmp, sigzyTmp, sigzzTmp, &
