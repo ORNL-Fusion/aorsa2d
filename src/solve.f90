@@ -69,7 +69,8 @@ contains
     subroutine solve_lsq_parallel ()
 
         use aorsa2din_mod, &
-        only: nPtsX, nPtsY, nModesX, nModesY, npRow, npCol
+        only: nPtsX, nPtsY, nModesX, nModesY, &
+            npRow, npCol, square
         use mat_fill, &
         only: aMat
         use antenna, &
@@ -91,6 +92,7 @@ contains
         integer :: icoffb, nb_b, Npb0, rsrc_a, rsrc_b
 
         integer, external :: ILCM, NUMROC, INDXG2P
+        integer, allocatable :: ipiv(:)
 
         integer :: ii, gg
 
@@ -138,27 +140,62 @@ contains
 
         lWork   = ltau + max ( lwf, lws )
 
-        allocate ( work ( lWork ) )
 
-        !write(*,*) trans, m, n, nrhs, ia, ja, ib, jb, lwork
+        ! Least squares or LU decomp for square array
+        ! -------------------------------------------
 
-        !write(*,*) descriptor_aMat
-        !write(*,*) descriptor_brhs
+        if(square) then 
 
-        !write(*,*) 'amat-------------------'
-        !write(*,*) aMat
-        !write(*,*) 'brhs-------------------'
-        !write(*,*) brhs
-        !write(*,*) '------------------------'
-        call pcgels ( trans, m, n, nrhs, aMat, ia, ja, descriptor_aMat, &
-                    brhs, ib, jb, descriptor_brhs, work, lWork, info ) 
-       
-        if (iAm==0) then 
-            write(*,*) '    pcgels status: ', info
-            write(*,*) '    actual/optimal lwork: ', lwork, real(work(1))
-        endif
+            if(iAm==0) write(*,*) &
+            "   using LU decomposition for square system"
 
-        deallocate ( work )
+            allocate ( ipiv ( numroc ( m, mb_a, myRow, rsrc_a, npRow ) + mb_a ) )
+
+            call pcgesv ( n, nrhs, aMat, ia, ja, descriptor_aMat, ipiv, &
+                    brhs, ib, jb, descriptor_brhs, info ) 
+
+            if (iAm==0) then 
+                write(*,*) '    pcgesv status: ', info
+            endif
+
+            deallocate ( ipiv )
+
+        else 
+
+            if(iAm==0) write(*,*) &
+            "   using least squares for n x m system"
+
+            allocate ( work ( lWork ) )
+
+            call pcgels ( trans, m, n, nrhs, aMat, ia, ja, descriptor_aMat, &
+                        brhs, ib, jb, descriptor_brhs, work, lWork, info ) 
+
+            if (iAm==0) then 
+                write(*,*) '    pcgels status: ', info
+                write(*,*) '    actual/optimal lwork: ', lwork, real(work(1))
+            endif
+
+            deallocate ( work )
+
+        endif 
+      
+        
+        call gather_coeffs ()
+
+    end subroutine solve_lsq_parallel
+
+
+    subroutine gather_coeffs ()
+
+        use aorsa2din_mod, &
+        only: nPtsX, nPtsY, nModesX, nModesY, npRow, npCol
+        use antenna, &
+        only: brhs, brhs_global
+        use parallel
+
+        implicit none
+
+        integer :: ii, gg
 
         !   Gather the solution vector from all processors by
         !   creating a global solution vector of the full, not
@@ -173,9 +210,6 @@ contains
                 gg   =  myRow*rowBlockSize+1 &
                         +mod(ii-1,rowBlockSize) &
                         +(ii-1)/rowBlockSize * npRow*rowBlockSize
-                !write(*,*) nRow, nRowLocal, &
-                !ii, myRow, rowBlockSize, ii/rowBlockSize, &
-                !    mod(ii,rowBlockSize), gg
                 brhs_global(gg) = brhs(ii)
 
             enddo
@@ -184,9 +218,7 @@ contains
         call cgSum2D ( iContext, 'All', ' ', nRow, 1, &
                 brhs_global, nRow, -1, -1 )
 
-        !write(*,*) brhs_global
-
-    end subroutine solve_lsq_parallel
+    end subroutine gather_coeffs
 
 
     subroutine extract_coeffs ()

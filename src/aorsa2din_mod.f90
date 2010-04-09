@@ -18,6 +18,7 @@ implicit none
     real :: r0 = 1.0
     real :: bx_frac = 0.0
     real :: by_frac = 0.0
+    logical :: square = .false.
  
 !     --------------------------------------------------------
 !     Declarations and defaults for aorsa2d.in input variables
@@ -422,7 +423,7 @@ implicit none
      &    dlgAntFileName, dlgProfileFileName, antGridMatch, domainMask, &
      &    use_dlg_bField, edgeCollisions, nSpec, zSpecIn, amuSpecIn, &
      &    tSpecIn, dSpecIn, tLimIn, dLimIn, &
-     &    tAlphaIn, tBetaIn, dAlphaIn, dBetaIn, useFluxProfiles
+     &    tAlphaIn, tBetaIn, dAlphaIn, dBetaIn, useFluxProfiles, square
                 
 contains
 

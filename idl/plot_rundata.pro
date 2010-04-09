@@ -11,8 +11,17 @@ pro plot_rundata
 		nCdf_varGet, cdfId, 'bzn', bz
 		nCdf_varGet, cdfId, 'densitySpec', densitySpec
 		nCdf_varGet, cdfId, 'tempSpec', tempSpec
-
+		nCdf_varGet, cdfId, 'tempSpec', tempSpec
+		nCdf_varGet, cdfId, 'xx_re', xx_re 
+		nCdf_varGet, cdfId, 'xx_im', xx_im
+		nCdf_varGet, cdfId, 'yy_re', yy_re 
+		nCdf_varGet, cdfId, 'yy_im', yy_im
+		nCdf_varGet, cdfId, 'xkxsav',  xkxsav
+		nCdf_varGet, cdfId, 'xkysav', xkysav 
 	ncdf_close, cdfId
+
+	xx	= complex ( xx_re, xx_im )
+	yy	= complex ( yy_re, yy_im )
 
 	;cdfId = ncdf_open ( 'amat.nc', /noWrite ) 
 	;	nCdf_varGet, cdfId, 'amat_re', amat_re

@@ -319,8 +319,8 @@ contains
                                         !   boundary conditions
                                         !   -------------------
 
-                                        if ( i==1 .or. i==nPtsX &
-                                                .or. j==1 .or. j==nPtsY ) then
+                                        if ( i==1 .or. i==nPtsX ) then !&
+                                                !.or. j==1 .or. j==nPtsY ) then
 
                                             if (ii==0 .and. jj==0) aMat(localRow,localCol) = cexpkxky 
                                             if (ii==1 .and. jj==0) aMat(localRow,localCol) = 0  

@@ -41,7 +41,8 @@ PAPI = -lpapi
 
 BOUNDS = -fbounds-check
 WARN = #-Wall
-DEBUG = -pg -g -fbacktrace -fsignaling-nans #-ffpe-trap=zero,invalid#,overflow#,underflow
+DEBUG = -pg -g -fbacktrace -fsignaling-nans -ffpe-trap=zero,invalid#,overflow#,underflow
+DOUBLE = -fdefault-real-8
 F90 = mpif90 #gfortran
 MOD_LOC = -Jmod
 
@@ -102,6 +103,8 @@ ${OBJ_DIR}/%.o: ${DLG_DIR}/%.f90
 ${OBJ_DIR}/%.o: ${DLG_DIR}/%.F90
 	${F90} -c ${F90FLAGS} $< -o $@ ${NETCDF} ${INC_DIR} ${CPP_DIRECTIVES}
 
+#${OBJ_DIR}/bessel.o: ${SRC_DIR}/bessel.f90
+#	${F90} -c ${F90FLAGS} ${DOUBLE} $< -o $@ ${NETCDF} ${INC_DIR} ${CPP_DIRECTIVES}
 
 # Dependencies	
 
@@ -128,7 +131,8 @@ ${OBJ_DIR}/eqdsk_dlg.o: \
 		${OBJ_DIR}/fitpack.o
 
 ${OBJ_DIR}/aorsaSubs.o: \
-		${OBJ_DIR}/bessel.o
+		${OBJ_DIR}/bessel.o \
+		${OBJ_DIR}/constants.o
 
 ${OBJ_DIR}/sigma.o: \
 		${OBJ_DIR}/bessel.o \

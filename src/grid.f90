@@ -75,6 +75,14 @@ contains
         kyL = -nModesY/2
         kyR =  nModesY/2
 
+
+        ! Catch for even number of modes
+        ! for producing a square matrix
+        ! ------------------------------
+
+        if (mod(nModesX,2)==0) kXL = kXL+1
+        if (mod(nModesY,2)==0) kYL = kYL+1
+
         if (iAm==0) then
             write(*,*) '    kx: ', kxL, kxR
             write(*,*) '    ky: ', kyL, kyR

@@ -12,7 +12,7 @@ contains
         use antenna, &
         only: xjx, xjy, xjz
         use grid, &
-        only: capR, y, xkxsav, xkysav
+        only: capR, y, xkxsav, xkysav, xx, yy
         use profiles
         use constants
 
@@ -27,6 +27,7 @@ contains
             bx_id, by_id, bz_id, bmod_id, &
             jy_re_id, jy_im_id, kx_id, ky_id, &
             dens_id, temp_id
+        integer :: xx_re_id, yy_re_id, xx_im_id, yy_im_id
 
         call check ( nf90_create ( fName, nf90_clobber, nc_id ) )
         call check ( nf90_def_dim ( nc_id, "nPtsX", nPtsX, nX_id ) )
@@ -37,7 +38,7 @@ contains
 
         call check ( nf90_def_var ( nc_id, "capR", NF90_REAL, &
             (/nX_id/), x_id ) ) 
-         call check ( nf90_def_var ( nc_id, "y", NF90_REAL, &
+        call check ( nf90_def_var ( nc_id, "y", NF90_REAL, &
             (/nY_id/), y_id ) ) 
  
         call check ( nf90_def_var ( nc_id, "bxn", NF90_REAL, &
@@ -59,6 +60,16 @@ contains
         call check ( nf90_def_var ( nc_id, "xkysav", NF90_REAL, &
             (/nModesY_id/), ky_id ) ) 
  
+        call check ( nf90_def_var ( nc_id, "xx_re", NF90_REAL, &
+            (/nModesX_id,nX_id/), xx_re_id ) ) 
+        call check ( nf90_def_var ( nc_id, "yy_re", NF90_REAL, &
+            (/nModesY_id,nY_id/), yy_re_id ) ) 
+        call check ( nf90_def_var ( nc_id, "xx_im", NF90_REAL, &
+            (/nModesX_id,nX_id/), xx_im_id ) ) 
+        call check ( nf90_def_var ( nc_id, "yy_im", NF90_REAL, &
+            (/nModesY_id,nY_id/), yy_im_id ) ) 
+ 
+
         nc_stat = nf90_def_var ( nc_id, "densitySpec", NF90_REAL, (/nX_id,nY_id,nSpec_id/), dens_id ) 
         nc_stat = nf90_def_var ( nc_id, "tempSpec", NF90_REAL, (/nX_id,nY_id,nSpec_id/), temp_id ) 
 
@@ -77,6 +88,12 @@ contains
         call check ( nf90_put_var ( nc_id, ky_id, xkysav ) )
         nc_stat = nf90_put_var ( nc_id, dens_id, densitySpec )
         nc_stat = nf90_put_var ( nc_id, temp_id, ktSpec / q )
+
+        call check ( nf90_put_var ( nc_id, xx_re_id, real ( xx ) ) )
+        call check ( nf90_put_var ( nc_id, yy_re_id, real ( yy ) ) )
+        call check ( nf90_put_var ( nc_id, xx_im_id, aimag ( xx ) ) )
+        call check ( nf90_put_var ( nc_id, yy_im_id, aimag ( yy ) ) )
+
 
         call check ( nf90_close ( nc_id ) )
 
