@@ -17,7 +17,7 @@ DLG_DIR = $(SRC_DIR)/dlg
 #OBJ_FFT := $(patsubst src/fftpack/%,obj/%.o,$(basename $(wildcard src/fftpack/*)))
 OBJ_DLG := $(patsubst src/dlg/%,obj/%.o,$(basename $(wildcard src/dlg/*)))
 OBJ_FILES := $(patsubst src/%,obj/%.o,$(basename $(wildcard src/*.*)))
-OBJ_CQL3D := $(patsubst src/cql3d/%,obj/%.o,$(basename $(wildcard src/cql3d/*.*)))
+#OBJ_CQL3D := $(patsubst src/cql3d/%,obj/%.o,$(basename $(wildcard src/cql3d/*.*)))
 
 
 # libraries 
@@ -35,6 +35,17 @@ SCALAPACK = ${HOME}/code/scalapack/scalapack_gnu64/libscalapack.a
 PAPI_INC = -I/usr/include 
 PAPI = -lpapi
 
+# set the MODE to "serial" or "parallel"
+
+MODE = "parallel"
+
+# pre-processor directives
+# ------------------------
+
+ifeq (${MODE},"parallel")
+	CPP_DIRECTIVES = -Dpar
+endif
+
 
 # compile flags
 # -------------
@@ -43,7 +54,11 @@ BOUNDS = -fbounds-check
 WARN = #-Wall
 DEBUG = -pg -g -fbacktrace -fsignaling-nans -ffpe-trap=zero,invalid#,overflow#,underflow
 DOUBLE = -fdefault-real-8
-F90 = mpif90 #gfortran
+ifeq (${MODE},"parallel")
+	F90 = mpif90
+else
+	F90 = gfortran
+endif
 MOD_LOC = -Jmod
 
 
@@ -66,7 +81,11 @@ MOD_LOC = -module mod
 endif
 
 # the order of linking libs is important
-LIBS = ${SCALAPACK} ${BLACS} ${BLAS} ${LAPACK} ${NETCDF} ${PAPI}
+ifeq (${MODE},"parallel")
+	LIBS = ${SCALAPACK} ${BLACS} ${BLAS} ${LAPACK} ${NETCDF} ${PAPI}
+else
+	LIBS = ${BLAS} ${LAPACK} ${NETCDF} ${PAPI}
+endif
 INC_DIR = ${PAPI_INC}
 
 F90FLAGS = ${WARN} ${DEBUG} ${BOUNDS} ${MOD_LOC} 
@@ -90,10 +109,10 @@ ${OBJ_DIR}/%.o: ${SRC_DIR}/%.f90
 ${OBJ_DIR}/%.o: ${SRC_DIR}/%.F90
 	${F90} -c ${F90FLAGS} $< -o $@ ${BOUNDS} ${NETCDF} ${CPP_DIRECTIVES} ${INC_DIR}
 
-# CQL files
-
-${OBJ_DIR}/%.o: ${CQL_DIR}/%.*
-	${F90} -c ${F90FLAGS} $< -o $@ ${BOUNDS} ${NETCDF}
+## CQL files
+#
+#${OBJ_DIR}/%.o: ${CQL_DIR}/%.*
+#	${F90} -c ${F90FLAGS} $< -o $@ ${BOUNDS} ${NETCDF}
 
 # DLG files
 		
@@ -104,7 +123,7 @@ ${OBJ_DIR}/%.o: ${DLG_DIR}/%.F90
 	${F90} -c ${F90FLAGS} $< -o $@ ${NETCDF} ${INC_DIR} ${CPP_DIRECTIVES}
 
 ${OBJ_DIR}/bessel.o: ${SRC_DIR}/bessel.f90
-	${F90} -c ${F90FLAGS} ${DOUBLE} $< -o $@ ${NETCDF} ${INC_DIR} ${CPP_DIRECTIVES}
+	${F90} -c ${F90FLAGS} ${DOUBLE} $< -o $@ ${NETCDF} ${INC_DIR}
 
 # Dependencies	
 

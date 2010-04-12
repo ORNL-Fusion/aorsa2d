@@ -10,6 +10,8 @@ integer :: nRow, nCol, nRowLocal, nColLocal
 
 contains
 
+#ifdef par
+
     subroutine init_procGrid ()
 
         use aorsa2din_mod, &
@@ -127,5 +129,7 @@ contains
         call blacs_exit ( 0 )
 
     end subroutine release_grid
+
+#endif
 
 end module parallel

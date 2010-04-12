@@ -52,7 +52,9 @@ program aorsa2dMain
     if (iAm==0) &
     write(*,*) 'Initialising the parallel environment'
 
+#ifdef par
     call init_procGrid ()
+#endif
 
 
 !   initialise the spatial grid
@@ -64,8 +66,8 @@ program aorsa2dMain
     call init_grid ()
 
 
-!   read g-eqdsk file
-!   -----------------
+!   setup magnetic field 
+!   --------------------
 
     if (iAm==0) &
     write(*,*) 'Reading eqdsk'
@@ -139,8 +141,11 @@ program aorsa2dMain
     !   sum total mflops from all procs
 
     papi_mflops_global  = papi_mflops
+
+#ifdef par
     call sgSum2D ( iContext, 'All', ' ', 1, 1, &
                 papi_mflops_global, 1, -1, -1 )
+#endif
 
     if (iAm==0) then
 
@@ -181,7 +186,9 @@ program aorsa2dMain
     if (iAm==0) &
     write(*,*) 'Solving complex linear system'
 
+#ifdef par
     call init_parallel_aMat ()
+#endif
 
     call start_timer ( tSolve )
 
@@ -189,7 +196,11 @@ program aorsa2dMain
     papi_rTime_zero = papi_rTime
     papi_pTime_zero = papi_pTime
 
+#ifdef par
     call solve_lsq_parallel ()
+#else
+    call solve_lsq ()
+#endif
 
     call PAPIF_flops ( papi_rTime, papi_pTime, papi_flpins, papi_mflops, papi_irc )
     papi_rTime_solve = papi_rTime - papi_rTime_zero
@@ -201,8 +212,11 @@ program aorsa2dMain
     !   sum total mflops from all procs
 
     papi_mflops_global  = papi_mflops
+
+#ifdef par
     call sgSum2D ( iContext, 'All', ' ', 1, 1, &
                 papi_mflops_global, 1, -1, -1 )
+#endif
 
     if (iAm==0) then
 
@@ -216,7 +230,6 @@ program aorsa2dMain
     endif
 
 
-    !call blacs_barrier ( iContext, 'A' )
     call extract_coeffs ()    
 
 
@@ -241,7 +254,9 @@ program aorsa2dMain
     if ( iAm == 0 ) &
     call write_solution ( 'solution.nc' )
 
+#ifdef par
     call release_grid ()
+#endif
 
 !
 !!     ----------------------------------------------

@@ -19,7 +19,7 @@ contains
         use mat_fill, &
         only: aMat
         use antenna, &
-        only: brhs
+        only: brhs, brhs_global
 
         implicit none
 
@@ -63,8 +63,11 @@ contains
 
         write(*,*) '    LAPACK status: ', info
 
+        brhs_global = brhs
+
     end subroutine solve_lsq
 
+#ifdef par
 
     subroutine solve_lsq_parallel ()
 
@@ -220,6 +223,7 @@ contains
 
     end subroutine gather_coeffs
 
+#endif
 
     subroutine extract_coeffs ()
 

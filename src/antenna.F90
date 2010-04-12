@@ -29,8 +29,11 @@ contains
         integer :: localRow, localCol, ii, jj
 
         allocate ( brhs_global(nPtsX*nPtsY*3) )
+#ifdef par
         allocate ( brhs(nRowLocal) )
-
+#else
+        allocate ( brhs(nPtsX*nPtsY*3) )
+#endif
         brhs        = 0
         brhs_global = 0
 
@@ -54,15 +57,23 @@ contains
                           )
                 xjz(i,j) = 0.0
 
-                !!   boundary conditions
-                !!   -------------------
+                !   boundary conditions
+                !   -------------------
 
-                !if ( i==1 .or. i==nPtsX ) then !&
-                !        !.or. j==1 .or. j==nPtsY ) then
-                !    xjx(i,j)    = 0
-                !    xjy(i,j)    = 0
-                !    xjz(i,j)    = 0
-                !endif
+                if ( i==1 .or. i==nPtsX ) then !&
+                        !.or. j==1 .or. j==nPtsY ) then
+                    xjx(i,j)    = 0
+                    xjy(i,j)    = 0
+                    xjz(i,j)    = 0
+                endif
+
+                if ( capR(i) < 0.18 .and. capR(i) > 1.6 ) then !&
+                        !.or. j==1 .or. j==nPtsY ) then
+                    xjx(i,j)    = 0
+                    xjy(i,j)    = 0
+                    xjz(i,j)    = 0
+                endif
+
 
            enddo
         enddo
@@ -81,6 +92,7 @@ contains
 
                 do ii = 0, 2
 
+#ifdef par
                     !   2D (with only 1 col) block cyclic storage, see:
                     !   http://www.netlib.org/scalapack/slug/node76.html
                     !       and
@@ -111,7 +123,11 @@ contains
                         if (ii==2) brhs(localRow)    = xjz(i,j)
 
                     endif
-
+#else
+                    if (ii==0) brhs(iRow+0)    = xjx(i,j)
+                    if (ii==1) brhs(iRow+1)    = xjy(i,j)
+                    if (ii==2) brhs(iRow+2)    = xjz(i,j)
+#endif
                 enddo
 
             enddo

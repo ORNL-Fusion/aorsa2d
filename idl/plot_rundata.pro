@@ -41,7 +41,7 @@ pro plot_rundata
 	window, 0, xSize = 800, ySize = 800
 	!p.multi = [0,3,3]
 	contour, jy_im, x, y
-	contour, bmod, x, y
+	contour, bmod, x, y, nLev = 30
 	contour, bx, x, y
 	contour, by, x, y
 	contour, bz, x, y

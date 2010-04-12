@@ -47,13 +47,17 @@ contains
         implicit none
 
         integer :: iRow, iCol, i, j, n, m, p, s, ii, jj
+        integer :: localRow, localCol
+        complex :: metal
+
+#ifdef par
 
         !   scalapack indicies
         !   see http://www.netlib.org/scalapack/slug/node76.html
 
         integer :: l_sp, m_sp, pr_sp, pc_sp, x_sp, y_sp
-        integer :: localRow, localCol
         integer :: pr_sp_thisPt(3), pc_sp_thisPt(3)
+
 
         if (iAm == 0) &
         write(*,100), &
@@ -62,20 +66,28 @@ contains
         100 format (' Filling aMat [global size: ',f8.1,' MB, local size: ',f8.1' MB]')
 
         allocate ( aMat(nRowLocal,nColLocal) )
-        aMat    = 0
+#else 
+        write(*,100), &
+            nPtsX*nPtsY*3*nModesX*nModesY*3*2*8.0 / 1024.0**2
+        100 format (' Filling aMat [global size: ',f8.1,' MB]')
 
+        allocate ( aMat(nPtsX*nPtsY*3,nModesX*nModesY*3) )
+#endif
+
+        aMat    = 0
+        metal   = ( 1e3,1e3 )
 
         i_loop: &
         do i=1,nPtsX
 
-            !!   progress indicator
-            !!   ------------------
-
-            !do p=1,7 
-            !    write(*,'(a)',advance='no') char(8)
-            !enddo
-            !write(*,'(1x,f5.1,a)',advance='no') real(i)/nPtsX*100, '%'
-
+#ifndef par
+            !   progress indicator
+            !   ------------------
+            do p=1,7 
+                write(*,'(a)',advance='no') char(8)
+            enddo
+            write(*,'(1x,f5.1,a)',advance='no') real(i)/nPtsX*100, '%'
+#endif
             j_loop: &
             do j=1,nPtsY
 
@@ -89,13 +101,13 @@ contains
                         !write(*,*) i, j, m, n, kxL, kxR, kyL, kyR
 
                         iCol = (n-kxL) * 3 * nModesY + (m-kyL) * 3 + 1
-
+#ifdef par
                         pr_sp_thisPt   = mod ( rowStartProc + (iRow-1+(/0,1,2/))/rowBlockSize, npRow )
                         pc_sp_thisPt   = mod ( colStartProc + (iCol-1+(/0,1,2/))/colBlockSize, npCol )
 
                         doWork: &
                         if ( any(pr_sp_thisPt==myRow) .and.  any(pc_sp_thisPt==myCol) ) then
-
+#endif
                             sigxx = 0.0
                             sigxy = 0.0
                             sigxz = 0.0
@@ -151,21 +163,22 @@ contains
 
                             enddo species
 
-                            !if ( capR(i) < 0.3 ) then
+                            if ( capR(i) < 0.18 .or. capR(i) > 1.6 &
+                                .or. y(j) > 1.0 .or. y(j) < -1.0 ) then
 
-                            !    sigxx = complex(0,1e10) 
-                            !    sigxy = 0
-                            !    sigxz = 0 
-                            !            
-                            !    sigyx = 0 
-                            !    sigyy = complex(0,1e10) 
-                            !    sigyz = 0 
-                            !            
-                            !    sigzx = 0 
-                            !    sigzy = 0 
-                            !    sigzz = complex(0,1e10) 
+                                sigxx = metal 
+                                sigxy = 0
+                                sigxz = 0 
+                                        
+                                sigyx = 0 
+                                sigyy = metal 
+                                sigyz = 0 
+                                        
+                                sigzx = 0 
+                                sigzy = 0 
+                                sigzz = metal 
 
-                            !endif
+                            endif
 
                             cexpkxky = xx(n, i) * yy(m, j)
 
@@ -295,7 +308,7 @@ contains
                             do ii=0,2
                                 jj_loop: &
                                 do jj=0,2
-
+#ifdef par
                                     pr_sp   = mod ( rowStartProc + (iRow-1+ii)/rowBlockSize, npRow )
                                     pc_sp   = mod ( colStartProc + (iCol-1+jj)/colBlockSize, npCol )
 
@@ -315,7 +328,10 @@ contains
 
                                         localRow    = l_sp*rowBlockSize+x_sp
                                         localCol    = m_sp*colBlockSize+y_sp
-
+#else
+                                        localRow    = iRow+ii
+                                        localCol    = iCol+jj
+#endif
                                         !write(*,*) iRow+ii, iCol+jj, l_sp, m_sp, &
                                         !    pr_sp, pc_sp, x_sp, y_sp, localRow, localCol
 
@@ -332,33 +348,33 @@ contains
                                         if (ii==2 .and. jj==2) aMat(localRow,localCol) = cexpkxky * dzz  
 
 
-                                        !!   boundary conditions
-                                        !!   -------------------
+                                        !   boundary conditions
+                                        !   -------------------
 
-                                        !if ( i==1 .or. i==nPtsX ) then !&
-                                        !        !.or. j==1 .or. j==nPtsY ) then
+                                        if ( i==1 .or. i==nPtsX ) then !&
+                                                !.or. j==1 .or. j==nPtsY ) then
 
-                                        !    if (ii==0 .and. jj==0) aMat(localRow,localCol) = cexpkxky 
-                                        !    if (ii==1 .and. jj==0) aMat(localRow,localCol) = 0  
-                                        !    if (ii==2 .and. jj==0) aMat(localRow,localCol) = 0  
+                                            if (ii==0 .and. jj==0) aMat(localRow,localCol) = cexpkxky 
+                                            if (ii==1 .and. jj==0) aMat(localRow,localCol) = 0  
+                                            if (ii==2 .and. jj==0) aMat(localRow,localCol) = 0  
                                    
-                                        !    if (ii==0 .and. jj==1) aMat(localRow,localCol) = 0  
-                                        !    if (ii==1 .and. jj==1) aMat(localRow,localCol) = cexpkxky   
-                                        !    if (ii==2 .and. jj==1) aMat(localRow,localCol) = 0   
+                                            if (ii==0 .and. jj==1) aMat(localRow,localCol) = 0  
+                                            if (ii==1 .and. jj==1) aMat(localRow,localCol) = cexpkxky   
+                                            if (ii==2 .and. jj==1) aMat(localRow,localCol) = 0   
                                    
-                                        !    if (ii==0 .and. jj==2) aMat(localRow,localCol) = 0   
-                                        !    if (ii==1 .and. jj==2) aMat(localRow,localCol) = 0   
-                                        !    if (ii==2 .and. jj==2) aMat(localRow,localCol) = cexpkxky   
+                                            if (ii==0 .and. jj==2) aMat(localRow,localCol) = 0   
+                                            if (ii==1 .and. jj==2) aMat(localRow,localCol) = 0   
+                                            if (ii==2 .and. jj==2) aMat(localRow,localCol) = cexpkxky   
 
-                                        !endif
-
+                                        endif
+#ifdef par
                                     endif myProc
-
+#endif
                                 enddo jj_loop
                             enddo ii_loop
-
+#ifdef par
                         endif doWork
-
+#endif
                     enddo m_loop
                 enddo n_loop 
 
