@@ -126,7 +126,7 @@ contains
       subroutine z_approx(sgn_kprl, zeta, gamma_, z0, z1, z2)
 
       use ztable_mod
-      use aorsasubs_mod
+      !use aorsasubs_mod
       use hammett, zfun_hammett => zfun
 
       implicit none
@@ -197,7 +197,7 @@ contains
       subroutine z_approx_im(sgn_kprl, zeta, gamma, z0, z1, z2)
 
       use ztable_mod
-      use aorsasubs_mod
+      !use aorsasubs_mod
 
       implicit none
 
@@ -262,7 +262,8 @@ contains
          al, bl, cl)
 
       use ztable_mod
-      use aorsasubs_mod
+      use hammett, zfun_hammett => zfun
+
 
       implicit none
 
@@ -274,7 +275,8 @@ contains
 
       if(sgn_kprl .ge. 0.0)then
 !        zfunct = fzeta(zeta_eff)
-         call zfun (zeta_eff, zfunct)
+         !call zfun (zeta_eff, zfunct)
+         zfunct = zfun_hammett ( zeta_eff )
 
          al = 1. /(xkprl_eff * alpha) * zfunct
          bl = 1. /(xkprl_eff * alpha) * (1. + zeta_eff * zfunct)
@@ -284,7 +286,8 @@ contains
 
       if(sgn_kprl .lt. 0.0)then
 !        zfunct = fzeta(-zeta_eff)
-         call zfun (-zeta_eff, zfunct)
+         !call zfun (-zeta_eff, zfunct)
+         zfunct = zfun_hammett ( -zeta_eff )
 
          al = - 1. /(xkprl_eff * alpha) * zfunct
          bl = - 1. /(xkprl_eff * alpha) * (1. - zeta_eff * zfunct)
@@ -415,5 +418,27 @@ contains
 
       return
       end subroutine dgrat1
+
+
+
+      SUBROUTINE ZFUN_IM(Z,FU)
+
+!     ---------------------------------------------------
+!     Evaluates only the imaginary part of the Z function
+!     ---------------------------------------------------
+
+      implicit none
+
+      complex z, fu, zi
+      real pi
+
+      pi = 3.14159
+      zi = cmplx (0.0, 1.0)
+
+      fu = zi * sqrt(pi) * cexp (-z*z)
+
+      return
+      end SUBROUTINE ZFUN_IM
+
 
 end module zfunction_mod

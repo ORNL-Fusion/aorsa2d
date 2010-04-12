@@ -284,33 +284,37 @@ end subroutine sigmaHot_maxwellian
          expbesovergam)
 
         use bessel_mod
+        use constants
 
 !     ----------------------------------------------------------
 !     Calculates exp(-gamma) times the modified bessel functions
 !     (and derivatives) of order up to lmax
 !     ----------------------------------------------------------
 
+
       implicit none
 
       integer, intent(in) :: lmax
       integer :: nmax, ier, l, lmaxdim
       complex, intent(in) :: gamma_
-      complex, intent(out) :: &
-        expbes(:), expbesp(:), expbesovergam(:)
-      complex, allocatable, dimension(:) :: &
-        xil, xilp, b
-      complex :: exgam
+      complex, intent(out) :: expbes(:), expbesp(:), expbesovergam(:)
+      complex(kind=dbl), allocatable, dimension(:) :: xil, xilp, b
+      complex(kind=dbl) :: exgam
       real :: gammod
       integer :: status
+      complex(kind=dbl) :: gamma_dbl
+
+      gamma_dbl = gamma_
 
       allocate ( xil(0:lMax), xilp(0:lMax), b(lMax+1), stat = status )
+      b = 0
 
-      exgam = exp(-gamma_)
+      exgam = exp(-gamma_dbl)
       gammod = cabs(gamma_)
 
       if(gammod .le. 700.)then
          nmax = lmax
-         call besic(gamma_, nmax, b, ier)
+         call besic(gamma_dbl, nmax, b, ier)
          if(ier .ne. 0)write(6,100) ier
 
          do l = 0, lMax
@@ -319,7 +323,7 @@ end subroutine sigmaHot_maxwellian
 
          do l = 0, lmax
            if(l .eq. 0) xilp(0) = xil(1)
-           if(l .ne. 0) xilp(l) = xil(l-1) - l / gamma_ * xil(l)
+           if(l .ne. 0) xilp(l) = xil(l-1) - l / gamma_dbl * xil(l)
            expbes(l+1) = exgam * xil(l)
            expbesp(l+1) = exgam * xilp(l)
          end do

@@ -151,6 +151,22 @@ contains
 
                             enddo species
 
+                            !if ( capR(i) < 0.3 ) then
+
+                            !    sigxx = complex(0,1e10) 
+                            !    sigxy = 0
+                            !    sigxz = 0 
+                            !            
+                            !    sigyx = 0 
+                            !    sigyy = complex(0,1e10) 
+                            !    sigyz = 0 
+                            !            
+                            !    sigzx = 0 
+                            !    sigzy = 0 
+                            !    sigzz = complex(0,1e10) 
+
+                            !endif
+
                             cexpkxky = xx(n, i) * yy(m, j)
 
                             xkxx = 1.0 + zi / (eps0 * omgrf) * sigxx
@@ -316,25 +332,25 @@ contains
                                         if (ii==2 .and. jj==2) aMat(localRow,localCol) = cexpkxky * dzz  
 
 
-                                        !   boundary conditions
-                                        !   -------------------
+                                        !!   boundary conditions
+                                        !!   -------------------
 
-                                        if ( i==1 .or. i==nPtsX ) then !&
-                                                !.or. j==1 .or. j==nPtsY ) then
+                                        !if ( i==1 .or. i==nPtsX ) then !&
+                                        !        !.or. j==1 .or. j==nPtsY ) then
 
-                                            if (ii==0 .and. jj==0) aMat(localRow,localCol) = cexpkxky 
-                                            if (ii==1 .and. jj==0) aMat(localRow,localCol) = 0  
-                                            if (ii==2 .and. jj==0) aMat(localRow,localCol) = 0  
+                                        !    if (ii==0 .and. jj==0) aMat(localRow,localCol) = cexpkxky 
+                                        !    if (ii==1 .and. jj==0) aMat(localRow,localCol) = 0  
+                                        !    if (ii==2 .and. jj==0) aMat(localRow,localCol) = 0  
                                    
-                                            if (ii==0 .and. jj==1) aMat(localRow,localCol) = 0  
-                                            if (ii==1 .and. jj==1) aMat(localRow,localCol) = cexpkxky   
-                                            if (ii==2 .and. jj==1) aMat(localRow,localCol) = 0   
+                                        !    if (ii==0 .and. jj==1) aMat(localRow,localCol) = 0  
+                                        !    if (ii==1 .and. jj==1) aMat(localRow,localCol) = cexpkxky   
+                                        !    if (ii==2 .and. jj==1) aMat(localRow,localCol) = 0   
                                    
-                                            if (ii==0 .and. jj==2) aMat(localRow,localCol) = 0   
-                                            if (ii==1 .and. jj==2) aMat(localRow,localCol) = 0   
-                                            if (ii==2 .and. jj==2) aMat(localRow,localCol) = cexpkxky   
+                                        !    if (ii==0 .and. jj==2) aMat(localRow,localCol) = 0   
+                                        !    if (ii==1 .and. jj==2) aMat(localRow,localCol) = 0   
+                                        !    if (ii==2 .and. jj==2) aMat(localRow,localCol) = cexpkxky   
 
-                                        endif
+                                        !endif
 
                                     endif myProc
 

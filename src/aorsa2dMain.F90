@@ -2,9 +2,8 @@ program aorsa2dMain
    
     use constants
     use eqdsk_dlg
-    use aorsasubs_mod
     use aorsa2din_mod
-    use fourier_mod
+    use inv_fourier
     use write_data
     use grid
     use bField

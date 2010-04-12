@@ -54,15 +54,15 @@ contains
                           )
                 xjz(i,j) = 0.0
 
-                !   boundary conditions
-                !   -------------------
+                !!   boundary conditions
+                !!   -------------------
 
-                if ( i==1 .or. i==nPtsX ) then !&
-                        !.or. j==1 .or. j==nPtsY ) then
-                    xjx(i,j)    = 0
-                    xjy(i,j)    = 0
-                    xjz(i,j)    = 0
-                endif
+                !if ( i==1 .or. i==nPtsX ) then !&
+                !        !.or. j==1 .or. j==nPtsY ) then
+                !    xjx(i,j)    = 0
+                !    xjy(i,j)    = 0
+                !    xjz(i,j)    = 0
+                !endif
 
            enddo
         enddo

@@ -75,8 +75,7 @@ contains
         use aorsa2din_mod, &
         only: nPtsX, nPtsY, nZFun
         use grid
-        use aorsasubs_mod, &
-        only: deriv_x, deriv_y, deriv_xy
+        use derivatives 
         use bField
         use eqdsk_dlg
 

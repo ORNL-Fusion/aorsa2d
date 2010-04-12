@@ -14,7 +14,7 @@ DLG_DIR = $(SRC_DIR)/dlg
 # objects
 # -------
 
-OBJ_FFT := $(patsubst src/fftpack/%,obj/%.o,$(basename $(wildcard src/fftpack/*)))
+#OBJ_FFT := $(patsubst src/fftpack/%,obj/%.o,$(basename $(wildcard src/fftpack/*)))
 OBJ_DLG := $(patsubst src/dlg/%,obj/%.o,$(basename $(wildcard src/dlg/*)))
 OBJ_FILES := $(patsubst src/%,obj/%.o,$(basename $(wildcard src/*.*)))
 OBJ_CQL3D := $(patsubst src/cql3d/%,obj/%.o,$(basename $(wildcard src/cql3d/*.*)))
@@ -77,10 +77,10 @@ LD_FLAGS =
 $(EXEC): $(OBJ_FILES) $(OBJ_FFT) $(OBJ_CQL3D_SETUP) $(OBJ_DLG) 
 	$(F90) -o $(EXEC) $(OBJ_FILES) $(OBJ_FFT) $(OBJ_CQL3D) $(OBJ_DLG) $(LIBS) ${LINK_FLAGS}
 			    		    		     		   			     			     				
-# FFT files
-
-${OBJ_DIR}/%.o: ${FFT_DIR}/%.f
-	${F90} -c ${F90FLAGS} $< -o $@ 
+## FFT files
+#
+#${OBJ_DIR}/%.o: ${FFT_DIR}/%.f
+#	${F90} -c ${F90FLAGS} $< -o $@ 
 				
 # SRC files
 
@@ -103,19 +103,18 @@ ${OBJ_DIR}/%.o: ${DLG_DIR}/%.f90
 ${OBJ_DIR}/%.o: ${DLG_DIR}/%.F90
 	${F90} -c ${F90FLAGS} $< -o $@ ${NETCDF} ${INC_DIR} ${CPP_DIRECTIVES}
 
-#${OBJ_DIR}/bessel.o: ${SRC_DIR}/bessel.f90
-#	${F90} -c ${F90FLAGS} ${DOUBLE} $< -o $@ ${NETCDF} ${INC_DIR} ${CPP_DIRECTIVES}
+${OBJ_DIR}/bessel.o: ${SRC_DIR}/bessel.f90
+	${F90} -c ${F90FLAGS} ${DOUBLE} $< -o $@ ${NETCDF} ${INC_DIR} ${CPP_DIRECTIVES}
 
 # Dependencies	
 
 ${OBJ_DIR}/aorsa2dMain.o: \
 		${OBJ_DIR}/constants.o \
 		${OBJ_DIR}/eqdsk_dlg.o \
-		${OBJ_DIR}/aorsaSubs.o \
 		${OBJ_DIR}/sigma.o \
 		${OBJ_DIR}/aorsa2din_mod.o \
 		${OBJ_DIR}/interp.o \
-		${OBJ_DIR}/fourier.o \
+		${OBJ_DIR}/inv_fourier.o \
 		${OBJ_DIR}/write_data.o \
 		${OBJ_DIR}/grid.o \
 		${OBJ_DIR}/bField.o \
@@ -130,10 +129,6 @@ ${OBJ_DIR}/eqdsk_dlg.o: \
 		${OBJ_DIR}/dlg.o \
 		${OBJ_DIR}/fitpack.o
 
-${OBJ_DIR}/aorsaSubs.o: \
-		${OBJ_DIR}/bessel.o \
-		${OBJ_DIR}/constants.o
-
 ${OBJ_DIR}/sigma.o: \
 		${OBJ_DIR}/bessel.o \
 		${OBJ_DIR}/zfunction.o \
@@ -142,7 +137,6 @@ ${OBJ_DIR}/sigma.o: \
 
 ${OBJ_DIR}/zfunction.o: \
 		${OBJ_DIR}/ztable.o \
-		${OBJ_DIR}/aorsaSubs.o \
 		${OBJ_DIR}/Zfun.o
 
 ${OBJ_DIR}/interp.o: \
@@ -164,9 +158,8 @@ ${OBJ_DIR}/profiles.o: \
 
 ${OBJ_DIR}/rotation.o: \
 		${OBJ_DIR}/bField.o \
-		${OBJ_DIR}/aorsa2din_mod.o \
+		${OBJ_DIR}/derivatives.o \
 		${OBJ_DIR}/grid.o \
-		${OBJ_DIR}/aorsaSubs.o \
 		${OBJ_DIR}/eqdsk_dlg.o
 
 ${OBJ_DIR}/grid.o: \
@@ -195,7 +188,7 @@ ${OBJ_DIR}/write_data.o: \
 		${OBJ_DIR}/mat_fill.o \
 		${OBJ_DIR}/solve.o
 
-${OBJ_DIR}/fourier.o: \
+${OBJ_DIR}/inv_fourier.o: \
 		${OBJ_DIR}/aorsa2din_mod.o \
 		${OBJ_DIR}/grid.o
 
