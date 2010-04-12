@@ -15,7 +15,7 @@ contains
     subroutine solve_lsq ()
 
         use aorsa2din_mod, &
-        only: nPtsX, nPtsY, nModesX, nModesY
+        only: nPtsX, nPtsY, nModesX, nModesY, square
         use mat_fill, &
         only: aMat
         use antenna, &
@@ -37,29 +37,34 @@ contains
         nRow    = nPtsX * nPtsY * 3
         nCol    = nModesX * nModesY * 3
 
-        !allocate ( ipiv ( nRow ), jpvt ( nCol ) )
+        if(square) then
 
-        !call cgesv ( nRow, 1, aMat, nRow, ipiv, brhs, nRow, info )
+            allocate ( ipiv ( nRow ) )
+            call cgesv ( nRow, 1, aMat, nRow, ipiv, brhs, nRow, info )
 
-        M_  = nRow
-        N_  = nCol
-        NRHS   = 1
-        LDA = maxVal ( (/ 1, M_ /) )
-        LDB = maxVal ( (/ 1, M_, N_ /) )
-        MN_ = minVal ( (/ M_, N_ /) )
-        LWORK   = MN_ + maxVal ( (/ 2 * MN_, N_ + 1, MN_ + NRHS /) )
-        RCOND   = 1E-12
+        else
 
-        allocate ( WORK ( maxVal ( (/ 1, LWORK /) ) ) )
-        allocate ( RWORK ( 2 * N_ ) )
-        allocate ( JPVT ( N_ ) ) 
+            M_  = nRow
+            N_  = nCol
+            NRHS   = 1
+            LDA = maxVal ( (/ 1, M_ /) )
+            LDB = maxVal ( (/ 1, M_, N_ /) )
+            MN_ = minVal ( (/ M_, N_ /) )
+            LWORK   = MN_ + maxVal ( (/ 2 * MN_, N_ + 1, MN_ + NRHS /) )
+            RCOND   = 1E-12
 
-        JPVT    = 0
+            allocate ( WORK ( maxVal ( (/ 1, LWORK /) ) ) )
+            allocate ( RWORK ( 2 * N_ ) )
+            allocate ( JPVT ( N_ ) ) 
 
-        write(*,*) shape ( amat ), M_*N_, size(amat)
+            JPVT    = 0
 
-        call cgelsy ( M_, N_, NRHS, aMat, LDA, brhs, LDB, JPVT, RCOND, RANK, &
-                            WORK, LWORK, RWORK, info )
+            write(*,*) shape ( amat ), M_*N_, size(amat)
+
+            call cgelsy ( M_, N_, NRHS, aMat, LDA, brhs, LDB, JPVT, RCOND, RANK, &
+                                WORK, LWORK, RWORK, info )
+
+        endif
 
         write(*,*) '    LAPACK status: ', info
 

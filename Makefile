@@ -37,7 +37,7 @@ PAPI = -lpapi
 
 # set the MODE to "serial" or "parallel"
 
-MODE = "parallel"
+MODE = "serial"
 
 # pre-processor directives
 # ------------------------

@@ -122,6 +122,11 @@ implicit none
       real :: rwright = 0.0            !-----rwright = major radius of the right conducting wall
       real :: ytop    = 0.0            !-----ytop = location of the upper conducting wall
       real :: ybot = 0.0            !-----ybottom = location of the lower conducting wall
+      real :: metalRight = 10.0
+      real :: metalLeft = 0.0
+      real :: metalTop = 10.0
+      real :: metalBot = -10.0
+
       real :: xLeft_ = 1.0
       real :: xRight_ = 2.0
       real :: freqcy = 3.2000E+07      !-----freqcy= rf frequency in Hertz
@@ -423,7 +428,8 @@ implicit none
      &    dlgAntFileName, dlgProfileFileName, antGridMatch, domainMask, &
      &    use_dlg_bField, edgeCollisions, nSpec, zSpecIn, amuSpecIn, &
      &    tSpecIn, dSpecIn, tLimIn, dLimIn, &
-     &    tAlphaIn, tBetaIn, dAlphaIn, dBetaIn, useFluxProfiles, square
+     &    tAlphaIn, tBetaIn, dAlphaIn, dBetaIn, useFluxProfiles, square, &
+     &    metalLeft, metalRight, metalTop, metalBot
                 
 contains
 

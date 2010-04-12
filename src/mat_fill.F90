@@ -35,7 +35,9 @@ contains
         use aorsa2din_mod, &
         only: nModesX, nModesY, &
             delta0, nSpec, &
-            iSigma, nPtsX, nPtsY, npRow, npCol
+            iSigma, nPtsX, nPtsY, npRow, npCol, &
+            metalLeft, metalRight, &
+            metalTop, metalBot
         use grid
         use sigma_mod
         use rotation
@@ -163,8 +165,8 @@ contains
 
                             enddo species
 
-                            if ( capR(i) < 0.18 .or. capR(i) > 1.6 &
-                                .or. y(j) > 1.0 .or. y(j) < -1.0 ) then
+                            if ( capR(i) < metalLeft .or. capR(i) > metalRight &
+                                .or. y(j) > metalTop .or. y(j) < metalBot ) then
 
                                 sigxx = metal 
                                 sigxy = 0
