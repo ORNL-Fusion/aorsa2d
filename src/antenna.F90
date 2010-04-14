@@ -1,9 +1,16 @@
 module antenna
 
+use constants
+
 implicit none
 
 real :: antSigX, antSigY
-complex, allocatable :: brhs(:), brhs_global(:)
+#ifndef dblprec
+    complex, allocatable :: brhs(:)
+#else
+    complex(kind=dbl), allocatable :: brhs(:)
+#endif
+complex, allocatable :: brhs_global(:)
 complex, allocatable, dimension(:,:) :: &
     xjx, xjy, xjz
 
@@ -13,9 +20,9 @@ contains
 
         use aorsa2din_mod, &
         only: rAnt, zAnt, nPtsX, nPtsY, npRow, npCol, &
-            antSigX, antSigY
+            antSigX, antSigY, &
+            metalLeft, metalRight, metalTop, metalBot
         use grid
-        use constants
         use profiles
         use parallel
 
@@ -60,15 +67,15 @@ contains
                 !   boundary conditions
                 !   -------------------
 
-                if ( i==1 .or. i==nPtsX ) then !&
-                        !.or. j==1 .or. j==nPtsY ) then
+                if ( i==1 .or. i==nPtsX &
+                        .or. j==1 .or. j==nPtsY ) then
                     xjx(i,j)    = 0
                     xjy(i,j)    = 0
                     xjz(i,j)    = 0
                 endif
 
-                if ( capR(i) < 0.18 .and. capR(i) > 1.6 ) then !&
-                        !.or. j==1 .or. j==nPtsY ) then
+                if ( capR(i) < metalLeft .or. capR(i) > metalRight &
+                        .or. y(j) > metalTop .or. y(j) < metalBot ) then 
                     xjx(i,j)    = 0
                     xjy(i,j)    = 0
                     xjz(i,j)    = 0

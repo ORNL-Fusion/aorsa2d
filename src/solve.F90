@@ -1,5 +1,7 @@
 module solve
 
+use constants
+
 implicit none
 
 complex, allocatable, dimension(:,:) :: &
@@ -30,8 +32,13 @@ contains
         
         integer :: M_, N_, NRHS, LDA, LDB, MN_, LWORK, RANK
         real :: RCOND
+#ifndef dblprec   
         real, allocatable :: rWork(:)
         complex, allocatable :: work(:)
+#else
+        real(kind=dbl), allocatable :: rWork(:)
+        complex(kind=dbl), allocatable :: work(:)
+#endif
         integer, allocatable, dimension(:) :: jpvt
           
         nRow    = nPtsX * nPtsY * 3
@@ -40,7 +47,12 @@ contains
         if(square) then
 
             allocate ( ipiv ( nRow ) )
+            ipiv = 0
+#ifndef dblprec
             call cgesv ( nRow, 1, aMat, nRow, ipiv, brhs, nRow, info )
+#else            
+            call zgesv ( nRow, 1, aMat, nRow, ipiv, brhs, nRow, info )
+#endif
 
         else
 
@@ -58,11 +70,17 @@ contains
             allocate ( JPVT ( N_ ) ) 
 
             JPVT    = 0
+            WORK    = 0
+            RWORK   = 0
 
             write(*,*) shape ( amat ), M_*N_, size(amat)
-
+#ifndef dblprec
             call cgelsy ( M_, N_, NRHS, aMat, LDA, brhs, LDB, JPVT, RCOND, RANK, &
                                 WORK, LWORK, RWORK, info )
+#else
+            call zgelsy ( M_, N_, NRHS, aMat, LDA, brhs, LDB, JPVT, RCOND, RANK, &
+                                WORK, LWORK, RWORK, info )
+#endif
 
         endif
 
@@ -92,7 +110,11 @@ contains
         integer :: ia, ja
         complex :: b
         integer :: ib, jb
+#ifndef dblprec
         complex, allocatable :: work(:)
+#else
+        complex(kind=dbl), allocatable :: work(:)
+#endif
         integer :: lWork, info
         integer :: ltau, lwf, lws, MpA0, NqA0, NRHSqB0, MpB0
         integer :: IROFFA, IAROW, IACOL, IROFFB, IBROW, IBCOL
@@ -158,10 +180,14 @@ contains
             "   using LU decomposition for square system"
 
             allocate ( ipiv ( numroc ( m, mb_a, myRow, rsrc_a, npRow ) + mb_a ) )
-
+            ipiv = 0
+#ifndef dblprec
             call pcgesv ( n, nrhs, aMat, ia, ja, descriptor_aMat, ipiv, &
                     brhs, ib, jb, descriptor_brhs, info ) 
-
+#else
+            call pzgesv ( n, nrhs, aMat, ia, ja, descriptor_aMat, ipiv, &
+                    brhs, ib, jb, descriptor_brhs, info ) 
+#endif
             if (iAm==0) then 
                 write(*,*) '    pcgesv status: ', info
             endif
@@ -174,10 +200,15 @@ contains
             "   using least squares for n x m system"
 
             allocate ( work ( lWork ) )
+            work = 0
 
+#ifndef dblprec
             call pcgels ( trans, m, n, nrhs, aMat, ia, ja, descriptor_aMat, &
                         brhs, ib, jb, descriptor_brhs, work, lWork, info ) 
-
+#else
+            call pzgels ( trans, m, n, nrhs, aMat, ia, ja, descriptor_aMat, &
+                        brhs, ib, jb, descriptor_brhs, work, lWork, info ) 
+#endif
             if (iAm==0) then 
                 write(*,*) '    pcgels status: ', info
                 write(*,*) '    actual/optimal lwork: ', lwork, real(work(1))
@@ -186,7 +217,13 @@ contains
             deallocate ( work )
 
         endif 
-      
+     
+        if  (info/=0) then
+
+            write(*,*) 'solve.F90: ERROR, solve did not complete successfully'
+            stop
+
+        endif 
         
         call gather_coeffs ()
 
@@ -219,6 +256,8 @@ contains
                         +mod(ii-1,rowBlockSize) &
                         +(ii-1)/rowBlockSize * npRow*rowBlockSize
                 brhs_global(gg) = brhs(ii)
+
+                !write(*,*) iAm, brhs(ii), brhs_global(gg)
 
             enddo
         endif

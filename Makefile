@@ -32,12 +32,17 @@ BLACS = \
 	${HOME}/code/blacs/blacs_gnu64/LIB/blacsF77init_MPI-LINUX-0.a \
 	${HOME}/code/blacs/blacs_gnu64/LIB/blacs_MPI-LINUX-0.a
 SCALAPACK = ${HOME}/code/scalapack/scalapack_gnu64/libscalapack.a
+#SCALAPACK = -L/usr/lib64/scalapack-openmpi -lscalapack
 PAPI_INC = -I/usr/include 
 PAPI = -lpapi
 
 # set the MODE to "serial" or "parallel"
 
-MODE = "serial"
+MODE = "parallel"
+
+# set solve precision to "single" or "double" 
+
+SOLVE_PREC = "double"
 
 # pre-processor directives
 # ------------------------
@@ -46,6 +51,9 @@ ifeq (${MODE},"parallel")
 	CPP_DIRECTIVES = -Dpar
 endif
 
+ifeq (${SOLVE_PREC},"double")
+	CPP_DIRECTIVES := -Ddblprec ${CPP_DIRECTIVES}
+endif
 
 # compile flags
 # -------------
@@ -205,7 +213,8 @@ ${OBJ_DIR}/antenna.o: \
 
 ${OBJ_DIR}/write_data.o: \
 		${OBJ_DIR}/mat_fill.o \
-		${OBJ_DIR}/solve.o
+		${OBJ_DIR}/solve.o \
+		${OBJ_DIR}/constants.o
 
 ${OBJ_DIR}/inv_fourier.o: \
 		${OBJ_DIR}/aorsa2din_mod.o \

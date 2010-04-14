@@ -158,7 +158,8 @@ program aorsa2dMain
 
     endif
 
-    !call write_amat ( 'amat.nc' )
+    if (iAm==0) &
+    call write_amat ( 'amat.nc' )
 
 
 !   Antenna current

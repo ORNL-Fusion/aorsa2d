@@ -1,5 +1,7 @@
 module mat_fill
 
+use constants
+
 implicit none
 
 complex :: cexpkxky
@@ -26,7 +28,12 @@ complex :: &
     frk, fqk, fsk
 complex, allocatable, dimension(:) :: &
     sss, ttt, qqq
-complex, allocatable :: aMat(:,:)
+
+#ifndef dblprec
+    complex, allocatable :: aMat(:,:)
+#else
+    complex(kind=dbl), allocatable :: aMat(:,:)
+#endif
 
 contains
 
@@ -41,7 +48,6 @@ contains
         use grid
         use sigma_mod
         use rotation
-        use constants
         use profiles
         use bField
         use parallel
@@ -77,7 +83,7 @@ contains
 #endif
 
         aMat    = 0
-        metal   = ( 1e3,1e3 )
+        metal   = ( 0,1e4 )
 
         i_loop: &
         do i=1,nPtsX
@@ -353,8 +359,8 @@ contains
                                         !   boundary conditions
                                         !   -------------------
 
-                                        if ( i==1 .or. i==nPtsX ) then !&
-                                                !.or. j==1 .or. j==nPtsY ) then
+                                        if ( i==1 .or. i==nPtsX &
+                                                .or. j==1 .or. j==nPtsY ) then
 
                                             if (ii==0 .and. jj==0) aMat(localRow,localCol) = cexpkxky 
                                             if (ii==1 .and. jj==0) aMat(localRow,localCol) = 0  
