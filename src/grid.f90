@@ -52,7 +52,7 @@ contains
             dy = yRange / (nPtsY-1)
             do j = 1, nPtsY
         
-                y(j) = (j-1) * dy + yBot
+                y(j) = (j-1) * dy + yBot 
         
             enddo
 
@@ -93,14 +93,12 @@ contains
             xkysav (kyL:kyR) )
 
         do n = kxL, kxR 
-            xkxsav(n) = 2.0 * pi * n / xRange 
+            xkxsav(n) = 2.0 * pi * n / (xRange+dx)
         enddo
 
         do m = kyL, kyR 
-            xkysav(m) = 2.0 * pi * m / yRange 
+            xkysav(m) = 2.0 * pi * m / (yRange+dy) 
         enddo
-
-        !write(*,*) 'WARNING: Running with /4 on the mode resolution'
 
         xk_cutoff   = sqrt ( xkxsav( kxR )**2 &
                                 + xkysav( kyR )**2 ) * xkperp_cutoff
@@ -111,7 +109,8 @@ contains
     subroutine init_basis_functions ()
 
         use aorsa2din_mod, &
-        only: nModesX, nModesY, nPtsX, nPtsY
+        only: nModesX, nModesY, nPtsX, nPtsY, &
+                rwLeft, yBot
         use constants
 
         implicit none
@@ -124,14 +123,14 @@ contains
 
         do i = 1, nPtsX
             do n = kxL, kxR 
-                xx(n, i) = exp(zi * xkxsav(n) * (capR(i)-minVal(capR)))
+                xx(n, i) = exp(zi * xkxsav(n) * ( capR(i)-rwLeft+dx/2 ) )
                 xx_inv(n,i) = 1.0/xx(n,i)
             enddo
         enddo
 
         do j = 1, nPtsY
             do m = kyL, kyR 
-                yy(m,j) = exp(zi * xkysav(m) * (y(j)-minVal(y)))
+                yy(m,j) = exp(zi * xkysav(m) * ( y(j)-yBot+dy/2 ) )
                 yy_inv(m,j) = 1.0/yy(m,j)
             enddo
         enddo

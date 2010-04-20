@@ -48,7 +48,7 @@ pro plot_solution
 
 		ealphak	= complex ( ealphak_re, ealphak_im )
 		ebetak	= complex ( ebetak_re, ebetak_im )
-		ebk	= complex ( ebk_re, eb_im )
+		ebk	= complex ( ebk_re, ebk_im )
 
 	ncdf_close, cdfId
 

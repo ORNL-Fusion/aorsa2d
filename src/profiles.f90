@@ -4,7 +4,7 @@ use constants
 
 implicit none
 
-real :: omgrf, xk0
+real :: omgrf, k0
 real, allocatable, dimension(:) :: mSpec, qSpec, tSpec, dSpec
 integer, allocatable, dimension(:) :: zSpec, amuSpec
 real, allocatable, dimension(:,:,:) :: &
@@ -24,7 +24,7 @@ contains
         implicit none
 
         omgrf = 2.0 * pi * freqcy
-        xk0 = omgrf / clight
+        k0 = omgrf / clight
         
         allocate ( &
             mSpec(nSpec), zSpec(nSpec), &

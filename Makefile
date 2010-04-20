@@ -14,11 +14,11 @@ DLG_DIR = $(SRC_DIR)/dlg
 # objects
 # -------
 
-#OBJ_FFT := $(patsubst src/fftpack/%,obj/%.o,$(basename $(wildcard src/fftpack/*)))
-OBJ_DLG := $(patsubst src/dlg/%,obj/%.o,$(basename $(wildcard src/dlg/*)))
 OBJ_FILES := $(patsubst src/%,obj/%.o,$(basename $(wildcard src/*.*)))
-#OBJ_CQL3D := $(patsubst src/cql3d/%,obj/%.o,$(basename $(wildcard src/cql3d/*.*)))
+OBJ_DLG := $(patsubst src/dlg/%,obj/%.o,$(basename $(wildcard src/dlg/*)))
 
+#OBJ_CQL3D := $(patsubst src/cql3d/%,obj/%.o,$(basename $(wildcard src/cql3d/*.*)))
+#OBJ_FFT := $(patsubst src/fftpack/%,obj/%.o,$(basename $(wildcard src/fftpack/*)))
 
 # libraries 
 # ---------
@@ -32,7 +32,6 @@ BLACS = \
 	${HOME}/code/blacs/blacs_gnu64/LIB/blacsF77init_MPI-LINUX-0.a \
 	${HOME}/code/blacs/blacs_gnu64/LIB/blacs_MPI-LINUX-0.a
 SCALAPACK = ${HOME}/code/scalapack/scalapack_gnu64/libscalapack.a
-#SCALAPACK = -L/usr/lib64/scalapack-openmpi -lscalapack
 PAPI_INC = -I/usr/include 
 PAPI = -lpapi
 

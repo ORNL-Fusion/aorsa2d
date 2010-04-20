@@ -14,9 +14,9 @@ complex :: &
     sigyxTmp, sigyyTmp, sigyzTmp, &
     sigzxTmp, sigzyTmp, sigzzTmp
 complex :: &
-    xkxx, xkxy, xkxz, &
-    xkyx, xkyy, xkyz, &
-    xkzx, xkzy, xkzz
+    kxx, kxy, kxz, &
+    kyx, kyy, kyz, &
+    kzx, kzy, kzz
 real :: rnx, rny, rnPhi 
 complex :: &
     dxx, dxy, dxz, &
@@ -57,6 +57,7 @@ contains
         integer :: iRow, iCol, i, j, n, m, p, s, ii, jj
         integer :: localRow, localCol
         complex :: metal
+        real :: kr, kz
 
 #ifdef par
 
@@ -141,7 +142,7 @@ contains
                                     sigxxTmp, sigxyTmp, sigxzTmp, &
                                     sigyxTmp, sigyyTmp, sigyzTmp, &
                                     sigzxTmp, sigzyTmp, sigzzTmp, &
-                                    delta0, omgrf, xk0, &
+                                    delta0, omgrf, k0, &
                                     xk_cutoff )
                               
                                 !if(iAm==0) &
@@ -190,126 +191,129 @@ contains
 
                             cexpkxky = xx(n, i) * yy(m, j)
 
-                            xkxx = 1.0 + zi / (eps0 * omgrf) * sigxx
-                            xkxy =       zi / (eps0 * omgrf) * sigxy
-                            xkxz =       zi / (eps0 * omgrf) * sigxz
+                            kxx = 1.0 + zi / (eps0 * omgrf) * sigxx
+                            kxy =       zi / (eps0 * omgrf) * sigxy
+                            kxz =       zi / (eps0 * omgrf) * sigxz
 
-                            xkyx =       zi / (eps0 * omgrf) * sigyx
-                            xkyy = 1.0 + zi / (eps0 * omgrf) * sigyy
-                            xkyz =       zi / (eps0 * omgrf) * sigyz
+                            kyx =       zi / (eps0 * omgrf) * sigyx
+                            kyy = 1.0 + zi / (eps0 * omgrf) * sigyy
+                            kyz =       zi / (eps0 * omgrf) * sigyz
 
-                            xkzx =       zi / (eps0 * omgrf) * sigzx
-                            xkzy =       zi / (eps0 * omgrf) * sigzy
-                            xkzz = 1.0 + zi / (eps0 * omgrf) * sigzz
+                            kzx =       zi / (eps0 * omgrf) * sigzx
+                            kzy =       zi / (eps0 * omgrf) * sigzy
+                            kzz = 1.0 + zi / (eps0 * omgrf) * sigzz
 
-                            rnx = xkxsav(n) / xk0
-                            rny = xkysav(m) / xk0
-                            rnPhi = xkphi(i) / xk0
+                            rnx = xkxsav(n) / k0
+                            rny = xkysav(m) / k0
+                            rnPhi = xkphi(i) / k0
 
-                            dxx = (xkxx - rny**2 - rnphi**2) * uxx(i,j) &
-                                +  xkyx * uyx(i,j) &
-                                +  xkzx * uzx(i,j) &
+                            kz  = xkysav(m)
+                            kr  = xkxsav(n)
+
+                            dxx = (kxx - rny**2 - rnphi**2) * uxx(i,j) &
+                                +  kyx * uyx(i,j) &
+                                +  kzx * uzx(i,j) &
                                 + rnx * (rny * uxy(i,j) + rnphi * uxz(i,j)) &
-                                - zi * rnphi / xk0 * &
+                                - zi * rnphi / k0 * &
                                          (uxz(i,j) / capr(i) + dxuxz(i,j)) &
-                                - zi * rny / xk0 * (dxuxy(i,j) - 2. * dyuxx(i,j)) &
-                                - zi * rnx / xk0 * dyuxy(i,j) &
-                                + 1. / xk0**2 * (dyyuxx(i,j) - dxyuxy(i,j))
+                                - zi * rny / k0 * (dxuxy(i,j) - 2. * dyuxx(i,j)) &
+                                - zi * rnx / k0 * dyuxy(i,j) &
+                                + 1. / k0**2 * (dyyuxx(i,j) - dxyuxy(i,j))
 
-                            dxy =  xkxy * uxx(i,j) &
-                                + (xkyy - rny**2 - rnphi**2) * uyx(i,j) &
-                                +  xkzy * uzx(i,j) &
+                            dxy =  kxy * uxx(i,j) &
+                                + (kyy - rny**2 - rnphi**2) * uyx(i,j) &
+                                +  kzy * uzx(i,j) &
                                 + rnx * (rny * uyy(i,j) + rnphi * uyz(i,j)) &
-                                - zi * rnphi / xk0 * &
+                                - zi * rnphi / k0 * &
                                          (uyz(i,j) / capr(i) + dxuyz(i,j)) &
-                                - zi * rny / xk0 * (dxuyy(i,j) - 2. * dyuyx(i,j)) &
-                                - zi * rnx / xk0 * dyuyy(i,j) &
-                                + 1. / xk0**2 * (dyyuyx(i,j) - dxyuyy(i,j))
+                                - zi * rny / k0 * (dxuyy(i,j) - 2. * dyuyx(i,j)) &
+                                - zi * rnx / k0 * dyuyy(i,j) &
+                                + 1. / k0**2 * (dyyuyx(i,j) - dxyuyy(i,j))
 
-                            dxz =  xkxz * uxx(i,j) &
-                                +  xkyz * uyx(i,j) &
-                                + (xkzz - rny**2 - rnphi**2) * uzx(i,j) &
+                            dxz =  kxz * uxx(i,j) &
+                                +  kyz * uyx(i,j) &
+                                + (kzz - rny**2 - rnphi**2) * uzx(i,j) &
                                 + rnx * (rny * uzy(i,j) + rnphi * uzz(i,j)) &
-                                - zi * rnphi / xk0 * &
+                                - zi * rnphi / k0 * &
                                          (uzz(i,j) / capr(i) + dxuzz(i,j)) &
-                                - zi * rny / xk0 * (dxuzy(i,j) - 2. * dyuzx(i,j)) &
-                                - zi * rnx / xk0 * dyuzy(i,j) &
-                                + 1. / xk0**2 * (dyyuzx(i,j) - dxyuzy(i,j))
+                                - zi * rny / k0 * (dxuzy(i,j) - 2. * dyuzx(i,j)) &
+                                - zi * rnx / k0 * dyuzy(i,j) &
+                                + 1. / k0**2 * (dyyuzx(i,j) - dxyuzy(i,j))
 
-                            dyx = (xkxx - rnx**2 - rnphi**2) * uxy(i,j) &
-                                +  xkyx * uyy(i,j) &
-                                +  xkzx * uzy(i,j) &
+                            dyx = (kxx - rnx**2 - rnphi**2) * uxy(i,j) &
+                                +  kyx * uyy(i,j) &
+                                +  kzx * uzy(i,j) &
                                 + rny * (rnx * uxx(i,j) + rnphi * uxz(i,j)) &
-                                - zi * rny / xk0 * &
+                                - zi * rny / k0 * &
                                          (dxuxx(i,j) + uxx(i,j) / capr(i)) &
-                                - zi * rnphi / xk0 * dyuxz(i,j) &
-                                - zi * rnx / xk0 * &
+                                - zi * rnphi / k0 * dyuxz(i,j) &
+                                - zi * rnx / k0 * &
                                 (dyuxx(i,j) - uxy(i,j) / capr(i) - 2.* dxuxy(i,j)) &
-                                + 1. / xk0**2 * (dxxuxy(i,j) - dxyuxx(i,j) &
+                                + 1. / k0**2 * (dxxuxy(i,j) - dxyuxx(i,j) &
                                 - dyuxx(i,j)/ capr(i) + dxuxy(i,j) / capr(i))
 
-                            dyy =  xkxy * uxy(i,j) &
-                                + (xkyy - rnx**2 - rnphi**2) * uyy(i,j) &
-                                +  xkzy * uzy(i,j) &
+                            dyy =  kxy * uxy(i,j) &
+                                + (kyy - rnx**2 - rnphi**2) * uyy(i,j) &
+                                +  kzy * uzy(i,j) &
                                 + rny * (rnx * uyx(i,j) + rnphi * uyz(i,j)) &
-                                - zi * rny / xk0 * &
+                                - zi * rny / k0 * &
                                          (dxuyx(i,j) + uyx(i,j) / capr(i)) &
-                                - zi * rnphi / xk0 * dyuyz(i,j) &
-                                - zi * rnx / xk0 * &
+                                - zi * rnphi / k0 * dyuyz(i,j) &
+                                - zi * rnx / k0 * &
                                 (dyuyx(i,j) - uyy(i,j) / capr(i) - 2.* dxuyy(i,j)) &
-                                + 1. / xk0**2 * (dxxuyy(i,j) - dxyuyx(i,j) &
+                                + 1. / k0**2 * (dxxuyy(i,j) - dxyuyx(i,j) &
                                 - dyuyx(i,j)/ capr(i) + dxuyy(i,j) / capr(i))
 
-                            dyz =  xkxz * uxy(i,j) &
-                                +  xkyz * uyy(i,j) &
-                                + (xkzz - rnx**2 - rnphi**2) * uzy(i,j) &
+                            dyz =  kxz * uxy(i,j) &
+                                +  kyz * uyy(i,j) &
+                                + (kzz - rnx**2 - rnphi**2) * uzy(i,j) &
                                 + rny * (rnx * uzx(i,j) + rnphi * uzz(i,j)) &
-                                - zi * rny / xk0 * &
+                                - zi * rny / k0 * &
                                          (dxuzx(i,j) + uzx(i,j) / capr(i)) &
-                                - zi * rnphi / xk0 * dyuzz(i,j) &
-                                - zi * rnx / xk0 * &
+                                - zi * rnphi / k0 * dyuzz(i,j) &
+                                - zi * rnx / k0 * &
                                 (dyuzx(i,j) - uzy(i,j) / capr(i) - 2.* dxuzy(i,j)) &
-                                + 1. / xk0**2 * (dxxuzy(i,j) - dxyuzx(i,j) &
+                                + 1. / k0**2 * (dxxuzy(i,j) - dxyuzx(i,j) &
                                 - dyuzx(i,j)/ capr(i) + dxuzy(i,j) / capr(i))
 
-                            dzx = (xkxx - rnx**2 - rny**2) * uxz(i,j) &
-                                +  xkyx * uyz(i,j) &
-                                +  xkzx * uzz(i,j) &
+                            dzx = (kxx - rnx**2 - rny**2) * uxz(i,j) &
+                                +  kyx * uyz(i,j) &
+                                +  kzx * uzz(i,j) &
                                 + rnphi * (rny * uxy(i,j) + rnx * uxx(i,j)) &
-                                + zi * rny / xk0 * 2. * dyuxz(i,j) &
-                                - zi * rnphi / xk0 * &
+                                + zi * rny / k0 * 2. * dyuxz(i,j) &
+                                - zi * rnphi / k0 * &
                                    (dyuxy(i,j) + dxuxx(i,j) - uxx(i,j) / capr(i)) &
-                                + zi * rnx / xk0 * &
+                                + zi * rnx / k0 * &
                                    (uxz(i,j) / capr(i) + 2.* dxuxz(i,j)) &
-                                - 1. / (xk0**2 * capr(i)) * &
+                                - 1. / (k0**2 * capr(i)) * &
                                    (uxz(i,j)/ capr(i) - dxuxz(i,j)) &
-                                + 1. / xk0**2  * (dxxuxz(i,j) + dyyuxz(i,j))
+                                + 1. / k0**2  * (dxxuxz(i,j) + dyyuxz(i,j))
 
-                            dzy =  xkxy * uxz(i,j) &
-                                + (xkyy - rnx**2 - rny**2) * uyz(i,j) &
-                                +  xkzy * uzz(i,j) &
+                            dzy =  kxy * uxz(i,j) &
+                                + (kyy - rnx**2 - rny**2) * uyz(i,j) &
+                                +  kzy * uzz(i,j) &
                                 + rnphi * (rny * uyy(i,j) + rnx * uyx(i,j)) &
-                                + zi * rny / xk0 * 2. * dyuyz(i,j) &
-                                - zi * rnphi / xk0 * &
+                                + zi * rny / k0 * 2. * dyuyz(i,j) &
+                                - zi * rnphi / k0 * &
                                    (dyuyy(i,j) + dxuyx(i,j) - uyx(i,j) / capr(i)) &
-                                + zi * rnx / xk0 * &
+                                + zi * rnx / k0 * &
                                    (uyz(i,j) / capr(i) + 2.* dxuyz(i,j)) &
-                                - 1. / (xk0**2 * capr(i)) * &
+                                - 1. / (k0**2 * capr(i)) * &
                                    (uyz(i,j)/ capr(i) - dxuyz(i,j)) &
-                                + 1. / xk0**2  * (dxxuyz(i,j) + dyyuyz(i,j))
+                                + 1. / k0**2  * (dxxuyz(i,j) + dyyuyz(i,j))
 
-                            dzz =  xkxz * uxz(i,j) &
-                                +  xkyz * uyz(i,j) &
-                                + (xkzz - rnx**2 - rny**2) * uzz(i,j) &
+                            dzz =  kxz * uxz(i,j) &
+                                +  kyz * uyz(i,j) &
+                                + (kzz - rnx**2 - rny**2) * uzz(i,j) &
                                 + rnphi * (rny * uzy(i,j) + rnx * uzx(i,j)) &
-                                + zi * rny / xk0 * 2. * dyuzz(i,j) &
-                                - zi * rnphi / xk0 * &
+                                + zi * rny / k0 * 2. * dyuzz(i,j) &
+                                - zi * rnphi / k0 * &
                                    (dyuzy(i,j) + dxuzx(i,j) - uzx(i,j) / capr(i)) &
-                                + zi * rnx / xk0 * &
+                                + zi * rnx / k0 * &
                                    (uzz(i,j) / capr(i) + 2.* dxuzz(i,j)) &
-                                - 1. / (xk0**2 * capr(i)) * &
+                                - 1. / (k0**2 * capr(i)) * &
                                    (uzz(i,j)/ capr(i) - dxuzz(i,j)) &
-                                + 1. / xk0**2  * (dxxuzz(i,j) + dyyuzz(i,j))
+                                + 1. / k0**2  * (dxxuzz(i,j) + dyyuzz(i,j))
 
 
                             ii_loop: &
