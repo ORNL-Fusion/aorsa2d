@@ -6,216 +6,231 @@ contains
         xm, &
         xkt, omgc, omgp2, &
         kxsav, kysav, capr, &
-        sigxx, sigxy, sigxz, &
-        sigyx, sigyy, sigyz, &
-        sigzx, sigzy, sigzz, &
+        sig_alp_alp, sig_alp_bet, sig_alp_prl, &
+        sig_bet_alp, sig_bet_bet, sig_bet_prl, &
+        sig_prl_alp, sig_prl_bet, sig_prl_prl, &
         delta0, &
         omgrf, xk0, &
         xk_cutoff )
 
-    use constants
-    use zfunction_mod
-    use rotation
-    use bField
-    use aorsa2din_mod, &
-    only: upshift, nzfun, damping, lmax, xnuomg, nPhi
+        use constants
+        use zfunction_mod
+        use rotation
+        use bField
+        use aorsa2din_mod, &
+        only: upshift, nzfun, damping, lmax, xnuomg, nPhi
+
+        ! This routine uses the modified Z functions Z0, Z1, Z2
+        ! with the appropriate sign changes for k_parallel < 0.0
+        ! No rotation is made.  Result is in the Stix frame,
+        ! (alp,bet,prl)
+        ! ---------------------------------------------------------
+
+        implicit none
+
+        integer :: l, labs, i, j
+        real :: xkperp, xkprl, xm, xkt, omgc, omgp2
+        real :: xkprl_eff, fgam, y0, y, sgn_kprl
+        real :: descrim
+        real :: nu_coll
+        real :: akprl,  alpha, omgrf
+        real :: gammab(-lmax:lmax), gamma_coll(-lmax:lmax)
+        real :: delta0, rhol
+        real :: kxsav, kysav, capr
+        real :: xkphi
+        real :: xkalp, xkbet, xk0, rgamma, xk_cutoff, kr, step
+        complex :: omgrfc
+        complex :: z0, z1, z2
+        complex :: sig0, sig1, sig2, sig3, sig4, sig5
+        complex :: sig0l, sig1l, sig2l, sig3l, sig4l, sig5l
+        integer, parameter :: lmaxdim = 99
+        complex, allocatable, dimension(:) :: &
+          exil, exilp, exilovergam
+        complex :: zetal(-lmax:lmax)
+        complex :: zieps0, al, bl, cl, gamma_
+        complex, intent(inout) :: &
+            sig_alp_alp, sig_alp_bet, sig_alp_prl, &
+            sig_bet_alp, sig_bet_bet, sig_bet_prl, &
+            sig_prl_alp, sig_prl_bet, sig_prl_prl
+
+        nu_coll =  .01 * omgrf
+        zieps0 = zi * eps0
+        alpha = sqrt(2. * xkt / xm)
+        rhol = alpha / omgc
+        xkphi = nphi / capr
+        omgrfc = omgrf * (1. + zi * xnuomg)
+
+        xkalp = uxx(i,j) * kxsav + uxy(i,j) * kysav + uxz(i,j) * xkphi
+        xkbet = uyx(i,j) * kxsav + uyy(i,j) * kysav + uyz(i,j) * xkphi
+        xkprl = uzx(i,j) * kxsav + uzy(i,j) * kysav + uzz(i,j) * xkphi
+        xkperp = sqrt(xkalp**2 + xkbet**2)
 
 
-!   This routine uses the modified Z functions Z0, Z1, Z2
-!   with the appropriate sign changes for k_parallel < 0.0
-!   No rotation is made.  Result is in the Stix frame.
-!   ---------------------------------------------------------
+        ! Optional: leave out upshift in xkprl
+        ! --------------------------------- --
 
-    implicit none
+        if (upshift .eq. 0)  xkprl = uzz(i,j) * xkphi
+        if (xkprl  .eq. 0.0) xkprl  = 1.0e-08
+        if (xkperp .eq. 0.0) xkperp = 1.0e-08
 
-    integer :: l, labs, i, j
-    real :: xkperp, xkprl, xm, xkt, omgc, omgp2
-    real :: xkprl_eff, fgam, y0, y, sgn_kprl
-    real :: descrim
-    real :: nu_coll
-    real :: akprl,  alpha, omgrf
-    real :: gammab(-lmax:lmax), gamma_coll(-lmax:lmax)
-    real :: delta0, rhol
-    real :: kxsav, kysav, capr
-    real :: xkphi
-    real :: xkalp, xkbet, xk0, rgamma, xk_cutoff, kr, step
-    complex :: omgrfc
-    complex :: z0, z1, z2
-    complex :: sig0, sig1, sig2, sig3, sig4, sig5
-    complex :: sig0l, sig1l, sig2l, sig3l, sig4l, sig5l
-    complex :: sigxx, sigxy, sigxz, &
-            sigyx, sigyy, sigyz, &
-            sigzx, sigzy, sigzz
-    integer, parameter :: lmaxdim = 99
-    complex, allocatable, dimension(:) :: &
-      exil, exilp, exilovergam
-    complex :: zetal(-lmax:lmax)
-    complex :: zieps0, al, bl, cl, gamma_
+        sgn_kprl = sign(1.0, xkprl)
+        akprl = abs(xkprl)
 
-    nu_coll =  .01 * omgrf
-    zieps0 = zi * eps0
-    alpha = sqrt(2. * xkt / xm)
-    rhol = alpha / omgc
-    xkphi = nphi / capr
-    omgrfc = omgrf * (1. + zi * xnuomg)
+        ! Calculate zetal(l) and gammab(l)
+        ! ---------------------------------
 
-    xkalp = uxx(i,j) * kxsav + uxy(i,j) * kysav + uxz(i,j) * xkphi
-    xkbet = uyx(i,j) * kxsav + uyy(i,j) * kysav + uyz(i,j) * xkphi
-    xkprl = uzx(i,j) * kxsav + uzy(i,j) * kysav + uzz(i,j) * xkphi
-    xkperp = sqrt(xkalp**2 + xkbet**2)
+        do l = -lmax, lmax
 
+            labs = abs(l)
+            zetal(l) = (omgrfc - l * omgc) / (xkprl * alpha)
+            gammab(l) = abs(l * omgc / (2.0 * alpha * xkprl**2) &
+                                                    * gradprlb(i,j) / bmod(i,j))
+            gamma_coll(l) = nu_coll / (akprl * alpha)
+            if(xm .eq. xme)gammab(l) = 0.0
+            if(abs(gammab(l)) .lt. .01)gammab(l) = .01
 
-!     Optional: leave out upshift in xkprl
-!     --------------------------------- --
+        enddo
 
-      if (upshift .eq. 0)  xkprl = uzz(i,j) * xkphi
-      if (xkprl  .eq. 0.0) xkprl  = 1.0e-08
-      if (xkperp .eq. 0.0) xkperp = 1.0e-08
+        ! Calculate Brambillas xkrpl_eff using l = 1 only
+        ! ------------------------------------------------
 
-      sgn_kprl = sign(1.0, xkprl)
-      akprl = abs(xkprl)
+        y0 = 1.5
+        y = y0
+
+        if(sgn_kprl .ge. 0.0)then
+
+            fgam = 1.0
+
+            if(gammab(1) .gt. 1.0e-05)then
+                y = y0
+                fgam = (sqrt(1. +  4. * gammab(1) * y) - 1.) &
+                  / (2. * gammab(1) * y)
+            endif
+
+            xkprl_eff = xkprl / fgam
+
+        endif
 
 
-!     Calculate zetal(l) and gammab(l)
-!     ---------------------------------
+        if(sgn_kprl .lt. 0.0)then
 
-      do l = -lmax, lmax
+            fgam = 1.0
 
-         labs = abs(l)
-         zetal(l) = (omgrfc - l * omgc) / (xkprl * alpha)
-         gammab(l) = abs(l * omgc / (2.0 * alpha * xkprl**2) &
-                                                 * gradprlb(i,j) / bmod(i,j))
-         gamma_coll(l) = nu_coll / (akprl * alpha)
-         if(xm .eq. xme)gammab(l) = 0.0
-         if(abs(gammab(l)) .lt. .01)gammab(l) = .01
+            if(gammab(1) .gt. 1.0e-05)then
 
-      enddo
+                descrim = 1. - 4. * gammab(1) * y0
+                if (descrim .ge. 0.0) y =   y0
+                if (descrim .lt. 0.0) y = - y0
+                fgam = (1. - sqrt(1. -  4. * gammab(1) * y) ) &
+                   / (2. * gammab(1) * y)
 
+            endif
 
-!     Calculate Brambillas xkrpl_eff using l = 1 only
-!     ------------------------------------------------
+            xkprl_eff = xkprl / fgam
 
-      y0 = 1.5
-      y = y0
-
-      if(sgn_kprl .ge. 0.0)then
-         fgam = 1.0
-
-         if(gammab(1) .gt. 1.0e-05)then
-            y = y0
-            fgam = (sqrt(1. +  4. * gammab(1) * y) - 1.) &
-               / (2. * gammab(1) * y)
-         endif
-
-         xkprl_eff = xkprl / fgam
-
-      endif
+        endif
 
 
-      if(sgn_kprl .lt. 0.0)then
-         fgam = 1.0
+        ! Maxwellian distribution
+        ! -----------------------
 
-         if(gammab(1) .gt. 1.0e-05)then
-            descrim = 1. - 4. * gammab(1) * y0
-            if (descrim .ge. 0.0) y =   y0
-            if (descrim .lt. 0.0) y = - y0
-            fgam = (1. - sqrt(1. -  4. * gammab(1) * y) ) &
-               / (2. * gammab(1) * y)
-         endif
-
-         xkprl_eff = xkprl / fgam
-
-      endif
-
-
-!   Maxwellian distribution
-!   -----------------------
-
-    gamma_ = 0.5 * xkperp**2 * rhol**2
-    rgamma = real(gamma_)
-    
-    if (.not. allocated(exil) ) &
-    allocate ( exil(0:lMax), exilp(0:lMax), exilOverGam(0:lMax) )
-
-    if(rgamma .ge. 1.0e-08) &
-    call besiexp(gamma_, lmax, exil, exilp, lmaxdim, exilovergam)
-
-    if(rgamma .lt. 1.0e-08) &
-    call bes_expand(gamma_, lmax, exil, exilp, lmaxdim, exilovergam)
-
-
-    sig0 = 0.0
-    sig1 = 0.0
-    sig2 = 0.0
-    sig3 = 0.0
-    sig4 = 0.0
-    sig5 = 0.0
-
-    do l = -lmax, lmax
-
-        labs = abs(l)
-
-        if(nzfun .eq. 0) call z_approx(sgn_kprl, zetal(l), 0.0, z0, z1, z2)
-        if(nzfun .eq. 1) call z_approx(sgn_kprl,zetal(l),gammab(l), z0, z1, z2)
-        if(nzfun .eq. 2) call z_smithe(sgn_kprl,zetal(l),gammab(l), z0, z1, z2)
-        if(nzfun .eq. 3) call z_table(sgn_kprl,zetal(l),gammab(l), gamma_coll(l), z0, z1, z2)
-
-        al = 1.0 / (xkprl * alpha) * z0
-        bl = 1.0 / (xkprl * alpha) * z1
-        cl = 1.0 / (xkprl * alpha) * z2
-
-        sig0l = - zieps0 * omgp2 * rhol**2 * (exil(labs) - exilp(labs)) * al
-        sig1l = - zieps0 * omgp2 * l**2 * exilovergam(labs) * al
-        sig2l = - eps0 * omgp2 * l * (exil(labs) - exilp(labs)) * al
-        sig3l = - zieps0 * omgp2 * 2.0 * exil(labs) * cl
-        sig4l = - zieps0 * omgp2 * rhol * l * exilovergam(labs) * bl
-        sig5l = - eps0 * omgp2 * rhol * (exil(labs) - exilp(labs)) * bl
-
-        sig0 = sig0 + sig0l
-        sig1 = sig1 + sig1l
-        sig2 = sig2 + sig2l
-        sig3 = sig3 + sig3l
-        sig4 = sig4 + sig4l
-        sig5 = sig5 + sig5l
-
-    enddo
+        gamma_ = 0.5 * xkperp**2 * rhol**2
+        rgamma = real(gamma_)
         
-    sig1 = sig1 + delta0 * eps0 * omgrfc * xkperp**2 / xk0**2
-    sig3 = sig3 + delta0 * eps0 * omgrfc * xkperp**2 / xk0**2
+        if (.not. allocated(exil) ) &
+        allocate ( exil(0:lMax), exilp(0:lMax), exilOverGam(0:lMax) )
 
-    if (xm .eq. xme) then
+        if(rgamma .ge. 1.0e-08) &
+        call besiexp(gamma_, lmax, exil, exilp, lmaxdim, exilovergam)
 
-        kr = xkperp / xk_cutoff
-        step = damping * kr**16 / (1. + kr**16)
-        sig3 = sig3 * (1.0 + step)
+        if(rgamma .lt. 1.0e-08) &
+        call bes_expand(gamma_, lmax, exil, exilp, lmaxdim, exilovergam)
 
-    end if
+        sig0 = 0.0
+        sig1 = 0.0
+        sig2 = 0.0
+        sig3 = 0.0
+        sig4 = 0.0
+        sig5 = 0.0
 
+        do l = -lmax, lmax
 
-!   Swanson's rotation (original):
-!   -----------------------------
+            labs = abs(l)
 
-    sigxx = sig1 + sig0 * xkbet**2
-    sigxy = sig2 - sig0 * xkbet * xkalp
-    sigxz = sig4 * xkalp + sig5 * xkbet
+            if(nzfun .eq. 0) call z_approx(sgn_kprl, zetal(l), 0.0, z0, z1, z2)
+            if(nzfun .eq. 1) call z_approx(sgn_kprl,zetal(l),gammab(l), z0, z1, z2)
+            if(nzfun .eq. 2) call z_smithe(sgn_kprl,zetal(l),gammab(l), z0, z1, z2)
+            if(nzfun .eq. 3) call z_table(sgn_kprl,zetal(l),gammab(l), gamma_coll(l), z0, z1, z2)
 
-    sigyx = - sig2 - sig0 * xkbet * xkalp
-    sigyy =   sig1 + sig0 * xkalp**2
-    sigyz =   sig4 * xkbet - sig5 * xkalp
+            al = 1.0 / (xkprl * alpha) * z0
+            bl = 1.0 / (xkprl * alpha) * z1
+            cl = 1.0 / (xkprl * alpha) * z2
 
-    sigzx = sig4 * xkalp - sig5 * xkbet
-    sigzy = sig4 * xkbet + sig5 * xkalp
-    sigzz = sig3
+            sig0l = - zieps0 * omgp2 * rhol**2 * (exil(labs) - exilp(labs)) * al
+            sig1l = - zieps0 * omgp2 * l**2 * exilovergam(labs) * al
+            sig2l = - eps0 * omgp2 * l * (exil(labs) - exilp(labs)) * al
+            sig3l = - zieps0 * omgp2 * 2.0 * exil(labs) * cl
+            sig4l = - zieps0 * omgp2 * rhol * l * exilovergam(labs) * bl
+            sig5l = - eps0 * omgp2 * rhol * (exil(labs) - exilp(labs)) * bl
 
-end subroutine sigmaHot_maxwellian
+            sig0 = sig0 + sig0l
+            sig1 = sig1 + sig1l
+            sig2 = sig2 + sig2l
+            sig3 = sig3 + sig3l
+            sig4 = sig4 + sig4l
+            sig5 = sig5 + sig5l
+
+        enddo
+            
+        sig1 = sig1 + delta0 * eps0 * omgrfc * xkperp**2 / xk0**2
+        sig3 = sig3 + delta0 * eps0 * omgrfc * xkperp**2 / xk0**2
+
+        if (xm .eq. xme) then
+
+            kr = xkperp / xk_cutoff
+            step = damping * kr**16 / (1. + kr**16)
+            sig3 = sig3 * (1.0 + step)
+
+        end if
+
+        
+        ! Swanson's rotation (original), to
+        ! (alp,bet,prl)
+        ! -----------------------------
+
+        !sigxx = sig1 + sig0 * xkbet**2
+        !sigxy = sig2 - sig0 * xkbet * xkalp
+        !sigxz = sig4 * xkalp + sig5 * xkbet
+
+        !sigyx = - sig2 - sig0 * xkbet * xkalp
+        !sigyy =   sig1 + sig0 * xkalp**2
+        !sigyz =   sig4 * xkbet - sig5 * xkalp
+
+        !sigzx = sig4 * xkalp - sig5 * xkbet
+        !sigzy = sig4 * xkbet + sig5 * xkalp
+        !sigzz = sig3
+
+        sig_alp_alp = sig1 + sig0 * xkbet**2
+        sig_alp_bet = sig2 - sig0 * xkbet * xkalp
+        sig_alp_prl = sig4 * xkalp + sig5 * xkbet
+
+        sig_bet_alp = - sig2 - sig0 * xkbet * xkalp
+        sig_bet_bet =   sig1 + sig0 * xkalp**2
+        sig_bet_prl =   sig4 * xkbet - sig5 * xkalp
+
+        sig_prl_alp = sig4 * xkalp - sig5 * xkbet
+        sig_prl_bet = sig4 * xkbet + sig5 * xkalp
+        sig_prl_prl = sig3
+
+    end subroutine sigmaHot_maxwellian
 
 
     subroutine sigmaCold_stix(i,j, &
         omgc, omgp2, &
         kxsav, kysav, capr, &
-        sigxx, sigxy, sigxz, &
-        sigyx, sigyy, sigyz, &
-        sigzx, sigzy, sigzz, &
+        sig_alp_alp, sig_alp_bet, sig_alp_prl, &
+        sig_bet_alp, sig_bet_bet, sig_bet_prl, &
+        sig_prl_alp, sig_prl_bet, sig_prl_prl, &
         omgrf )
 
         use constants 
@@ -223,24 +238,26 @@ end subroutine sigmaHot_maxwellian
         use aorsa2din_mod, &
         only: xnuomg, nPhi
 
-        !     This routine calculates sigma_cold in the Stix frame
-        !     ----------------------------------------------------
+        ! This routine calculates sigma_cold in the Stix frame
+        ! (alp,bet,prl)
+        ! ----------------------------------------------------
 
         implicit none
 
         integer, intent(in) :: i, j
         real, intent(in) :: omgc, omgp2
         real :: xkprl
-        real omgrf
+        real, intent(in) :: omgrf
         real, intent(in) :: kxsav, kysav, capr
-        real xkphi
-        real xkalp, xkbet
-        complex omgrfc
-        complex sig0, sig1, sig2, sig3, sig4, sig5
-        complex sigxx, sigxy, sigxz, &
-                sigyx, sigyy, sigyz, &
-                sigzx, sigzy, sigzz
-        complex zieps0
+        real :: xkphi
+        real :: xkalp, xkbet
+        complex :: omgrfc
+        complex :: sig0, sig1, sig2, sig3, sig4, sig5
+        complex, intent(inout) :: &
+            sig_alp_alp, sig_alp_bet, sig_alp_prl, &
+            sig_bet_alp, sig_bet_bet, sig_bet_prl, &
+            sig_prl_alp, sig_prl_bet, sig_prl_prl
+        complex :: zieps0
 
         zieps0 = zi * eps0
         xkphi = nphi / capr
@@ -258,20 +275,32 @@ end subroutine sigmaHot_maxwellian
         sig5 = 0.0
 
 
-        !     Swanson's rotation:
-        !     -------------------
+        ! Swanson's rotation to a particular Stix frame
+        ! ---------------------------------------------
 
-        sigxx = sig1 + sig0 * xkbet**2
-        sigxy = sig2 - sig0 * xkbet * xkalp
-        sigxz = sig4 * xkalp + sig5 * xkbet
+        !sigxx = sig1 + sig0 * xkbet**2
+        !sigxy = sig2 - sig0 * xkbet * xkalp
+        !sigxz = sig4 * xkalp + sig5 * xkbet
 
-        sigyx = - sig2 - sig0 * xkbet * xkalp
-        sigyy =   sig1 + sig0 * xkalp**2
-        sigyz =   sig4 * xkbet - sig5 * xkalp
+        !sigyx = - sig2 - sig0 * xkbet * xkalp
+        !sigyy =   sig1 + sig0 * xkalp**2
+        !sigyz =   sig4 * xkbet - sig5 * xkalp
 
-        sigzx = sig4 * xkalp - sig5 * xkbet
-        sigzy = sig4 * xkbet + sig5 * xkalp
-        sigzz = sig3
+        !sigzx = sig4 * xkalp - sig5 * xkbet
+        !sigzy = sig4 * xkbet + sig5 * xkalp
+        !sigzz = sig3
+
+        sig_alp_alp = sig1 + sig0 * xkbet**2
+        sig_alp_bet = sig2 - sig0 * xkbet * xkalp
+        sig_alp_prl = sig4 * xkalp + sig5 * xkbet
+
+        sig_bet_alp = - sig2 - sig0 * xkbet * xkalp
+        sig_bet_bet =   sig1 + sig0 * xkalp**2
+        sig_bet_prl =   sig4 * xkbet - sig5 * xkalp
+
+        sig_prl_alp = sig4 * xkalp - sig5 * xkbet
+        sig_prl_bet = sig4 * xkbet + sig5 * xkalp
+        sig_prl_prl = sig3
 
     end subroutine sigmaCold_stix
 

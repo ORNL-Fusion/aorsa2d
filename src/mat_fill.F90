@@ -6,22 +6,18 @@ implicit none
 
 complex :: cexpkxky
 complex :: &
-    sigxx, sigxy, sigxz, &
-    sigyx, sigyy, sigyz, &
-    sigzx, sigzy, sigzz
+    sigAlpAlp, sigAlpBet, sigAlpPrl, &
+    sigBetAlp, sigBetBet, sigBetPrl, &
+    sigPrlAlp, sigPrlBet, sigPrlPrl
 complex :: &
-    sigxxTmp, sigxyTmp, sigxzTmp, &
-    sigyxTmp, sigyyTmp, sigyzTmp, &
-    sigzxTmp, sigzyTmp, sigzzTmp
+    sigAlpAlpTmp, sigAlpBetTmp, sigAlpPrlTmp, &
+    sigBetAlpTmp, sigBetBetTmp, sigBetPrlTmp, &
+    sigPrlAlpTmp, sigPrlBetTmp, sigPrlPrlTmp
 complex :: &
-    kxx, kxy, kxz, &
-    kyx, kyy, kyz, &
-    kzx, kzy, kzz
+    kAlpAlp, kAlpBet, kAlpPrl, &
+    kBetAlp, kBetBet, kBetPrl, &
+    kPrlAlp, kPrlBet, kPrlPrl
 real :: rnx, rny, rnPhi 
-complex :: &
-    dxx, dxy, dxz, &
-    dyx, dyy, dyz, &
-    dzx, dzy, dzz 
 complex :: &
     fdk, fek, ffk, &
     fgk, fak, fpk, &
@@ -57,7 +53,16 @@ contains
         integer :: iRow, iCol, i, j, n, m, p, s, ii, jj
         integer :: localRow, localCol
         complex :: metal
-        real :: kr, kz
+        real :: kr, kth, kz, z
+        complex :: &
+            dxx, dxy, dxz, &
+            dyx, dyy, dyz, &
+            dzx, dzy, dzz 
+
+        complex :: &
+            mat_r_alp, mat_r_bet, mat_r_prl, &
+            mat_th_alp, mat_th_bet, mat_th_prl, &
+            mat_z_alp, mat_z_bet, mat_z_prl
 
 #ifdef par
 
@@ -117,15 +122,15 @@ contains
                         doWork: &
                         if ( any(pr_sp_thisPt==myRow) .and.  any(pc_sp_thisPt==myCol) ) then
 #endif
-                            sigxx = 0.0
-                            sigxy = 0.0
-                            sigxz = 0.0
-                            sigyx = 0.0
-                            sigyy = 0.0
-                            sigyz = 0.0
-                            sigzx = 0.0
-                            sigzy = 0.0
-                            sigzz = 0.0
+                            sigAlpAlp = 0.0
+                            sigAlpBet = 0.0
+                            sigAlpPrl = 0.0
+                            sigBetAlp = 0.0
+                            sigBetBet = 0.0
+                            sigBetPrl = 0.0
+                            sigPrlAlp = 0.0
+                            sigPrlBet = 0.0
+                            sigPrlPrl = 0.0
 
 
                             !   interior plasma region:
@@ -139,9 +144,9 @@ contains
                                     mSpec(s), &
                                     ktSpec(i,j,s), omgc(i,j,s), omgp2(i,j,s), &
                                     kxsav(n), kysav(m), capr(i), &
-                                    sigxxTmp, sigxyTmp, sigxzTmp, &
-                                    sigyxTmp, sigyyTmp, sigyzTmp, &
-                                    sigzxTmp, sigzyTmp, sigzzTmp, &
+                                    sigAlpAlpTmp, sigAlpBetTmp, sigAlpPrlTmp, &
+                                    sigBetAlpTmp, sigBetBetTmp, sigBetPrlTmp, &
+                                    sigPrlAlpTmp, sigPrlBetTmp, sigPrlPrlTmp, &
                                     delta0, omgrf, k0, &
                                     xk_cutoff )
                               
@@ -153,66 +158,68 @@ contains
                                 call sigmaCold_stix(i, j, &
                                     omgc(i,j,s), omgp2(i,j,s), &
                                     kxsav(n), kysav(m), capr(i), &
-                                    sigxxTmp, sigxyTmp, sigxzTmp, &
-                                    sigyxTmp, sigyyTmp, sigyzTmp, &
-                                    sigzxTmp, sigzyTmp, sigzzTmp, &
+                                    sigAlpAlpTmp, sigAlpBetTmp, sigAlpPrlTmp, &
+                                    sigBetAlpTmp, sigBetBetTmp, sigBetPrlTmp, &
+                                    sigPrlAlpTmp, sigPrlBetTmp, sigPrlPrlTmp, &
                                     omgrf )
 
-                                sigxx = sigxx + sigxxTmp 
-                                sigxy = sigxy + sigxyTmp 
-                                sigxz = sigxz + sigxzTmp 
+                                sigAlpAlp = sigAlpAlp + sigAlpAlpTmp 
+                                sigAlpBet = sigAlpBet + sigAlpBetTmp 
+                                sigAlpPrl = sigAlpPrl + sigAlpPrlTmp 
                                                
-                                sigyx = sigyx + sigyxTmp 
-                                sigyy = sigyy + sigyyTmp 
-                                sigyz = sigyz + sigyzTmp 
+                                sigBetAlp = sigBetAlp + sigBetAlpTmp 
+                                sigBetBet = sigBetBet + sigBetBetTmp 
+                                sigBetPrl = sigBetPrl + sigBetPrlTmp 
                                                
-                                sigzx = sigzx + sigzxTmp 
-                                sigzy = sigzy + sigzyTmp 
-                                sigzz = sigzz + sigzzTmp 
+                                sigPrlAlp = sigPrlAlp + sigPrlAlpTmp 
+                                sigPrlBet = sigPrlBet + sigPrlBetTmp 
+                                sigPrlPrl = sigPrlPrl + sigPrlPrlTmp 
 
                             enddo species
 
                             if ( capR(i) < metalLeft .or. capR(i) > metalRight &
                                 .or. y(j) > metalTop .or. y(j) < metalBot ) then
 
-                                sigxx = metal 
-                                sigxy = 0
-                                sigxz = 0 
+                                sigAlpAlp = metal 
+                                sigAlpBet = 0
+                                sigAlpPrl = 0 
                                         
-                                sigyx = 0 
-                                sigyy = metal 
-                                sigyz = 0 
+                                sigBetAlp = 0 
+                                sigBetBet = metal 
+                                sigBetPrl = 0 
                                         
-                                sigzx = 0 
-                                sigzy = 0 
-                                sigzz = metal 
+                                sigPrlAlp = 0 
+                                sigPrlBet = 0 
+                                sigPrlPrl = metal 
 
                             endif
 
                             cexpkxky = xx(n, i) * yy(m, j)
 
-                            kxx = 1.0 + zi / (eps0 * omgrf) * sigxx
-                            kxy =       zi / (eps0 * omgrf) * sigxy
-                            kxz =       zi / (eps0 * omgrf) * sigxz
+                            kAlpAlp = 1.0 + zi / (eps0 * omgrf) * sigAlpAlp
+                            kAlpBet =       zi / (eps0 * omgrf) * sigAlpBet
+                            kAlpPrl =       zi / (eps0 * omgrf) * sigAlpPrl
 
-                            kyx =       zi / (eps0 * omgrf) * sigyx
-                            kyy = 1.0 + zi / (eps0 * omgrf) * sigyy
-                            kyz =       zi / (eps0 * omgrf) * sigyz
+                            kBetAlp =       zi / (eps0 * omgrf) * sigBetAlp
+                            kBetBet = 1.0 + zi / (eps0 * omgrf) * sigBetBet
+                            kBetPrl =       zi / (eps0 * omgrf) * sigBetPrl
 
-                            kzx =       zi / (eps0 * omgrf) * sigzx
-                            kzy =       zi / (eps0 * omgrf) * sigzy
-                            kzz = 1.0 + zi / (eps0 * omgrf) * sigzz
+                            kPrlAlp =       zi / (eps0 * omgrf) * sigPrlAlp
+                            kPrlBet =       zi / (eps0 * omgrf) * sigPrlBet
+                            kPrlPrl = 1.0 + zi / (eps0 * omgrf) * sigPrlPrl
 
                             rnx = kxsav(n) / k0
                             rny = kysav(m) / k0
                             rnPhi = xkphi(i) / k0
 
-                            kz  = kysav(m)
-                            kr  = kxsav(n)
+                            kz  = kysav(m)  
+                            kth = xkphi(i) 
+                            kr  = kxsav(n) 
+                            z   = y(j)
 
-                            dxx = (kxx - rny**2 - rnphi**2) * uxx(i,j) &
-                                +  kyx * uyx(i,j) &
-                                +  kzx * uzx(i,j) &
+                            dxx = (kAlpAlp - rny**2 - rnphi**2) * uxx(i,j) &
+                                +  kBetAlp * uyx(i,j) &
+                                +  kPrlAlp * uzx(i,j) &
                                 + rnx * (rny * uxy(i,j) + rnphi * uxz(i,j)) &
                                 - zi * rnphi / k0 * &
                                          (uxz(i,j) / capr(i) + dxuxz(i,j)) &
@@ -220,9 +227,22 @@ contains
                                 - zi * rnx / k0 * dyuxy(i,j) &
                                 + 1. / k0**2 * (dyyuxx(i,j) - dxyuxy(i,j))
 
-                            dxy =  kxy * uxx(i,j) &
-                                + (kyy - rny**2 - rnphi**2) * uyx(i,j) &
-                                +  kzy * uzx(i,j) &
+                            mat_r_alp = -((kth**2*Urr_(i,j))/capR(i)**2) &
+                                - kz**2*Urr_(i,j) + &
+                                k0**2*KAlpAlp*Urr_(i,j) + &
+                                ((-zi + capR(i)*kr)*kth*Urth_(i,j))/capR(i)**2 &
+                                + kr*kz*Urz_(i,j) + &
+                                k0**2*KBetAlp*Uthr_(i,j) + &
+                                k0**2*KPrlAlp*Uzr_(i,j) + &
+                                2*zi*kz*dzUrr(i,j) - &
+                                zi*kr*dzUrz(i,j) + &
+                                dzzUrr(i,j) - &
+                                (zi*kth*drUrth(i,j))/capR(i) - &
+                                zi*kz*drUrz(i,j) - drzUrz(i,j)
+
+                            dxy =  kAlpBet * uxx(i,j) &
+                                + (kBetBet - rny**2 - rnphi**2) * uyx(i,j) &
+                                +  kPrlBet * uzx(i,j) &
                                 + rnx * (rny * uyy(i,j) + rnphi * uyz(i,j)) &
                                 - zi * rnphi / k0 * &
                                          (uyz(i,j) / capr(i) + dxuyz(i,j)) &
@@ -230,9 +250,22 @@ contains
                                 - zi * rnx / k0 * dyuyy(i,j) &
                                 + 1. / k0**2 * (dyyuyx(i,j) - dxyuyy(i,j))
 
-                            dxz =  kxz * uxx(i,j) &
-                                +  kyz * uyx(i,j) &
-                                + (kzz - rny**2 - rnphi**2) * uzx(i,j) &
+                            mat_r_bet = k0**2*KAlpBet*Urr_(i,j) &
+                                - (kth**2*Uthr_(i,j))/capR(i)**2 - &
+                                kz**2*Uthr_(i,j) + k0**2*KBetBet*Uthr_(i,j) - &
+                                (zi*kth*Uthth_(i,j))/capR(i)**2 &
+                                + (kr*kth*Uthth_(i,j))/capR(i) + &
+                                kr*kz*Uthz_(i,j) + k0**2*KPrlBet*Uzr_(i,j) + &
+                                2*zi*kz*dzUthr(i,j) &
+                                - zi*kr*dzUthz(i,j) + &
+                                dzzUthr(i,j) &
+                                - (zi*kth*drUthth(i,j))/capR(i) - &
+                                zi*kz*drUthz(i,j) &
+                                - drzUthz(i,j)
+
+                            dxz =  kAlpPrl * uxx(i,j) &
+                                +  kBetPrl * uyx(i,j) &
+                                + (kPrlPrl - rny**2 - rnphi**2) * uzx(i,j) &
                                 + rnx * (rny * uzy(i,j) + rnphi * uzz(i,j)) &
                                 - zi * rnphi / k0 * &
                                          (uzz(i,j) / capr(i) + dxuzz(i,j)) &
@@ -240,9 +273,22 @@ contains
                                 - zi * rnx / k0 * dyuzy(i,j) &
                                 + 1. / k0**2 * (dyyuzx(i,j) - dxyuzy(i,j))
 
-                            dyx = (kxx - rnx**2 - rnphi**2) * uxy(i,j) &
-                                +  kyx * uyy(i,j) &
-                                +  kzx * uzy(i,j) &
+                            mat_r_prl = k0**2*KAlpPrl*Urr_(i,j) + &
+                                k0**2*KBetPrl*Uthr_(i,j) - &
+                                (kth**2*Uzr_(i,j))/capR(i)**2 - kz**2*Uzr_(i,j) + &
+                                k0**2*KPrlPrl*Uzr_(i,j) &
+                                - (zi*kth*Uzth_(i,j))/capR(i)**2 + &
+                                (kr*kth*Uzth_(i,j))/capR(i) + kr*kz*Uzz_(i,j) + &
+                                2*zi*kz*dzUzr(i,j) &
+                                - zi*kr*dzUzz(i,j) + &
+                                dzzUzr(i,j) &
+                                - (zi*kth*drUzth(i,j))/capR(i) - &
+                                zi*kz*drUzz(i,j) &
+                                - drzUzz(i,j)
+
+                            dyx = (kAlpAlp - rnx**2 - rnphi**2) * uxy(i,j) &
+                                +  kBetAlp * uyy(i,j) &
+                                +  kPrlAlp * uzy(i,j) &
                                 + rny * (rnx * uxx(i,j) + rnphi * uxz(i,j)) &
                                 - zi * rny / k0 * &
                                          (dxuxx(i,j) + uxx(i,j) / capr(i)) &
@@ -252,9 +298,9 @@ contains
                                 + 1. / k0**2 * (dxxuxy(i,j) - dxyuxx(i,j) &
                                 - dyuxx(i,j)/ capr(i) + dxuxy(i,j) / capr(i))
 
-                            dyy =  kxy * uxy(i,j) &
-                                + (kyy - rnx**2 - rnphi**2) * uyy(i,j) &
-                                +  kzy * uzy(i,j) &
+                            dyy =  kAlpBet * uxy(i,j) &
+                                + (kBetBet - rnx**2 - rnphi**2) * uyy(i,j) &
+                                +  kPrlBet * uzy(i,j) &
                                 + rny * (rnx * uyx(i,j) + rnphi * uyz(i,j)) &
                                 - zi * rny / k0 * &
                                          (dxuyx(i,j) + uyx(i,j) / capr(i)) &
@@ -264,9 +310,9 @@ contains
                                 + 1. / k0**2 * (dxxuyy(i,j) - dxyuyx(i,j) &
                                 - dyuyx(i,j)/ capr(i) + dxuyy(i,j) / capr(i))
 
-                            dyz =  kxz * uxy(i,j) &
-                                +  kyz * uyy(i,j) &
-                                + (kzz - rnx**2 - rnphi**2) * uzy(i,j) &
+                            dyz =  kAlpPrl * uxy(i,j) &
+                                +  kBetPrl * uyy(i,j) &
+                                + (kPrlPrl - rnx**2 - rnphi**2) * uzy(i,j) &
                                 + rny * (rnx * uzx(i,j) + rnphi * uzz(i,j)) &
                                 - zi * rny / k0 * &
                                          (dxuzx(i,j) + uzx(i,j) / capr(i)) &
@@ -276,9 +322,9 @@ contains
                                 + 1. / k0**2 * (dxxuzy(i,j) - dxyuzx(i,j) &
                                 - dyuzx(i,j)/ capr(i) + dxuzy(i,j) / capr(i))
 
-                            dzx = (kxx - rnx**2 - rny**2) * uxz(i,j) &
-                                +  kyx * uyz(i,j) &
-                                +  kzx * uzz(i,j) &
+                            dzx = (kAlpAlp - rnx**2 - rny**2) * uxz(i,j) &
+                                +  kBetAlp * uyz(i,j) &
+                                +  kPrlAlp * uzz(i,j) &
                                 + rnphi * (rny * uxy(i,j) + rnx * uxx(i,j)) &
                                 + zi * rny / k0 * 2. * dyuxz(i,j) &
                                 - zi * rnphi / k0 * &
@@ -289,9 +335,9 @@ contains
                                    (uxz(i,j)/ capr(i) - dxuxz(i,j)) &
                                 + 1. / k0**2  * (dxxuxz(i,j) + dyyuxz(i,j))
 
-                            dzy =  kxy * uxz(i,j) &
-                                + (kyy - rnx**2 - rny**2) * uyz(i,j) &
-                                +  kzy * uzz(i,j) &
+                            dzy =  kAlpBet * uxz(i,j) &
+                                + (kBetBet - rnx**2 - rny**2) * uyz(i,j) &
+                                +  kPrlBet * uzz(i,j) &
                                 + rnphi * (rny * uyy(i,j) + rnx * uyx(i,j)) &
                                 + zi * rny / k0 * 2. * dyuyz(i,j) &
                                 - zi * rnphi / k0 * &
@@ -302,9 +348,9 @@ contains
                                    (uyz(i,j)/ capr(i) - dxuyz(i,j)) &
                                 + 1. / k0**2  * (dxxuyz(i,j) + dyyuyz(i,j))
 
-                            dzz =  kxz * uxz(i,j) &
-                                +  kyz * uyz(i,j) &
-                                + (kzz - rnx**2 - rny**2) * uzz(i,j) &
+                            dzz =  kAlpPrl * uxz(i,j) &
+                                +  kBetPrl * uyz(i,j) &
+                                + (kPrlPrl - rnx**2 - rny**2) * uzz(i,j) &
                                 + rnphi * (rny * uzy(i,j) + rnx * uzx(i,j)) &
                                 + zi * rny / k0 * 2. * dyuzz(i,j) &
                                 - zi * rnphi / k0 * &
@@ -315,6 +361,17 @@ contains
                                    (uzz(i,j)/ capr(i) - dxuzz(i,j)) &
                                 + 1. / k0**2  * (dxxuzz(i,j) + dyyuzz(i,j))
 
+                            if(iAm==0) then
+                            write(*,*) dxx, dxy, dxz
+                            write(*,*) dyx, dyy, dyz
+                            write(*,*) dzx, dzy, dzz
+
+                            write(*,*)
+
+                            write(*,*) mat_r_alp/k0**2, mat_r_bet/k0**2, mat_r_prl/k0**2
+                            endif
+
+                            stop
 
                             ii_loop: &
                             do ii=0,2

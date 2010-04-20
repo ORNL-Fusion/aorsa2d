@@ -67,6 +67,7 @@ contains
 
         integer :: i,j 
         real, allocatable :: sqr(:,:)
+        real, allocatable :: det(:,:)
 
         allocate ( sqr ( nPtsx, nPtsY ) )
         allocate ( btau ( nPtsX, nPtsY ) )
@@ -132,6 +133,28 @@ contains
         Uzr_     = brn_
         Uzth_    = bthn_
         Uzz_     = bzn_
+
+
+        ! Check the determinant, should = 1
+        ! ---------------------------------
+    
+        allocate(det(nPtsX,nPtsY))
+
+        det = Urr_ * Uthth_ * Uzz_ &
+            + Urth_ * Uthz_ * Uzr_ &
+            + Urz_ * Uthr_ * Uzth_ &
+            - Urr_ * Uthz_ * Uzth_ &
+            - Urth_ * Uthr_ * Uzz_ &
+            - Urz_ * Uthth_ * Uzr_
+
+        if ( any(1-det>1e-4) ) then
+
+            write(*,*) 'rotation.f90: ERROR det != 1'
+            stop
+
+        endif
+
+        deallocate(det)
 
     end subroutine init_rotation
 
