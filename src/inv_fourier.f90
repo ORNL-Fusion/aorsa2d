@@ -9,7 +9,7 @@ contains
         use aorsa2din_mod, &
         only: nPtsX, nPtsY, nModesX, nModesY
         use grid, &
-        only: kxL, kxR, kyL, kyR, xkxsav, xkysav, xx, yy
+        only: kxL, kxR, kyL, kyR, kxsav, kysav, xx, yy
  
         implicit none
         
@@ -45,8 +45,8 @@ contains
                       cexpkxky = xx(kxL+n-1, i) * yy(kyL+m-1, j)
 
                       f(i,j) = f(i,j) + a(n,m) * cexpkxky
-                      if (present(fx)) fx(i,j) = f(i,j) + xkxsav(kxL+n-1) * a(n,m) * cexpkxky
-                      if (present(fy)) fy(i,j) = f(i,j) + xkysav(kyL+m-1) * a(n,m) * cexpkxky
+                      if (present(fx)) fx(i,j) = f(i,j) + kxsav(kxL+n-1) * a(n,m) * cexpkxky
+                      if (present(fy)) fy(i,j) = f(i,j) + kysav(kyL+m-1) * a(n,m) * cexpkxky
 
                     enddo
                 enddo

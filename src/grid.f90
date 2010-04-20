@@ -8,7 +8,7 @@ real, allocatable, dimension(:) :: y
 real :: dx, dy, xRange, yRange
 
 !   init_k
-real, allocatable, dimension(:) :: xkxsav, xkysav
+real, allocatable, dimension(:) :: kxsav, kysav
 real :: xk_cutOff
 integer :: kxL, kxR, kyL, kyR
 
@@ -89,19 +89,19 @@ contains
         endif
 
         allocate ( &
-            xkxsav (kxL:kxR), &
-            xkysav (kyL:kyR) )
+            kxsav (kxL:kxR), &
+            kysav (kyL:kyR) )
 
         do n = kxL, kxR 
-            xkxsav(n) = 2.0 * pi * n / (xRange+dx)
+            kxsav(n) = 2.0 * pi * n / (xRange+dx)
         enddo
 
         do m = kyL, kyR 
-            xkysav(m) = 2.0 * pi * m / (yRange+dy) 
+            kysav(m) = 2.0 * pi * m / (yRange+dy) 
         enddo
 
-        xk_cutoff   = sqrt ( xkxsav( kxR )**2 &
-                                + xkysav( kyR )**2 ) * xkperp_cutoff
+        xk_cutoff   = sqrt ( kxsav( kxR )**2 &
+                                + kysav( kyR )**2 ) * xkperp_cutoff
 
     end subroutine init_k
 
@@ -123,14 +123,14 @@ contains
 
         do i = 1, nPtsX
             do n = kxL, kxR 
-                xx(n, i) = exp(zi * xkxsav(n) * ( capR(i)-rwLeft+dx/2 ) )
+                xx(n, i) = exp(zi * kxsav(n) * ( capR(i)-rwLeft+dx/2 ) )
                 xx_inv(n,i) = 1.0/xx(n,i)
             enddo
         enddo
 
         do j = 1, nPtsY
             do m = kyL, kyR 
-                yy(m,j) = exp(zi * xkysav(m) * ( y(j)-yBot+dy/2 ) )
+                yy(m,j) = exp(zi * kysav(m) * ( y(j)-yBot+dy/2 ) )
                 yy_inv(m,j) = 1.0/yy(m,j)
             enddo
         enddo

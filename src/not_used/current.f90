@@ -13,7 +13,7 @@ contains
          nxdim, nydim, nnodex, nnodey, &
          nkx1, nkx2, nky1, nky2, nkdim1, nkdim2, mkdim1, mkdim2, &
          xm, q, xn, xkt, omgc, omgp2, lmax, &
-         xkxsav, xkysav, nzfun, ibessel, &
+         kxsav, kysav, nzfun, ibessel, &
          exk, eyk, ezk, nphi, capr, &
          bxn, byn, bzn, &
          uxx, uxy, uxz, &
@@ -90,7 +90,7 @@ contains
               eyk(nkdim1 : nkdim2, mkdim1 : mkdim2), &
               ezk(nkdim1 : nkdim2, mkdim1 : mkdim2)
 
-      real xkxsav(nkdim1 : nkdim2), xkysav(mkdim1 : mkdim2)
+      real kxsav(nkdim1 : nkdim2), kysav(mkdim1 : mkdim2)
       real q, xn(nxdim, nydim), xkt(nxdim, nydim)
       real bxn(nxdim, nydim), byn(nxdim, nydim), bzn(nxdim, nydim)
 
@@ -161,8 +161,8 @@ contains
 !                    Calculate C_ehst
 !                    ----------------
 
-!                     xkprl = uzx(i, j) * xkxsav(n)
-!     .                    + uzy(i, j) * xkysav(m)
+!                     xkprl = uzx(i, j) * kxsav(n)
+!     .                    + uzy(i, j) * kysav(m)
 !     .                    + uzz(i, j) * xkphi
 
                      xkprl = uzz(i, j) * xkphi
@@ -240,7 +240,7 @@ contains
                             xm, q, xn(i,j), xnuomg(i,j), &
                             xkt(i,j), omgc(i,j), omgp2(i,j), &
                             -lmax, lmax, nzfun, ibessel, &
-                            xkxsav(n), xkysav(m), nphi, capr(i), &
+                            kxsav(n), kysav(m), nphi, capr(i), &
                             bxn(i,j), byn(i,j), bzn(i,j), &
                             uxx(i,j), uxy(i,j), uxz(i,j), &
                             uyx(i,j), uyy(i,j), uyz(i,j), &
@@ -262,7 +262,7 @@ contains
                             xm, q, xn(i,j), xnuomg(i,j), &
                             xkt(i,j), omgc(i,j), omgp2(i,j), &
                             -lmax, lmax, nzfun, ibessel, &
-                            xkxsav(n), xkysav(m), nphi, capr(i), &
+                            kxsav(n), kysav(m), nphi, capr(i), &
                             bxn(i,j), byn(i,j), bzn(i,j), &
                             uxx(i,j), uxy(i,j), uxz(i,j), &
                             uyx(i,j), uyy(i,j), uyz(i,j), &
@@ -342,7 +342,7 @@ contains
       subroutine current(xjpx, xjpy, xjpz, nxdim, nydim, nnodex, nnodey, &
          nkx1, nkx2, nky1, nky2, nkdim1, nkdim2, mkdim1, mkdim2, &
          xm, q, xn, xkt, omgc, omgp2, lmax, &
-         xkxsav, xkysav, nzfun, ibessel, &
+         kxsav, kysav, nzfun, ibessel, &
          exk, eyk, ezk, nphi, capr, &
          bxn, byn, bzn, &
          uxx, uxy, uxz, &
@@ -405,7 +405,7 @@ contains
               eyk(nkdim1 : nkdim2, mkdim1 : mkdim2), &
               ezk(nkdim1 : nkdim2, mkdim1 : mkdim2)
 
-      real xkxsav(nkdim1 : nkdim2), xkysav(mkdim1 : mkdim2)
+      real kxsav(nkdim1 : nkdim2), kysav(mkdim1 : mkdim2)
       real q, xn(nxdim, nydim), xkt(nxdim, nydim)
       real bxn(nxdim, nydim), byn(nxdim, nydim), bzn(nxdim, nydim)
 
@@ -455,7 +455,7 @@ contains
                             xm, q, xn(i,j), xnuomg(i,j), &
                             xkt(i,j), omgc(i,j), omgp2(i,j), &
                             -lmax, lmax, nzfun, ibessel, &
-                            xkxsav(n), xkysav(m), nphi, capr(i), &
+                            kxsav(n), kysav(m), nphi, capr(i), &
                             bxn(i,j), byn(i,j), bzn(i,j), &
                             uxx(i,j), uxy(i,j), uxz(i,j), &
                             uyx(i,j), uyy(i,j), uyz(i,j), &
@@ -477,7 +477,7 @@ contains
                             xm, q, xn(i,j), xnuomg(i,j), &
                             xkt(i,j), omgc(i,j), omgp2(i,j), &
                             -lmax, lmax, nzfun, ibessel, &
-                            xkxsav(n), xkysav(m), nphi, capr(i), &
+                            kxsav(n), kysav(m), nphi, capr(i), &
                             bxn(i,j), byn(i,j), bzn(i,j), &
                             uxx(i,j), uxy(i,j), uxz(i,j), &
                             uyx(i,j), uyy(i,j), uyz(i,j), &
@@ -538,7 +538,7 @@ contains
          nnodex, nnodey, &
          nkx1, nkx2, nky1, nky2, nkdim1, nkdim2, mkdim1, mkdim2, &
          xm, q, xn, xkt, omgc, omgp2, lmax, &
-         xkxsav, xkysav, nzfun, ibessel, &
+         kxsav, kysav, nzfun, ibessel, &
          exk, eyk, ezk, nphi, capr, &
          bxn, byn, bzn, &
          uxx, uxy, uxz, &
@@ -600,7 +600,7 @@ contains
               eyk(nkdim1 : nkdim2, mkdim1 : mkdim2), &
               ezk(nkdim1 : nkdim2, mkdim1 : mkdim2)
 
-      real xkxsav(nkdim1 : nkdim2), xkysav(mkdim1 : mkdim2)
+      real kxsav(nkdim1 : nkdim2), kysav(mkdim1 : mkdim2)
       real q, xn(nxdim, nydim), xkt(nxdim, nydim)
       real bxn(nxdim, nydim), byn(nxdim, nydim), bzn(nxdim, nydim)
 
@@ -648,7 +648,7 @@ contains
                             xm, q, xn(i,j), xnuomg(i,j), &
                             xkt(i,j), omgc(i,j), omgp2(i,j), &
                             -lmax, lmax, nzfun, ibessel, &
-                            xkxsav(n), xkysav(m), nphi, capr(i), &
+                            kxsav(n), kysav(m), nphi, capr(i), &
                             bxn(i,j), byn(i,j), bzn(i,j), &
                             uxx(i,j), uxy(i,j), uxz(i,j), &
                             uyx(i,j), uyy(i,j), uyz(i,j), &
@@ -670,7 +670,7 @@ contains
                             xm, q, xn(i,j), xnuomg(i,j), &
                             xkt(i,j), omgc(i,j), omgp2(i,j), &
                             -lmax, lmax, nzfun, ibessel, &
-                            xkxsav(n), xkysav(m), nphi, capr(i), &
+                            kxsav(n), kysav(m), nphi, capr(i), &
                             bxn(i,j), byn(i,j), bzn(i,j), &
                             uxx(i,j), uxy(i,j), uxz(i,j), &
                             uyx(i,j), uyy(i,j), uyz(i,j), &
@@ -731,7 +731,7 @@ contains
          nnodex, nnodey, &
          nkx1, nkx2, nky1, nky2, nkdim1, nkdim2, mkdim1, mkdim2, &
          xm, q, xn, xkt, omgc, omgp2, lmax, &
-         xkxsav, xkysav, nzfun, ibessel, &
+         kxsav, kysav, nzfun, ibessel, &
          exk, eyk, ezk, nphi, capr, &
          bxn, byn, bzn, &
          uxx, uxy, uxz, &
@@ -794,7 +794,7 @@ contains
               eyk(nkdim1 : nkdim2, mkdim1 : mkdim2), &
               ezk(nkdim1 : nkdim2, mkdim1 : mkdim2)
 
-      real xkxsav(nkdim1 : nkdim2), xkysav(mkdim1 : mkdim2)
+      real kxsav(nkdim1 : nkdim2), kysav(mkdim1 : mkdim2)
       real q, xn(nxdim, nydim), xkt(nxdim, nydim)
       real bxn(nxdim, nydim), byn(nxdim, nydim), bzn(nxdim, nydim)
 
@@ -842,7 +842,7 @@ contains
                             xm, q, xn(i,j), xnuomg(i,j), &
                             xkt(i,j), omgc(i,j), omgp2(i,j), &
                             -lmax, lmax, nzfun, ibessel, &
-                            xkxsav(n), xkysav(m), nphi, capr(i), &
+                            kxsav(n), kysav(m), nphi, capr(i), &
                             bxn(i,j), byn(i,j), bzn(i,j), &
                             uxx(i,j), uxy(i,j), uxz(i,j), &
                             uyx(i,j), uyy(i,j), uyz(i,j), &
@@ -864,7 +864,7 @@ contains
                             xm, q, xn(i,j), xnuomg(i,j), &
                             xkt(i,j), omgc(i,j), omgp2(i,j), &
                             -lmax, lmax, nzfun, ibessel, &
-                            xkxsav(n), xkysav(m), nphi, capr(i), &
+                            kxsav(n), kysav(m), nphi, capr(i), &
                             bxn(i,j), byn(i,j), bzn(i,j), &
                             uxx(i,j), uxy(i,j), uxz(i,j), &
                             uyx(i,j), uyy(i,j), uyz(i,j), &
@@ -925,7 +925,7 @@ contains
          nnodex, nnodey, &
          nkx1, nkx2, nky1, nky2, nkdim1, nkdim2, mkdim1, mkdim2, &
          xm, q, xn, eslow, omgc, omgp2, lmax, &
-         xkxsav, xkysav, nzfun, ibessel, &
+         kxsav, kysav, nzfun, ibessel, &
          exk, eyk, ezk, nphi, capr, &
          bxn, byn, bzn, &
          uxx, uxy, uxz, &
@@ -973,7 +973,7 @@ contains
               eyk(nkdim1 : nkdim2, mkdim1 : mkdim2), &
               ezk(nkdim1 : nkdim2, mkdim1 : mkdim2)
 
-      real xkxsav(nkdim1 : nkdim2), xkysav(mkdim1 : mkdim2)
+      real kxsav(nkdim1 : nkdim2), kysav(mkdim1 : mkdim2)
       real q, xn(nxdim, nydim), eslow, xkte(nxdim, nydim)
       real bxn(nxdim, nydim), byn(nxdim, nydim), bzn(nxdim, nydim)
 
@@ -1003,7 +1003,7 @@ contains
                          xm, q, xn(i,j), xnuomg(i,j), &
                          eslow, omgc(i,j), omgp2(i,j), &
                          -lmax, lmax, nzfun, ibessel, &
-                         xkxsav(n), xkysav(m), nphi, capr(i), &
+                         kxsav(n), kysav(m), nphi, capr(i), &
                          bxn(i,j), byn(i,j), bzn(i,j), &
                          uxx(i,j), uxy(i,j), uxz(i,j), &
                          uyx(i,j), uyy(i,j), uyz(i,j), &

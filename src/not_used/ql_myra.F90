@@ -22,7 +22,7 @@ module ql_myra_mod
          dx, dy, r0, nxdim, nydim, nnodex, nnodey, &
          nkx1, nkx2, nky1, nky2, nkdim1, nkdim2, mkdim1, mkdim2, &
          xm, q, xn, xkt, omgc, omgp2, lmax, &
-         xkxsav, xkysav, nzfun, ibessel, &
+         kxsav, kysav, nzfun, ibessel, &
          exk, eyk, ezk, nphi, capr, &
          bxn, byn, bzn, &
          uxx, uxy, uxz, &
@@ -158,7 +158,7 @@ module ql_myra_mod
               eyk(nkdim1 : nkdim2, mkdim1 : mkdim2), &
               ezk(nkdim1 : nkdim2, mkdim1 : mkdim2)
 
-      real xkxsav(nkdim1 : nkdim2), xkysav(mkdim1 : mkdim2)
+      real kxsav(nkdim1 : nkdim2), kysav(mkdim1 : mkdim2)
       real q, xn(nxdim, nydim), xkt(nxdim, nydim)
       real bxn(nxdim, nydim), byn(nxdim, nydim), bzn(nxdim, nydim)
 
@@ -661,7 +661,7 @@ ip_loop: do ip = start, finish
                      uxx(i,j), uxy(i,j), uxz(i,j), &
                      uyx(i,j), uyy(i,j), uyz(i,j), &
                      uzx(i,j), uzy(i,j), uzz(i,j), &
-                     nxdim, nydim, xkxsav, xkysav, xkphi, xx, yy, i, j, &
+                     nxdim, nydim, kxsav, kysav, xkphi, xx, yy, i, j, &
                      lmaxdim, ndist, nzeta_wdot, &
                      gradprlb(i,j), bmod(i,j), omgc(i,j), alpha, xm, &
                      upshift, xk_cutoff, maxwellian = .true. )
@@ -677,7 +677,7 @@ ip_loop: do ip = start, finish
                      uxx(i,j), uxy(i,j), uxz(i,j), &
                      uyx(i,j), uyy(i,j), uyz(i,j), &
                      uzx(i,j), uzy(i,j), uzz(i,j), &
-                     nxdim, nydim, xkxsav, xkysav, xkphi, xx, yy, i, j, &
+                     nxdim, nydim, kxsav, kysav, xkphi, xx, yy, i, j, &
                      lmaxdim, ndist, nzeta_wdot, &
                      gradprlb(i,j), bmod(i,j), omgc(i,j), alpha, xm, &
                      upshift, xk_cutoff, maxwellian = .false. )

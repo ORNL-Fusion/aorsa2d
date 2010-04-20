@@ -11,7 +11,7 @@ contains
         uxx, uxy, uxz, &
         uyx, uyy, uyz, &
         uzx, uzy, uzz, &
-        nxdim, nydim, xkxsav, xkysav, xkphi, xx, yy, i_global, j_global, &
+        nxdim, nydim, kxsav, kysav, xkphi, xx, yy, i_global, j_global, &
         lmaxdim, ndist, nzeta, &
         gradprlb, bmod, omgc, alpha, xm, upshift, xk_cutoff, &
         maxwellian )
@@ -45,7 +45,7 @@ contains
 
     real  uxx, uxy, uxz, uyx, uyy, uyz, uzx, uzy, uzz
     real  xkphi, sinth, facte, sinth_inv
-    real  xkxsav(nkdim1 : nkdim2), xkysav(mkdim1 : mkdim2)
+    real  kxsav(nkdim1 : nkdim2), kysav(mkdim1 : mkdim2)
     real  xkperpn, xkperpni, xkrhon, xketan, xkprln
     real:: W2, WCW, RRP, RRM, WC, WCI
     real:: MUT0, SQMUT0, PISQMUT0, SQMUT0I
@@ -192,9 +192,9 @@ contains
             kyLoop1: &
             do m = nky1, nky2
     
-                xkrhon  = uxx * xkxsav(n) + uxy * xkysav(m) + uxz * xkphi
-                xketan  = uyx * xkxsav(n) + uyy * xkysav(m) + uyz * xkphi
-                xkprln  = uzx * xkxsav(n) + uzy * xkysav(m) + uzz * xkphi
+                xkrhon  = uxx * kxsav(n) + uxy * kysav(m) + uxz * xkphi
+                xketan  = uyx * kxsav(n) + uyy * kysav(m) + uyz * xkphi
+                xkprln  = uzx * kxsav(n) + uzy * kysav(m) + uzz * xkphi
                 xkperpn = sqrt(xkrhon**2 + xketan**2)
          
                 ! ------------------------------------
@@ -288,9 +288,9 @@ contains
             kyLoop2: &
             do m = nky1, nky2
 
-                xkrhon = uxx * xkxsav(n) + uxy * xkysav(m) + uxz * xkphi
-                xketan = uyx * xkxsav(n) + uyy * xkysav(m) + uyz * xkphi
-                xkprln   = uzx * xkxsav(n) + uzy * xkysav(m) + uzz * xkphi
+                xkrhon = uxx * kxsav(n) + uxy * kysav(m) + uxz * xkphi
+                xketan = uyx * kxsav(n) + uyy * kysav(m) + uyz * xkphi
+                xkprln   = uzx * kxsav(n) + uzy * kysav(m) + uzz * xkphi
 
                 xkperpn = sqrt(xkrhon**2 + xketan**2) + 1.0e-08
     
@@ -335,9 +335,9 @@ contains
             kyLoop3: &
             do m = nky1, nky2
 
-                xkrhon = uxx * xkxsav(n) + uxy * xkysav(m) + uxz * xkphi
-                xketan = uyx * xkxsav(n) + uyy * xkysav(m) + uyz * xkphi
-                xkprln   = uzx * xkxsav(n) + uzy * xkysav(m) + uzz * xkphi
+                xkrhon = uxx * kxsav(n) + uxy * kysav(m) + uxz * xkphi
+                xketan = uyx * kxsav(n) + uyy * kysav(m) + uyz * xkphi
+                xkprln   = uzx * kxsav(n) + uzy * kysav(m) + uzz * xkphi
                 xkperpn = sqrt(xkrhon**2 + xketan**2)
          
                 ! ------------------------------------
@@ -532,13 +532,13 @@ contains
             sum2_2 = sum2_2 + conjg(epsy) * Jn(IHARM - 1, n, m)
             sum2_3 = sum2_3 + conjg(epsz) * Jn(IHARM, n, m)
          
-            sumkx2_1 = sumkx2_1 + xkxsav(n) * conjg(epsx) * Jn(IHARM + 1, n, m)
-            sumkx2_2 = sumkx2_2 + xkxsav(n) * conjg(epsy) * Jn(IHARM - 1, n, m)
-            sumkx2_3 = sumkx2_3 + xkxsav(n) * conjg(epsz) * Jn(IHARM, n, m)
+            sumkx2_1 = sumkx2_1 + kxsav(n) * conjg(epsx) * Jn(IHARM + 1, n, m)
+            sumkx2_2 = sumkx2_2 + kxsav(n) * conjg(epsy) * Jn(IHARM - 1, n, m)
+            sumkx2_3 = sumkx2_3 + kxsav(n) * conjg(epsz) * Jn(IHARM, n, m)
          
-            sumky2_1 = sumky2_1 + xkysav(m) * conjg(epsx) * Jn(IHARM + 1, n, m)
-            sumky2_2 = sumky2_2 + xkysav(m) * conjg(epsy) * Jn(IHARM - 1, n, m)
-            sumky2_3 = sumky2_3 + xkysav(m) * conjg(epsz) * Jn(IHARM, n, m)                       
+            sumky2_1 = sumky2_1 + kysav(m) * conjg(epsx) * Jn(IHARM + 1, n, m)
+            sumky2_2 = sumky2_2 + kysav(m) * conjg(epsy) * Jn(IHARM - 1, n, m)
+            sumky2_3 = sumky2_3 + kysav(m) * conjg(epsz) * Jn(IHARM, n, m)                       
 
             UPAR0   = SQMUT0 / NPARA_sav(n, m) * (1. - NWCW)
     
@@ -619,11 +619,11 @@ contains
             sumwdot_11 = sumwdot_11 + sumwdot_11_nm
             sumwdot_31 = sumwdot_31 + sumwdot_31_nm
               
-            sumwdotkx_11 = sumwdotkx_11 + xkxsav(n) * sumwdot_11_nm
-            sumwdotkx_31 = sumwdotkx_31 + xkxsav(n) * sumwdot_31_nm   
+            sumwdotkx_11 = sumwdotkx_11 + kxsav(n) * sumwdot_11_nm
+            sumwdotkx_31 = sumwdotkx_31 + kxsav(n) * sumwdot_31_nm   
               
-            sumwdotky_11 = sumwdotky_11 + xkysav(m) * sumwdot_11_nm
-            sumwdotky_31 = sumwdotky_31 + xkysav(m) * sumwdot_31_nm                           
+            sumwdotky_11 = sumwdotky_11 + kysav(m) * sumwdot_11_nm
+            sumwdotky_31 = sumwdotky_31 + kysav(m) * sumwdot_31_nm                           
               
         enddo resonantModes
        

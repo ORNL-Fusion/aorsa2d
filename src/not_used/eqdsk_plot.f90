@@ -225,7 +225,7 @@ contains
       complex fdk, fek, ffk, fgk, fak, fpk, frk, fqk, fsk
 
 
-      real xkxsav(nkdim1 : nkdim2), xkysav(mkdim1 : mkdim2), &
+      real kxsav(nkdim1 : nkdim2), kysav(mkdim1 : mkdim2), &
            xkperp, xketa, &
            xkprl, ptot, pcito2, pcrto2, powtot, pscale, &
            cosalp, sinalp, t1, gaussian, frho, q07qa, psimax, &

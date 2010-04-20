@@ -138,7 +138,7 @@ contains
                                 call sigmaHot_maxwellian(i, j, &
                                     mSpec(s), &
                                     ktSpec(i,j,s), omgc(i,j,s), omgp2(i,j,s), &
-                                    xkxsav(n), xkysav(m), capr(i), &
+                                    kxsav(n), kysav(m), capr(i), &
                                     sigxxTmp, sigxyTmp, sigxzTmp, &
                                     sigyxTmp, sigyyTmp, sigyzTmp, &
                                     sigzxTmp, sigzyTmp, sigzzTmp, &
@@ -147,12 +147,12 @@ contains
                               
                                 !if(iAm==0) &
                                 !write(*,*) omgc(i,j,s), omgp2(i,j,s), &
-                                !    xkxsav(n), xkysav(m), nphi, capr(i), omgrf
+                                !    kxsav(n), kysav(m), nphi, capr(i), omgrf
 
                                 if (iSigma==0) & ! cold plasma 
                                 call sigmaCold_stix(i, j, &
                                     omgc(i,j,s), omgp2(i,j,s), &
-                                    xkxsav(n), xkysav(m), capr(i), &
+                                    kxsav(n), kysav(m), capr(i), &
                                     sigxxTmp, sigxyTmp, sigxzTmp, &
                                     sigyxTmp, sigyyTmp, sigyzTmp, &
                                     sigzxTmp, sigzyTmp, sigzzTmp, &
@@ -203,12 +203,12 @@ contains
                             kzy =       zi / (eps0 * omgrf) * sigzy
                             kzz = 1.0 + zi / (eps0 * omgrf) * sigzz
 
-                            rnx = xkxsav(n) / k0
-                            rny = xkysav(m) / k0
+                            rnx = kxsav(n) / k0
+                            rny = kysav(m) / k0
                             rnPhi = xkphi(i) / k0
 
-                            kz  = xkysav(m)
-                            kr  = xkxsav(n)
+                            kz  = kysav(m)
+                            kr  = kxsav(n)
 
                             dxx = (kxx - rny**2 - rnphi**2) * uxx(i,j) &
                                 +  kyx * uyx(i,j) &

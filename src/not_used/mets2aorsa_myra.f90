@@ -13,7 +13,7 @@
        & uxx, uxy, uxz, &
        & uyx, uyy, uyz, &
        & uzx, uzy, uzz, &
-       & nxdim, nydim, xkxsav, xkysav, xkphi, xx, yy, i_global, j_global, &
+       & nxdim, nydim, kxsav, kysav, xkphi, xx, yy, i_global, j_global, &
        & lmaxdim, ndist, nzeta)
 
 
@@ -27,7 +27,7 @@
 
     real  uxx, uxy, uxz, uyx, uyy, uyz, uzx, uzy, uzz
     real  xkphi
-    real  xkxsav(nkdim1 : nkdim2), xkysav(mkdim1 : mkdim2)
+    real  kxsav(nkdim1 : nkdim2), kysav(mkdim1 : mkdim2)
     real  xkperpn, xkperpni, xkrhon, xketan, xkbn, beta
     real, intent(IN):: W, ZSPEC, ASPEC, BMAG
     real, intent(IN):: ENORM, UPARMIN, UPARMAX
@@ -111,9 +111,9 @@
        do n = nkx1, nkx2
           do m = nky1, nky2
 
-             xkrhon = uxx * xkxsav(n) + uxy * xkysav(m) + uxz * xkphi
-             xketan = uyx * xkxsav(n) + uyy * xkysav(m) + uyz * xkphi
-             xkbn   = uzx * xkxsav(n) + uzy * xkysav(m) + uzz * xkphi
+             xkrhon = uxx * kxsav(n) + uxy * kysav(m) + uxz * xkphi
+             xketan = uyx * kxsav(n) + uyy * kysav(m) + uyz * xkphi
+             xkbn   = uzx * kxsav(n) + uzy * kysav(m) + uzz * xkphi
 	
              NPARA_sav(n, m) = xkbn * C / W
 
@@ -150,9 +150,9 @@
        do n = nkx1, nkx2
           do m = nky1, nky2
 
-             xkrhon = uxx * xkxsav(n) + uxy * xkysav(m) + uxz * xkphi
-             xketan = uyx * xkxsav(n) + uyy * xkysav(m) + uyz * xkphi
-             xkbn   = uzx * xkxsav(n) + uzy * xkysav(m) + uzz * xkphi
+             xkrhon = uxx * kxsav(n) + uxy * kysav(m) + uxz * xkphi
+             xketan = uyx * kxsav(n) + uyy * kysav(m) + uyz * xkphi
+             xkbn   = uzx * kxsav(n) + uzy * kysav(m) + uzz * xkphi
 
              xkperpn = sqrt(xkrhon**2 + xketan**2) + 1.0e-08
 	
@@ -201,9 +201,9 @@
           !dir$ prefervector
           do m = nky1, nky2
 
-             xkrhon = uxx * xkxsav(n) + uxy * xkysav(m) + uxz * xkphi
-             xketan = uyx * xkxsav(n) + uyy * xkysav(m) + uyz * xkphi
-             xkbn   = uzx * xkxsav(n) + uzy * xkysav(m) + uzz * xkphi
+             xkrhon = uxx * kxsav(n) + uxy * kysav(m) + uxz * xkphi
+             xketan = uyx * kxsav(n) + uyy * kysav(m) + uyz * xkphi
+             xkbn   = uzx * kxsav(n) + uzy * kysav(m) + uzz * xkphi
 	
              NPARA_sav(n, m) = xkbn * C * WI
 

@@ -5,7 +5,7 @@ contains
     subroutine sigmaHot_maxwellian(i, j, &
         xm, &
         xkt, omgc, omgp2, &
-        xkxsav, xkysav, capr, &
+        kxsav, kysav, capr, &
         sigxx, sigxy, sigxz, &
         sigyx, sigyy, sigyz, &
         sigzx, sigzy, sigzz, &
@@ -36,7 +36,7 @@ contains
     real :: akprl,  alpha, omgrf
     real :: gammab(-lmax:lmax), gamma_coll(-lmax:lmax)
     real :: delta0, rhol
-    real :: xkxsav, xkysav, capr
+    real :: kxsav, kysav, capr
     real :: xkphi
     real :: xkalp, xkbet, xk0, rgamma, xk_cutoff, kr, step
     complex :: omgrfc
@@ -59,9 +59,9 @@ contains
     xkphi = nphi / capr
     omgrfc = omgrf * (1. + zi * xnuomg)
 
-    xkalp = uxx(i,j) * xkxsav + uxy(i,j) * xkysav + uxz(i,j) * xkphi
-    xkbet = uyx(i,j) * xkxsav + uyy(i,j) * xkysav + uyz(i,j) * xkphi
-    xkprl = uzx(i,j) * xkxsav + uzy(i,j) * xkysav + uzz(i,j) * xkphi
+    xkalp = uxx(i,j) * kxsav + uxy(i,j) * kysav + uxz(i,j) * xkphi
+    xkbet = uyx(i,j) * kxsav + uyy(i,j) * kysav + uyz(i,j) * xkphi
+    xkprl = uzx(i,j) * kxsav + uzy(i,j) * kysav + uzz(i,j) * xkphi
     xkperp = sqrt(xkalp**2 + xkbet**2)
 
 
@@ -212,7 +212,7 @@ end subroutine sigmaHot_maxwellian
 
     subroutine sigmaCold_stix(i,j, &
         omgc, omgp2, &
-        xkxsav, xkysav, capr, &
+        kxsav, kysav, capr, &
         sigxx, sigxy, sigxz, &
         sigyx, sigyy, sigyz, &
         sigzx, sigzy, sigzz, &
@@ -232,7 +232,7 @@ end subroutine sigmaHot_maxwellian
         real, intent(in) :: omgc, omgp2
         real :: xkprl
         real omgrf
-        real, intent(in) :: xkxsav, xkysav, capr
+        real, intent(in) :: kxsav, kysav, capr
         real xkphi
         real xkalp, xkbet
         complex omgrfc
@@ -246,9 +246,9 @@ end subroutine sigmaHot_maxwellian
         xkphi = nphi / capr
         omgrfc = omgrf * (1. + zi * xnuomg)
 
-        xkalp = uxx(i,j) * xkxsav + uxy(i,j) * xkysav + uxz(i,j) * xkphi
-        xkbet = uyx(i,j) * xkxsav + uyy(i,j) * xkysav + uyz(i,j) * xkphi
-        xkprl = uzx(i,j) * xkxsav + uzy(i,j) * xkysav + uzz(i,j) * xkphi
+        xkalp = uxx(i,j) * kxsav + uxy(i,j) * kysav + uxz(i,j) * xkphi
+        xkbet = uyx(i,j) * kxsav + uyy(i,j) * kysav + uyz(i,j) * xkphi
+        xkprl = uzx(i,j) * kxsav + uzy(i,j) * kysav + uzz(i,j) * xkphi
 
         sig0 = 0.0
         sig1 = zieps0 * omgrfc * omgp2 / (omgrfc**2 - omgc**2)

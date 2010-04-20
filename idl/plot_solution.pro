@@ -20,8 +20,8 @@ pro plot_solution
 		nCdf_varGet, cdfId, 'xjy_re', jy_re 
 		nCdf_varGet, cdfId, 'xjy_im', jy_im 
 		nCdf_varGet, cdfId, 'bmod', bmod 
-		nCdf_varGet, cdfId, 'xkxsav', kx 
-		nCdf_varGet, cdfId, 'xkysav', ky 
+		nCdf_varGet, cdfId, 'kxsav', kx 
+		nCdf_varGet, cdfId, 'kysav', ky 
 
 	ncdf_close, cdfId
 

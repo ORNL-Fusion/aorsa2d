@@ -126,7 +126,7 @@ contains
       real capr_bpol_mid2(nxmx, nymx), bmod_midavg(nrhomax)
       real bmod_mid(nxmx, nymx), bratio(nxmx, nymx)
 
-      real xkxsav(nkpltdim), xkysav(mkpltdim), pscale
+      real kxsav(nkpltdim), kysav(mkpltdim), pscale
       real wdoti1avg(nrhomax), wdoti2avg(nrhomax), wdoti3avg(nrhomax)
       real wdoti4avg(nrhomax), wdoti5avg(nrhomax), wdoti6avg(nrhomax)
       real zdummy(3)
@@ -458,8 +458,8 @@ contains
       nkxplt = 2 * nkx2
       nkyplt = 2 * nky2
 
-      read (38, 310) (xkxsav(n), n = 1, nkxplt)
-      read (38, 310) (xkysav(m), m = 1, nkyplt)
+      read (38, 310) (kxsav(n), n = 1, nkxplt)
+      read (38, 310) (kysav(m), m = 1, nkyplt)
 
       read(38, 310) ((exkmod(n, m), n = 1, nkxplt), m = 1, nkyplt)
       read(38, 310) ((eykmod(n, m), n = 1, nkxplt), m = 1, nkyplt)
@@ -2384,12 +2384,12 @@ contains
       titx = 'kx (m-1)'
       tity = 'ky (m-1)'
       title = 'Mod E alpha(kx, ky)'
-      call ezconc(xkxsav, xkysav, exkmod, ff, nkxplt, nkyplt, numb, &
+      call ezconc(kxsav, kysav, exkmod, ff, nkxplt, nkyplt, numb, &
          nkpltdim, mkpltdim, nlevmax, title, titx, tity, iflag)
 
       title='3-D plot of Mod E alpha(kx,ky)'
       titz='Mod E alpha(kx,ky)'
-      call ezcon3d(xkxsav, xkysav, exkmod, ff, nkxplt, nkyplt, numb, &
+      call ezcon3d(kxsav, kysav, exkmod, ff, nkxplt, nkyplt, numb, &
          nkpltdim, mkpltdim, nlevmax, title, titx, tity, titz)
 
 
@@ -2404,7 +2404,7 @@ contains
       titll= 'Mod E alpha (V/m)'
       titlr= ''
 
-      call ezlog1(title, titll, titlr, tity, xkysav, fmodm, &
+      call ezlog1(title, titll, titlr, tity, kysav, fmodm, &
           nkyplt, mkpltdim, exkmin, exkmax)
 
 
@@ -2425,7 +2425,7 @@ contains
       titll= 'Mod E alpha (V/m)'
       titlr= ''
 
-      call ezlog1(title, titll, titlr, titx, xkxsav, fmodm, &
+      call ezlog1(title, titll, titlr, titx, kxsav, fmodm, &
           nkxplt, nkpltdim, exkmin, exkmax)
 
 
@@ -2436,23 +2436,23 @@ contains
       titx = 'kx (m-1)'
       tity = 'ky (m-1)'
       title = 'log E alpha(kx, ky)'
-      call ezconc(xkxsav, xkysav, exklog, ff, nkxplt, nkyplt, numb, &
+      call ezconc(kxsav, kysav, exklog, ff, nkxplt, nkyplt, numb, &
          nkpltdim, mkpltdim, nlevmax, title, titx, tity, iflag)
 
       title='3-D plot of log E alpha(kx,ky)'
       titz='log E alpha(kx,ky)'
-      call ezcon3d(xkxsav, xkysav, exklog, ff, nkxplt, nkyplt, numb, &
+      call ezcon3d(kxsav, kysav, exklog, ff, nkxplt, nkyplt, numb, &
          nkpltdim, mkpltdim, nlevmax, title, titx, tity, titz)
 
 
 
       title = 'Mod E beta(kx, ky)'
-      call ezconc(xkxsav, xkysav, eykmod, ff, nkxplt, nkyplt, numb, &
+      call ezconc(kxsav, kysav, eykmod, ff, nkxplt, nkyplt, numb, &
          nkpltdim, mkpltdim, nlevmax, title, titx, tity, iflag)
 
       title='3-D plot of Mod E beta(kx,ky)'
       titz='Mod E beta(kx,ky)'
-      call ezcon3d(xkxsav, xkysav, eykmod, ff, nkxplt, nkyplt, numb, &
+      call ezcon3d(kxsav, kysav, eykmod, ff, nkxplt, nkyplt, numb, &
          nkpltdim, mkpltdim, nlevmax, title, titx, tity, titz)
 
 
@@ -2466,7 +2466,7 @@ contains
       titll= 'Mod E beta (V/m)'
       titlr= ''
 
-      call ezlog1(title, titll, titlr, tity, xkysav, fmodm, &
+      call ezlog1(title, titll, titlr, tity, kysav, fmodm, &
           nkyplt, mkpltdim, exkmin, exkmax)
 
 
@@ -2483,7 +2483,7 @@ contains
       titll= 'Mod E beta (V/m)'
       titlr= ''
 
-      call ezlog1(title, titll, titlr, titx, xkxsav, fmodm, &
+      call ezlog1(title, titll, titlr, titx, kxsav, fmodm, &
           nkxplt, nkpltdim, exkmin, exkmax)
 
 
@@ -2491,23 +2491,23 @@ contains
 !--   plot log of E beta
 
       title = 'log E beta(kx, ky)'
-      call ezconc(xkxsav, xkysav, eyklog, ff, nkxplt, nkyplt, numb, &
+      call ezconc(kxsav, kysav, eyklog, ff, nkxplt, nkyplt, numb, &
          nkpltdim, mkpltdim, nlevmax, title, titx, tity, iflag)
 
       title='3-D plot of log E beta(kx,ky)'
       titz='log E beta(kx,ky)'
-      call ezcon3d(xkxsav, xkysav, eyklog, ff, nkxplt, nkyplt, numb, &
+      call ezcon3d(kxsav, kysav, eyklog, ff, nkxplt, nkyplt, numb, &
          nkpltdim, mkpltdim, nlevmax, title, titx, tity, titz)
 
 
 
       title = 'Mod E b(kx, ky)'
-      call ezconc(xkxsav, xkysav, ezkmod, ff, nkxplt, nkyplt, numb, &
+      call ezconc(kxsav, kysav, ezkmod, ff, nkxplt, nkyplt, numb, &
          nkpltdim, mkpltdim, nlevmax, title, titx, tity, iflag)
 
       title='3-D plot of Mod E b(kx,ky)'
       titz='Mod E b(kx,ky)'
-      call ezcon3d(xkxsav, xkysav, ezkmod, ff, nkxplt, nkyplt, numb, &
+      call ezcon3d(kxsav, kysav, ezkmod, ff, nkxplt, nkyplt, numb, &
          nkpltdim, mkpltdim, nlevmax, title, titx, tity, titz)
 
 
@@ -2521,7 +2521,7 @@ contains
       titll= 'Mod Eb (V/m)'
       titlr= ''
 
-      call ezlog1(title, titll, titlr, tity, xkysav, fmodm, &
+      call ezlog1(title, titll, titlr, tity, kysav, fmodm, &
           nkyplt, mkpltdim, exkmin, exkmax)
 
 
@@ -2538,19 +2538,19 @@ contains
       titll= 'Mod Eb (V/m)'
       titlr= ''
 
-      call ezlog1(title, titll, titlr, titx, xkxsav, fmodm, &
+      call ezlog1(title, titll, titlr, titx, kxsav, fmodm, &
           nkxplt, nkpltdim, exkmin, exkmax)
 
 
 !--   plot log of Eb
 
       title = 'log E b(kx, ky)'
-      call ezconc(xkxsav, xkysav, ezklog, ff, nkxplt, nkyplt, numb, &
+      call ezconc(kxsav, kysav, ezklog, ff, nkxplt, nkyplt, numb, &
          nkpltdim, mkpltdim, nlevmax, title, titx, tity, iflag)
 
       title='3-D plot of log E b(kx,ky)'
       titz='Mod E b(kx,ky)'
-      call ezcon3d(xkxsav, xkysav, ezklog, ff, nkxplt, nkyplt, numb, &
+      call ezcon3d(kxsav, kysav, ezklog, ff, nkxplt, nkyplt, numb, &
          nkpltdim, mkpltdim, nlevmax, title, titx, tity, titz)
 
 
