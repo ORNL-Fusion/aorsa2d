@@ -40,7 +40,7 @@ contains
             delta0, nSpec, &
             iSigma, nPtsX, nPtsY, npRow, npCol, &
             metalLeft, metalRight, &
-            metalTop, metalBot
+            metalTop, metalBot, nPhi
         use grid
         use sigma_mod
         use rotation
@@ -53,7 +53,7 @@ contains
         integer :: iRow, iCol, i, j, n, m, p, s, ii, jj
         integer :: localRow, localCol
         complex :: metal
-        real :: kr, kth, kz, z
+        real :: kr, kz, z
         complex :: &
             dxx, dxy, dxz, &
             dyx, dyy, dyz, &
@@ -213,7 +213,6 @@ contains
                             rnPhi = xkphi(i) / k0
 
                             kz  = kysav(m)  
-                            kth = xkphi(i) 
                             kr  = kxsav(n) 
                             z   = y(j)
 
@@ -227,17 +226,17 @@ contains
                                 - zi * rnx / k0 * dyuxy(i,j) &
                                 + 1. / k0**2 * (dyyuxx(i,j) - dxyuxy(i,j))
 
-                            mat_r_alp = -((kth**2*Urr_(i,j))/capR(i)**2) &
+                            mat_r_alp = -((nPhi**2*Urr_(i,j))/capR(i)**2) &
                                 - kz**2*Urr_(i,j) + &
                                 k0**2*KAlpAlp*Urr_(i,j) + &
-                                ((-zi + capR(i)*kr)*kth*Urth_(i,j))/capR(i)**2 &
+                                ((-zi + capR(i)*kr)*nPhi*Urth_(i,j))/capR(i)**2 &
                                 + kr*kz*Urz_(i,j) + &
                                 k0**2*KBetAlp*Uthr_(i,j) + &
                                 k0**2*KPrlAlp*Uzr_(i,j) + &
                                 2*zi*kz*dzUrr(i,j) - &
                                 zi*kr*dzUrz(i,j) + &
                                 dzzUrr(i,j) - &
-                                (zi*kth*drUrth(i,j))/capR(i) - &
+                                (zi*nPhi*drUrth(i,j))/capR(i) - &
                                 zi*kz*drUrz(i,j) - drzUrz(i,j)
 
                             dxy =  kAlpBet * uxx(i,j) &
@@ -251,15 +250,15 @@ contains
                                 + 1. / k0**2 * (dyyuyx(i,j) - dxyuyy(i,j))
 
                             mat_r_bet = k0**2*KAlpBet*Urr_(i,j) &
-                                - (kth**2*Uthr_(i,j))/capR(i)**2 - &
+                                - (nPhi**2*Uthr_(i,j))/capR(i)**2 - &
                                 kz**2*Uthr_(i,j) + k0**2*KBetBet*Uthr_(i,j) - &
-                                (zi*kth*Uthth_(i,j))/capR(i)**2 &
-                                + (kr*kth*Uthth_(i,j))/capR(i) + &
+                                (zi*nPhi*Uthth_(i,j))/capR(i)**2 &
+                                + (kr*nPhi*Uthth_(i,j))/capR(i) + &
                                 kr*kz*Uthz_(i,j) + k0**2*KPrlBet*Uzr_(i,j) + &
                                 2*zi*kz*dzUthr(i,j) &
                                 - zi*kr*dzUthz(i,j) + &
                                 dzzUthr(i,j) &
-                                - (zi*kth*drUthth(i,j))/capR(i) - &
+                                - (zi*nPhi*drUthth(i,j))/capR(i) - &
                                 zi*kz*drUthz(i,j) &
                                 - drzUthz(i,j)
 
@@ -275,14 +274,14 @@ contains
 
                             mat_r_prl = k0**2*KAlpPrl*Urr_(i,j) + &
                                 k0**2*KBetPrl*Uthr_(i,j) - &
-                                (kth**2*Uzr_(i,j))/capR(i)**2 - kz**2*Uzr_(i,j) + &
+                                (nPhi**2*Uzr_(i,j))/capR(i)**2 - kz**2*Uzr_(i,j) + &
                                 k0**2*KPrlPrl*Uzr_(i,j) &
-                                - (zi*kth*Uzth_(i,j))/capR(i)**2 + &
-                                (kr*kth*Uzth_(i,j))/capR(i) + kr*kz*Uzz_(i,j) + &
+                                - (zi*nPhi*Uzth_(i,j))/capR(i)**2 + &
+                                (kr*nPhi*Uzth_(i,j))/capR(i) + kr*kz*Uzz_(i,j) + &
                                 2*zi*kz*dzUzr(i,j) &
                                 - zi*kr*dzUzz(i,j) + &
                                 dzzUzr(i,j) &
-                                - (zi*kth*drUzth(i,j))/capR(i) - &
+                                - (zi*nPhi*drUzth(i,j))/capR(i) - &
                                 zi*kz*drUzz(i,j) &
                                 - drzUzz(i,j)
 
@@ -298,6 +297,21 @@ contains
                                 + 1. / k0**2 * (dxxuxy(i,j) - dxyuxx(i,j) &
                                 - dyuxx(i,j)/ capr(i) + dxuxy(i,j) / capr(i))
 
+                            mat_th_alp = (((zi + capR(i)*kr)*nPhi*Urr_(i,j) &
+                                - Urth_(i,j) + zi*capR(i)*kr*Urth_(i,j) - &
+                                capR(i)**2*kr**2*Urth_(i,j) - capR(i)**2*kz**2*Urth_(i,j) + &
+                                capR(i)**2*k0**2*KAlpAlp*Urth_(i,j) &
+                                + capR(i)*kz*nPhi*Urz_(i,j) + &
+                                capR(i)**2*k0**2*KBetAlp*Uthth_(i,j) + &
+                                capR(i)**2*k0**2*KPrlAlp*Uzth_(i,j) + &
+                                2*zi*capR(i)**2*kz*dzUrth(i,j) - &
+                                zi*capR(i)*nPhi*dzUrz(i,j) + &
+                                capR(i)**2*dzzUrth(i,j) - &
+                                zi*capR(i)*nPhi*drUrr(i,j) + &
+                                capR(i)*drUrth(i,j) + &
+                                2*zi*capR(i)**2*kr*drUrth(i,j) + &
+                                capR(i)**2*drrUrth(i,j)))/capR(i)**2 
+
                             dyy =  kAlpBet * uxy(i,j) &
                                 + (kBetBet - rnx**2 - rnphi**2) * uyy(i,j) &
                                 +  kPrlBet * uzy(i,j) &
@@ -310,6 +324,23 @@ contains
                                 + 1. / k0**2 * (dxxuyy(i,j) - dxyuyx(i,j) &
                                 - dyuyx(i,j)/ capr(i) + dxuyy(i,j) / capr(i))
 
+                            mat_th_bet = ((capR(i)**2*k0**2*KAlpBet*Urth_(i,j) &
+                                + zi*nPhi*Uthr_(i,j) + &
+                                capR(i)*kr*nPhi*Uthr_(i,j) &
+                                - Uthth_(i,j) + zi*capR(i)*kr*Uthth_(i,j) - &
+                                capR(i)**2*kr**2*Uthth_(i,j) &
+                                - capR(i)**2*kz**2*Uthth_(i,j) + &
+                                capR(i)**2*k0**2*KBetBet*Uthth_(i,j) &
+                                + capR(i)*kz*nPhi*Uthz_(i,j) + &
+                                capR(i)**2*k0**2*KPrlBet*Uzth_(i,j) + &
+                                2*zi*capR(i)**2*kz*dzUthth(i,j) - &
+                                zi*capR(i)*nPhi*dzUthz(i,j) + &
+                                capR(i)**2*dzzUthth(i,j) - &
+                                zi*capR(i)*nPhi*drUthr(i,j) + &
+                                capR(i)*drUthth(i,j) + &
+                                2*zi*capR(i)**2*kr*drUthth(i,j) + &
+                                capR(i)**2*drrUthth(i,j)))/capR(i)**2 
+
                             dyz =  kAlpPrl * uxy(i,j) &
                                 +  kBetPrl * uyy(i,j) &
                                 + (kPrlPrl - rnx**2 - rnphi**2) * uzy(i,j) &
@@ -321,6 +352,22 @@ contains
                                 (dyuzx(i,j) - uzy(i,j) / capr(i) - 2.* dxuzy(i,j)) &
                                 + 1. / k0**2 * (dxxuzy(i,j) - dxyuzx(i,j) &
                                 - dyuzx(i,j)/ capr(i) + dxuzy(i,j) / capr(i))
+
+                            mat_th_prl = ((capR(i)**2*k0**2*KAlpPrl*Urth_(i,j) + &
+                                capR(i)**2*k0**2*KBetPrl*Uthth_(i,j) &
+                                + zi*nPhi*Uzr_(i,j) + &
+                                capR(i)*kr*nPhi*Uzr_(i,j) - Uzth_(i,j) &
+                                + zi*capR(i)*kr*Uzth_(i,j) - &
+                                capR(i)**2*kr**2*Uzth_(i,j) - capR(i)**2*kz**2*Uzth_(i,j) + &
+                                capR(i)**2*k0**2*KPrlPrl*Uzth_(i,j) &
+                                + capR(i)*kz*nPhi*Uzz_(i,j) + &
+                                2*zi*capR(i)**2*kz*dzUzth(i,j) - &
+                                zi*capR(i)*nPhi*dzUzz(i,j) + &
+                                capR(i)**2*dzzUzth(i,j) - &
+                                zi*capR(i)*nPhi*drUzr(i,j) + &
+                                capR(i)*drUzth(i,j) + &
+                                2*zi*capR(i)**2*kr*drUzth(i,j) + &
+                                capR(i)**2*drrUzth(i,j)))/capR(i)**2 
 
                             dzx = (kAlpAlp - rnx**2 - rny**2) * uxz(i,j) &
                                 +  kBetAlp * uyz(i,j) &
@@ -335,6 +382,22 @@ contains
                                    (uxz(i,j)/ capr(i) - dxuxz(i,j)) &
                                 + 1. / k0**2  * (dxxuxz(i,j) + dyyuxz(i,j))
 
+                            mat_z_alp = ((-zi + capR(i)*kr)*kz*Urr_(i,j))/capR(i) &
+                                + (kz*nPhi*Urth_(i,j))/capR(i) + &
+                                (zi*kr*Urz_(i,j))/capR(i) - kr**2*Urz_(i,j) &
+                                - (nPhi**2*Urz_(i,j))/capR(i)**2 + &
+                                k0**2*KAlpAlp*Urz_(i,j) &
+                                + k0**2*KBetAlp*Uthz_(i,j) + &
+                                k0**2*KPrlAlp*Uzz_(i,j) &
+                                - dzUrr(i,j)/capR(i) - &
+                                zi*kr*dzUrr(i,j) - &
+                                (zi*nPhi*dzUrth(i,j))/capR(i) - &
+                                zi*kz*drUrr(i,j) &
+                                + drUrz(i,j)/capR(i) + &
+                                2*zi*kr*drUrz(i,j) &
+                                - drzUrr(i,j) + &
+                                drrUrz(i,j)
+
                             dzy =  kAlpBet * uxz(i,j) &
                                 + (kBetBet - rnx**2 - rny**2) * uyz(i,j) &
                                 +  kPrlBet * uzz(i,j) &
@@ -347,6 +410,22 @@ contains
                                 - 1. / (k0**2 * capr(i)) * &
                                    (uyz(i,j)/ capr(i) - dxuyz(i,j)) &
                                 + 1. / k0**2  * (dxxuyz(i,j) + dyyuyz(i,j))
+
+                            mat_z_bet = k0**2*KAlpBet*Urz_(i,j) &
+                                - (zi*kz*Uthr_(i,j))/capR(i) + &
+                                kr*kz*Uthr_(i,j) + (kz*nPhi*Uthth_(i,j))/capR(i) &
+                                + (zi*kr*Uthz_(i,j))/capR(i) - &
+                                kr**2*Uthz_(i,j) - (nPhi**2*Uthz_(i,j))/capR(i)**2 + &
+                                k0**2*KBetBet*Uthz_(i,j) &
+                                + k0**2*KPrlBet*Uzz_(i,j) - &
+                                dzUthr(i,j)/capR(i) &
+                                - zi*kr*dzUthr(i,j) - &
+                                (zi*nPhi*dzUthth(i,j))/capR(i) - &
+                                zi*kz*drUthr(i,j) &
+                                + drUthz(i,j)/capR(i) + &
+                                2*zi*kr*drUthz(i,j) &
+                                - drzUthr(i,j) + &
+                                drrUthz(i,j)
 
                             dzz =  kAlpPrl * uxz(i,j) &
                                 +  kBetPrl * uyz(i,j) &
@@ -361,6 +440,22 @@ contains
                                    (uzz(i,j)/ capr(i) - dxuzz(i,j)) &
                                 + 1. / k0**2  * (dxxuzz(i,j) + dyyuzz(i,j))
 
+                            mat_z_prl =k0**2*KAlpPrl*Urz_(i,j) &
+                                + k0**2*KBetPrl*Uthz_(i,j) - &
+                                (zi*kz*Uzr_(i,j))/capR(i) + kr*kz*Uzr_(i,j) &
+                                + (kz*nPhi*Uzth_(i,j))/capR(i) + &
+                                (zi*kr*Uzz_(i,j))/capR(i) - kr**2*Uzz_(i,j) &
+                                - (nPhi**2*Uzz_(i,j))/capR(i)**2 + &
+                                k0**2*KPrlPrl*Uzz_(i,j) &
+                                - dzUzr(i,j)/capR(i) - &
+                                zi*kr*dzUzr(i,j) - &
+                                (zi*nPhi*dzUzth(i,j))/capR(i) - &
+                                zi*kz*drUzr(i,j) &
+                                + drUzz(i,j)/capR(i) + &
+                                2*zi*kr*drUzz(i,j) &
+                                - drzUzr(i,j) + &
+                                drrUzz(i,j) 
+
                             if(iAm==0) then
                             write(*,*) dxx, dxy, dxz
                             write(*,*) dyx, dyy, dyz
@@ -369,6 +464,9 @@ contains
                             write(*,*)
 
                             write(*,*) mat_r_alp/k0**2, mat_r_bet/k0**2, mat_r_prl/k0**2
+                            write(*,*) mat_th_alp/k0**2, mat_th_bet/k0**2, mat_th_prl/k0**2
+                            write(*,*) mat_z_alp/k0**2, mat_z_bet/k0**2, mat_z_prl/k0**2
+
                             endif
 
                             stop

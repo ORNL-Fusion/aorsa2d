@@ -10,10 +10,10 @@
 NotebookFileLineBreakTest
 NotebookFileLineBreakTest
 NotebookDataPosition[       145,          7]
-NotebookDataLength[     10551,        296]
-NotebookOptionsPosition[     10174,        280]
-NotebookOutlinePosition[     10514,        295]
-CellTagsIndexPosition[     10471,        292]
+NotebookDataLength[     11367,        320]
+NotebookOptionsPosition[     10928,        301]
+NotebookOutlinePosition[     11268,        316]
+CellTagsIndexPosition[     11225,        313]
 WindowFrame->Normal*)
 
 (* Beginning of Notebook Content *)
@@ -22,6 +22,8 @@ Cell[BoxData[
  StyleBox[
   RowBox[{"AORSA2", ".0"}], "Title"]], "Input",
  CellChangeTimes->{{3.4806794184940443`*^9, 3.4806794217138233`*^9}}],
+
+Cell[CellGroupData[{
 
 Cell[BoxData[{
  RowBox[{"Needs", "[", "\"\<VectorAnalysis`\>\"", 
@@ -34,7 +36,7 @@ Cell[BoxData[{
  RowBox[{
   RowBox[{"kk", "=", 
    RowBox[{"{", 
-    RowBox[{"kr", ",", "kth", ",", "kz"}], "}"}]}], 
+    RowBox[{"kr", ",", "nphi", ",", "kz"}], "}"}]}], 
   ";"}], "\[IndentingNewLine]", 
  RowBox[{
   RowBox[{"rr", "=", 
@@ -213,7 +215,7 @@ Cell[BoxData[{
  RowBox[{"FortranForm", "[", 
   RowBox[{"Collect", "[", 
    RowBox[{
-    RowBox[{"RHS", ".", "rUnit"}], ",", 
+    RowBox[{"RHS", ".", "zUnit"}], ",", 
     RowBox[{"{", 
      RowBox[{"E\[Alpha]", ",", "E\[Beta]", ",", "Eb"}], "}"}]}], "]"}], 
   "]"}]}], "Input",
@@ -235,45 +237,64 @@ Cell[BoxData[{
    3.480775541106266*^9}, {3.480775634729065*^9, 3.480775927120843*^9}, {
    3.480776661520599*^9, 3.480776665969687*^9}, {3.480777298615275*^9, 
    3.4807773295849667`*^9}, {3.48078077413326*^9, 3.480780780234209*^9}, {
-   3.4807833346057367`*^9, 3.4807833365905037`*^9}}],
+   3.4807833346057367`*^9, 3.4807833365905037`*^9}, {3.480851644893258*^9, 
+   3.480851647074416*^9}, {3.4808536166994762`*^9, 3.4808536232977877`*^9}, {
+   3.480853666914858*^9, 3.4808536769071093`*^9}, {3.4808561036100283`*^9, 
+   3.480856104801497*^9}}],
 
 Cell["\<\
-        E\[Alpha]*(-((kth**2*Urr(capR,z))/capR**2) - kz**2*Urr(capR,z) + 
-     -     k0**2*KAlpAlp(capR,z)*Urr(capR,z) + (((0,-1) + \
-capR*kr)*kth*Urth(capR,z))/capR**2 + 
-     -     kr*kz*Urz(capR,z) + k0**2*KBetAlp(capR,z)*Uthr(capR,z) + 
-     -     k0**2*KPrlAlp(capR,z)*Uzr(capR,z) + \
-(0,2)*kz*Derivative(0,1)(Urr)(capR,z) - 
-     -     (0,1)*kr*Derivative(0,1)(Urz)(capR,z) + \
-Derivative(0,2)(Urr)(capR,z) - 
-     -     ((0,1)*kth*Derivative(1,0)(Urth)(capR,z))/capR - 
-     -     (0,1)*kz*Derivative(1,0)(Urz)(capR,z) - \
-Derivative(1,1)(Urz)(capR,z)) + 
-     -  E\[Beta]*(k0**2*KAlpBet(capR,z)*Urr(capR,z) - \
-(kth**2*Uthr(capR,z))/capR**2 - 
-     -     kz**2*Uthr(capR,z) + k0**2*KBetBet(capR,z)*Uthr(capR,z) - 
-     -     ((0,1)*kth*Uthth(capR,z))/capR**2 + (kr*kth*Uthth(capR,z))/capR + 
-     -     kr*kz*Uthz(capR,z) + k0**2*KPrlBet(capR,z)*Uzr(capR,z) + 
-     -     (0,2)*kz*Derivative(0,1)(Uthr)(capR,z) - \
-(0,1)*kr*Derivative(0,1)(Uthz)(capR,z) + 
-     -     Derivative(0,2)(Uthr)(capR,z) - \
-((0,1)*kth*Derivative(1,0)(Uthth)(capR,z))/capR - 
-     -     (0,1)*kz*Derivative(1,0)(Uthz)(capR,z) - \
-Derivative(1,1)(Uthz)(capR,z)) + 
-     -  Eb*(k0**2*KAlpPrl(capR,z)*Urr(capR,z) + \
-k0**2*KBetPrl(capR,z)*Uthr(capR,z) - 
-     -     (kth**2*Uzr(capR,z))/capR**2 - kz**2*Uzr(capR,z) + 
-     -     k0**2*KPrlPrl(capR,z)*Uzr(capR,z) - \
-((0,1)*kth*Uzth(capR,z))/capR**2 + 
-     -     (kr*kth*Uzth(capR,z))/capR + kr*kz*Uzz(capR,z) + 
-     -     (0,2)*kz*Derivative(0,1)(Uzr)(capR,z) - \
-(0,1)*kr*Derivative(0,1)(Uzz)(capR,z) + 
-     -     Derivative(0,2)(Uzr)(capR,z) - \
-((0,1)*kth*Derivative(1,0)(Uzth)(capR,z))/capR - 
-     -     (0,1)*kz*Derivative(1,0)(Uzz)(capR,z) - \
-Derivative(1,1)(Uzz)(capR,z))\
-\>", "Input",
- CellChangeTimes->{{3.480783749440174*^9, 3.480783755334537*^9}}],
+        E\[Alpha]*((((0,-1) + capR*kr)*kz*Urr(capR,z))/capR + \
+(kz*nphi*Urth(capR,z))/capR + 
+     -     ((0,1)*kr*Urz(capR,z))/capR - kr**2*Urz(capR,z) - \
+(nphi**2*Urz(capR,z))/capR**2 + 
+     -     k0**2*KAlpAlp(capR,z)*Urz(capR,z) + \
+k0**2*KBetAlp(capR,z)*Uthz(capR,z) + 
+     -     k0**2*KPrlAlp(capR,z)*Uzz(capR,z) - \
+Derivative(0,1)(Urr)(capR,z)/capR - 
+     -     (0,1)*kr*Derivative(0,1)(Urr)(capR,z) - 
+     -     ((0,1)*nphi*Derivative(0,1)(Urth)(capR,z))/capR - 
+     -     (0,1)*kz*Derivative(1,0)(Urr)(capR,z) + \
+Derivative(1,0)(Urz)(capR,z)/capR + 
+     -     (0,2)*kr*Derivative(1,0)(Urz)(capR,z) - \
+Derivative(1,1)(Urr)(capR,z) + 
+     -     Derivative(2,0)(Urz)(capR,z)) + 
+     -  E\[Beta]*(k0**2*KAlpBet(capR,z)*Urz(capR,z) - \
+((0,1)*kz*Uthr(capR,z))/capR + 
+     -     kr*kz*Uthr(capR,z) + (kz*nphi*Uthth(capR,z))/capR + \
+((0,1)*kr*Uthz(capR,z))/capR - 
+     -     kr**2*Uthz(capR,z) - (nphi**2*Uthz(capR,z))/capR**2 + 
+     -     k0**2*KBetBet(capR,z)*Uthz(capR,z) + \
+k0**2*KPrlBet(capR,z)*Uzz(capR,z) - 
+     -     Derivative(0,1)(Uthr)(capR,z)/capR - \
+(0,1)*kr*Derivative(0,1)(Uthr)(capR,z) - 
+     -     ((0,1)*nphi*Derivative(0,1)(Uthth)(capR,z))/capR - 
+     -     (0,1)*kz*Derivative(1,0)(Uthr)(capR,z) + \
+Derivative(1,0)(Uthz)(capR,z)/capR + 
+     -     (0,2)*kr*Derivative(1,0)(Uthz)(capR,z) - \
+Derivative(1,1)(Uthr)(capR,z) + 
+     -     Derivative(2,0)(Uthz)(capR,z)) + 
+     -  Eb*(k0**2*KAlpPrl(capR,z)*Urz(capR,z) + \
+k0**2*KBetPrl(capR,z)*Uthz(capR,z) - 
+     -     ((0,1)*kz*Uzr(capR,z))/capR + kr*kz*Uzr(capR,z) + \
+(kz*nphi*Uzth(capR,z))/capR + 
+     -     ((0,1)*kr*Uzz(capR,z))/capR - kr**2*Uzz(capR,z) - \
+(nphi**2*Uzz(capR,z))/capR**2 + 
+     -     k0**2*KPrlPrl(capR,z)*Uzz(capR,z) - \
+Derivative(0,1)(Uzr)(capR,z)/capR - 
+     -     (0,1)*kr*Derivative(0,1)(Uzr)(capR,z) - 
+     -     ((0,1)*nphi*Derivative(0,1)(Uzth)(capR,z))/capR - 
+     -     (0,1)*kz*Derivative(1,0)(Uzr)(capR,z) + \
+Derivative(1,0)(Uzz)(capR,z)/capR + 
+     -     (0,2)*kr*Derivative(1,0)(Uzz)(capR,z) - \
+Derivative(1,1)(Uzr)(capR,z) + 
+     -     Derivative(2,0)(Uzz)(capR,z))\
+\>", "Output",
+ CellChangeTimes->{{3.480853638316784*^9, 3.480853677861105*^9}, 
+   3.480856105938953*^9}]
+}, Open  ]],
+
+Cell[BoxData[""], "Input",
+ CellChangeTimes->{{3.4808536013003607`*^9, 3.480853602168672*^9}}],
 
 Cell[BoxData[""], "Input",
  CellChangeTimes->{{3.480680630212297*^9, 3.4806806425009336`*^9}}]
@@ -295,9 +316,12 @@ CellTagsIndex->{}
 (*NotebookFileOutline
 Notebook[{
 Cell[545, 20, 142, 3, 51, "Input"],
-Cell[690, 25, 7573, 212, 418, "Input"],
-Cell[8266, 239, 1807, 36, 287, InheritFromParent],
-Cell[10076, 277, 94, 1, 27, "Input"]
+Cell[CellGroupData[{
+Cell[712, 27, 7778, 215, 418, "Input"],
+Cell[8493, 244, 2225, 48, 377, "Output"]
+}, Open  ]],
+Cell[10733, 295, 94, 1, 27, "Input"],
+Cell[10830, 298, 94, 1, 27, "Input"]
 }
 ]
 *)
