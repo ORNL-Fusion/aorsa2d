@@ -178,7 +178,7 @@ contains
                             enddo species
 
                             if ( capR(i) < metalLeft .or. capR(i) > metalRight &
-                                .or. y(j) > metalTop .or. y(j) < metalBot ) then
+                                .or. y(j) > metalTop .or. y(j) < metalBot ) then 
 
                                 sigAlpAlp = metal 
                                 sigAlpBet = 0
@@ -469,17 +469,17 @@ contains
                             !endif
                             !stop
 
-                            dxx = mat_r_alp / k0**2
-                            dxy = mat_r_bet / k0**2
-                            dxz = mat_r_prl / k0**2
+                            !dxx = mat_r_alp / k0**2
+                            !dxy = mat_r_bet / k0**2
+                            !dxz = mat_r_prl / k0**2
 
-                            dyx = mat_th_alp / k0**2
-                            dyy = mat_th_bet / k0**2
-                            dyz = mat_th_prl / k0**2
+                            !dyx = mat_th_alp / k0**2
+                            !dyy = mat_th_bet / k0**2
+                            !dyz = mat_th_prl / k0**2
 
-                            dzx = mat_z_alp / k0**2
-                            dzy = mat_z_bet / k0**2
-                            dzz = mat_z_prl / k0**2
+                            !dzx = mat_z_alp / k0**2
+                            !dzy = mat_z_bet / k0**2
+                            !dzz = mat_z_prl / k0**2
 
                             ii_loop: &
                             do ii=0,2
@@ -530,7 +530,7 @@ contains
 
                                         if ( i==1 .or. i==nPtsX &
                                                 .or. j==1 .or. j==nPtsY &
-                                                .or. (.not. inside_bbbs(i,j)) ) then
+                                                .or. (.not. inside_bbbs(i,j)) ) then 
 
                                             if (ii==0 .and. jj==0) aMat(localRow,localCol) = cexpkxky 
                                             if (ii==1 .and. jj==0) aMat(localRow,localCol) = 0  
