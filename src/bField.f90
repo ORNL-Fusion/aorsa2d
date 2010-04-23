@@ -98,14 +98,14 @@ contains
         do i=1,nPtsX
             do j=1,nPtsY
 
-                bzn(i,j) = r0 * b0 !/ capR(i) 
+                bzn(i,j) = r0 * b0 / capR(i) 
                 bxn(i,j) = bzn(i,j) * bx_frac
                 byn(i,j) = bzn(i,j) * by_frac 
 
                 br_frac = bx_frac
                 bz_frac = by_frac 
                  
-                bthn_(i,j) = r0 * b0 !/ capR(i)  
+                bthn_(i,j) = r0 * b0 / capR(i)  
                 brn_(i,j) = bthn_(i,j) * br_frac
                 bzn_(i,j) = bthn_(i,j) * bz_frac 
  
