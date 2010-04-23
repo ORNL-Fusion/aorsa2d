@@ -76,6 +76,7 @@ program aorsa2dMain
         call read_geqdsk ( eqdsk, plot = .false. )
         call init_interp ()
         call bFieldEqdsk ()
+        call is_inside_bbbs ()
     else
         call bFieldAnalytical ()
     endif

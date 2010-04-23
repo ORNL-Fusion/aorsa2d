@@ -16,6 +16,8 @@ module eqdsk_dlg
         fluxGrid_ (:), fpol_ (:), rhoNorm (:,:)
     logical :: ascending_flux 
 
+    logical, allocatable :: inside_bbbs(:,:)
+
 contains
 
     subroutine read_geqdsk ( eqdsk_fileName, plot )
@@ -177,31 +179,42 @@ contains
 
     end subroutine read_geqdsk
 
-    function is_inside_bbbs ( rIn, zIn )
+    subroutine is_inside_bbbs ( )
+
+        use aorsa2din_mod, &
+        only: nPtsX, nPtsY
+        use grid, &
+        only: capR, y
 
         implicit none
-        logical :: is_inside_bbbs
-        real, intent(in) :: rIn, zIn
+
         integer :: q1, q2, q3, q4
+        integer :: i, j
 
-        q1  = count ( rIn - rbbbs > 0 .and. zIn - zbbbs > 0 )
-        q2  = count ( rIn - rbbbs > 0 .and. zIn - zbbbs .le. 0 )
-        q3  = count ( rIn - rbbbs .le. 0 .and. zIn - zbbbs > 0 )
-        q4  = count ( rIn - rbbbs .le. 0 .and. zIn - zbbbs .le. 0 )
+        allocate ( inside_bbbs (nPtsX,nPtsY) )
 
-        if ( q1 > 0 .and. q2 > 0 .and. q3 > 0 .and. q4 > 0 ) then
+        do i=1,nPtsX
+            do j=1,nPtsY
 
-           is_inside_bbbs    = .true. 
+                q1  = count ( capR(i) - rbbbs > 0 .and. y(j) - zbbbs > 0 )
+                q2  = count ( capR(i) - rbbbs > 0 .and. y(j) - zbbbs .le. 0 )
+                q3  = count ( capR(i) - rbbbs .le. 0 .and. y(j) - zbbbs > 0 )
+                q4  = count ( capR(i) - rbbbs .le. 0 .and. y(j) - zbbbs .le. 0 )
 
-        else
+                if ( q1 > 0 .and. q2 > 0 .and. q3 > 0 .and. q4 > 0 ) then
 
-           is_inside_bbbs   = .false.
+                   inside_bbbs(i,j)    = .true. 
 
-        endif
+                else
+
+                   inside_bbbs(i,j)   = .false.
+
+                endif
+
+            enddo
+        enddo
        
-        return
-
-    end function is_inside_bbbs
+    end subroutine is_inside_bbbs
 
     function is_inside_lim ( rIn, zIn )
 

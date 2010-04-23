@@ -25,6 +25,8 @@ contains
         use grid
         use profiles
         use parallel
+        use eqdsk_dlg, &
+        only: inside_bbbs
 
         implicit none
 
@@ -68,7 +70,8 @@ contains
                 !   -------------------
 
                 if ( i==1 .or. i==nPtsX &
-                        .or. j==1 .or. j==nPtsY ) then
+                        .or. j==1 .or. j==nPtsY &
+                        .or. (.not. inside_bbbs(i,j)) ) then
                     xjx(i,j)    = 0
                     xjy(i,j)    = 0
                     xjz(i,j)    = 0

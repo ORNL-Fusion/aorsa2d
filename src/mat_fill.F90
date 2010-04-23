@@ -50,6 +50,8 @@ contains
         use profiles
         use bField
         use parallel
+        use eqdsk_dlg, &
+        only: inside_bbbs
 
         implicit none
 
@@ -527,7 +529,8 @@ contains
                                         !   -------------------
 
                                         if ( i==1 .or. i==nPtsX &
-                                                .or. j==1 .or. j==nPtsY ) then
+                                                .or. j==1 .or. j==nPtsY &
+                                                .or. (.not. inside_bbbs(i,j)) ) then
 
                                             if (ii==0 .and. jj==0) aMat(localRow,localCol) = cexpkxky 
                                             if (ii==1 .and. jj==0) aMat(localRow,localCol) = 0  
