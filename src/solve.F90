@@ -280,7 +280,7 @@ contains
  
         implicit none
 
-        integer :: m, n, iRow
+        integer :: m, n, iCol
 
         !   Extract the k coefficents from the solution
         !   for each field component
@@ -294,11 +294,11 @@ contains
         do n=kxL,kxR
             do m=kyL,kyR
 
-                iRow = (m-kyL) * 3 + (n-kxL) * nModesY * 3 + 1
-        
-                ealphak(n,m)    = brhs_global(iRow)
-                ebetak(n,m)     = brhs_global(iRow+1)
-                eBk(n,m)        = brhs_global(iRow+2)
+                iCol = (m-kyL) * 3 + (n-kxL) * nModesY * 3 + 1
+       
+                ealphak(n,m)    = brhs_global(iCol+0)
+                ebetak(n,m)     = brhs_global(iCol+1)
+                eBk(n,m)        = brhs_global(iCol+2)
 
             enddo
         enddo

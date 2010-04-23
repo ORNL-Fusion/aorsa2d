@@ -10,18 +10,47 @@
 NotebookFileLineBreakTest
 NotebookFileLineBreakTest
 NotebookDataPosition[       145,          7]
-NotebookDataLength[     11367,        320]
-NotebookOptionsPosition[     10928,        301]
-NotebookOutlinePosition[     11268,        316]
-CellTagsIndexPosition[     11225,        313]
+NotebookDataLength[     16066,        466]
+NotebookOptionsPosition[     15185,        432]
+NotebookOutlinePosition[     15596,        448]
+CellTagsIndexPosition[     15553,        445]
 WindowFrame->Normal*)
 
 (* Beginning of Notebook Content *)
 Notebook[{
-Cell[BoxData[
- StyleBox[
-  RowBox[{"AORSA2", ".0"}], "Title"]], "Input",
- CellChangeTimes->{{3.4806794184940443`*^9, 3.4806794217138233`*^9}}],
+
+Cell[CellGroupData[{
+Cell["AORSA 2.0", "Title",
+ CellChangeTimes->{{3.4806794184940443`*^9, 3.4806794217138233`*^9}, {
+  3.480931592661604*^9, 3.480931649596284*^9}, {3.4809320394937267`*^9, 
+  3.4809320404870358`*^9}, {3.480932552474019*^9, 3.4809325541541033`*^9}}],
+
+Cell["D. L. Green (greendl1@ornl.gov)", "Author",
+ CellChangeTimes->{{3.480932252654871*^9, 3.480932254402033*^9}, {
+  3.480932311084427*^9, 3.480932319882872*^9}}],
+
+Cell["Fusion Energy Division, ORNL", "Department",
+ CellChangeTimes->{{3.4809323228227053`*^9, 3.480932328796302*^9}}],
+
+Cell["22-April-2010", "Date",
+ CellChangeTimes->{{3.480932374128356*^9, 3.480932391028791*^9}}],
+
+Cell["\<\
+This document describes (in a limited sense) the equations and their \
+numerical counterparts for the All ORders Spectral Algorithm (AORSA). In \
+particular for version 2 of the code. The original version was developed by \
+E. F. Jaeger up until 2010 at which point it was decided to create a more \
+modern code base for ease of future development, scaling and collaboration. \
+The code is stored in a private git repository.\
+\>", "Text",
+ CellChangeTimes->{{3.480932043230383*^9, 3.4809322480270367`*^9}, {
+  3.480936365695589*^9, 3.48093636682017*^9}}],
+
+Cell[CellGroupData[{
+
+Cell["LHS Matrix elements (aMat)", "Section",
+ CellChangeTimes->{{3.480932412658349*^9, 3.480932424394731*^9}, {
+  3.481018856335483*^9, 3.4810188689022427`*^9}}],
 
 Cell[CellGroupData[{
 
@@ -291,18 +320,121 @@ Derivative(1,1)(Uzr)(capR,z) +
 \>", "Output",
  CellChangeTimes->{{3.480853638316784*^9, 3.480853677861105*^9}, 
    3.480856105938953*^9}]
-}, Open  ]],
+}, Open  ]]
+}, Closed]],
 
-Cell[BoxData[""], "Input",
- CellChangeTimes->{{3.4808536013003607`*^9, 3.480853602168672*^9}}],
+Cell[CellGroupData[{
 
-Cell[BoxData[""], "Input",
- CellChangeTimes->{{3.480680630212297*^9, 3.4806806425009336`*^9}}]
+Cell["Cold Plasma Sigma", "Section",
+ CellChangeTimes->{{3.481017985738782*^9, 3.4810180116134253`*^9}}],
+
+Cell[CellGroupData[{
+
+Cell[BoxData[{
+ RowBox[{
+  RowBox[{"\[Epsilon]", "=", 
+   RowBox[{"{", 
+    RowBox[{
+     RowBox[{"{", 
+      RowBox[{"stixS", ",", 
+       RowBox[{
+        RowBox[{"-", "I"}], " ", "stixD"}], ",", " ", "0"}], "}"}], ",", 
+     RowBox[{"{", 
+      RowBox[{
+       RowBox[{"I", " ", "stixD"}], ",", " ", "stixS", ",", " ", "0"}], "}"}],
+      ",", " ", 
+     RowBox[{"{", 
+      RowBox[{"0", ",", "0", ",", "stixP"}], "}"}]}], "}"}]}], 
+  ";"}], "\[IndentingNewLine]", 
+ RowBox[{
+  RowBox[{"stixS", "=", 
+   RowBox[{
+    RowBox[{"(", 
+     RowBox[{"stixR", "+", "stixL"}], ")"}], "/", "2"}]}], ";", 
+  RowBox[{"stixD", "=", 
+   RowBox[{
+    RowBox[{"(", 
+     RowBox[{"stixR", "-", "stixL"}], ")"}], "/", "2"}]}], 
+  ";"}], "\[IndentingNewLine]", 
+ RowBox[{
+  RowBox[{"stixR", "=", 
+   RowBox[{"1", "-", 
+    RowBox[{"omgP2", "/", 
+     RowBox[{"(", 
+      RowBox[{"omgRF", "*", 
+       RowBox[{"(", 
+        RowBox[{"omgRF", "+", "omgC"}], ")"}]}], ")"}]}]}]}], 
+  ";"}], "\[IndentingNewLine]", 
+ RowBox[{
+  RowBox[{"stixL", "=", 
+   RowBox[{"1", "-", 
+    RowBox[{"omgP2", "/", 
+     RowBox[{"(", 
+      RowBox[{"omgRF", "*", 
+       RowBox[{"(", 
+        RowBox[{"omgRF", "-", "omgC"}], ")"}]}], ")"}]}]}]}], 
+  ";"}], "\[IndentingNewLine]", 
+ RowBox[{
+  RowBox[{"stixP", "=", 
+   RowBox[{"1", "-", 
+    RowBox[{"omgP2", "/", 
+     RowBox[{"omgRF", "^", "2"}]}]}]}], ";"}], "\[IndentingNewLine]", 
+ RowBox[{"\[Sigma]", "=", 
+  RowBox[{"Simplify", "[", 
+   RowBox[{
+    RowBox[{"(", 
+     RowBox[{"\[Epsilon]", "-", 
+      RowBox[{"IdentityMatrix", "[", "3", "]"}]}], ")"}], "*", "omgRF", "*", 
+    RowBox[{"eps0", "/", "I"}]}], "]"}]}]}], "Input",
+ CellChangeTimes->{{3.481018042945221*^9, 3.481018387668269*^9}, {
+  3.481018680187751*^9, 3.481018681060255*^9}}],
+
+Cell[BoxData[
+ RowBox[{"{", 
+  RowBox[{
+   RowBox[{"{", 
+    RowBox[{
+     FractionBox[
+      RowBox[{"\[ImaginaryI]", " ", "eps0", " ", "omgP2", " ", "omgRF"}], 
+      RowBox[{
+       RowBox[{"-", 
+        SuperscriptBox["omgC", "2"]}], "+", 
+       SuperscriptBox["omgRF", "2"]}]], ",", 
+     FractionBox[
+      RowBox[{"eps0", " ", "omgC", " ", "omgP2"}], 
+      RowBox[{
+       SuperscriptBox["omgC", "2"], "-", 
+       SuperscriptBox["omgRF", "2"]}]], ",", "0"}], "}"}], ",", 
+   RowBox[{"{", 
+    RowBox[{
+     RowBox[{"-", 
+      FractionBox[
+       RowBox[{"eps0", " ", "omgC", " ", "omgP2"}], 
+       RowBox[{
+        SuperscriptBox["omgC", "2"], "-", 
+        SuperscriptBox["omgRF", "2"]}]]}], ",", 
+     FractionBox[
+      RowBox[{"\[ImaginaryI]", " ", "eps0", " ", "omgP2", " ", "omgRF"}], 
+      RowBox[{
+       RowBox[{"-", 
+        SuperscriptBox["omgC", "2"]}], "+", 
+       SuperscriptBox["omgRF", "2"]}]], ",", "0"}], "}"}], ",", 
+   RowBox[{"{", 
+    RowBox[{"0", ",", "0", ",", 
+     FractionBox[
+      RowBox[{"\[ImaginaryI]", " ", "eps0", " ", "omgP2"}], "omgRF"]}], 
+    "}"}]}], "}"}]], "Output",
+ CellChangeTimes->{{3.4810183637208138`*^9, 3.481018388222657*^9}, 
+   3.481018682237989*^9}]
+}, Open  ]]
+}, Open  ]]
+}, Open  ]]
 },
 WindowSize->{805, 688},
 WindowMargins->{{62, Automatic}, {Automatic, 27}},
 FrontEndVersion->"7.0 for Mac OS X x86 (32-bit) (November 10, 2008)",
-StyleDefinitions->"Default.nb"
+StyleDefinitions->FrontEnd`FileName[{"Report"}, "StandardReport.nb", 
+  CharacterEncoding -> "UTF-8"]
 ]
 (* End of Notebook Content *)
 
@@ -315,13 +447,27 @@ CellTagsIndex->{}
 *)
 (*NotebookFileOutline
 Notebook[{
-Cell[545, 20, 142, 3, 51, "Input"],
 Cell[CellGroupData[{
-Cell[712, 27, 7778, 215, 418, "Input"],
-Cell[8493, 244, 2225, 48, 377, "Output"]
-}, Open  ]],
-Cell[10733, 295, 94, 1, 27, "Input"],
-Cell[10830, 298, 94, 1, 27, "Input"]
+Cell[567, 22, 246, 3, 74, "Title"],
+Cell[816, 27, 164, 2, 39, "Author"],
+Cell[983, 31, 118, 1, 16, "Department"],
+Cell[1104, 34, 95, 1, 42, "Date"],
+Cell[1202, 37, 565, 9, 56, "Text"],
+Cell[CellGroupData[{
+Cell[1792, 50, 162, 2, 69, "Section"],
+Cell[CellGroupData[{
+Cell[1979, 56, 7778, 215, 427, "Input"],
+Cell[9760, 273, 2225, 48, 374, "Output"]
+}, Open  ]]
+}, Closed]],
+Cell[CellGroupData[{
+Cell[12034, 327, 104, 1, 39, "Section"],
+Cell[CellGroupData[{
+Cell[12163, 332, 1764, 57, 112, "Input"],
+Cell[13930, 391, 1215, 36, 100, "Output"]
+}, Open  ]]
+}, Open  ]]
+}, Open  ]]
 }
 ]
 *)

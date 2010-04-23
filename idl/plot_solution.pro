@@ -55,8 +55,8 @@ pro plot_solution
 	window, 0
 	!p.multi = [0,3,2]
 	!p.background = 255
-	scale = max ( abs ( [ealpha[*],ebeta[*],eb[*]] ) ) * 0.4 
-	nLevs	= 1001 
+	scale = max ( abs ( [ealpha[*],ebeta[*],eb[*]] ) ) * 0.1
+	nLevs	= 21 
 	device, decomposed = 0
 
 	contour_field, ealpha, x, y, nLevs, scale
@@ -69,9 +69,9 @@ pro plot_solution
 stop
 	window, 1
 	!p.multi = [0,3,2]
-	scale = max ( abs ( [ealphak_re[*],ebetak_re[*],ebk_re[*]] ) ) * 1.5
+	scale = max ( abs ( [ealphak_re[*],ebetak_re[*],ebk_re[*]] ) ) * 0.5
 	scalePar = max ( abs ( [ebk_re[*]] ) ) 
-	nLevs	= 1001
+	nLevs	= 21 
 	contour_field, ealphak,	kx, ky, nLevs, scale
 	contour_field, ebetak,	kx, ky, nLevs, scale 
 	contour_field, ebk,		kx, ky, nLevs, scale 

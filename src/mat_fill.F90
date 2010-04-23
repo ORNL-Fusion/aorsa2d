@@ -13,6 +13,9 @@ complex :: &
     sigAlpAlpTmp, sigAlpBetTmp, sigAlpPrlTmp, &
     sigBetAlpTmp, sigBetBetTmp, sigBetPrlTmp, &
     sigPrlAlpTmp, sigPrlBetTmp, sigPrlPrlTmp
+
+complex :: sigma_tmp(3,3)
+
 complex :: &
     kAlpAlp, kAlpBet, kAlpPrl, &
     kBetAlp, kBetBet, kBetPrl, &
@@ -155,25 +158,20 @@ contains
                                 !    kxsav(n), kysav(m), nphi, capr(i), omgrf
 
                                 if (iSigma==0) & ! cold plasma 
-                                call sigmaCold_stix(i, j, &
-                                    omgc(i,j,s), omgp2(i,j,s), &
-                                    kxsav(n), kysav(m), capr(i), &
-                                    sigAlpAlpTmp, sigAlpBetTmp, sigAlpPrlTmp, &
-                                    sigBetAlpTmp, sigBetBetTmp, sigBetPrlTmp, &
-                                    sigPrlAlpTmp, sigPrlBetTmp, sigPrlPrlTmp, &
-                                    omgrf )
+                                sigma_tmp = sigmaCold_stix(i, j, &
+                                    omgc(i,j,s), omgp2(i,j,s), omgrf )
 
-                                sigAlpAlp = sigAlpAlp + sigAlpAlpTmp 
-                                sigAlpBet = sigAlpBet + sigAlpBetTmp 
-                                sigAlpPrl = sigAlpPrl + sigAlpPrlTmp 
+                                sigAlpAlp = sigAlpAlp + sigma_tmp(1,1) 
+                                sigAlpBet = sigAlpBet + sigma_tmp(1,2) 
+                                sigAlpPrl = sigAlpPrl + sigma_tmp(1,3) 
                                                
-                                sigBetAlp = sigBetAlp + sigBetAlpTmp 
-                                sigBetBet = sigBetBet + sigBetBetTmp 
-                                sigBetPrl = sigBetPrl + sigBetPrlTmp 
+                                sigBetAlp = sigBetAlp + sigma_tmp(2,1) 
+                                sigBetBet = sigBetBet + sigma_tmp(2,2) 
+                                sigBetPrl = sigBetPrl + sigma_tmp(2,3) 
                                                
-                                sigPrlAlp = sigPrlAlp + sigPrlAlpTmp 
-                                sigPrlBet = sigPrlBet + sigPrlBetTmp 
-                                sigPrlPrl = sigPrlPrl + sigPrlPrlTmp 
+                                sigPrlAlp = sigPrlAlp + sigma_tmp(3,1) 
+                                sigPrlBet = sigPrlBet + sigma_tmp(3,2) 
+                                sigPrlPrl = sigPrlPrl + sigma_tmp(3,3) 
 
                             enddo species
 
@@ -456,20 +454,30 @@ contains
                                 - drzUzr(i,j) + &
                                 drrUzz(i,j) 
 
-                            if(iAm==0) then
-                            write(*,*) dxx, dxy, dxz
-                            write(*,*) dyx, dyy, dyz
-                            write(*,*) dzx, dzy, dzz
+                            !if(iAm==0) then
+                            !   write(*,*) dxx, dxy, dxz
+                            !   write(*,*) dyx, dyy, dyz
+                            !   write(*,*) dzx, dzy, dzz
 
-                            write(*,*)
+                            !   write(*,*)
 
-                            write(*,*) mat_r_alp/k0**2, mat_r_bet/k0**2, mat_r_prl/k0**2
-                            write(*,*) mat_th_alp/k0**2, mat_th_bet/k0**2, mat_th_prl/k0**2
-                            write(*,*) mat_z_alp/k0**2, mat_z_bet/k0**2, mat_z_prl/k0**2
+                            !   write(*,*) mat_r_alp/k0**2, mat_r_bet/k0**2, mat_r_prl/k0**2
+                            !   write(*,*) mat_th_alp/k0**2, mat_th_bet/k0**2, mat_th_prl/k0**2
+                            !   write(*,*) mat_z_alp/k0**2, mat_z_bet/k0**2, mat_z_prl/k0**2
+                            !endif
+                            !stop
 
-                            endif
+                            dxx = mat_r_alp / k0**2
+                            dxy = mat_r_bet / k0**2
+                            dxz = mat_r_prl / k0**2
 
-                            stop
+                            dyx = mat_th_alp / k0**2
+                            dyy = mat_th_bet / k0**2
+                            dyz = mat_th_prl / k0**2
+
+                            dzx = mat_z_alp / k0**2
+                            dzy = mat_z_bet / k0**2
+                            dzz = mat_z_prl / k0**2
 
                             ii_loop: &
                             do ii=0,2

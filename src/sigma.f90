@@ -225,18 +225,13 @@ contains
     end subroutine sigmaHot_maxwellian
 
 
-    subroutine sigmaCold_stix(i,j, &
-        omgc, omgp2, &
-        kxsav, kysav, capr, &
-        sig_alp_alp, sig_alp_bet, sig_alp_prl, &
-        sig_bet_alp, sig_bet_bet, sig_bet_prl, &
-        sig_prl_alp, sig_prl_bet, sig_prl_prl, &
-        omgrf )
+    function sigmaCold_stix &
+        ( i, j, omgC, omgP2, omgRF )
 
         use constants 
         use rotation
         use aorsa2din_mod, &
-        only: xnuomg, nPhi
+        only: xnuomg
 
         ! This routine calculates sigma_cold in the Stix frame
         ! (alp,bet,prl)
@@ -246,63 +241,34 @@ contains
 
         integer, intent(in) :: i, j
         real, intent(in) :: omgc, omgp2
-        real :: xkprl
         real, intent(in) :: omgrf
-        real, intent(in) :: kxsav, kysav, capr
-        real :: xkphi
-        real :: xkalp, xkbet
         complex :: omgrfc
-        complex :: sig0, sig1, sig2, sig3, sig4, sig5
-        complex, intent(inout) :: &
-            sig_alp_alp, sig_alp_bet, sig_alp_prl, &
-            sig_bet_alp, sig_bet_bet, sig_bet_prl, &
-            sig_prl_alp, sig_prl_bet, sig_prl_prl
+        complex :: sig1, sig2, sig3
+        complex :: sigmaCold_stix(3,3)
         complex :: zieps0
 
         zieps0 = zi * eps0
-        xkphi = nphi / capr
-        omgrfc = omgrf * (1. + zi * xnuomg)
+        omgRFc = omgRF * (1.0 + zi * xNuomg)
 
-        xkalp = uxx(i,j) * kxsav + uxy(i,j) * kysav + uxz(i,j) * xkphi
-        xkbet = uyx(i,j) * kxsav + uyy(i,j) * kysav + uyz(i,j) * xkphi
-        xkprl = uzx(i,j) * kxsav + uzy(i,j) * kysav + uzz(i,j) * xkphi
+        sig1 = zieps0 * omgRFc * omgP2 / (omgRFc**2 - omgC**2)
+        sig2 = - eps0 * omgC   * omgP2 / (omgRFc**2 - omgC**2)
+        sig3 = zieps0 * omgp2 / omgRFc
 
-        sig0 = 0.0
-        sig1 = zieps0 * omgrfc * omgp2 / (omgrfc**2 - omgc**2)
-        sig2 = - eps0 * omgc   * omgp2 / (omgrfc**2 - omgc**2)
-        sig3 = zieps0 * omgp2 / omgrfc
-        sig4 = 0.0
-        sig5 = 0.0
+        sigmaCold_stix(1,1) = sig1 
+        sigmaCold_stix(1,2) = sig2 
+        sigmaCold_stix(1,3) = 0 
 
+        sigmaCold_stix(2,1) = -sig2 
+        sigmaCold_stix(2,2) = sig1 
+        sigmaCold_stix(2,3) = 0 
 
-        ! Swanson's rotation to a particular Stix frame
-        ! ---------------------------------------------
+        sigmaCold_stix(3,1) = 0
+        sigmaCold_stix(3,2) = 0 
+        sigmaCold_stix(3,3) = sig3
 
-        !sigxx = sig1 + sig0 * xkbet**2
-        !sigxy = sig2 - sig0 * xkbet * xkalp
-        !sigxz = sig4 * xkalp + sig5 * xkbet
+        return
 
-        !sigyx = - sig2 - sig0 * xkbet * xkalp
-        !sigyy =   sig1 + sig0 * xkalp**2
-        !sigyz =   sig4 * xkbet - sig5 * xkalp
-
-        !sigzx = sig4 * xkalp - sig5 * xkbet
-        !sigzy = sig4 * xkbet + sig5 * xkalp
-        !sigzz = sig3
-
-        sig_alp_alp = sig1 + sig0 * xkbet**2
-        sig_alp_bet = sig2 - sig0 * xkbet * xkalp
-        sig_alp_prl = sig4 * xkalp + sig5 * xkbet
-
-        sig_bet_alp = - sig2 - sig0 * xkbet * xkalp
-        sig_bet_bet =   sig1 + sig0 * xkalp**2
-        sig_bet_prl =   sig4 * xkbet - sig5 * xkalp
-
-        sig_prl_alp = sig4 * xkalp - sig5 * xkbet
-        sig_prl_bet = sig4 * xkbet + sig5 * xkalp
-        sig_prl_prl = sig3
-
-    end subroutine sigmaCold_stix
+    end function sigmaCold_stix
 
 !
 !***************************************************************************
