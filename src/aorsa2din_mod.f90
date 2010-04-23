@@ -2,6 +2,10 @@ module aorsa2din_mod
       
 implicit none
 
+    ! Notes 
+    ! -----
+    ! Electrons must be the first species 
+
     integer, parameter :: nSpecMax  = 5 
     integer :: zSpecIn(nSpecMax)    = (/ -1, 2, 0, 0, 0 /)
     integer :: amuSpecIn(nSpecMax)  = (/  0, 4, 0, 0, 0 /) 

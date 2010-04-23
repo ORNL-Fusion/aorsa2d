@@ -153,7 +153,7 @@ contains
                                     sigBetAlpTmp, sigBetBetTmp, sigBetPrlTmp, &
                                     sigPrlAlpTmp, sigPrlBetTmp, sigPrlPrlTmp, &
                                     delta0, omgrf, k0, &
-                                    xk_cutoff )
+                                    xk_cutoff, s )
                               
                                 !if(iAm==0) &
                                 !write(*,*) omgc(i,j,s), omgp2(i,j,s), &

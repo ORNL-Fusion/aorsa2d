@@ -11,7 +11,7 @@ contains
         sig_prl_alp, sig_prl_bet, sig_prl_prl, &
         delta0, &
         omgrf, xk0, &
-        xk_cutoff )
+        xk_cutoff, specNo )
 
         use constants
         use zfunction_mod
@@ -28,6 +28,8 @@ contains
 
         implicit none
 
+        integer, intent(in) :: specNo
+        real, intent(in) :: xk_cutOff
         integer :: l, labs, i, j
         real :: xkperp, xkprl, xm, xkt, omgc, omgp2
         real :: xkprl_eff, fgam, y0, y, sgn_kprl
@@ -38,7 +40,7 @@ contains
         real :: delta0, rhol
         real :: kxsav, kysav, capr
         real :: xkphi
-        real :: xkalp, xkbet, xk0, rgamma, xk_cutoff, kr, step
+        real :: xkalp, xkbet, xk0, rgamma, kr, step
         complex :: omgrfc
         complex :: z0, z1, z2
         complex :: sig0, sig1, sig2, sig3, sig4, sig5
@@ -86,7 +88,13 @@ contains
             gammab(l) = abs(l * omgc / (2.0 * alpha * xkprl**2) &
                                                     * gradprlb(i,j) / bmod(i,j))
             gamma_coll(l) = nu_coll / (akprl * alpha)
-            if(xm .eq. xme)gammab(l) = 0.0
+
+            !if(xm .eq. xme)gammab(l) = 0.0
+
+            ! electrons
+            ! ---------
+            if(specNo==1) gammab(l) = 0.0
+
             if(abs(gammab(l)) .lt. .01)gammab(l) = .01
 
         enddo
@@ -185,7 +193,11 @@ contains
         sig1 = sig1 + delta0 * eps0 * omgrfc * xkperp**2 / xk0**2
         sig3 = sig3 + delta0 * eps0 * omgrfc * xkperp**2 / xk0**2
 
-        if (xm .eq. xme) then
+        !if (xm .eq. xme) then
+
+        ! electrons
+        ! ---------
+        if (specNo==1) then
 
             kr = xkperp / xk_cutoff
             step = damping * kr**16 / (1. + kr**16)
@@ -197,18 +209,6 @@ contains
         ! Swanson's rotation (original), to
         ! (alp,bet,prl)
         ! -----------------------------
-
-        !sigxx = sig1 + sig0 * xkbet**2
-        !sigxy = sig2 - sig0 * xkbet * xkalp
-        !sigxz = sig4 * xkalp + sig5 * xkbet
-
-        !sigyx = - sig2 - sig0 * xkbet * xkalp
-        !sigyy =   sig1 + sig0 * xkalp**2
-        !sigyz =   sig4 * xkbet - sig5 * xkalp
-
-        !sigzx = sig4 * xkalp - sig5 * xkbet
-        !sigzy = sig4 * xkbet + sig5 * xkalp
-        !sigzz = sig3
 
         sig_alp_alp = sig1 + sig0 * xkbet**2
         sig_alp_bet = sig2 - sig0 * xkbet * xkalp
