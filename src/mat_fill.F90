@@ -50,8 +50,6 @@ contains
         use profiles
         use bField
         use parallel
-        use eqdsk_dlg, &
-        only: inside_bbbs
 
         implicit none
 
@@ -145,23 +143,16 @@ contains
                             do s=1,nSpec
 
                                 if (iSigma==1) & ! hot plasma        
-                                call sigmaHot_maxwellian(i, j, &
-                                    mSpec(s), &
+                                sigma_tmp = sigmaHot_maxwellian&
+                                    ( i, j, mSpec(s), &
                                     ktSpec(i,j,s), omgc(i,j,s), omgp2(i,j,s), &
                                     kxsav(n), kysav(m), capr(i), &
-                                    sigAlpAlpTmp, sigAlpBetTmp, sigAlpPrlTmp, &
-                                    sigBetAlpTmp, sigBetBetTmp, sigBetPrlTmp, &
-                                    sigPrlAlpTmp, sigPrlBetTmp, sigPrlPrlTmp, &
                                     delta0, omgrf, k0, &
                                     xk_cutoff, s )
                               
-                                !if(iAm==0) &
-                                !write(*,*) omgc(i,j,s), omgp2(i,j,s), &
-                                !    kxsav(n), kysav(m), nphi, capr(i), omgrf
-
                                 if (iSigma==0) & ! cold plasma 
-                                sigma_tmp = sigmaCold_stix(i, j, &
-                                    omgc(i,j,s), omgp2(i,j,s), omgrf )
+                                sigma_tmp = sigmaCold_stix &
+                                    ( i, j, omgc(i,j,s), omgp2(i,j,s), omgrf )
 
                                 sigAlpAlp = sigAlpAlp + sigma_tmp(1,1) 
                                 sigAlpBet = sigAlpBet + sigma_tmp(1,2) 
@@ -530,7 +521,7 @@ contains
 
                                         if ( i==1 .or. i==nPtsX &
                                                 .or. j==1 .or. j==nPtsY &
-                                                .or. (.not. inside_bbbs(i,j)) ) then 
+                                                .or. (.not. mask(i,j)) ) then 
 
                                             if (ii==0 .and. jj==0) aMat(localRow,localCol) = cexpkxky 
                                             if (ii==1 .and. jj==0) aMat(localRow,localCol) = 0  

@@ -18,8 +18,11 @@ implicit none
     real :: tAlphaIn(nSpecMax)      = (/ 1.0, 1.0, 0.0, 0.0, 0.0 /) ! [ev]
     real :: tBetaIn(nSpecMax)       = (/ 1.0, 1.0, 0.0, 0.0, 0.0 /)
     logical :: useFluxProfiles = .false.  
+    logical :: useSoloviev = .false.
     integer :: nSpec = 2
     real :: r0 = 1.0
+    real :: a = 1.0
+    real :: psiExp = 0.5 ! exponential scale for soloviev poloidal field
     real :: bx_frac = 0.0
     real :: by_frac = 0.0
     logical :: square = .false.
@@ -433,7 +436,7 @@ implicit none
      &    use_dlg_bField, edgeCollisions, nSpec, zSpecIn, amuSpecIn, &
      &    tSpecIn, dSpecIn, tLimIn, dLimIn, &
      &    tAlphaIn, tBetaIn, dAlphaIn, dBetaIn, useFluxProfiles, square, &
-     &    metalLeft, metalRight, metalTop, metalBot
+     &    metalLeft, metalRight, metalTop, metalBot, useSoloviev, a, psiExp
                 
 contains
 

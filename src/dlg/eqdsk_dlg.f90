@@ -16,7 +16,6 @@ module eqdsk_dlg
         fluxGrid_ (:), fpol_ (:), rhoNorm (:,:)
     logical :: ascending_flux 
 
-    logical, allocatable :: inside_bbbs(:,:)
 
 contains
 
@@ -179,7 +178,7 @@ contains
 
     end subroutine read_geqdsk
 
-    subroutine is_inside_bbbs ( )
+    function is_inside_bbbs ( )
 
         use aorsa2din_mod, &
         only: nPtsX, nPtsY
@@ -188,10 +187,11 @@ contains
 
         implicit none
 
+        logical, allocatable :: is_inside_bbbs(:,:)
         integer :: q1, q2, q3, q4
         integer :: i, j
 
-        allocate ( inside_bbbs (nPtsX,nPtsY) )
+        allocate ( is_inside_bbbs (nPtsX,nPtsY) )
 
         do i=1,nPtsX
             do j=1,nPtsY
@@ -203,18 +203,18 @@ contains
 
                 if ( q1 > 0 .and. q2 > 0 .and. q3 > 0 .and. q4 > 0 ) then
 
-                   inside_bbbs(i,j)    = .true. 
+                   is_inside_bbbs(i,j)    = .true. 
 
                 else
 
-                   inside_bbbs(i,j)   = .false.
+                   is_inside_bbbs(i,j)   = .false.
 
                 endif
 
             enddo
         enddo
        
-    end subroutine is_inside_bbbs
+    end function is_inside_bbbs
 
     function is_inside_lim ( rIn, zIn )
 

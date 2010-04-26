@@ -55,7 +55,7 @@ pro plot_solution
 	window, 0
 	!p.multi = [0,3,2]
 	!p.background = 255
-	scale = max ( abs ( [ealpha[*],ebeta[*],eb[*]] ) ) * 0.05
+	scale = max ( abs ( [ealpha[*],ebeta[*],eb[*]] ) ) * 0.5
 	nLevs	= 21 
 	device, decomposed = 0
 

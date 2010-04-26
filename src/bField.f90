@@ -8,6 +8,7 @@ real, allocatable, dimension(:,:) :: &
     brn_, bthn_, bzn_
 
 real :: r0__, z0__
+logical, allocatable :: mask(:,:)
 
 contains
 
@@ -68,6 +69,9 @@ contains
             rho = 0
         endwhere
 
+        allocate ( mask(nPtsX,nPtsY) )
+        mask = is_inside_bbbs ()
+
 
     end subroutine bFieldEqdsk
 
@@ -122,6 +126,147 @@ contains
         bthn_ = bthn_ / bMod
         bzn_ = bzn_ / bMod
 
+        allocate ( mask(nPtsX,nPtsY) )
+        mask = .true.
+
     end subroutine bFieldAnalytical
+
+
+    subroutine soloviev ()
+
+        use aorsa2din_mod, &
+        only: eKappa, r0, b0, a, q0, nPtsX, nPtsY, psiExp
+        use grid, &
+        only: capR, y
+        use constants
+
+        implicit none
+
+        real :: q070qa, xiota0, rLim, psi_lim, psi1
+        integer :: i, j
+        real, allocatable :: psi(:,:), &
+            bx(:,:), by(:,:), bz(:,:)
+        real :: fRho, gaussian, q07qa
+
+        allocate ( &
+            bMod(nPtsX,nPtsY), &
+            bxn(nPtsX,nPtsY), &
+            byn(nPtsX,nPtsY), &
+            bzn(nPtsX,nPtsY), &
+            bx(nPtsX,nPtsY), &
+            by(nPtsX,nPtsY), &
+            bz(nPtsX,nPtsY) )
+
+
+        allocate ( &
+            brn_(nPtsX,nPtsY), &
+            bthn_(nPtsX,nPtsY), &
+            bzn_(nPtsX,nPtsY) )
+
+        allocate ( psi(nPtsX,nPtsY), &
+                    rho(nPtsX,nPtsY) )
+
+        psi     = 0
+        rho     = 0
+
+        q07qa   = 0.0
+        xiota0  = 1 / q0
+        rLim    = r0 + a
+
+        psi_lim = xiota0 * b0 / 2.0 * ( (rLim**2 - r0**2)**2 / 4. / r0**2 )
+
+        do i = 1, nPtsX
+            do j = 1, nPtsY
+
+                ! Toroidal field
+                ! --------------
+                
+                bz(i,j) = b0 * r0 / capr(i)
+                bthn_(i,j) = b0 * r0 / capr(i)
+
+
+                ! Poloidal field
+                ! --------------
+
+                psi1 = b0 * xiota0 / 2. * &
+                  ((capR(i) * y(j) / r0 / eKappa)**2 &
+                  + (capR(i)**2 - r0**2)**2 / 4. / r0**2 )
+
+                psi(i,j) = psi1 / psi_lim
+                rho(i,j) = sqrt(psi(i,j))
+
+                if ( rho(i,j) <= 0.0 ) rho(i,j) = 1.0e-08
+                if ( rho(i,j) > 1 ) rho(i,j) = 1
+
+                !denom = ekappa / 2. / capr(i) *(capr(i)**2 - r0**2)
+
+                !if(y(j) /= 0.0 .or. denom /= 0.0) then
+
+                !   theta0(i,j) = atan2(y(j), denom)
+                !   if(theta0(i,j) .ge. 0.0) theta(i,j) = theta0(i,j)
+                !   if(theta0(i,j) .lt. 0.0) theta(i,j) = theta0(i,j) + 2.0 * pi
+                !   
+                !endif
+
+                bx(i,j) = -b0 * xiota0 * capR(i) * y(j) / r0**2 / eKappa**2
+                by(i,j) = xiota0 * b0 / 2.0 * &
+                      ( 2.0 * y(j)**2 / r0**2 / eKappa**2 &
+                       + capR(i)**2 / r0**2 - 1.0)
+
+                gaussian =  exp(-psi(i,j) / psiExp)
+
+
+                !! use for regular runs (default)
+                !! ------------------------------
+
+                !if (iqprof .eq. 1) &
+                fRho = q07qa + (1. - q07qa) * gaussian
+
+
+                !! use for TAE modes
+                !! -----------------
+
+                !if (iqprof .eq. 2) &
+                !fRho = q07qa + (1. - q07qa) * gaussian**(0.5)
+
+                bx(i,j) = bx(i,j) * fRho
+                by(i,j) = by(i,j) * fRho
+
+                brn_(i,j)    = bx(i,j)
+                bzn_(i,j)    = by(i,j)
+
+                !dxdth(i, j) = - y(j) / ekappa
+                !dzdth(i, j) = ekappa * (capr(i)**2 - r0**2) / &
+                !  (2. *capr(i)) + y(j)**2 / (capr(i) * ekappa)
+                !xntau(i, j) = sqr0(dxdth(i, j)**2 + dzdth(i, j)**2)
+                !if(xntau(i,j) .eq. 0.0)xntau(i,j) = 1.0e-08
+                !btau(i,j) = 1.0 / xntau(i, j) * &
+                !     (dxdth(i, j) * bx(i, j) + dzdth(i, j) * by(i, j)) &
+                !     / bmod(i,j)
+                !bzeta(i,j) = bz(i,j) / bmod(i,j)
+
+                !xiota(i,j) = btau(i,j)/ bzeta(i,j) * capr(i) / xntau(i,j)
+                !if(xiota(i,j) .eq. 0.0) xiota(i,j) = 1.0e-06
+                !qsafety(i,j) = 1.0 / xiota(i,j)
+
+            enddo
+         enddo
+
+         bmod = sqrt ( bx**2 + by**2 + bz**2 )
+
+         bxn = bx / bmod
+         byn = by / bmod
+         bzn = bz / bmod
+
+         brn_ = brn_ / bmod
+         bthn_ = bthn_ / bmod
+         bzn_ = bzn_ / bmod
+
+         deallocate ( bx, by, bz, psi )
+
+         allocate ( mask(nPtsX,nPtsY) )
+         mask = .true.
+
+    end subroutine soloviev
 
 end module bField

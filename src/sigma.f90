@@ -2,16 +2,13 @@ module sigma_mod
 
 contains
 
-    subroutine sigmaHot_maxwellian(i, j, &
+    function sigmaHot_maxwellian(i, j, &
         xm, &
-        xkt, omgc, omgp2, &
+        kt, omgc, omgp2, &
         kxsav, kysav, capr, &
-        sig_alp_alp, sig_alp_bet, sig_alp_prl, &
-        sig_bet_alp, sig_bet_bet, sig_bet_prl, &
-        sig_prl_alp, sig_prl_bet, sig_prl_prl, &
         delta0, &
-        omgrf, xk0, &
-        xk_cutoff, specNo )
+        omgrf, k0, &
+        k_cutoff, specNo )
 
         use constants
         use zfunction_mod
@@ -28,19 +25,20 @@ contains
 
         implicit none
 
+        complex :: sigmaHot_maxwellian(3,3)
         integer, intent(in) :: specNo
-        real, intent(in) :: xk_cutOff
+        real, intent(in) :: k_cutOff
         integer :: l, labs, i, j
-        real :: xkperp, xkprl, xm, xkt, omgc, omgp2
-        real :: xkprl_eff, fgam, y0, y, sgn_kprl
+        real :: kperp, kprl, xm, kt, omgc, omgp2
+        real :: kprl_eff, fgam, y0, y, sgn_kprl
         real :: descrim
         real :: nu_coll
         real :: akprl,  alpha, omgrf
         real :: gammab(-lmax:lmax), gamma_coll(-lmax:lmax)
         real :: delta0, rhol
         real :: kxsav, kysav, capr
-        real :: xkphi
-        real :: xkalp, xkbet, xk0, rgamma, kr, step
+        real :: kphi
+        real :: kalp, kbet, k0, rgamma, kr, step
         complex :: omgrfc
         complex :: z0, z1, z2
         complex :: sig0, sig1, sig2, sig3, sig4, sig5
@@ -50,33 +48,34 @@ contains
           exil, exilp, exilovergam
         complex :: zetal(-lmax:lmax)
         complex :: zieps0, al, bl, cl, gamma_
-        complex, intent(inout) :: &
-            sig_alp_alp, sig_alp_bet, sig_alp_prl, &
-            sig_bet_alp, sig_bet_bet, sig_bet_prl, &
-            sig_prl_alp, sig_prl_bet, sig_prl_prl
 
         nu_coll =  .01 * omgrf
         zieps0 = zi * eps0
-        alpha = sqrt(2. * xkt / xm)
+        alpha = sqrt(2. * kt / xm)
         rhol = alpha / omgc
-        xkphi = nphi / capr
+        kphi = nphi / capr
         omgrfc = omgrf * (1. + zi * xnuomg)
 
-        xkalp = uxx(i,j) * kxsav + uxy(i,j) * kysav + uxz(i,j) * xkphi
-        xkbet = uyx(i,j) * kxsav + uyy(i,j) * kysav + uyz(i,j) * xkphi
-        xkprl = uzx(i,j) * kxsav + uzy(i,j) * kysav + uzz(i,j) * xkphi
-        xkperp = sqrt(xkalp**2 + xkbet**2)
+
+        ! k in Stix frame
+        ! ---------------
+
+        kalp = uxx(i,j) * kxsav + uxy(i,j) * kysav + uxz(i,j) * kphi
+        kbet = uyx(i,j) * kxsav + uyy(i,j) * kysav + uyz(i,j) * kphi
+        kprl = uzx(i,j) * kxsav + uzy(i,j) * kysav + uzz(i,j) * kphi
+        kperp = sqrt(kalp**2 + kbet**2)
 
 
-        ! Optional: leave out upshift in xkprl
+        ! Optional: leave out upshift in kprl
         ! --------------------------------- --
 
-        if (upshift .eq. 0)  xkprl = uzz(i,j) * xkphi
-        if (xkprl  .eq. 0.0) xkprl  = 1.0e-08
-        if (xkperp .eq. 0.0) xkperp = 1.0e-08
+        if (upshift .eq. 0)  kprl = uzz(i,j) * kphi
+        if (kprl  .eq. 0.0) kprl  = 1.0e-08
+        if (kperp .eq. 0.0) kperp = 1.0e-08
 
-        sgn_kprl = sign(1.0, xkprl)
-        akprl = abs(xkprl)
+        sgn_kprl = sign(1.0, kprl)
+        akprl = abs(kprl)
+
 
         ! Calculate zetal(l) and gammab(l)
         ! ---------------------------------
@@ -84,8 +83,8 @@ contains
         do l = -lmax, lmax
 
             labs = abs(l)
-            zetal(l) = (omgrfc - l * omgc) / (xkprl * alpha)
-            gammab(l) = abs(l * omgc / (2.0 * alpha * xkprl**2) &
+            zetal(l) = (omgrfc - l * omgc) / (kprl * alpha)
+            gammab(l) = abs(l * omgc / (2.0 * alpha * kprl**2) &
                                                     * gradprlb(i,j) / bmod(i,j))
             gamma_coll(l) = nu_coll / (akprl * alpha)
 
@@ -99,7 +98,8 @@ contains
 
         enddo
 
-        ! Calculate Brambillas xkrpl_eff using l = 1 only
+
+        ! Calculate Brambillas krpl_eff using l = 1 only
         ! ------------------------------------------------
 
         y0 = 1.5
@@ -115,7 +115,7 @@ contains
                   / (2. * gammab(1) * y)
             endif
 
-            xkprl_eff = xkprl / fgam
+            kprl_eff = kprl / fgam
 
         endif
 
@@ -134,7 +134,7 @@ contains
 
             endif
 
-            xkprl_eff = xkprl / fgam
+            kprl_eff = kprl / fgam
 
         endif
 
@@ -142,7 +142,7 @@ contains
         ! Maxwellian distribution
         ! -----------------------
 
-        gamma_ = 0.5 * xkperp**2 * rhol**2
+        gamma_ = 0.5 * kperp**2 * rhol**2
         rgamma = real(gamma_)
         
         if (.not. allocated(exil) ) &
@@ -165,14 +165,14 @@ contains
 
             labs = abs(l)
 
-            if(nzfun .eq. 0) call z_approx(sgn_kprl, zetal(l), 0.0, z0, z1, z2)
+            !if(nzfun .eq. 0) call z_approx(sgn_kprl, zetal(l), 0.0, z0, z1, z2)
             if(nzfun .eq. 1) call z_approx(sgn_kprl,zetal(l),gammab(l), z0, z1, z2)
-            if(nzfun .eq. 2) call z_smithe(sgn_kprl,zetal(l),gammab(l), z0, z1, z2)
-            if(nzfun .eq. 3) call z_table(sgn_kprl,zetal(l),gammab(l), gamma_coll(l), z0, z1, z2)
+            !if(nzfun .eq. 2) call z_smithe(sgn_kprl,zetal(l),gammab(l), z0, z1, z2)
+            !if(nzfun .eq. 3) call z_table(sgn_kprl,zetal(l),gammab(l), gamma_coll(l), z0, z1, z2)
 
-            al = 1.0 / (xkprl * alpha) * z0
-            bl = 1.0 / (xkprl * alpha) * z1
-            cl = 1.0 / (xkprl * alpha) * z2
+            al = 1.0 / (kprl * alpha) * z0
+            bl = 1.0 / (kprl * alpha) * z1
+            cl = 1.0 / (kprl * alpha) * z2
 
             sig0l = - zieps0 * omgp2 * rhol**2 * (exil(labs) - exilp(labs)) * al
             sig1l = - zieps0 * omgp2 * l**2 * exilovergam(labs) * al
@@ -190,8 +190,8 @@ contains
 
         enddo
             
-        sig1 = sig1 + delta0 * eps0 * omgrfc * xkperp**2 / xk0**2
-        sig3 = sig3 + delta0 * eps0 * omgrfc * xkperp**2 / xk0**2
+        sig1 = sig1 + delta0 * eps0 * omgrfc * kperp**2 / k0**2
+        sig3 = sig3 + delta0 * eps0 * omgrfc * kperp**2 / k0**2
 
         !if (xm .eq. xme) then
 
@@ -199,7 +199,7 @@ contains
         ! ---------
         if (specNo==1) then
 
-            kr = xkperp / xk_cutoff
+            kr = kperp / k_cutoff
             step = damping * kr**16 / (1. + kr**16)
             sig3 = sig3 * (1.0 + step)
 
@@ -210,19 +210,21 @@ contains
         ! (alp,bet,prl)
         ! -----------------------------
 
-        sig_alp_alp = sig1 + sig0 * xkbet**2
-        sig_alp_bet = sig2 - sig0 * xkbet * xkalp
-        sig_alp_prl = sig4 * xkalp + sig5 * xkbet
+        sigmaHot_maxwellian(1,1) = sig1 + sig0 * kbet**2
+        sigmaHot_maxwellian(1,2) = sig2 - sig0 * kbet * kalp
+        sigmaHot_maxwellian(1,3) = sig4 * kalp + sig5 * kbet
 
-        sig_bet_alp = - sig2 - sig0 * xkbet * xkalp
-        sig_bet_bet =   sig1 + sig0 * xkalp**2
-        sig_bet_prl =   sig4 * xkbet - sig5 * xkalp
+        sigmaHot_maxwellian(2,1) = - sig2 - sig0 * kbet * kalp
+        sigmaHot_maxwellian(2,2) =   sig1 + sig0 * kalp**2
+        sigmaHot_maxwellian(2,3) =   sig4 * kbet - sig5 * kalp
 
-        sig_prl_alp = sig4 * xkalp - sig5 * xkbet
-        sig_prl_bet = sig4 * xkbet + sig5 * xkalp
-        sig_prl_prl = sig3
+        sigmaHot_maxwellian(3,1) = sig4 * kalp - sig5 * kbet
+        sigmaHot_maxwellian(3,2) = sig4 * kbet + sig5 * kalp
+        sigmaHot_maxwellian(3,3) = sig3
 
-    end subroutine sigmaHot_maxwellian
+        return
+
+    end function sigmaHot_maxwellian
 
 
     function sigmaCold_stix &

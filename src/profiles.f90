@@ -62,18 +62,34 @@ contains
 
         integer :: i, j, s
 
-        !   create profile
-        !   --------------
+        ! create profile
+        ! --------------
        
         allocate ( &
             densitySpec ( nPtsX, nPtsY, nSpec ), & 
             ktSpec ( nPtsX, nPtsY, nSpec ) )
-        
-        do s=1,nSpec
+       
+        ! ions
+        ! ---- 
+
+        do s=2,nSpec
         
             ktSpec(:,:,s)       = tSpec(s) * q 
             densitySpec(:,:,s)  = dSpec(s) 
         
+        enddo
+
+        ! electrons
+        ! ---------
+
+        ktSpec(:,:,1) = tSpec(1) * q
+
+        do i=1,nPtsX
+            do j=1,nPtsY
+
+                densitySpec(i,j,1)  = sum ( densitySpec(i,j,2:nSpec)*zSpec(2:nSpec) )
+
+            enddo
         enddo
 
         call omega_freqs ()
@@ -95,8 +111,20 @@ contains
         allocate ( &
             densitySpec ( nPtsX, nPtsY, nSpec ), & 
             ktSpec ( nPtsX, nPtsY, nSpec ) )
-        
-        do s=1,nSpec
+     
+        ! Catch bad rho values
+
+        if ( any ( rho > 1 ) .or. any ( rho < 0 ) ) then 
+
+            write(*,*) 'profiles.f90: ERROR - bad rho values'
+            stop
+
+        endif
+
+        ! ions
+        ! ----
+
+        do s=2,nSpec
         
             ktSpec(:,:,s)       = ( &
                 tLim(s) + ( tSpec(s)-tLim(s) ) * (1d0 - rho**tBeta(s))**tAlpha(s) ) * q 
@@ -110,7 +138,7 @@ contains
 
         do i=1,nPtsX
             do j=1,nPtsY
-                do s=1,nSpec
+                do s=2,nSpec
             
                     if (ktSpec(i,j,s)<tLim(s)*q) &
                         ktSpec(i,j,s) = tLim(s)*q
@@ -127,6 +155,20 @@ contains
                 enddo
             enddo
         enddo
+
+        ! electrons
+        ! ---------
+
+        ktSpec(:,:,1) = tSpec(1) * q
+
+        do i=1,nPtsX
+            do j=1,nPtsY
+
+                densitySpec(i,j,1)  = sum ( densitySpec(i,j,2:nSpec)*zSpec(2:nSpec) )
+
+            enddo
+        enddo
+
 
         call omega_freqs ()
 
