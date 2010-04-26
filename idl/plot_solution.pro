@@ -1,14 +1,39 @@
 pro contour_field, field, x, y, nLevs, scale
 
-	loadct, 1
 	levels	= (fIndGen(nLevs)+1)/(nLevs-1) * scale * 1.1
 	colors	= 256-(bytScl ( levels, top = 253 )+1)
-	contour, field,x, y, levels = levels, c_colors=colors, color = 0, /fill
-	loadct, 3
-	levels	= (fIndGen(nLevs)+1)/(nLevs-1) * scale * 1.1
-	colors	= 256-(bytScl ( levels, top = 253 )+1)
-	contour, -field,x, y, levels = levels, c_colors=colors, /over, /fill
 
+	iContour, field, x, y, $
+		c_value = levels, $
+		rgb_indices = colors, $
+		/fill, $
+		rgb_table = 1, $
+		/view_next, $
+		/stretch_to_fit, $
+		/zoom_on_resize, $
+		/scale_isotropic
+
+	iContour, field, x, y, $
+		c_value = levels/2, $
+		rgb_indices = colors, $
+		rgb_table = 1, $
+		/over
+
+	iContour, -field, x, y, $
+		c_value = levels, $
+		rgb_indices = colors, $
+		/over, $
+		/fill, $
+		rgb_table = 3, $
+		/scale_isotropic	
+	
+	iContour, -field, x, y, $
+		c_value = levels/2, $
+		rgb_indices = colors, $
+		rgb_table = 3, $
+		/over
+
+		
 end
 
 pro plot_solution
@@ -52,12 +77,10 @@ pro plot_solution
 
 	ncdf_close, cdfId
 
-	window, 0
-	!p.multi = [0,3,2]
-	!p.background = 255
-	scale = max ( abs ( [ealpha[*],ebeta[*],eb[*]] ) ) * 0.5
+	scale = max ( abs ( [ealpha[*],ebeta[*],eb[*]] ) ) 
 	nLevs	= 21 
-	device, decomposed = 0
+
+	iContour, view_grid = [3,2], /stretch_to_fit, /zoom_on_resize
 
 	contour_field, ealpha, x, y, nLevs, scale
 	contour_field, ebeta, x, y, nLevs, scale
@@ -66,12 +89,13 @@ pro plot_solution
 	contour_field, imaginary(ealpha), x, y, nLevs, scale
 	contour_field, imaginary(ebeta), x, y, nLevs, scale
 	contour_field, imaginary(eb), x, y, nLevs, scale
-stop
-	window, 1
-	!p.multi = [0,3,2]
+	
+	
 	scale = max ( abs ( [ealphak_re[*],ebetak_re[*],ebk_re[*]] ) ) * 0.05
 	scalePar = max ( abs ( [ebk_re[*]] ) ) 
-	nLevs	= 21 
+
+	iContour, view_grid = [3,2]
+
 	contour_field, ealphak,	kx, ky, nLevs, scale
 	contour_field, ebetak,	kx, ky, nLevs, scale 
 	contour_field, ebk,		kx, ky, nLevs, scale 
