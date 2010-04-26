@@ -69,7 +69,7 @@ pro plot_solution
 stop
 	window, 1
 	!p.multi = [0,3,2]
-	scale = max ( abs ( [ealphak_re[*],ebetak_re[*],ebk_re[*]] ) ) * 0.5
+	scale = max ( abs ( [ealphak_re[*],ebetak_re[*],ebk_re[*]] ) ) * 0.05
 	scalePar = max ( abs ( [ebk_re[*]] ) ) 
 	nLevs	= 21 
 	contour_field, ealphak,	kx, ky, nLevs, scale

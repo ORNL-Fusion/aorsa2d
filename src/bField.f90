@@ -135,7 +135,8 @@ contains
     subroutine soloviev ()
 
         use aorsa2din_mod, &
-        only: eKappa, r0, b0, a, q0, nPtsX, nPtsY, psiExp
+        only: eKappa, r0, b0, a, q0, nPtsX, nPtsY, psiExp, &
+            noPoloidalSoloviev
         use grid, &
         only: capR, y
         use constants
@@ -198,16 +199,6 @@ contains
                 if ( rho(i,j) <= 0.0 ) rho(i,j) = 1.0e-08
                 if ( rho(i,j) > 1 ) rho(i,j) = 1
 
-                !denom = ekappa / 2. / capr(i) *(capr(i)**2 - r0**2)
-
-                !if(y(j) /= 0.0 .or. denom /= 0.0) then
-
-                !   theta0(i,j) = atan2(y(j), denom)
-                !   if(theta0(i,j) .ge. 0.0) theta(i,j) = theta0(i,j)
-                !   if(theta0(i,j) .lt. 0.0) theta(i,j) = theta0(i,j) + 2.0 * pi
-                !   
-                !endif
-
                 bx(i,j) = -b0 * xiota0 * capR(i) * y(j) / r0**2 / eKappa**2
                 by(i,j) = xiota0 * b0 / 2.0 * &
                       ( 2.0 * y(j)**2 / r0**2 / eKappa**2 &
@@ -216,17 +207,10 @@ contains
                 gaussian =  exp(-psi(i,j) / psiExp)
 
 
-                !! use for regular runs (default)
-                !! ------------------------------
+                ! use for regular runs (default)
+                ! ------------------------------
 
-                !if (iqprof .eq. 1) &
                 fRho = q07qa + (1. - q07qa) * gaussian
-
-
-                !! use for TAE modes
-                !! -----------------
-
-                !if (iqprof .eq. 2) &
                 !fRho = q07qa + (1. - q07qa) * gaussian**(0.5)
 
                 bx(i,j) = bx(i,j) * fRho
@@ -235,37 +219,33 @@ contains
                 brn_(i,j)    = bx(i,j)
                 bzn_(i,j)    = by(i,j)
 
-                !dxdth(i, j) = - y(j) / ekappa
-                !dzdth(i, j) = ekappa * (capr(i)**2 - r0**2) / &
-                !  (2. *capr(i)) + y(j)**2 / (capr(i) * ekappa)
-                !xntau(i, j) = sqr0(dxdth(i, j)**2 + dzdth(i, j)**2)
-                !if(xntau(i,j) .eq. 0.0)xntau(i,j) = 1.0e-08
-                !btau(i,j) = 1.0 / xntau(i, j) * &
-                !     (dxdth(i, j) * bx(i, j) + dzdth(i, j) * by(i, j)) &
-                !     / bmod(i,j)
-                !bzeta(i,j) = bz(i,j) / bmod(i,j)
-
-                !xiota(i,j) = btau(i,j)/ bzeta(i,j) * capr(i) / xntau(i,j)
-                !if(xiota(i,j) .eq. 0.0) xiota(i,j) = 1.0e-06
-                !qsafety(i,j) = 1.0 / xiota(i,j)
-
             enddo
-         enddo
+        enddo
 
-         bmod = sqrt ( bx**2 + by**2 + bz**2 )
+        if ( noPoloidalSoloviev ) then 
 
-         bxn = bx / bmod
-         byn = by / bmod
-         bzn = bz / bmod
+            bx = 0
+            by = 0
 
-         brn_ = brn_ / bmod
-         bthn_ = bthn_ / bmod
-         bzn_ = bzn_ / bmod
+            brn_   = 0
+            bzn_   = 0
 
-         deallocate ( bx, by, bz, psi )
+        endif
 
-         allocate ( mask(nPtsX,nPtsY) )
-         mask = .true.
+        bmod = sqrt ( bx**2 + by**2 + bz**2 )
+
+        bxn = bx / bmod
+        byn = by / bmod
+        bzn = bz / bmod
+
+        brn_ = brn_ / bmod
+        bthn_ = bthn_ / bmod
+        bzn_ = bzn_ / bmod
+
+        deallocate ( bx, by, bz, psi )
+
+        allocate ( mask(nPtsX,nPtsY) )
+        mask = .true.
 
     end subroutine soloviev
 

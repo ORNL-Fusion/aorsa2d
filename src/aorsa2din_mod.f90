@@ -19,6 +19,7 @@ implicit none
     real :: tBetaIn(nSpecMax)       = (/ 1.0, 1.0, 0.0, 0.0, 0.0 /)
     logical :: useFluxProfiles = .false.  
     logical :: useSoloviev = .false.
+    logical :: noPoloidalSoloviev = .false.
     integer :: nSpec = 2
     real :: r0 = 1.0
     real :: a = 1.0
@@ -436,7 +437,8 @@ implicit none
      &    use_dlg_bField, edgeCollisions, nSpec, zSpecIn, amuSpecIn, &
      &    tSpecIn, dSpecIn, tLimIn, dLimIn, &
      &    tAlphaIn, tBetaIn, dAlphaIn, dBetaIn, useFluxProfiles, square, &
-     &    metalLeft, metalRight, metalTop, metalBot, useSoloviev, a, psiExp
+     &    metalLeft, metalRight, metalTop, metalBot, useSoloviev, a, psiExp, &
+     &    noPoloidalSoloviev
                 
 contains
 
