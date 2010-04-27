@@ -7,7 +7,6 @@ real, allocatable, dimension(:,:) :: &
 real, allocatable, dimension(:,:) :: &
     brn_, bthn_, bzn_
 
-real :: r0__, z0__
 logical, allocatable :: mask(:,:)
 
 contains
@@ -15,7 +14,7 @@ contains
     subroutine bFieldEqdsk ()
 
         use aorsa2din_mod, &
-        only: nPtsX, nPtsY
+        only: nPtsX, nPtsY, r0
         use grid
         use interp
         use eqdsk_dlg
@@ -54,9 +53,7 @@ contains
             enddo
         enddo
 
-        r0__  = rmaxis__
-        z0__  = zmaxis__
-
+        r0  = rmaxis__
 
         !   For regions outside the LCFS apply a correction
         !   if nessecary 

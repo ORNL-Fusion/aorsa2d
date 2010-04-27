@@ -29,12 +29,12 @@ contains
         integer, intent(in) :: specNo
         real, intent(in) :: k_cutOff
         integer :: l, labs, i, j
-        real :: kperp, kprl, xm, kt, omgc, omgp2
-        real :: kprl_eff, fgam, y0, y, sgn_kprl
+        real :: kPerp, kPrl, xm, kt, omgc, omgp2
+        real :: kPrl_eff, fgam, y0, y, sgn_kPrl
         real :: descrim
         real :: nu_coll
-        real :: akprl,  alpha, omgrf
-        real :: gammab(-lmax:lmax), gamma_coll(-lmax:lmax)
+        real :: akPrl,  alpha, omgrf
+        real :: gammaBroaden(-lmax:lmax), gamma_coll(-lmax:lmax)
         real :: delta0, rhol
         real :: kxsav, kysav, capr
         real :: kphi
@@ -62,97 +62,98 @@ contains
 
         kalp = uxx(i,j) * kxsav + uxy(i,j) * kysav + uxz(i,j) * kphi
         kbet = uyx(i,j) * kxsav + uyy(i,j) * kysav + uyz(i,j) * kphi
-        kprl = uzx(i,j) * kxsav + uzy(i,j) * kysav + uzz(i,j) * kphi
-        kperp = sqrt(kalp**2 + kbet**2)
+        kPrl = uzx(i,j) * kxsav + uzy(i,j) * kysav + uzz(i,j) * kphi
+        kPerp = sqrt(kalp**2 + kbet**2)
 
 
-        ! Optional: leave out upshift in kprl
+        ! Optional: leave out upshift in kPrl
         ! --------------------------------- --
 
-        if (upshift .eq. 0)  kprl = uzz(i,j) * kphi
-        if (kprl  .eq. 0.0) kprl  = 1.0e-08
-        if (kperp .eq. 0.0) kperp = 1.0e-08
-
-        sgn_kprl = sign(1.0, kprl)
-        akprl = abs(kprl)
+        if (upshift .eq. 0)  kPrl = uzz(i,j) * kphi
 
 
-        ! Calculate zetal(l) and gammab(l)
+        if (kPrl  == 0.0) kPrl  = 1.0e-08
+        if (kPerp == 0.0) kPerp = 1.0e-08
+
+        sgn_kPrl    = sign ( 1.0, kPrl )
+        akPrl       = abs ( kPrl )
+
+
+        ! Calculate zetal(l) and gammaBroaden(l)
         ! ---------------------------------
 
         do l = -lmax, lmax
 
-            labs = abs(l)
-            zetal(l) = (omgrfc - l * omgc) / (kprl * alpha)
-            gammab(l) = abs(l * omgc / (2.0 * alpha * kprl**2) &
+            zetal(l) = (omgrfc - l * omgc) / (kPrl * alpha)
+            gammaBroaden(l) = abs(l * omgc / (2.0 * alpha * kPrl**2) &
                                                     * gradprlb(i,j) / bmod(i,j))
-            gamma_coll(l) = nu_coll / (akprl * alpha)
-
-            !if(xm .eq. xme)gammab(l) = 0.0
+            !gamma_coll(l) = nu_coll / (akPrl * alpha)
 
             ! electrons
-            ! ---------
-            if(specNo==1) gammab(l) = 0.0
-
-            if(abs(gammab(l)) .lt. .01)gammab(l) = .01
+            if(specNo==1) &
+            gammaBroaden(l) = 0.0
+           
+            ! not sure why this is nescessary yet ... ask EFJ 
+            if ( abs(gammaBroaden(l) ) < .01 ) &
+            gammaBroaden(l) = .01
 
         enddo
 
 
-        ! Calculate Brambillas krpl_eff using l = 1 only
+        ! Calculate Brambillas kPrl_eff using l = 1 only
         ! ------------------------------------------------
 
-        y0 = 1.5
-        y = y0
+        y0  = 1.5
+        y   = y0
 
-        if(sgn_kprl .ge. 0.0)then
+        if ( sgn_kPrl >= 0 ) then
 
             fgam = 1.0
 
-            if(gammab(1) .gt. 1.0e-05)then
+            if(gammaBroaden(1) > 1.0e-05)then
+
                 y = y0
-                fgam = (sqrt(1. +  4. * gammab(1) * y) - 1.) &
-                  / (2. * gammab(1) * y)
+                fgam = (sqrt(1. +  4. * gammaBroaden(1) * y) - 1.) &
+                  / (2. * gammaBroaden(1) * y)
+
             endif
 
-            kprl_eff = kprl / fgam
-
-        endif
-
-
-        if(sgn_kprl .lt. 0.0)then
+        else
 
             fgam = 1.0
 
-            if(gammab(1) .gt. 1.0e-05)then
+            if(gammaBroaden(1) > 1.0e-05)then
 
-                descrim = 1. - 4. * gammab(1) * y0
-                if (descrim .ge. 0.0) y =   y0
-                if (descrim .lt. 0.0) y = - y0
-                fgam = (1. - sqrt(1. -  4. * gammab(1) * y) ) &
-                   / (2. * gammab(1) * y)
+                descrim = 1. - 4. * gammaBroaden(1) * y0
+
+                if (descrim >= 0.0) y = y0
+                if (descrim < 0.0) y = -y0
+
+                fgam = (1. - sqrt(1. -  4. * gammaBroaden(1) * y) ) &
+                   / (2. * gammaBroaden(1) * y)
 
             endif
 
-            kprl_eff = kprl / fgam
-
         endif
+
+        kPrl_eff = kPrl / fgam
 
 
         ! Maxwellian distribution
         ! -----------------------
 
-        gamma_ = 0.5 * kperp**2 * rhol**2
-        rgamma = real(gamma_)
+        gamma_ = 0.5 * kPerp**2 * rhol**2
         
-        if (.not. allocated(exil) ) &
-        allocate ( exil(0:lMax), exilp(0:lMax), exilOverGam(0:lMax) )
+        allocate ( &
+            exil(0:lMax), &
+            exilp(0:lMax), &
+            exilOverGam(0:lMax) )
 
-        if(rgamma .ge. 1.0e-08) &
-        call besiexp(gamma_, lmax, exil, exilp, lmaxdim, exilovergam)
-
-        if(rgamma .lt. 1.0e-08) &
-        call bes_expand(gamma_, lmax, exil, exilp, lmaxdim, exilovergam)
+        if ( real(gamma_) >= 1.0e-08 ) then
+            call besIExp ( gamma_, lmax, exil, exilp, exilovergam )
+        else
+            call bes_expand ( gamma_, lmax, exil, exilp, lmaxdim, exilovergam )
+        endif
 
         sig0 = 0.0
         sig1 = 0.0
@@ -165,14 +166,14 @@ contains
 
             labs = abs(l)
 
-            !if(nzfun .eq. 0) call z_approx(sgn_kprl, zetal(l), 0.0, z0, z1, z2)
-            if(nzfun .eq. 1) call z_approx(sgn_kprl,zetal(l),gammab(l), z0, z1, z2)
-            !if(nzfun .eq. 2) call z_smithe(sgn_kprl,zetal(l),gammab(l), z0, z1, z2)
-            !if(nzfun .eq. 3) call z_table(sgn_kprl,zetal(l),gammab(l), gamma_coll(l), z0, z1, z2)
+            !if(nzfun .eq. 0) call z_approx(sgn_kPrl, zetal(l), 0.0, z0, z1, z2)
+            if(nzfun .eq. 1) call z_approx(sgn_kPrl,zetal(l),gammaBroaden(l), z0, z1, z2)
+            !if(nzfun .eq. 2) call z_smithe(sgn_kPrl,zetal(l),gammaBroaden(l), z0, z1, z2)
+            !if(nzfun .eq. 3) call z_table(sgn_kPrl,zetal(l),gammaBroaden(l), gamma_coll(l), z0, z1, z2)
 
-            al = 1.0 / (kprl * alpha) * z0
-            bl = 1.0 / (kprl * alpha) * z1
-            cl = 1.0 / (kprl * alpha) * z2
+            al = 1.0 / (kPrl * alpha) * z0
+            bl = 1.0 / (kPrl * alpha) * z1
+            cl = 1.0 / (kPrl * alpha) * z2
 
             sig0l = - zieps0 * omgp2 * rhol**2 * (exil(labs) - exilp(labs)) * al
             sig1l = - zieps0 * omgp2 * l**2 * exilovergam(labs) * al
@@ -189,17 +190,21 @@ contains
             sig5 = sig5 + sig5l
 
         enddo
-            
-        sig1 = sig1 + delta0 * eps0 * omgrfc * kperp**2 / k0**2
-        sig3 = sig3 + delta0 * eps0 * omgrfc * kperp**2 / k0**2
+           
+        deallocate ( exil, exilp, exilOverGam )
 
-        !if (xm .eq. xme) then
+        ! Add numerical damping for Bernstein wave (delta0 ~ 1e-4)
+
+        sig1 = sig1 + delta0 * eps0 * omgrfc * kPerp**2 / k0**2
+        sig3 = sig3 + delta0 * eps0 * omgrfc * kPerp**2 / k0**2
+
 
         ! electrons
         ! ---------
+
         if (specNo==1) then
 
-            kr = kperp / k_cutoff
+            kr = kPerp / k_cutoff
             step = damping * kr**16 / (1. + kr**16)
             sig3 = sig3 * (1.0 + step)
 
@@ -277,71 +282,76 @@ contains
 !
 
 
-      subroutine besiexp(gamma_, lmax, expbes, expbesp, lmaxdim, &
-         expbesovergam)
+    subroutine besIExp(gamma_, lMax, expBes, expBesP, expBesOverGam)
 
         use bessel_mod
         use constants
 
-!     ----------------------------------------------------------
-!     Calculates exp(-gamma) times the modified bessel functions
-!     (and derivatives) of order up to lmax
-!     ----------------------------------------------------------
+        ! Calculates exp(-gamma) times the modified bessel functions
+        ! (and derivatives) of order up to lmax
+        ! ----------------------------------------------------------
 
 
-      implicit none
+        implicit none
 
-      integer, intent(in) :: lmax
-      integer :: nmax, ier, l, lmaxdim
-      complex, intent(in) :: gamma_
-      complex, intent(out) :: expbes(:), expbesp(:), expbesovergam(:)
-      complex(kind=dbl), allocatable, dimension(:) :: xil, xilp, b
-      complex(kind=dbl) :: exgam
-      real :: gammod
-      integer :: status
-      complex(kind=dbl) :: gamma_dbl
+        integer, intent(in) :: lmax
+        integer :: nmax, ier, l
+        complex, intent(in) :: gamma_
+        complex, intent(out) :: expbes(:), expbesp(:), expbesovergam(:)
+        complex(kind=dbl), allocatable, dimension(:) :: xil, xilp, b
+        complex(kind=dbl) :: exgam
+        integer :: status
+        complex(kind=dbl) :: gamma_dbl
 
-      gamma_dbl = gamma_
+        gamma_dbl = gamma_
 
-      allocate ( xil(0:lMax), xilp(0:lMax), b(lMax+1), stat = status )
-      b = 0
+        allocate ( xil(0:lMax), xilp(0:lMax), b(lMax+1), stat = status )
 
-      exgam = exp(-gamma_dbl)
-      gammod = cabs(gamma_)
+        b       = 0
+        xil     = 0
+        xilp    = 0
 
-      if(gammod .le. 700.)then
-         nmax = lmax
-         call besic(gamma_dbl, nmax, b, ier)
-         if(ier .ne. 0)write(6,100) ier
+        exgam = exp(-gamma_dbl)
 
-         do l = 0, lMax
-            xil(l) = b(l+1)
-         end do
+        if ( cabs ( gamma_ ) <= 700.) then
 
-         do l = 0, lmax
-           if(l .eq. 0) xilp(0) = xil(1)
-           if(l .ne. 0) xilp(l) = xil(l-1) - l / gamma_dbl * xil(l)
-           expbes(l+1) = exgam * xil(l)
-           expbesp(l+1) = exgam * xilp(l)
-         end do
-      end if
+           nmax = lmax
+           call besic ( gamma_dbl, nmax, b, ier)
 
-      if(gammod .gt. 700.)then
-         do l = 0, lmax
-            call bes_asym(gamma_, l, expbes(l+1), expbesp(l+1))
-         end do
-      end if
+           if (ier/=0) write(6,100) ier
 
-      do l = 0, lmax
-         expbesovergam(l+1) = expbes(l+1) / gamma_
-      end do
+           do l = 0, lMax
+              xil(l) = b(l+1)
+           enddo
 
-  100 format('ier = ', i5, 'besic failed')
+           do l = 0, lmax
 
-      deallocate ( b )
-      deallocate ( xil )
-      deallocate ( xilp )
-      end subroutine besiexp
+             if(l .eq. 0) xilp(0) = xil(1)
+             if(l .ne. 0) xilp(l) = xil(l-1) - l / gamma_dbl * xil(l)
+             expbes(l+1) = exgam * xil(l)
+             expbesp(l+1) = exgam * xilp(l)
+
+           enddo
+
+        else
+
+           do l = 0, lmax
+              call bes_asym(gamma_, l, expbes(l+1), expbesp(l+1))
+           enddo
+
+        endif
+
+        do l = 0, lmax
+           expbesovergam(l+1) = expbes(l+1) / gamma_
+        enddo
+
+100   format('ier = ', i5, 'besic failed')
+
+        deallocate ( b )
+        deallocate ( xil )
+        deallocate ( xilp )
+
+    end subroutine besIExp
 
 
 !

@@ -27,14 +27,25 @@ pro plot_rundata
 	by	= byn * bmod
 	bz	= bzn * bmod
 
-	window, 0, xSize = 800, ySize = 800
-	!p.multi = [0,3,3]
-	contour, jy_im, x, y
-	contour, bmod, x, y, nLev = 30
-	contour, bx, x, y
-	contour, by, x, y
-	contour, bz, x, y
-	contour, densitySpec[*,*,0], x, y
-	contour, tempSpec[*,*,0], x, y
+	nR	= n_elements ( capR )
+
+	iPlot, x, bMod[*,nR/2], $
+			view_grid = [4,2]
+	iPlot, x, bxn[*,nR/2]*bMod, /over
+	iPlot, x, byn[*,nR/2]*bMod, /over
+	iPlot, x, bzn[*,nR/2]*bMod, /over
+
+	bxn_	= conGrid ( bxn, 20, 20, /center )
+	byn_	= conGrid ( byn, 20, 20, /center )
+	x_		= conGrid ( x, 20, 20, /center )
+	y_		= conGrid ( y, 20, 20, /center )
+
+	colors	= 256 - ( bytScl ( sqrt ( bxn_^2+byn_^2 ), top = 253 ) + 1 )
+
+	iVector, bxn_, byn_, x_, y_, $
+			vector_colors = colors, $
+			rgb_table = 1, $
+			scale_isotropic = 1, $
+			/view_next
 
 end

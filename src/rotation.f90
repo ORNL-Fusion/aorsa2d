@@ -162,7 +162,7 @@ contains
     subroutine deriv_rotation
 
         use aorsa2din_mod, &
-        only: nPtsX, nPtsY, nZFun
+        only: nPtsX, nPtsY, nZFun, r0
         use grid
         use derivatives 
         use bField
@@ -210,10 +210,10 @@ contains
                 !   Brambilla approximation:
                 !   -----------------------
 
-                sinTh = y(j) / sqrt ( (capR(i)-r0__)**2 + (y(j)-z0__)**2 )
+                sinTh = y(j) / sqrt ( (capR(i)-r0)**2 + y(j)**2 )
                 gradprlb(i,j) = bMod(i,j) / capr(i) * abs ( btau(i,j) * sinTh )
 
-                if (nzfun == 0) gradPrlB(i,j) = 1.0e-10
+                !if (nzfun == 0) gradPrlB(i,j) = 1.0e-10
 
                 call deriv_x(uxx, i, j, dx, dfdx = dxuxx(i,j), d2fdx2 = dxxuxx(i,j))
                 call deriv_x(uxy, i, j, dx, dfdx = dxuxy(i,j), d2fdx2 = dxxuxy(i,j))
