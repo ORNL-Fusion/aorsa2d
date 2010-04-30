@@ -96,8 +96,8 @@ contains
 
       d2fdxy = 0.0
 
-      if (i .ne. 1 .and. i .ne. nx .and. &
-          j .ne. 1 .and. j .ne. ny) then
+      if (i /= 1 .and. i /= nx .and. &
+          j /= 1 .and. j /= ny) then
 
          d2fdxy = (f(i+1,j+1) - f(i-1,j+1) - f(i+1,j-1) + f(i-1,j-1) ) &
             / (4.0 * dx * dy)

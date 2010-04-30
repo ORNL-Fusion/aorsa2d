@@ -133,7 +133,20 @@ ${OBJ_DIR}/%.o: ${DLG_DIR}/%.f90
 ${OBJ_DIR}/%.o: ${DLG_DIR}/%.F90
 	${F90} -c ${F90FLAGS} $< -o $@ ${NETCDF} ${INC_DIR} ${CPP_DIRECTIVES}
 
+
+# Double precision routines
+# -------------------------
+
 ${OBJ_DIR}/bessel.o: ${SRC_DIR}/bessel.f90
+	${F90} -c ${F90FLAGS} ${DOUBLE} $< -o $@ ${NETCDF} ${INC_DIR}
+
+${OBJ_DIR}/zfunction.o: ${SRC_DIR}/zfunction.f90
+	${F90} -c ${F90FLAGS} ${DOUBLE} $< -o $@ ${NETCDF} ${INC_DIR}
+
+${OBJ_DIR}/Zfun.o: ${SRC_DIR}/Zfun.f90
+	${F90} -c ${F90FLAGS} ${DOUBLE} $< -o $@ ${NETCDF} ${INC_DIR}
+
+${OBJ_DIR}/ztable.o: ${SRC_DIR}/ztable.f90
 	${F90} -c ${F90FLAGS} ${DOUBLE} $< -o $@ ${NETCDF} ${INC_DIR}
 
 # Dependencies	
@@ -229,6 +242,9 @@ ${OBJ_DIR}/inv_fourier.o: \
 
 ${OBJ_DIR}/solve.o: \
 		${OBJ_DIR}/parallel.o
+
+${OBJ_DIR}/write_data.o: \
+		${OBJ_DIR}/check_mod.o
 
 clean:
 	rm $(EXEC) $(OBJ_DIR)/*.o $(MOD_DIR)/*.mod
