@@ -1,24 +1,13 @@
 
-#PBS -N aorsa2d_dlg
-#PBS -A FUS016
+#PBS -N aorsa_2.0
+#PBS -A FUS033
 #PBS -m e
 #PBS -j oe
 #PBS -q debug
-#PBS -l walltime=1:00:00,size=256
+#PBS -l walltime=0:30:00,size=256
 #PBS -V
 
 cd $PBS_O_WORKDIR
 
-cp $HOME/AORSA2D/ZTABLE.TXT .
-cp $HOME/AORSA2D/grfont.dat .
-rm AORSA*
-mkdir output
-
-aprun -n 256 $HOME/aorsa2d/xaorsa2d.jaguar
-
-rm eqdsk.out
-rm out38 out138
-rm cql3d.out
-rm out_cql3d.coef*
-rm du0u0_input
+aprun -n 256 $HOME/aorsa2d/xaorsa2d
 

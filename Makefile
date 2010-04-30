@@ -46,7 +46,7 @@ SOLVE_PREC = "double"
 # set the coordinate system to an understandable 
 # cylindrical ("cylProper") or old version ("cylXYZ")
 
-COORDSYS = "cylXYZ"
+COORDSYS = "cylPROPER"
 
 
 # pre-processor directives
@@ -80,11 +80,15 @@ endif
 MOD_LOC = -Jmod
 
 
-# franklin
-# --------
+# other machines
+# --------------
 
 ifeq (${HOME},/global/homes/g/greendl1)
 	include Makefile.franklin
+endif
+
+ifeq (${HOME},/ccs/home/dg6)
+	include Makefile.jaguarpf
 endif
 
 # the order of linking libs is important

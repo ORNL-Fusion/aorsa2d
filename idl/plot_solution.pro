@@ -11,7 +11,7 @@ pro contour_field, field, x, y, nLevs, scale, $
 		rgb_indices = colors, $
 		/fill, $
 		rgb_table = 1, $
-		view_grid = [3,3], $
+		view_grid = [3,2], $
 		/stretch_to_fit, $
 		/zoom_on_resize, $
 		/scale_isotropic
@@ -23,7 +23,7 @@ pro contour_field, field, x, y, nLevs, scale, $
 		rgb_indices = colors, $
 		/fill, $
 		rgb_table = 1, $
-		view_grid = [3,3], $
+		view_grid = [3,2], $
 		view_next = 1, $
 		/stretch_to_fit, $
 		/zoom_on_resize, $
@@ -103,9 +103,9 @@ pro plot_solution
 	contour_field, ebeta, x, y, nLevs, scale
 	contour_field, eb, x, y, nLevs, scale
 
-	contour_field, imaginary(ealpha), x, y, nLevs, scale
-	contour_field, imaginary(ebeta), x, y, nLevs, scale
-	contour_field, imaginary(eb), x, y, nLevs, scale
+	;contour_field, imaginary(ealpha), x, y, nLevs, scale
+	;contour_field, imaginary(ebeta), x, y, nLevs, scale
+	;contour_field, imaginary(eb), x, y, nLevs, scale
 	
 	contour_field, abs(ealpha), x, y, nLevs, scale
 	contour_field, abs(ebeta), x, y, nLevs, scale
@@ -119,9 +119,9 @@ stop
 	contour_field, ebetak,	kx, ky, nLevs, scale
 	contour_field, ebk,		kx, ky, nLevs, scale
 
-	contour_field, imaginary(ealphak),	kx, ky, nLevs, scale 
-	contour_field, imaginary(ebetak),	kx, ky, nLevs, scale 
-	contour_field, imaginary(ebk),		kx, ky, nLevs, scale 
+	;contour_field, imaginary(ealphak),	kx, ky, nLevs, scale 
+	;contour_field, imaginary(ebetak),	kx, ky, nLevs, scale 
+	;contour_field, imaginary(ebk),		kx, ky, nLevs, scale 
 
 	contour_field, abs(ealphak),	kx, ky, nLevs, scale 
 	contour_field, abs(ebetak),	kx, ky, nLevs, scale 
