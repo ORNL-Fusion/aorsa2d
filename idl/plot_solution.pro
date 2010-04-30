@@ -1,28 +1,48 @@
-pro contour_field, field, x, y, nLevs, scale
+pro contour_field, field, x, y, nLevs, scale, $
+		initial = initial
 
 	levels	= (fIndGen(nLevs)+1)/(nLevs-1) * scale * 1.1
 	colors	= 256-(bytScl ( levels, top = 253 )+1)
+
+	if keyword_set ( initial ) then begin
 
 	iContour, field, x, y, $
 		c_value = levels, $
 		rgb_indices = colors, $
 		/fill, $
 		rgb_table = 1, $
-		/view_next, $
+		view_grid = [3,3], $
 		/stretch_to_fit, $
 		/zoom_on_resize, $
 		/scale_isotropic
+
+	endif else begin
+
+	iContour, field, x, y, $
+		c_value = levels, $
+		rgb_indices = colors, $
+		/fill, $
+		rgb_table = 1, $
+		view_grid = [3,3], $
+		view_next = 1, $
+		/stretch_to_fit, $
+		/zoom_on_resize, $
+		/scale_isotropic, $
+		overPlot = 0 
+
+
+	endelse
 
 	iContour, field, x, y, $
 		c_value = levels/2, $
 		rgb_indices = colors, $
 		rgb_table = 1, $
-		/over
+		over = 1 
 
 	iContour, -field, x, y, $
 		c_value = levels, $
 		rgb_indices = colors, $
-		/over, $
+		over = 1, $
 		/fill, $
 		rgb_table = 3, $
 		/scale_isotropic	
@@ -31,9 +51,8 @@ pro contour_field, field, x, y, nLevs, scale
 		c_value = levels/2, $
 		rgb_indices = colors, $
 		rgb_table = 3, $
-		/over
+		over = 1 
 
-		
 end
 
 pro plot_solution
@@ -77,12 +96,10 @@ pro plot_solution
 
 	ncdf_close, cdfId
 
-	scale = max ( abs ( [ealpha[*],ebeta[*],eb[*]] ) ) 
+	scale = max ( abs ( [ealpha[*],ebeta[*],eb[*]] ) )
 	nLevs	= 21 
 
-	iContour, view_grid = [3,2], /stretch_to_fit, /zoom_on_resize
-
-	contour_field, ealpha, x, y, nLevs, scale
+	contour_field, ealpha, x, y, nLevs, scale, /initial
 	contour_field, ebeta, x, y, nLevs, scale
 	contour_field, eb, x, y, nLevs, scale
 
@@ -90,19 +107,25 @@ pro plot_solution
 	contour_field, imaginary(ebeta), x, y, nLevs, scale
 	contour_field, imaginary(eb), x, y, nLevs, scale
 	
-	
+	contour_field, abs(ealpha), x, y, nLevs, scale
+	contour_field, abs(ebeta), x, y, nLevs, scale
+	contour_field, abs(eb), x, y, nLevs, scale
+
+stop	
 	scale = max ( abs ( [ealphak_re[*],ebetak_re[*],ebk_re[*]] ) ) * 0.05
 	scalePar = max ( abs ( [ebk_re[*]] ) ) 
 
-	iContour, view_grid = [3,2]
+	contour_field, ealphak,	kx, ky, nLevs, scale, /initial
+	contour_field, ebetak,	kx, ky, nLevs, scale
+	contour_field, ebk,		kx, ky, nLevs, scale
 
-	contour_field, ealphak,	kx, ky, nLevs, scale
-	contour_field, ebetak,	kx, ky, nLevs, scale 
-	contour_field, ebk,		kx, ky, nLevs, scale 
 	contour_field, imaginary(ealphak),	kx, ky, nLevs, scale 
 	contour_field, imaginary(ebetak),	kx, ky, nLevs, scale 
 	contour_field, imaginary(ebk),		kx, ky, nLevs, scale 
 
+	contour_field, abs(ealphak),	kx, ky, nLevs, scale 
+	contour_field, abs(ebetak),	kx, ky, nLevs, scale 
+	contour_field, abs(ebk),		kx, ky, nLevs, scale 
 
 stop
 end

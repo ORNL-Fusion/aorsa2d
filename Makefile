@@ -43,6 +43,12 @@ MODE = "parallel"
 
 SOLVE_PREC = "double"
 
+# set the coordinate system to an understandable 
+# cylindrical ("cylProper") or old version ("cylXYZ")
+
+COORDSYS = "cylXYZ"
+
+
 # pre-processor directives
 # ------------------------
 
@@ -53,6 +59,11 @@ endif
 ifeq (${SOLVE_PREC},"double")
 	CPP_DIRECTIVES := -Ddblprec ${CPP_DIRECTIVES}
 endif
+
+ifeq (${COORDSYS},"cylProper")
+	CPP_DIRECTIVES := -DcylProper ${CPP_DIRECTIVES}
+endif
+
 
 # compile flags
 # -------------
@@ -73,19 +84,7 @@ MOD_LOC = -Jmod
 # --------
 
 ifeq (${HOME},/global/homes/g/greendl1)
-BLAS = 
-LAPACK =  
-SCALAPACK = 
-PAPI_INC = ${PAPI_INCLUDE_OPTS}  
-PAPI = ${PAPI_POST_LINK_OPTS} 
-BLACS = 
-NETCDF = ${NETCDF_INCLUDE_OPTS} ${NETCDF_POST_LINK_OPTS} -lnetcdf 
-BOUNDS = 
-WARN = 
-DEBUG = 
-DOUBLE = -Mr8
-F90 = ftn -fast #-gopt -Mbounds -Mchkfpstk -Mchkptr
-MOD_LOC = -module mod
+	include Makefile.franklin
 endif
 
 # the order of linking libs is important

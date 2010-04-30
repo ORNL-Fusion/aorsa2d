@@ -28,12 +28,28 @@ pro plot_rundata
 	bz	= bzn * bmod
 
 	nR	= n_elements ( capR )
+	nz	= n_elements ( y )
+	nSpec	= n_elements ( densitySpec[0,0,*] )
 
 	iPlot, x, bMod[*,nR/2], $
-			view_grid = [4,2]
+			view_grid = [2,2], $
+			title = 'z=0 equil B field'
 	iPlot, x, bxn[*,nR/2]*bMod, /over
 	iPlot, x, byn[*,nR/2]*bMod, /over
 	iPlot, x, bzn[*,nR/2]*bMod, /over
+
+	iPlot, x, densitySpec[*,nz/2,0], $
+			/view_next, $
+			title = 'z=0 Density'
+	for i=1,nSpec-1 do $
+		iPlot, x, densitySpec[*,nz/2,i], /over
+
+	iPlot, x, tempSpec[*,nz/2,0], $
+			/view_next, $
+			title = 'z=0 Temp'
+	for i=1,nSpec-1 do $
+		iPlot, x, tempSpec[*,nz/2,i], /over
+
 
 	bxn_	= conGrid ( bxn, 20, 20, /center )
 	byn_	= conGrid ( byn, 20, 20, /center )
@@ -47,5 +63,7 @@ pro plot_rundata
 			rgb_table = 1, $
 			scale_isotropic = 1, $
 			/view_next
+
+stop
 
 end

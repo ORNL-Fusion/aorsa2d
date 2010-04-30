@@ -3,10 +3,8 @@ module sigma_mod
 contains
 
     function sigmaHot_maxwellian(i, j, &
-        xm, &
-        kt, omgc, omgp2, &
+        xm, kt, omgc, omgp2, &
         kxsav, kysav, capr, &
-        delta0, &
         omgrf, k0, &
         k_cutoff, specNo )
 
@@ -15,7 +13,8 @@ contains
         use rotation
         use bField
         use aorsa2din_mod, &
-        only: upshift, nzfun, damping, lmax, xnuomg, nPhi
+        only: upshift, nzfun, damping, lmax, xnuomg, &
+            nPhi, delta0
 
         ! This routine uses the modified Z functions Z0, Z1, Z2
         ! with the appropriate sign changes for k_parallel < 0.0
@@ -35,10 +34,10 @@ contains
         real :: nu_coll
         real :: akPrl,  alpha, omgrf
         real :: gammaBroaden(-lmax:lmax), gamma_coll(-lmax:lmax)
-        real :: delta0, rhol
+        real :: rhol
         real :: kxsav, kysav, capr
-        real :: kphi
-        real :: kalp, kbet, k0, rgamma, kr, step
+        real :: kPhi
+        real :: kAlp, kBet, k0, rgamma, kr, step
         complex :: omgrfc
         complex :: z0, z1, z2
         complex :: sig0, sig1, sig2, sig3, sig4, sig5
@@ -49,27 +48,39 @@ contains
         complex :: zetal(-lmax:lmax)
         complex :: zieps0, al, bl, cl, gamma_
 
-        nu_coll =  .01 * omgrf
+        !nu_coll =  .01 * omgrf
         zieps0 = zi * eps0
         alpha = sqrt(2. * kt / xm)
         rhol = alpha / omgc
-        kphi = nphi / capr
+        kPhi = nphi / capr
         omgrfc = omgrf * (1. + zi * xnuomg)
 
 
         ! k in Stix frame
         ! ---------------
 
-        kalp = uxx(i,j) * kxsav + uxy(i,j) * kysav + uxz(i,j) * kphi
-        kbet = uyx(i,j) * kxsav + uyy(i,j) * kysav + uyz(i,j) * kphi
-        kPrl = uzx(i,j) * kxsav + uzy(i,j) * kysav + uzz(i,j) * kphi
-        kPerp = sqrt(kalp**2 + kbet**2)
+#ifdef cylProper 
 
+        kAlp = Urr_(i,j) * kxsav + Urth_(i,j) * kPhi + Urz_(i,j) * kysav
+        kBet = Uthr_(i,j) * kxsav + Uthth_(i,j) * kPhi + Uthz_(i,j) * kysav
+        kPrl = Uzr_(i,j) * kxsav + Uzth_(i,j) * kPhi + Uzz_(i,j) * kysav
+
+        if ( upShift == 0 ) kPrl = Uthth_(i,j) * kPhi
+
+#else 
+        kAlp = uxx(i,j) * kxsav + uxy(i,j) * kysav + uxz(i,j) * kPhi
+        kBet = uyx(i,j) * kxsav + uyy(i,j) * kysav + uyz(i,j) * kPhi
+        kPrl = uzx(i,j) * kxsav + uzy(i,j) * kysav + uzz(i,j) * kPhi
 
         ! Optional: leave out upshift in kPrl
         ! --------------------------------- --
 
-        if (upshift .eq. 0)  kPrl = uzz(i,j) * kphi
+        if (upshift .eq. 0)  kPrl = uzz(i,j) * kPhi
+
+#endif
+
+        kPerp = sqrt(kAlp**2 + kBet**2)
+
 
 
         if (kPrl  == 0.0) kPrl  = 1.0e-08
@@ -98,45 +109,6 @@ contains
             gammaBroaden(l) = .01
 
         enddo
-
-
-        ! Calculate Brambillas kPrl_eff using l = 1 only
-        ! ------------------------------------------------
-
-        y0  = 1.5
-        y   = y0
-
-        if ( sgn_kPrl >= 0 ) then
-
-            fgam = 1.0
-
-            if(gammaBroaden(1) > 1.0e-05)then
-
-                y = y0
-                fgam = (sqrt(1. +  4. * gammaBroaden(1) * y) - 1.) &
-                  / (2. * gammaBroaden(1) * y)
-
-            endif
-
-        else
-
-            fgam = 1.0
-
-            if(gammaBroaden(1) > 1.0e-05)then
-
-                descrim = 1. - 4. * gammaBroaden(1) * y0
-
-                if (descrim >= 0.0) y = y0
-                if (descrim < 0.0) y = -y0
-
-                fgam = (1. - sqrt(1. -  4. * gammaBroaden(1) * y) ) &
-                   / (2. * gammaBroaden(1) * y)
-
-            endif
-
-        endif
-
-        kPrl_eff = kPrl / fgam
 
 
         ! Maxwellian distribution
@@ -193,14 +165,16 @@ contains
            
         deallocate ( exil, exilp, exilOverGam )
 
+
         ! Add numerical damping for Bernstein wave (delta0 ~ 1e-4)
+        ! --------------------------------------------------------
 
         sig1 = sig1 + delta0 * eps0 * omgrfc * kPerp**2 / k0**2
         sig3 = sig3 + delta0 * eps0 * omgrfc * kPerp**2 / k0**2
 
 
-        ! electrons
-        ! ---------
+        ! electron damping
+        ! ----------------
 
         if (specNo==1) then
 
@@ -215,16 +189,16 @@ contains
         ! (alp,bet,prl)
         ! -----------------------------
 
-        sigmaHot_maxwellian(1,1) = sig1 + sig0 * kbet**2
-        sigmaHot_maxwellian(1,2) = sig2 - sig0 * kbet * kalp
-        sigmaHot_maxwellian(1,3) = sig4 * kalp + sig5 * kbet
+        sigmaHot_maxwellian(1,1) = sig1 + sig0 * kBet**2
+        sigmaHot_maxwellian(1,2) = sig2 - sig0 * kBet * kAlp
+        sigmaHot_maxwellian(1,3) = sig4 * kAlp + sig5 * kBet
 
-        sigmaHot_maxwellian(2,1) = - sig2 - sig0 * kbet * kalp
-        sigmaHot_maxwellian(2,2) =   sig1 + sig0 * kalp**2
-        sigmaHot_maxwellian(2,3) =   sig4 * kbet - sig5 * kalp
+        sigmaHot_maxwellian(2,1) = - sig2 - sig0 * kBet * kAlp
+        sigmaHot_maxwellian(2,2) =   sig1 + sig0 * kAlp**2
+        sigmaHot_maxwellian(2,3) =   sig4 * kBet - sig5 * kAlp
 
-        sigmaHot_maxwellian(3,1) = sig4 * kalp - sig5 * kbet
-        sigmaHot_maxwellian(3,2) = sig4 * kbet + sig5 * kalp
+        sigmaHot_maxwellian(3,1) = sig4 * kAlp - sig5 * kBet
+        sigmaHot_maxwellian(3,2) = sig4 * kBet + sig5 * kAlp
         sigmaHot_maxwellian(3,3) = sig3
 
         return
@@ -290,7 +264,6 @@ contains
         ! Calculates exp(-gamma) times the modified bessel functions
         ! (and derivatives) of order up to lmax
         ! ----------------------------------------------------------
-
 
         implicit none
 

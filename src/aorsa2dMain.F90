@@ -122,6 +122,25 @@ program aorsa2dMain
     call init_basis_functions () 
 
 
+!   Antenna current
+!   ---------------
+
+    if (iAm==0) &
+    write(*,*) 'Building antenna current (brhs)'
+
+    call init_brhs ()
+
+
+!   Write the run input data to disk
+!   --------------------------------
+
+    if (iAm==0) &
+    write(*,*) 'Writing run input data to file'
+
+    if (iAm==0) &
+    call write_runData ( 'runData.nc' )
+
+
 !   Fill matrix 
 !   -----------
 
@@ -160,27 +179,8 @@ program aorsa2dMain
 
     endif
 
-    if (iAm==0) &
-    call write_amat ( 'amat.nc' )
-
-
-!   Antenna current
-!   ---------------
-
-    if (iAm==0) &
-    write(*,*) 'Building antenna current (brhs)'
-
-    call init_brhs ()
-
-
-!   Write the run input data to disk
-!   --------------------------------
-
-    if (iAm==0) &
-    write(*,*) 'Writing run input data to file'
-
-    if (iAm==0) &
-    call write_runData ( 'runData.nc' )
+    !if (iAm==0) &
+    !call write_amat ( 'amat.nc' )
 
 
 !   Solve complex, linear system

@@ -210,7 +210,10 @@ contains
                 !   Brambilla approximation:
                 !   -----------------------
 
-                sinTh = y(j) / sqrt ( (capR(i)-r0)**2 + y(j)**2 )
+                sinTh = y(j) 
+                if (abs(y(j))>0) &
+                sinTh =  y(j) / sqrt ( (capR(i)-r0)**2 + y(j)**2 )
+
                 gradprlb(i,j) = bMod(i,j) / capr(i) * abs ( btau(i,j) * sinTh )
 
                 !if (nzfun == 0) gradPrlB(i,j) = 1.0e-10
