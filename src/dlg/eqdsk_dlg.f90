@@ -23,6 +23,8 @@ contains
 
         use dlg
         use fitpack
+        use aorsa2din_mod, &
+        only: noPoloidalField
  
         implicit none
         
@@ -173,6 +175,13 @@ contains
 !                curv2 ( fluxGrid(i), nw, fluxGrid, fpol, yp_c, 0.0 )
 !         
 !        end do
+
+        if(noPoloidalField) then
+        
+            bz__    = 0
+            bR      = 0
+
+        endif
 
         bMag__    = sqrt ( bR**2 + bPhi**2 + bz__**2 )
 

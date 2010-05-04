@@ -133,7 +133,7 @@ contains
 
         use aorsa2din_mod, &
         only: eKappa, r0, b0, a, q0, nPtsX, nPtsY, psiExp, &
-            noPoloidalSoloviev
+            noPoloidalField
         use grid, &
         only: capR, y
         use constants
@@ -219,7 +219,7 @@ contains
             enddo
         enddo
 
-        if ( noPoloidalSoloviev ) then 
+        if ( noPoloidalField ) then 
 
             bx = 0
             by = 0

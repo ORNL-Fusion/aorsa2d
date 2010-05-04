@@ -19,7 +19,7 @@ implicit none
     real :: tBetaIn(nSpecMax)       = (/ 1.0, 1.0, 0.0, 0.0, 0.0 /)
     logical :: useFluxProfiles = .false.  
     logical :: useSoloviev = .false.
-    logical :: noPoloidalSoloviev = .false.
+    logical :: noPoloidalField = .false.
     integer :: nSpec = 2
     real :: r0 = 1.0
     real :: a = 1.0
@@ -438,7 +438,7 @@ implicit none
      &    tSpecIn, dSpecIn, tLimIn, dLimIn, &
      &    tAlphaIn, tBetaIn, dAlphaIn, dBetaIn, useFluxProfiles, square, &
      &    metalLeft, metalRight, metalTop, metalBot, useSoloviev, a, psiExp, &
-     &    noPoloidalSoloviev
+     &    noPoloidalField
                 
 contains
 
