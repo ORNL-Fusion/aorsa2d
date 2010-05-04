@@ -15,6 +15,8 @@ complex :: &
     sigPrlAlpTmp, sigPrlBetTmp, sigPrlPrlTmp
 
 complex :: sigma_tmp(3,3)
+complex :: sigma_tmp_rig(3,3), sigma_tmp_lef(3,3), &
+           sigma_tmp_top(3,3), sigma_tmp_bot(3,3)
 
 complex :: &
     kAlpAlp, kAlpBet, kAlpPrl, &
@@ -54,7 +56,7 @@ contains
         implicit none
 
         integer :: iRow, iCol, i, j, n, m, p, s, ii, jj
-        integer :: localRow, localCol
+        integer :: localRow, localCol, sigCnt
         complex :: metal
         real :: kr, kz, z
         complex :: &
@@ -142,14 +144,68 @@ contains
                             species: &
                             do s=1,nSpec
 
-                                if (iSigma==1) & ! hot plasma        
-                                sigma_tmp = sigmaHot_maxwellian&
-                                    ( i, j, mSpec(s), &
-                                    ktSpec(i,j,s), omgc(i,j,s), omgp2(i,j,s), &
-                                    kxsav(n), kysav(m), capr(i), &
-                                    omgrf, k0, &
-                                    xk_cutoff, s )
-                              
+                                if (iSigma==1) then !& ! hot plasma        
+
+                                    sigCnt = 1
+
+                                    sigma_rig = 0
+                                    sigma_lef = 0
+                                    sigma_top = 0
+                                    sigma_bot = 0
+
+                                    sigma_tmp = sigmaHot_maxwellian&
+                                        ( i, j, mSpec(s), &
+                                        ktSpec(i,j,s), omgc(i,j,s), omgp2(i,j,s), &
+                                        kxsav(n), kysav(m), capr(i), &
+                                        omgrf, k0, &
+                                        xk_cutoff, s )
+
+                                    ! Try some spatial averaging of sigma
+                                    ! -----------------------------------
+
+                                    if(i<nPtsX) then
+                                    sigma_tmp_rig = sigmaHot_maxwellian&
+                                        ( i+1, j, mSpec(s), &
+                                        ktSpec(i,j,s), omgc(i,j,s), omgp2(i,j,s), &
+                                        kxsav(n), kysav(m), capr(i), &
+                                        omgrf, k0, &
+                                        xk_cutoff, s )
+                                        sigCnt = sigCnt+1
+                                    endif
+                                    if(i>1) then
+                                    sigma_tmp_lef = sigmaHot_maxwellian&
+                                        ( i-1, j, mSpec(s), &
+                                        ktSpec(i,j,s), omgc(i,j,s), omgp2(i,j,s), &
+                                        kxsav(n), kysav(m), capr(i), &
+                                        omgrf, k0, &
+                                        xk_cutoff, s )
+                                        sigCnt = sigCnt + 1
+                                    endif
+                                    if(j<nPtsY) then
+                                    sigma_tmp_top = sigmaHot_maxwellian&
+                                        ( i, j+1, mSpec(s), &
+                                        ktSpec(i,j,s), omgc(i,j,s), omgp2(i,j,s), &
+                                        kxsav(n), kysav(m), capr(i), &
+                                        omgrf, k0, &
+                                        xk_cutoff, s )
+                                        sigCnt = sigCnt + 1
+                                    endif 
+                                    if(j>1) then
+                                    sigma_tmp_bot = sigmaHot_maxwellian&
+                                        ( i, j-1, mSpec(s), &
+                                        ktSpec(i,j,s), omgc(i,j,s), omgp2(i,j,s), &
+                                        kxsav(n), kysav(m), capr(i), &
+                                        omgrf, k0, &
+                                        xk_cutoff, s )
+                                        sigCnt = sigCnt + 1
+                                    endif
+
+                                    sigma_tmp = ( sigma_tmp_lef + sigma_tmp_rig &
+                                                + sigma_tmp_top + sigma_tmp_bot &
+                                                + sigma_tmp ) / sigCnt
+
+                                endif 
+
                                 if (iSigma==0) & ! cold plasma 
                                 sigma_tmp = sigmaCold_stix &
                                     ( i, j, omgc(i,j,s), omgp2(i,j,s), omgrf )
