@@ -148,10 +148,10 @@ contains
 
                                     sigCnt = 1
 
-                                    sigma_rig = 0
-                                    sigma_lef = 0
-                                    sigma_top = 0
-                                    sigma_bot = 0
+                                    sigma_tmp_rig = 0
+                                    sigma_tmp_lef = 0
+                                    sigma_tmp_top = 0
+                                    sigma_tmp_bot = 0
 
                                     sigma_tmp = sigmaHot_maxwellian&
                                         ( i, j, mSpec(s), &
