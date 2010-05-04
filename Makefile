@@ -46,7 +46,7 @@ SOLVE_PREC = "double"
 # set the coordinate system to an understandable 
 # cylindrical ("cylProper") or old version ("cylXYZ")
 
-COORDSYS = "cylPROPER"
+COORDSYS = "cylXYZ"
 
 
 # pre-processor directives
