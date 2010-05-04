@@ -97,7 +97,11 @@ contains
 
         do l = -lmax, lmax
 
-            zetal(l) = (omgrfc - l * omgc) / (kPrl * alpha)
+            zetal(l) = (omgrfc - l * omgc) / (kPrl * alpha) 
+
+            if(zetal(l)<1.005 .and. zetal(l)>1) zetal(l)=1.005
+            if(zetal(l)>0.995 .and. zetal(l)<1) zetal(l)=0.995
+
             gammaBroaden(l) = abs(l * omgc / (2.0 * alpha * kPrl**2) &
                                                     * gradprlb(i,j) / bmod(i,j))
             !gamma_coll(l) = nu_coll / (akPrl * alpha)
