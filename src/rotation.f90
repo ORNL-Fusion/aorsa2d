@@ -10,6 +10,8 @@ real, allocatable, dimension(:,:) :: &
 real, allocatable, dimension(:,:) :: &
     urr_, urth_, urz_, uthr_, uthth_, uthz_, uzr_, uzth_, uzz_
 
+real, allocatable, dimension(:,:,:,:) :: U_xyz, U_cyl
+
 real :: sinTh
 real, allocatable, dimension(:,:) :: gradPrlB
 real, allocatable, dimension(:,:) :: &
@@ -155,6 +157,32 @@ contains
         endif
 
         deallocate(det)
+
+        allocate ( U_xyz(nPtsX,nPtsY,3,3), U_cyl(nPtsX,nPtsY,3,3) )
+
+        U_xyz(:,:,1,1)  = Uxx
+        U_xyz(:,:,2,1)  = Uxy
+        U_xyz(:,:,3,1)  = Uxz
+        
+        U_xyz(:,:,1,2)  = Uyx
+        U_xyz(:,:,2,2)  = Uyy
+        U_xyz(:,:,3,2)  = Uyz
+
+        U_xyz(:,:,1,3)  = Uzx
+        U_xyz(:,:,2,3)  = Uzy
+        U_xyz(:,:,3,3)  = Uzz
+
+        U_cyl(:,:,1,1)  = Urr_
+        U_cyl(:,:,2,1)  = Urth_
+        U_cyl(:,:,3,1)  = Urz_
+        
+        U_cyl(:,:,1,2)  = Uthr_
+        U_cyl(:,:,2,2)  = Uthth_
+        U_cyl(:,:,3,2)  = Uthz_
+
+        U_cyl(:,:,1,3)  = Uzr_
+        U_cyl(:,:,2,3)  = Uzth_
+        U_cyl(:,:,3,3)  = Uzz_
 
     end subroutine init_rotation
 

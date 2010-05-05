@@ -2,22 +2,23 @@ module sigma_mod
 
 contains
 
-    function sigmaHot_maxwellian(i, j, &
+    function sigmaHot_maxwellian( &
         xm, kt, omgc, omgp2, &
         kxsav, kysav, capr, &
         omgrf, k0, &
-        k_cutoff, specNo )
+        k_cutoff, specNo, &
+        bMod, gradPrlB, U_xyz, U_cyl )
 
         use constants
         use zfunction_mod
-        use rotation
-        use bField
         use aorsa2din_mod, &
         only: upshift, nzfun, damping, lmax, xnuomg, &
             nPhi, delta0
         use bessel_mod
-        use grid, &
-        only: dx
+
+        ! Calculate the hot Maxwellian sigma at a single
+        ! point in space
+        !-----------------------------------------------
 
         ! This routine uses the modified Z functions Z0, Z1, Z2
         ! with the appropriate sign changes for k_parallel < 0.0
@@ -27,9 +28,11 @@ contains
 
         implicit none
 
+        real, intent(in) :: bMod, gradPrlB, U_xyz(:,:), U_cyl(:,:)
         complex :: sigmaHot_maxwellian(3,3)
         integer, intent(in) :: specNo
         real, intent(in) :: k_cutOff
+
         integer :: l, labs, i, j
         real :: kPerp, kPrl, xm, kt, omgc, omgp2, kPrlTmp
         real :: kPrl_eff, fgam, y0, y
@@ -67,21 +70,27 @@ contains
 
 #ifdef cylProper 
 
-        kAlp = Urr_(i,j) * kxsav + Urth_(i,j) * kPhi + Urz_(i,j) * kysav
-        kBet = Uthr_(i,j) * kxsav + Uthth_(i,j) * kPhi + Uthz_(i,j) * kysav
-        kPrl = Uzr_(i,j) * kxsav + Uzth_(i,j) * kPhi + Uzz_(i,j) * kysav
+        !kAlp = Urr_(i,j) * kxsav + Urth_(i,j) * kPhi + Urz_(i,j) * kysav
+        !kBet = Uthr_(i,j) * kxsav + Uthth_(i,j) * kPhi + Uthz_(i,j) * kysav
+        !kPrl = Uzr_(i,j) * kxsav + Uzth_(i,j) * kPhi + Uzz_(i,j) * kysav
 
-        if ( upShift == 0 ) kPrl = Uzth_(i,j) * kPhi
+        kAlp = U_cyl(1,1) * kxsav + U_cyl(1,2) * kPhi + U_cyl(1,3) * kysav
+        kBet = U_cyl(2,1) * kxsav + U_cyl(2,2) * kPhi + U_cyl(2,3) * kysav
+        kPrl = U_cyl(3,1) * kxsav + U_cyl(3,2) * kPhi + U_cyl(3,3) * kysav
 
+        !if ( upShift == 0 ) kPrl = Uzth_(i,j) * kPhi
+        if ( upShift == 0 ) kPrl = U_cyl(3,2) * kPhi
 #else 
-        kAlp = uxx(i,j) * kxsav + uxy(i,j) * kysav + uxz(i,j) * kPhi
-        kBet = uyx(i,j) * kxsav + uyy(i,j) * kysav + uyz(i,j) * kPhi
-        kPrl = uzx(i,j) * kxsav + uzy(i,j) * kysav + uzz(i,j) * kPhi
+        !kAlp = uxx(i,j) * kxsav + uxy(i,j) * kysav + uxz(i,j) * kPhi
+        !kBet = uyx(i,j) * kxsav + uyy(i,j) * kysav + uyz(i,j) * kPhi
+        !kPrl = uzx(i,j) * kxsav + uzy(i,j) * kysav + uzz(i,j) * kPhi
 
-        ! Optional: leave out upshift in kPrl
-        ! --------------------------------- --
+        kAlp = U_xyz(1,1) * kxsav + U_xyz(1,2) * kPhi + U_xyz(1,3) * kysav
+        kBet = U_xyz(2,1) * kxsav + U_xyz(2,2) * kPhi + U_xyz(2,3) * kysav
+        kPrl = U_xyz(3,1) * kxsav + U_xyz(3,2) * kPhi + U_xyz(3,3) * kysav
 
-        if (upshift == 0)  kPrl = uzz(i,j) * kPhi
+        !if (upshift == 0)  kPrl = uzz(i,j) * kPhi
+        if (upshift == 0)  kPrl = U_xyz(3,3) * kPhi
 
 #endif
 
@@ -101,13 +110,14 @@ contains
         do l = -lmax, lmax
 
             kPrlTmp = kPrl
-            dR      = omgc / ( kPrl * alpha )
-            if(abs(dR)/4<dx) write(*,*) dR, kPrl, alpha
+            dR      = real(omgc) / ( real(kPrl) * alpha )
+            !if((abs(dR)/10.0)<abs(dx)) 
+            !write(*,*) dx, dR, kPrl, alpha
             !if(abs(kPrlTmp)>25) kPrlTmp=sgn_kPrl * 25 
             zetal(l) = (omgrfc - l * omgc) / (kPrlTmp * alpha) 
 
             gammaBroaden(l) = abs(l * omgc / (2.0 * alpha * kPrlTmp**2) &
-                                                    * gradprlb(i,j) / bmod(i,j))
+                                                    * gradPrlB / bMod)
             !gamma_coll(l) = nu_coll / (akPrl * alpha)
 
             ! electrons
@@ -222,7 +232,6 @@ contains
         ( i, j, omgC, omgP2, omgRF )
 
         use constants 
-        use rotation
         use aorsa2din_mod, &
         only: xnuomg
 

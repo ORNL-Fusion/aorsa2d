@@ -144,11 +144,13 @@ contains
 
                                 if (iSigma==1) & ! hot plasma        
                                 sigma_tmp = sigmaHot_maxwellian&
-                                    ( i, j, mSpec(s), &
+                                    ( mSpec(s), &
                                     ktSpec(i,j,s), omgc(i,j,s), omgp2(i,j,s), &
                                     kxsav(n), kysav(m), capr(i), &
                                     omgrf, k0, &
-                                    xk_cutoff, s )
+                                    xk_cutoff, s, &
+                                    bMod(i,j), gradPrlB(i,j), &
+                                    U_xyz(i,j,:,:), U_cyl(i,j,:,:) )
                               
                                 if (iSigma==0) & ! cold plasma 
                                 sigma_tmp = sigmaCold_stix &

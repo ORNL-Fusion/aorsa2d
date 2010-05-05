@@ -142,122 +142,15 @@ ${OBJ_DIR}/%.o: ${DLG_DIR}/%.f90
 ${OBJ_DIR}/%.o: ${DLG_DIR}/%.F90
 	${F90} -c ${F90FLAGS} $< -o $@ ${NETCDF} ${INC_DIR} ${CPP_DIRECTIVES}
 
-
 # Double precision routines
 # -------------------------
 
-${OBJ_DIR}/bessel.o: ${SRC_DIR}/bessel.f90
-	${F90} -c ${F90FLAGS} ${DOUBLE} $< -o $@ ${NETCDF} ${INC_DIR}
+include Makefile.double
 
-${OBJ_DIR}/zfunction.o: ${SRC_DIR}/zfunction.F90
-	${F90} -c ${F90FLAGS} ${DOUBLE} $< -o $@ ${NETCDF} ${INC_DIR} ${CPP_DIRECTIVES}
+# Dependancies
+# ------------
 
-${OBJ_DIR}/zfunHammett.o: ${SRC_DIR}/zfunHammett.f90
-	${F90} -c ${F90FLAGS} ${DOUBLE} $< -o $@ ${NETCDF} ${INC_DIR}
-
-${OBJ_DIR}/zfunOriginal.o: ${SRC_DIR}/zfunOriginal.f90
-	${F90} -c ${F90FLAGS} ${DOUBLE} $< -o $@ ${NETCDF} ${INC_DIR}
-
-${OBJ_DIR}/ztable.o: ${SRC_DIR}/ztable.f90
-	${F90} -c ${F90FLAGS} ${DOUBLE} $< -o $@ ${NETCDF} ${INC_DIR}
-
-# Dependencies	
-
-${OBJ_DIR}/aorsa2dMain.o: \
-		${OBJ_DIR}/constants.o \
-		${OBJ_DIR}/eqdsk_dlg.o \
-		${OBJ_DIR}/sigma.o \
-		${OBJ_DIR}/aorsa2din_mod.o \
-		${OBJ_DIR}/interp.o \
-		${OBJ_DIR}/inv_fourier.o \
-		${OBJ_DIR}/write_data.o \
-		${OBJ_DIR}/grid.o \
-		${OBJ_DIR}/bField.o \
-		${OBJ_DIR}/profiles.o \
-		${OBJ_DIR}/rotation.o \
-		${OBJ_DIR}/mat_fill.o \
-		${OBJ_DIR}/antenna.o \
-		${OBJ_DIR}/solve.o \
-		${OBJ_DIR}/timer.o
-
-${OBJ_DIR}/eqdsk_dlg.o: \
-		${OBJ_DIR}/dlg.o \
-		${OBJ_DIR}/fitpack.o \
-		${OBJ_DIR}/grid.o \
-		${OBJ_DIR}/aorsa2din_mod.o
-
-${OBJ_DIR}/sigma.o: \
-		${OBJ_DIR}/bessel.o \
-		${OBJ_DIR}/zfunction.o \
-		${OBJ_DIR}/bField.o \
-		${OBJ_DIR}/rotation.o
-
-${OBJ_DIR}/zfunction.o: \
-		${OBJ_DIR}/ztable.o \
-		${OBJ_DIR}/zfunHammett.o \
-		${OBJ_DIR}/zfunOriginal.o
-
-${OBJ_DIR}/interp.o: \
-		${OBJ_DIR}/fitpack.o \
-		${OBJ_DIR}/eqdsk_dlg.o
-
-${OBJ_DIR}/Zfun.o: \
-		${OBJ_DIR}/constants.o
-
-${OBJ_DIR}/bField.o: \
-		${OBJ_DIR}/interp.o \
-		${OBJ_DIR}/aorsa2din_mod.o \
-		${OBJ_DIR}/grid.o
-
-${OBJ_DIR}/profiles.o: \
-		${OBJ_DIR}/bField.o \
-		${OBJ_DIR}/constants.o \
-		${OBJ_DIR}/aorsa2din_mod.o
-
-${OBJ_DIR}/rotation.o: \
-		${OBJ_DIR}/bField.o \
-		${OBJ_DIR}/derivatives.o \
-		${OBJ_DIR}/grid.o \
-		${OBJ_DIR}/eqdsk_dlg.o
-
-${OBJ_DIR}/grid.o: \
-		${OBJ_DIR}/constants.o \
-		${OBJ_DIR}/aorsa2din_mod.o \
-		${OBJ_DIR}/parallel.o
-
-${OBJ_DIR}/mat_fill.o: \
-		${OBJ_DIR}/aorsa2din_mod.o \
-		${OBJ_DIR}/sigma.o \
-		${OBJ_DIR}/grid.o \
-		${OBJ_DIR}/rotation.o \
-		${OBJ_DIR}/constants.o \
-		${OBJ_DIR}/profiles.o \
-		${OBJ_DIR}/bField.o \
-		${OBJ_DIR}/parallel.o \
-		${OBJ_DIR}/eqdsk_dlg.o
-
-${OBJ_DIR}/antenna.o: \
-		${OBJ_DIR}/grid.o \
-		${OBJ_DIR}/aorsa2din_mod.o \
-		${OBJ_DIR}/constants.o \
-		${OBJ_DIR}/profiles.o \
-		${OBJ_DIR}/parallel.o \
-		${OBJ_DIR}/eqdsk_dlg.o
-
-${OBJ_DIR}/write_data.o: \
-		${OBJ_DIR}/mat_fill.o \
-		${OBJ_DIR}/solve.o \
-		${OBJ_DIR}/constants.o
-
-${OBJ_DIR}/inv_fourier.o: \
-		${OBJ_DIR}/aorsa2din_mod.o \
-		${OBJ_DIR}/grid.o
-
-${OBJ_DIR}/solve.o: \
-		${OBJ_DIR}/parallel.o
-
-${OBJ_DIR}/write_data.o: \
-		${OBJ_DIR}/check_mod.o
+include Makefile.deps
 
 clean:
 	rm $(EXEC) $(OBJ_DIR)/*.o $(MOD_DIR)/*.mod

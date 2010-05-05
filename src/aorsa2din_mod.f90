@@ -442,12 +442,17 @@ implicit none
                 
 contains
 
-    subroutine read_namelist
+    subroutine read_namelist ( fileName )
 
         implicit none
         character(len=100) :: nml_fileName
+        character(len=*), intent(in), optional :: fileName
 
-        nml_fileName    = 'aorsa2d.in'
+        if(present(fileName)) then
+                nml_fileName = fileName
+        else
+            nml_fileName    = 'aorsa2d.in'
+        endif
         
         open ( unit = 63, file = nml_fileName )
         read ( unit = 63, nml = aorsa2din )
