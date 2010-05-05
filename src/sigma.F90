@@ -16,6 +16,8 @@ contains
         only: upshift, nzfun, damping, lmax, xnuomg, &
             nPhi, delta0
         use bessel_mod
+        use grid, &
+        only: dx
 
         ! This routine uses the modified Z functions Z0, Z1, Z2
         ! with the appropriate sign changes for k_parallel < 0.0
@@ -29,7 +31,7 @@ contains
         integer, intent(in) :: specNo
         real, intent(in) :: k_cutOff
         integer :: l, labs, i, j
-        real :: kPerp, kPrl, xm, kt, omgc, omgp2
+        real :: kPerp, kPrl, xm, kt, omgc, omgp2, kPrlTmp
         real :: kPrl_eff, fgam, y0, y
         real(kind=dbl) :: sgn_kPrl
         real :: descrim
@@ -50,6 +52,7 @@ contains
         complex(kind=dbl) :: zetal(-lmax:lmax)
         complex :: zieps0, al, bl, cl 
         complex(kind=dbl) ::gamma_
+        real :: dR
 
         !nu_coll =  .01 * omgrf
         zieps0 = zi * eps0
@@ -97,12 +100,13 @@ contains
 
         do l = -lmax, lmax
 
-            zetal(l) = (omgrfc - l * omgc) / (kPrl * alpha) 
+            kPrlTmp = kPrl
+            dR      = omgc / ( kPrl * alpha )
+            if(abs(dR)/4<dx) write(*,*) dR, kPrl, alpha
+            !if(abs(kPrlTmp)>25) kPrlTmp=sgn_kPrl * 25 
+            zetal(l) = (omgrfc - l * omgc) / (kPrlTmp * alpha) 
 
-            if(zetal(l)<1.005 .and. zetal(l)>1) zetal(l)=1.005
-            if(zetal(l)>0.995 .and. zetal(l)<1) zetal(l)=0.995
-
-            gammaBroaden(l) = abs(l * omgc / (2.0 * alpha * kPrl**2) &
+            gammaBroaden(l) = abs(l * omgc / (2.0 * alpha * kPrlTmp**2) &
                                                     * gradprlb(i,j) / bmod(i,j))
             !gamma_coll(l) = nu_coll / (akPrl * alpha)
 

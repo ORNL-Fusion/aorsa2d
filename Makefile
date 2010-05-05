@@ -48,6 +48,11 @@ SOLVE_PREC = "double"
 
 COORDSYS = "cylXYZ"
 
+# set the z function to use
+# either "zFunOriginal" or "zFunHammett"
+
+ZFUN = "zFunHammett"
+
 
 # pre-processor directives
 # ------------------------
@@ -62,6 +67,10 @@ endif
 
 ifeq (${COORDSYS},"cylProper")
 	CPP_DIRECTIVES := -DcylProper ${CPP_DIRECTIVES}
+endif
+
+ifeq (${ZFUN},"zFunHammett")
+	CPP_DIRECTIVES := -DzFunHammett ${CPP_DIRECTIVES}
 endif
 
 
@@ -140,10 +149,13 @@ ${OBJ_DIR}/%.o: ${DLG_DIR}/%.F90
 ${OBJ_DIR}/bessel.o: ${SRC_DIR}/bessel.f90
 	${F90} -c ${F90FLAGS} ${DOUBLE} $< -o $@ ${NETCDF} ${INC_DIR}
 
-${OBJ_DIR}/zfunction.o: ${SRC_DIR}/zfunction.f90
+${OBJ_DIR}/zfunction.o: ${SRC_DIR}/zfunction.F90
+	${F90} -c ${F90FLAGS} ${DOUBLE} $< -o $@ ${NETCDF} ${INC_DIR} ${CPP_DIRECTIVES}
+
+${OBJ_DIR}/zfunHammett.o: ${SRC_DIR}/zfunHammett.f90
 	${F90} -c ${F90FLAGS} ${DOUBLE} $< -o $@ ${NETCDF} ${INC_DIR}
 
-${OBJ_DIR}/Zfun.o: ${SRC_DIR}/Zfun.f90
+${OBJ_DIR}/zfunOriginal.o: ${SRC_DIR}/zfunOriginal.f90
 	${F90} -c ${F90FLAGS} ${DOUBLE} $< -o $@ ${NETCDF} ${INC_DIR}
 
 ${OBJ_DIR}/ztable.o: ${SRC_DIR}/ztable.f90
@@ -182,7 +194,8 @@ ${OBJ_DIR}/sigma.o: \
 
 ${OBJ_DIR}/zfunction.o: \
 		${OBJ_DIR}/ztable.o \
-		${OBJ_DIR}/Zfun.o
+		${OBJ_DIR}/zfunHammett.o \
+		${OBJ_DIR}/zfunOriginal.o
 
 ${OBJ_DIR}/interp.o: \
 		${OBJ_DIR}/fitpack.o \

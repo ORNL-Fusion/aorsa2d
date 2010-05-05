@@ -58,7 +58,7 @@ contains
 !*******************************************************************************
 !
 
-      subroutine z_exact(sgn_kprl, zeta, gamma, xnu, z0, z1, z2, &
+      subroutine z_exact(sgn_kprl, zeta, gamma_, xnu, z0, z1, z2, &
          dz0, dz1, dz2)
 
 !     ----------------------------------------------------
@@ -69,9 +69,10 @@ contains
 
       implicit none
 
-      complex, intent(inout)   :: z0, z1, z2, dz0, dz1, dz2
+      complex, intent(inout)   :: z0, z1, z2
+      complex, intent(out), optional :: dz0, dz1, dz2
       complex, intent(in)    :: zeta
-      real, intent(in)       :: sgn_kprl, gamma, xnu
+      real, intent(in)       :: sgn_kprl, gamma_, xnu
       complex, dimension(0:4)  :: zfunc
 
       real alpha_s
@@ -79,21 +80,21 @@ contains
 
       zi = cmplx(0.0, 1.0)
 
-      alpha_s = -2.0 * gamma
+      alpha_s = -2.0 * gamma_
 
       if ( sgn_kprl .ge. 0.0 ) then
 
          call ztable_zfunc( real(zeta), alpha_s, xnu, zfunc )
          z0 = zfunc(0)
-         z1 = - 0.5 * zfunc(1) - gamma / (2.0 * zi) * zfunc(2)
+         z1 = - 0.5 * zfunc(1) - gamma_ / (2.0 * zi) * zfunc(2)
          z2 = 0.5 * zfunc(0) + 0.25 * zfunc(2) &
-            + gamma / (2.0 * zi) * zfunc(3) &
-            - gamma**2 / 4. * zfunc(4)
+            + gamma_ / (2.0 * zi) * zfunc(3) &
+            - gamma_**2 / 4. * zfunc(4)
 
-         dz0 = zfunc(1)
-         dz1 = - 0.5 * zfunc(2) - gamma / (2.0 * zi) * zfunc(3)
+        if(present(dz0)) dz0 = zfunc(1)
+        if(present(dz1)) dz1 = - 0.5 * zfunc(2) - gamma_ / (2.0 * zi) * zfunc(3)
 !         dz2 = 0.5 * zfunc(1) + 0.25 * zfunc(3)
-!     .      + gamma / (2.0 * zi) * zfunc(4)
+!     .      + gamma_ / (2.0 * zi) * zfunc(4)
 
 
 
@@ -101,17 +102,17 @@ contains
 
          call ztable_zfunc( - real(zeta), - alpha_s, - xnu, zfunc )
          z0 = - zfunc(0)
-         z1 = - 0.5 * zfunc(1) + gamma / (2.0 * zi) * zfunc(2)
+         z1 = - 0.5 * zfunc(1) + gamma_ / (2.0 * zi) * zfunc(2)
          z2 = - 0.5 * zfunc(0) - 0.25 * zfunc(2) &
-            + gamma / (2.0 * zi) * zfunc(3) &
-            + gamma**2 / 4. * zfunc(4)
+            + gamma_ / (2.0 * zi) * zfunc(3) &
+            + gamma_**2 / 4. * zfunc(4)
 
-         dz0 =  zfunc(1)
-         dz1 =  0.5 * zfunc(2) - gamma / (2.0 * zi) * zfunc(3)
+            if(present(dz0)) dz0 =  zfunc(1)
+            if(present(dz1)) dz1 =  0.5 * zfunc(2) - gamma_ / (2.0 * zi) * zfunc(3)
 !         dz2 =  0.5 * zfunc(1) + 0.25 * zfunc(3)
-!     .      - gamma / (2.0 * zi) * zfunc(4)
+!     .      - gamma_ / (2.0 * zi) * zfunc(4)
 
-      end if
+      endif
 
       return
 
@@ -126,9 +127,12 @@ contains
       subroutine z_approx(sgn_kprl, zeta, gamma_, z0, z1, z2)
 
       use ztable_mod
-      !use aorsasubs_mod
+#ifdef zFunHammett
       use hammett, zfun_hammett => zfun
-
+#else
+      use hammett, zfun_hammett => zfun
+      use zfunOriginal
+#endif
       implicit none
 
 !     ------------------
@@ -136,7 +140,7 @@ contains
 !     ------------------
       real gamma_, fgam, y0, y, sgn_kprl, descrim
       complex zeta, z0, z1, z2, zfunct, zetat, fzeta
-
+        complex :: zFunctCheck
 
       y0 = 1.5
       y = y0
@@ -153,9 +157,14 @@ contains
 
          zetat = fgam * zeta
 !        zfunct = fzeta(zetat)
-!         call zfun (zetat, zfunct)
-         zfunct =  zfun_hammett (zetat)
-
+#ifdef zFunHammett
+        zfunct =  zfun_hammett (zetat)
+#else
+        ! this zfun gives NaNs when argument close to zero?
+        call zfun (zetat, zfunct)
+        zFunctCheck =  zfun_hammett (zetat)
+        write(*,*) zetat, zfunct, zFunctCheck
+#endif
 
          z0 = fgam * zfunct
          z1 = fgam * (1.0 + fgam * zeta * zfunct)
@@ -176,15 +185,26 @@ contains
 
          zetat = - fgam * zeta
 !         zfunct = fzeta( zetat)
-!         call zfun (zetat, zfunct)
-         zfunct = zfun_hammett (zetat)
 
+#ifdef zFunHammett
+        zfunct = zfun_hammett (zetat)
+#else
+        ! this zfun gives NaNs when argument close to zero?
+        call zfun (zetat, zfunct)
+        zFunctCheck = zfun_hammett (zetat)
+        write(*,*) zetat, zfunct, zFunctCheck
+#endif
          z0 = - fgam * zfunct
          z1 = y / abs(y) * fgam * (1.0 - fgam * zeta * zfunct)
          z2 =  fgam**2 * zeta * (1.0 - fgam * zeta * zfunct)
 
       endif
 
+      !if(abs(real(zeta))<1) then
+      !        write(*,'(5("("f7.3,","1x,f7.3,1x")"))') real(zeta), aimag(zeta), &
+      !          real(zfunct), aimag(zfunct),&
+      !          real(z0), aimag(z0), real(z1), aimag(z1) , real(z2), aimag(z2)
+      !endif
 
       return
       end subroutine z_approx
