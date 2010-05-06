@@ -121,16 +121,24 @@ contains
 
         endif
 
-        ! ions
-        ! ----
 
-        do s=2,nSpec
-        
-            ktSpec(:,:,s)       = ( &
+        ! ions and e for temp since they can 
+        ! be specified independantly
+        ! ----------------------------------
+
+        do s=1,nSpec 
+            ktSpec(:,:,s) = ( &
                 tLim(s) + ( tSpec(s)-tLim(s) ) * (1d0 - rho**tBeta(s))**tAlpha(s) ) * q 
+        enddo
+
+
+        ! ions only for density, e density calculated
+        ! for quasi neutrality
+        ! -------------------------------------------
+
+        do s=2,nSpec 
             densitySpec(:,:,s)  = &
                 dLim(s) + ( dSpec(s)-dLim(s) ) * (1d0 - rho**dBeta(s))**dAlpha(s)
-      
         enddo
 
         !   Enforce limits just in case. I would hope
@@ -156,10 +164,8 @@ contains
             enddo
         enddo
 
-        ! electrons
-        ! ---------
-
-        ktSpec(:,:,1) = tSpec(1) * q
+        ! electrons density for quasi neutrality
+        ! --------------------------------------
 
         do i=1,nPtsX
             do j=1,nPtsY
