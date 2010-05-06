@@ -4,7 +4,7 @@ use constants
 use sigma_mod
 use aorsa2din_mod, &
 only: nPhi, damping, delta0, lMax, nzfun, xnuomg, upshift, &
-    read_nameList
+    read_nameList, xkPerp_cutOff
 use netcdf
 use check_mod
 
@@ -59,12 +59,11 @@ qSpec   = zSpec * q
 omgc    = qSpec * b / mSpec
 density = 4e19
 omgp2   = density * qSpec**2 / ( eps0 * mSpec )
-kx  = 2.0
-ky  = 2.0
+kx  = 100.0
+ky  = 100.0
 freq   = 30e6
 omgrf = 2.0 * pi * freq
 k0 = omgrf / clight
-k_cutOff    = 100.0
 U_xyz   = real( reshape ( (/1,0,0,0,1,0,0,0,1/) , (/3,3/) ) )
 U_cyl   = real( reshape ( (/1,0,0,0,1,0,0,0,1/) , (/3,3/) ) )
 
@@ -90,7 +89,7 @@ do i=1,nPts
         ktSpec, omgc(i), omgp2, &
         kx, ky, r(i), &
         omgrf, k0, &
-        k_cutoff, 1, &
+        xkPerp_cutoff, 1, &
         b(i), 0.0, &
         U_xyz, U_cyl )
 

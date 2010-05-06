@@ -44,7 +44,8 @@ contains
         real :: rhol
         real :: kxsav, kysav, capr
         real :: kPhi
-        real :: kAlp, kBet, k0, rgamma, kr, step
+        real :: kAlp, kBet, k0, rgamma
+        real(kind=dbl) :: kr, step
         complex :: omgrfc
         complex(kind=dbl) :: z0, z1, z2
         complex :: sig0, sig1, sig2, sig3, sig4, sig5

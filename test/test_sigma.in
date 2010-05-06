@@ -3,6 +3,7 @@
 upshift = 1,
 xnuomg = 0.00, 
 damping = 100.0, 
+xkPerp_cutOff = 0.5,
 delta0 = 0,
 lmax = 20,
 nPhi = 20,
