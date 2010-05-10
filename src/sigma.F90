@@ -7,12 +7,12 @@ contains
         kxsav, kysav, capr, &
         omgrf, k0, &
         k_cutoff, specNo, &
-        bMod, gradPrlB, U_xyz, U_cyl )
+        bMod, gradPrlB, U_xyz, U_cyl, nuOmg )
 
         use constants
         use zfunction_mod
         use aorsa2din_mod, &
-        only: upshift, nzfun, damping, lmax, xnuomg, &
+        only: upshift, nzfun, damping, lmax, &
             nPhi, delta0
         use bessel_mod
 
@@ -31,7 +31,7 @@ contains
         real, intent(in) :: bMod, gradPrlB, U_xyz(:,:), U_cyl(:,:)
         complex :: sigmaHot_maxwellian(3,3)
         integer, intent(in) :: specNo
-        real, intent(in) :: k_cutOff
+        real, intent(in) :: k_cutOff, nuOmg
 
         integer :: l, labs, i, j
         real :: kPerp, kPrl, xm, kt, omgc, omgp2, kPrlTmp
@@ -63,7 +63,7 @@ contains
         alpha = sqrt(2. * kt / xm)
         rhol = alpha / omgc
         kPhi = nphi / capr
-        omgrfc = omgrf * (1. + zi * xnuomg)
+        omgrfc = omgrf * (1. + zi * nuOmg)
 
 
         ! k in Stix frame
@@ -230,11 +230,9 @@ contains
 
 
     function sigmaCold_stix &
-        ( i, j, omgC, omgP2, omgRF )
+        ( i, j, omgC, omgP2, omgRF, nuOmg )
 
         use constants 
-        use aorsa2din_mod, &
-        only: xnuomg
 
         ! This routine calculates sigma_cold in the Stix frame
         ! (alp,bet,prl)
@@ -244,14 +242,15 @@ contains
 
         integer, intent(in) :: i, j
         real, intent(in) :: omgc, omgp2
-        real, intent(in) :: omgrf
+        real, intent(in) :: omgrf, nuOmg
+
         complex :: omgrfc
         complex :: sig1, sig2, sig3
         complex :: sigmaCold_stix(3,3)
         complex :: zieps0
 
         zieps0 = zi * eps0
-        omgRFc = omgRF * (1.0 + zi * xNuomg)
+        omgRFc = omgRF * (1.0 + zi * nuOmg)
 
         sig1 = zieps0 * omgRFc * omgP2 / (omgRFc**2 - omgC**2)
         sig2 = - eps0 * omgC   * omgP2 / (omgRFc**2 - omgC**2)

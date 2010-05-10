@@ -150,11 +150,12 @@ contains
                                     omgrf, k0, &
                                     xk_cutoff, s, &
                                     bMod(i,j), gradPrlB(i,j), &
-                                    U_xyz(i,j,:,:), U_cyl(i,j,:,:) )
+                                    U_xyz(i,j,:,:), U_cyl(i,j,:,:), nuOmg2D(i,j) )
                               
                                 if (iSigma==0) & ! cold plasma 
                                 sigma_tmp = sigmaCold_stix &
-                                    ( i, j, omgc(i,j,s), omgp2(i,j,s), omgrf )
+                                    ( i, j, omgc(i,j,s), omgp2(i,j,s), omgrf, &
+                                    nuOmg2D(i,j) )
 
                                 sigAlpAlp = sigAlpAlp + sigma_tmp(1,1) 
                                 sigAlpBet = sigAlpBet + sigma_tmp(1,2) 

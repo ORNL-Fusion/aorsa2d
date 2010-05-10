@@ -203,7 +203,6 @@ contains
 
                 gaussian =  exp(-psi(i,j) / psiExp)
 
-
                 ! use for regular runs (default)
                 ! ------------------------------
 

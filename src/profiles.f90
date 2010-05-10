@@ -11,6 +11,7 @@ real, allocatable, dimension(:,:,:) :: &
     omgc, omgp2, densitySpec, ktSpec
 real, allocatable, dimension(:) :: &
     tLim, dLim, dAlpha, dBeta, tAlpha, tBeta
+real, allocatable :: nuOmg2D(:,:)
 
 contains
 
@@ -19,7 +20,8 @@ contains
         use aorsa2din_mod, &
         only: freqcy, nSpec, zSpecIn, amuSpecIn, &
             tSpecIn, dSpecIn, tLimIn, dLimIn, &
-            dAlphaIn, dBetaIn, tAlphaIn, tBetaIn
+            dAlphaIn, dBetaIn, tAlphaIn, tBetaIn, &
+            nPtsX, nPtsY, xNuOmg
 
         implicit none
 
@@ -49,6 +51,11 @@ contains
         mSpec(1)    = xme  
         qSpec       = zSpec * q 
  
+        allocate ( nuOmg2D(nPtsX,nPtsY) )
+
+        nuOmg2D = xNuOmg
+
+
     end subroutine init_profiles
 
 
@@ -94,13 +101,14 @@ contains
 
         call omega_freqs ()
 
+
     end subroutine
 
     
     subroutine flux_profiles ()
 
         use aorsa2din_mod, &
-        only: nPtsX, nPtsY, nSpec
+        only: nPtsX, nPtsY, nSpec, xNuOmg, xNuOmgOutside
         use bField
         use parallel
 
@@ -175,8 +183,16 @@ contains
             enddo
         enddo
 
-
         call omega_freqs ()
+
+
+        ! create a 2D map of collisional damping parameter
+        ! for application outside the last closed flux surface
+        ! ----------------------------------------------------
+
+        where ( rho>1 )
+            nuOmg2D = xNuOmgOutside
+        endwhere
 
     end subroutine flux_profiles
 

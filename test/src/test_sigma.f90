@@ -59,8 +59,9 @@ qSpec   = zSpec * q
 omgc    = qSpec * b / mSpec
 density = 4e19
 omgp2   = density * qSpec**2 / ( eps0 * mSpec )
-kx  = 100.0
-ky  = 100.0
+kx  = 0.0
+ky  = 2.0
+k_cutOff =  150.0
 freq   = 30e6
 omgrf = 2.0 * pi * freq
 k0 = omgrf / clight
@@ -89,7 +90,7 @@ do i=1,nPts
         ktSpec, omgc(i), omgp2, &
         kx, ky, r(i), &
         omgrf, k0, &
-        xkPerp_cutoff, 1, &
+        k_cutoff, 1, &
         b(i), 0.0, &
         U_xyz, U_cyl )
 

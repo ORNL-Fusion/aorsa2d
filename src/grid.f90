@@ -100,8 +100,8 @@ contains
             kysav(m) = 2.0 * pi * m / (yRange+dy) 
         enddo
 
-        xk_cutoff   = sqrt ( kxsav( kxR )**2 &
-                                + kysav( kyR )**2 ) * xkperp_cutoff
+        xk_cutOff   = sqrt ( maxVal ( abs(kxsav) )**2 &
+                                + maxVal ( abs(kysav) )**2 ) * xkPerp_cutOff
 
     end subroutine init_k
 
