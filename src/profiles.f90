@@ -108,7 +108,7 @@ contains
     subroutine flux_profiles ()
 
         use aorsa2din_mod, &
-        only: nPtsX, nPtsY, nSpec, xNuOmg, xNuOmgOutside
+        only: nPtsX, nPtsY, nSpec, xNuOmgOutside
         use bField
         use parallel
 
@@ -190,7 +190,7 @@ contains
         ! for application outside the last closed flux surface
         ! ----------------------------------------------------
 
-        where ( rho>1 )
+        where ( rho>=1 )
             nuOmg2D = xNuOmgOutside
         endwhere
 
