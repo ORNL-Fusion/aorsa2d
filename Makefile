@@ -34,6 +34,7 @@ BLACS = \
 SCALAPACK = ${HOME}/code/scalapack/scalapack_gnu64/libscalapack.a
 PAPI_INC = -I/usr/include 
 PAPI = -lpapi
+MAGMA = -L ${HOME}/code/magma/magma_0.2/lib -lmagma -lmagmablas
 
 # set the MODE to "serial" or "parallel"
 
@@ -77,7 +78,7 @@ endif
 # compile flags
 # -------------
 
-BOUNDS = -fbounds-check
+BOUNDS = -fbounds-check 
 WARN = #-Wall
 DEBUG = -pg -g -fbacktrace -fsignaling-nans -ffpe-trap=zero,invalid#,overflow#,underflow
 DOUBLE = -fdefault-real-8
@@ -104,12 +105,12 @@ endif
 ifeq (${MODE},"parallel")
 	LIBS = ${SCALAPACK} ${BLACS} ${BLAS} ${LAPACK} ${NETCDF} ${PAPI}
 else
-	LIBS = ${BLAS} ${LAPACK} ${NETCDF} ${PAPI}
+	LIBS = ${BLAS} ${LAPACK} ${NETCDF} ${PAPI} ${MAGMA}
 endif
 INC_DIR = ${PAPI_INC}
 
 F90FLAGS = ${WARN} ${DEBUG} ${BOUNDS} ${MOD_LOC} 
-LD_FLAGS =
+LINK_FLAGS = 
 
 .PHONY: depend clean
 

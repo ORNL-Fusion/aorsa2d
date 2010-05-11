@@ -19,6 +19,8 @@ implicit none
     real :: tBetaIn(nSpecMax)       = (/ 1.0, 1.0, 0.0, 0.0, 0.0 /)
     logical :: useFluxProfiles = .false.  
     logical :: useSoloviev = .false.
+    logical :: useCircular = .false.
+    logical :: useCircularProfiles = .false.
     logical :: noPoloidalField = .false.
     integer :: nSpec = 2
     real :: r0 = 1.0
@@ -26,7 +28,11 @@ implicit none
     real :: psiExp = 0.5 ! exponential scale for soloviev poloidal field
     real :: bx_frac = 0.0
     real :: by_frac = 0.0
+    real :: bPol_frac = 0.0
     logical :: square = .false.
+    real :: rhoScale = 0.2
+    real :: rhoWidth = 0.2
+    real :: rhoPower = 3.0
  
 !     --------------------------------------------------------
 !     Declarations and defaults for aorsa2d.in input variables
@@ -439,7 +445,8 @@ implicit none
      &    tSpecIn, dSpecIn, tLimIn, dLimIn, &
      &    tAlphaIn, tBetaIn, dAlphaIn, dBetaIn, useFluxProfiles, square, &
      &    metalLeft, metalRight, metalTop, metalBot, useSoloviev, a, psiExp, &
-     &    noPoloidalField
+     &    noPoloidalField, rhoScale, rhoWidth, rhoPower, useCircular, &
+     &    bPol_frac, useCircularProfiles
                 
 contains
 

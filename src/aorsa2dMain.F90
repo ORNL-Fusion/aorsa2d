@@ -78,6 +78,8 @@ program aorsa2dMain
         call bFieldEqdsk ()
     elseif (useSoloviev) then
         call soloviev ()
+    elseif (useCircular) then
+        call bFieldCircular ()
     else
         call bFieldAnalytical ()
     endif
@@ -92,6 +94,8 @@ program aorsa2dMain
 
     if (useFluxProfiles) then
         call flux_profiles ()
+    elseif (useCircularProfiles) then
+        call circular_profiles ()
     else
         call flat_profiles ()
     endif

@@ -104,6 +104,62 @@ contains
 
     end subroutine
 
+
+    subroutine circular_profiles ()
+
+        use aorsa2din_mod, &
+        only: nPtsX, nPtsY, nSpec, xNuOmgOutside, a, r0
+        use bField
+        use parallel
+        use grid, &
+        only: capR, y
+
+        implicit none
+
+        integer :: s, i, j
+        real, allocatable :: distance(:,:)
+
+        allocate ( &
+            densitySpec ( nPtsX, nPtsY, nSpec ), & 
+            ktSpec ( nPtsX, nPtsY, nSpec ), &
+            distance(nPtsX,nPtsY) )
+     
+        do i=1,nPtsX
+            do j=1,nPtsY
+
+                distance(i,j)   = sqrt( (capR(i)-r0)**2 + (y(j)-0.0)**2  ) / a
+
+            enddo
+        enddo
+
+        do s=1,nSpec 
+                
+            ktSpec(:,:,s) = ( exp ( - ( distance )**tBeta(s) / ( 2 * tAlpha(s)**2 ) ) &
+                * (tSpec(s)-tLim(s)) + tLim(s) ) * q
+        enddo
+
+        do s=2,nSpec 
+            densitySpec(:,:,s)  = &
+                dLim(s) + ( dSpec(s)-dLim(s) ) &
+                * exp ( - ( distance )**dBeta(s) / ( 2 * dAlpha(s)**2 ) )
+        enddo
+
+        do i=1,nPtsX
+            do j=1,nPtsY
+
+                densitySpec(i,j,1)  = sum ( densitySpec(i,j,2:nSpec)*zSpec(2:nSpec) )
+
+            enddo
+        enddo
+
+        call omega_freqs ()
+
+        where ( distance/a>=0.99)
+            nuOmg2D = xNuOmgOutside
+        endwhere
+
+    end subroutine circular_profiles
+
     
     subroutine flux_profiles ()
 
@@ -190,7 +246,7 @@ contains
         ! for application outside the last closed flux surface
         ! ----------------------------------------------------
 
-        where ( rho>=1 )
+        where ( rho>=0.99)
             nuOmg2D = xNuOmgOutside
         endwhere
 

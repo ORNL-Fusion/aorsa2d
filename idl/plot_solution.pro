@@ -97,7 +97,7 @@ pro plot_solution
 	ncdf_close, cdfId
 
 	scale = max ( abs ( [ealpha[*],ebeta[*],eb[*]] ) ) 
-	scalePrl = max ( abs ( [eb[*]] ) ) *0.5
+	scalePrl = max ( abs(abs ( [eb[*]] )) ) 
 	nLevs	= 21 
 
 	contour_field, ealpha, x, y, nLevs, scale, /initial

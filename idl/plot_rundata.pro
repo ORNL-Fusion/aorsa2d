@@ -27,18 +27,18 @@ pro plot_rundata
 	by	= byn * bmod
 	bz	= bzn * bmod
 
-	nR	= n_elements ( capR )
+	nR	= n_elements ( x )
 	nz	= n_elements ( y )
 	nSpec	= n_elements ( densitySpec[0,0,*] )
 
-	iPlot, x, bMod[*,nR/2], $
+	iPlot, x, bMod[*,nz/2.0], $
 			view_grid = [2,2], $
 			title = 'z=0 equil B field'
-	iPlot, x, bxn[*,nR/2]*bMod, /over
-	iPlot, x, byn[*,nR/2]*bMod, /over
-	iPlot, x, bzn[*,nR/2]*bMod, /over
+	iPlot, x, bx[*,nz/2.0], /over
+	iPlot, x, by[*,nz/2.0], /over
+	iPlot, x, bz[*,nz/2.0], /over
 
-	iPlot, x, densitySpec[*,nz/2,0], $
+	iPlot, x, densitySpec[*,nz/2.0,0], $
 			/view_next, $
 			title = 'z=0 Density'
 	for i=1,nSpec-1 do $

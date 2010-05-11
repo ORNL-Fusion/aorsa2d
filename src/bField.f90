@@ -129,6 +129,82 @@ contains
     end subroutine bFieldAnalytical
 
 
+    subroutine bFieldCircular ()
+
+        use aorsa2din_mod, &
+        only: nPtsX, nPtsY, r0, b0, a, &
+            rhoScale, rhoWidth, rhoPower, bPol_frac, noPoloidalField
+        use grid
+        use dlg
+
+        implicit none
+
+        integer :: i, j
+        real :: x, reScaleFac
+
+        allocate ( &
+            bMod(nPtsX,nPtsY), &
+            bxn(nPtsX,nPtsY), &
+            byn(nPtsX,nPtsY), &
+            bzn(nPtsX,nPtsY), &
+            rho(nPtsX,nPtsY) )
+
+        allocate ( &
+            brn_(nPtsX,nPtsY), &
+            bthn_(nPtsX,nPtsY), &
+            bzn_(nPtsX,nPtsY) )
+
+        do i=1,nPtsX
+            do j=1,nPtsY
+
+                x   = sqrt( (capR(i)-r0)**2 + (y(j)-0.0)**2  ) / a
+                rho(i,j) = exp ( - ( x )**rhoPower / ( 2 * rhoWidth**2 ) )
+
+                bzn(i,j) = r0 * b0 / capR(i) 
+                bthn_(i,j) = r0 * b0 / capR(i)  
+
+            enddo
+        enddo
+
+        rho = maxVal(rho)-rho
+
+        bxn = -dlg_pDeriv ( rho, 2, dy )
+        byn = dlg_pDeriv ( rho, 1, dx )
+
+        reScaleFac   = maxVal ( sqrt ( bxn**2 + byn**2 ) )
+
+        bxn = bxn / reScaleFac * bPol_frac * b0
+        byn = byn / reScaleFac * bPol_frac * b0
+
+        brn_ = bxn
+        bzn_ = byn
+
+        if ( noPoloidalField ) then 
+
+            bxn = 0
+            byn = 0
+
+            brn_   = 0
+            bzn_   = 0
+
+        endif
+
+        bMod = sqrt ( bxn**2 + byn**2 + bzn**2 )
+
+        bxn = bxn / bMod
+        byn = byn / bMod
+        bzn = bzn / bMod
+
+        brn_ = brn_ / bMod
+        bthn_ = bthn_ / bMod
+        bzn_ = bzn_ / bMod
+
+        allocate ( mask(nPtsX,nPtsY) )
+        mask = .true.
+
+    end subroutine bFieldCircular
+
+
     subroutine soloviev ()
 
         use aorsa2din_mod, &

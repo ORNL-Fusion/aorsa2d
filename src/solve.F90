@@ -40,6 +40,13 @@ contains
         complex(kind=dbl), allocatable :: work(:)
 #endif
         integer, allocatable, dimension(:) :: jpvt
+        
+        !! Cuda
+        !integer :: k1, k2, cublasStatus, dA_dim, devPtr_dA, nb
+        !integer, external :: magma_get_zgetrf_nb
+        !external :: cublas_init
+        !integer :: cublas_alloc
+        !integer, parameter :: sizeOfDbl = 8
           
         nRow    = nPtsX * nPtsY * 3
         nCol    = nModesX * nModesY * 3
@@ -51,7 +58,20 @@ contains
 #ifndef dblprec
             call cgesv ( nRow, 1, aMat, nRow, ipiv, brhs, nRow, info )
 #else            
+
             call zgesv ( nRow, 1, aMat, nRow, ipiv, brhs, nRow, info )
+
+            !! MAGMA Cuda solve
+
+            !nb  = magma_get_zgetrf_nb (nRow)
+            !k1  = 32 - mod ( maxVal ( (/nRow,1/) ), 32 )
+            !k2  = 32 - mod ( nRow, 32 ) 
+            !dA_dim = (maxVal( (/nRow,1/) ) + k1 )**2 &
+            !    + ( nRow + k2 ) * nb + 2 * nb**2
+            !allocate ( work(1 * nb) )
+            !call cublas_init
+            !cublasStatus = cublas_alloc ( dA_dim, sizeOfDbl, devPtr_dA ) 
+            !call magma_zgetrf ( nRow, 1, aMat, nRow, ipiv, work, devPtr_dA, info ) 
 #endif
 
         else
