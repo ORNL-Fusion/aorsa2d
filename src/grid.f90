@@ -13,7 +13,7 @@ real :: xk_cutOff
 integer :: kxL, kxR, kyL, kyR
 
 !   init_basis_functions
-complex, allocatable, dimension(:,:) :: xx, xx_inv, yy, yy_inv
+complex, allocatable, dimension(:,:) :: xx, yy
 
 contains
 
@@ -118,20 +118,20 @@ contains
         integer :: i, j, n, m
 
         allocate ( &
-            xx(kxL:kxR,nPtsX), xx_inv(kxL:kxR,nPtsX), &
-            yy(kyL:kyR,nPtsY), yy_inv(kyL:kyR,nPtsY) )
+            xx(kxL:kxR,nPtsX), &
+            yy(kyL:kyR,nPtsY) )
 
         do i = 1, nPtsX
             do n = kxL, kxR 
                 xx(n, i) = exp(zi * kxsav(n) * ( capR(i)-rwLeft+dx/2 ) )
-                xx_inv(n,i) = 1.0/xx(n,i)
+                if(abs(kxSav(n))>xk_cutOff) xx(n,i)=0
             enddo
         enddo
 
         do j = 1, nPtsY
             do m = kyL, kyR 
                 yy(m,j) = exp(zi * kysav(m) * ( y(j)-yBot+dy/2 ) )
-                yy_inv(m,j) = 1.0/yy(m,j)
+                if(abs(kySav(m))>xk_cutOff) yy(m,j)=0
             enddo
         enddo
 
