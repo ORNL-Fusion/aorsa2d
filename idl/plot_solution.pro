@@ -115,33 +115,33 @@ pro plot_solution
 	scalePrl = max ( abs(abs ( [eb[*]] )) ) 
 	nLevs	= 21 
 
-	;contour_field, ealpha, x, y, nLevs, scale, /initial
-	;contour_field, ebeta, x, y, nLevs, scale
-	;contour_field, eb, x, y, nLevs, scalePrl
+	contour_field, ealpha, x, y, nLevs, scale, /initial
+	contour_field, ebeta, x, y, nLevs, scale
+	contour_field, eb, x, y, nLevs, scalePrl
 
-	;;contour_field, imaginary(ealpha), x, y, nLevs, scale
-	;;contour_field, imaginary(ebeta), x, y, nLevs, scale
-	;;contour_field, imaginary(eb), x, y, nLevs, scale
-	;
-	;contour_field, abs(ealpha), x, y, nLevs, scale
-	;contour_field, abs(ebeta), x, y, nLevs, scale
-	;contour_field, abs(eb), x, y, nLevs, scalePrl
+	;contour_field, imaginary(ealpha), x, y, nLevs, scale
+	;contour_field, imaginary(ebeta), x, y, nLevs, scale
+	;contour_field, imaginary(eb), x, y, nLevs, scale
+	
+	contour_field, abs(ealpha), x, y, nLevs, scale
+	contour_field, abs(ebeta), x, y, nLevs, scale
+	contour_field, abs(eb), x, y, nLevs, scalePrl
 
 stop;	
 	scale = max ( abs ( [ealphak_re[*],ebetak_re[*],ebk_re[*]] ) ) 
 	scalePar = max ( abs ( [ebk_re[*]] ) ) 
 
-	;contour_field, ealphak,	kx, ky, nLevs, scale, /initial
-	;contour_field, ebetak,	kx, ky, nLevs, scale
-	;contour_field, ebk,		kx, ky, nLevs, scale
+	contour_field, ealphak,	kx, ky, nLevs, scale, /initial
+	contour_field, ebetak,	kx, ky, nLevs, scale
+	contour_field, ebk,		kx, ky, nLevs, scale
 
-	;;contour_field, imaginary(ealphak),	kx, ky, nLevs, scale 
-	;;contour_field, imaginary(ebetak),	kx, ky, nLevs, scale 
-	;;contour_field, imaginary(ebk),		kx, ky, nLevs, scale 
+	;contour_field, imaginary(ealphak),	kx, ky, nLevs, scale 
+	;contour_field, imaginary(ebetak),	kx, ky, nLevs, scale 
+	;contour_field, imaginary(ebk),		kx, ky, nLevs, scale 
 
-	;contour_field, abs(ealphak),	kx, ky, nLevs, scale 
-	;contour_field, abs(ebetak),	kx, ky, nLevs, scale 
-	;contour_field, abs(ebk),		kx, ky, nLevs, scale 
+	contour_field, abs(ealphak),	kx, ky, nLevs, scale 
+	contour_field, abs(ebetak),	kx, ky, nLevs, scale 
+	contour_field, abs(ebk),		kx, ky, nLevs, scale 
 
 stop
 

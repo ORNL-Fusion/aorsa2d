@@ -124,14 +124,12 @@ contains
         do i = 1, nPtsX
             do n = kxL, kxR 
                 xx(n, i) = exp(zi * kxsav(n) * ( capR(i)-rwLeft+dx/2 ) )
-                if(abs(kxSav(n))>xk_cutOff) xx(n,i)=1
             enddo
         enddo
 
         do j = 1, nPtsY
             do m = kyL, kyR 
                 yy(m,j) = exp(zi * kysav(m) * ( y(j)-yBot+dy/2 ) )
-                if(abs(kySav(m))>xk_cutOff) yy(m,j)=1
             enddo
         enddo
 

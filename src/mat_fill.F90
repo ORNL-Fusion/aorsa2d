@@ -537,6 +537,23 @@ contains
                                             if (ii==2 .and. jj==2) aMat(localRow,localCol) = cexpkxky   
 
                                         endif
+
+                                        if ( n<kxL/2 .or. n>kxR/2 &
+                                            .or. m<kyL/2 .or. m>kyR/2 ) then 
+                                            
+                                            if (ii==0 .and. jj==0) aMat(localRow,localCol) = 1 
+                                            if (ii==1 .and. jj==0) aMat(localRow,localCol) = 0  
+                                            if (ii==2 .and. jj==0) aMat(localRow,localCol) = 0  
+                                   
+                                            if (ii==0 .and. jj==1) aMat(localRow,localCol) = 0  
+                                            if (ii==1 .and. jj==1) aMat(localRow,localCol) = 1   
+                                            if (ii==2 .and. jj==1) aMat(localRow,localCol) = 0   
+                                   
+                                            if (ii==0 .and. jj==2) aMat(localRow,localCol) = 0   
+                                            if (ii==1 .and. jj==2) aMat(localRow,localCol) = 0   
+                                            if (ii==2 .and. jj==2) aMat(localRow,localCol) = 1   
+
+                                        endif
 #ifdef par
                                     endif myProc
 #endif
