@@ -43,7 +43,7 @@ contains
             delta0, nSpec, &
             iSigma, nPtsX, nPtsY, npRow, npCol, &
             metalLeft, metalRight, &
-            metalTop, metalBot, nPhi
+            metalTop, metalBot, nPhi, square, lsWeightFac
         use grid
         use sigma_mod
         use rotation
@@ -93,6 +93,8 @@ contains
 
         aMat    = 0
         metal   = ( 0,1e4 )
+
+        if(square) lsWeightFac = 1
 
         i_loop: &
         do i=1,nPtsX
@@ -524,36 +526,36 @@ contains
                                                 .or. j==1 .or. j==nPtsY &
                                                 .or. (.not. mask(i,j)) ) then 
 
-                                            if (ii==0 .and. jj==0) aMat(localRow,localCol) = cexpkxky 
+                                            if (ii==0 .and. jj==0) aMat(localRow,localCol) = cexpkxky * lsWeightFac 
                                             if (ii==1 .and. jj==0) aMat(localRow,localCol) = 0  
                                             if (ii==2 .and. jj==0) aMat(localRow,localCol) = 0  
                                    
                                             if (ii==0 .and. jj==1) aMat(localRow,localCol) = 0  
-                                            if (ii==1 .and. jj==1) aMat(localRow,localCol) = cexpkxky   
+                                            if (ii==1 .and. jj==1) aMat(localRow,localCol) = cexpkxky * lsWeightFac  
                                             if (ii==2 .and. jj==1) aMat(localRow,localCol) = 0   
                                    
                                             if (ii==0 .and. jj==2) aMat(localRow,localCol) = 0   
                                             if (ii==1 .and. jj==2) aMat(localRow,localCol) = 0   
-                                            if (ii==2 .and. jj==2) aMat(localRow,localCol) = cexpkxky   
+                                            if (ii==2 .and. jj==2) aMat(localRow,localCol) = cexpkxky * lsWeightFac 
 
                                         endif
 
-                                        if ( n<kxL/2 .or. n>kxR/2 &
-                                            .or. m<kyL/2 .or. m>kyR/2 ) then 
-                                            
-                                            if (ii==0 .and. jj==0) aMat(localRow,localCol) = cexpkxky 
-                                            if (ii==1 .and. jj==0) aMat(localRow,localCol) = 0  
-                                            if (ii==2 .and. jj==0) aMat(localRow,localCol) = 0  
+                                        !if ( n<kxL/4.0 .or. n>kxR/4.0 &
+                                        !    .or. m<kyL/4.0 .or. m>kyR/4.0 ) then 
+                                        !    
+                                        !    if (ii==0 .and. jj==0) aMat(localRow,localCol) = 1 
+                                        !    if (ii==1 .and. jj==0) aMat(localRow,localCol) = 0  
+                                        !    if (ii==2 .and. jj==0) aMat(localRow,localCol) = 0  
                                    
-                                            if (ii==0 .and. jj==1) aMat(localRow,localCol) = 0  
-                                            if (ii==1 .and. jj==1) aMat(localRow,localCol) = cexpkxky   
-                                            if (ii==2 .and. jj==1) aMat(localRow,localCol) = 0   
+                                        !    if (ii==0 .and. jj==1) aMat(localRow,localCol) = 0  
+                                        !    if (ii==1 .and. jj==1) aMat(localRow,localCol) = 1   
+                                        !    if (ii==2 .and. jj==1) aMat(localRow,localCol) = 0   
                                    
-                                            if (ii==0 .and. jj==2) aMat(localRow,localCol) = 0   
-                                            if (ii==1 .and. jj==2) aMat(localRow,localCol) = 0   
-                                            if (ii==2 .and. jj==2) aMat(localRow,localCol) = cexpkxky   
+                                        !    if (ii==0 .and. jj==2) aMat(localRow,localCol) = 0   
+                                        !    if (ii==1 .and. jj==2) aMat(localRow,localCol) = 0   
+                                        !    if (ii==2 .and. jj==2) aMat(localRow,localCol) = 1   
 
-                                        endif
+                                        !endif
 #ifdef par
                                     endif myProc
 #endif

@@ -1,57 +1,40 @@
 pro contour_field, field, x, y, nLevs, scale, $
-		initial = initial
+		id = id, view = view
 
 	levels	= (fIndGen(nLevs)+1)/(nLevs-1) * scale * 1.1
 	colors	= 256-(bytScl ( levels, top = 253 )+1)
 
-	if keyword_set ( initial ) then begin
-
 	iContour, field, x, y, $
 		c_value = levels, $
 		rgb_indices = colors, $
 		/fill, $
 		rgb_table = 1, $
-		view_grid = [3,2], $
-		/stretch_to_fit, $
 		/zoom_on_resize, $
-		/scale_isotropic
-
-	endif else begin
-
-	iContour, field, x, y, $
-		c_value = levels, $
-		rgb_indices = colors, $
-		/fill, $
-		rgb_table = 1, $
-		view_grid = [3,2], $
-		view_next = 1, $
-		/stretch_to_fit, $
-		/zoom_on_resize, $
-		/scale_isotropic, $
-		overPlot = 0 
-
-
-	endelse
+		xTickFont_size = 26.0, $
+		yTickFont_size = 26.0, $
+		xTitle = 'R [m]', $
+		yTitle = 'z [m]', $
+		overplot = id, $
+		view_number = view
 
 	iContour, field, x, y, $
 		c_value = levels/2, $
 		rgb_indices = colors, $
 		rgb_table = 1, $
-		over = 1 
+		over = id
 
 	iContour, -field, x, y, $
 		c_value = levels, $
 		rgb_indices = colors, $
-		over = 1, $
+		over = id, $
 		/fill, $
-		rgb_table = 3, $
-		/scale_isotropic	
+		rgb_table = 3
 	
 	iContour, -field, x, y, $
 		c_value = levels/2, $
 		rgb_indices = colors, $
 		rgb_table = 3, $
-		over = 1 
+		over = id 
 
 end
 
@@ -111,65 +94,59 @@ pro plot_solution
 
 	ncdf_close, cdfId
 
+	; Field contour plot
+	; ------------------
+
+	nLevs	= 21 
 	scale = max ( abs ( [ealpha[*],ebeta[*],eb[*]] ) ) 
 	scalePrl = max ( abs(abs ( [eb[*]] )) ) 
-	nLevs	= 21 
 
-	contour_field, ealpha, x, y, nLevs, scale, /initial
-	contour_field, ebeta, x, y, nLevs, scale
-	contour_field, eb, x, y, nLevs, scalePrl
+	fieldPlot = 2
+	iContour, id = fieldPlot, view_grid = [3,1], dimensions = [1200,300]
 
-	;contour_field, imaginary(ealpha), x, y, nLevs, scale
-	;contour_field, imaginary(ebeta), x, y, nLevs, scale
-	;contour_field, imaginary(eb), x, y, nLevs, scale
-	
-	contour_field, abs(ealpha), x, y, nLevs, scale
-	contour_field, abs(ebeta), x, y, nLevs, scale
-	contour_field, abs(eb), x, y, nLevs, scalePrl
+	contour_field, ealpha, x, y, nLevs, scale, id = fieldPlot, view = 1
+	contour_field, ebeta, x, y, nLevs, scale, id = fieldPlot, view = 2
+	contour_field, eb, x, y, nLevs, scalePrl, id = fieldPlot, view = 3
 
-stop;	
+
+	; Spectrum contour plot
+	; ---------------------
+
 	scale = max ( abs ( [ealphak_re[*],ebetak_re[*],ebk_re[*]] ) ) 
 	scalePar = max ( abs ( [ebk_re[*]] ) ) 
 
-	contour_field, ealphak,	kx, ky, nLevs, scale, /initial
-	contour_field, ebetak,	kx, ky, nLevs, scale
-	contour_field, ebk,		kx, ky, nLevs, scale
+	specPID = 3
+	iContour, id = specPID, view_grid = [3,1], dimensions = [1200,300]
 
-	;contour_field, imaginary(ealphak),	kx, ky, nLevs, scale 
-	;contour_field, imaginary(ebetak),	kx, ky, nLevs, scale 
-	;contour_field, imaginary(ebk),		kx, ky, nLevs, scale 
+	contour_field, abs(ealphak),	kx, ky, nLevs, scale, id = specPID, view = 1
+	contour_field, abs(ebetak),		kx, ky, nLevs, scale, id = specPID, view = 2
+	contour_field, abs(ebk),		kx, ky, nLevs, scale, id = specPID, view = 3
 
-	contour_field, abs(ealphak),	kx, ky, nLevs, scale 
-	contour_field, abs(ebetak),	kx, ky, nLevs, scale 
-	contour_field, abs(ebk),		kx, ky, nLevs, scale 
+	;; Reconstruct the fields using only a specific set of
+	;; basis vectors
+	;; ---------------------------------------------------
 
-stop
+	;ealpha_	= complexArr ( nX, nY )
+	;ebeta_	= complexArr ( nX, nY )
+	;eb_	= complexArr ( nX, nY )
 
-	; Reconstruct the fields using only a specific set of
-	; basis vectors
-	; ---------------------------------------------------
+    ;for i = 0, nX-1 do begin
+    ;	for j = 0, nY-1 do begin
+    ;   		for n = nN/4, nN-nN/4-1 do begin
+    ;        	for m = nM/4, nM-nM/4-1 do begin
 
-	ealpha_	= complexArr ( nX, nY )
-	ebeta_	= complexArr ( nX, nY )
-	eb_	= complexArr ( nX, nY )
+    ;                  cexpkxky = xx(n, i) * yy(m, j)
+    ;                  ealpha_(i,j) = ealpha_(i,j) + ealphak(n,m) * cexpkxky
 
-    for i = 0, nX-1 do begin
-    	for j = 0, nY-1 do begin
-       		for n = nN/4, nN-nN/4-1 do begin
-            	for m = nM/4, nM-nM/4-1 do begin
+    ;        	endfor
+    ;   	 	endfor
+    ;	endfor
+  	;endfor
 
-                      cexpkxky = xx(n, i) * yy(m, j)
-                      ealpha_(i,j) = ealpha_(i,j) + ealphak(n,m) * cexpkxky
-
-            	endfor
-       	 	endfor
-    	endfor
-  	endfor
-
- 	scale = max ( abs ( [ealpha_[*],ebeta_[*],eb_[*]] ) ) 
-	contour_field, ealpha_, x, y, nLevs, scale, /initial
-	;contour_field, ebeta, x, y, nLevs, scale
-	;contour_field, eb, x, y, nLevs, scalePrl
+ 	;scale = max ( abs ( [ealpha_[*],ebeta_[*],eb_[*]] ) ) 
+	;contour_field, ealpha_, x, y, nLevs, scale, /initial
+	;;contour_field, ebeta, x, y, nLevs, scale
+	;;contour_field, eb, x, y, nLevs, scalePrl
 
 
 stop

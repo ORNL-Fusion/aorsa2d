@@ -104,7 +104,15 @@ contains
 
         endif
 
-        write(*,*) '    LAPACK status: ', info
+        if  (info/=0) then
+
+            write(*,*) '    solve.F90: ERROR, solve did not complete successfully'
+            stop
+
+        else
+            write(*,*) '    LAPACK status: ', info
+        endif 
+        
 
         brhs_global = brhs
 
