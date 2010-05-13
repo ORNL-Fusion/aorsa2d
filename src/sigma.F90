@@ -201,7 +201,7 @@ contains
 
         if (specNo==1) then
 
-            kr = kPerp / k_cutoff
+            kr = kPerp / k_cutOff
             step = damping * kr**16 / (1. + kr**16)
             sig3 = sig3 * (1.0 + step)
 

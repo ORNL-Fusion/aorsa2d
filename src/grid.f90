@@ -93,11 +93,11 @@ contains
             kysav (kyL:kyR) )
 
         do n = kxL, kxR 
-            kxsav(n) = pi * n / (xRange+dx)
+            kxsav(n) = 2.0 * pi * n / (xRange+dx)
         enddo
 
         do m = kyL, kyR 
-            kysav(m) = pi * m / (yRange+dy) 
+            kysav(m) = 2.0 * pi * m / (yRange+dy) 
         enddo
 
         xk_cutOff   = sqrt ( maxVal ( abs(kxsav) )**2 &
