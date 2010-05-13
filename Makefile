@@ -34,7 +34,7 @@ BLACS = \
 SCALAPACK = ${HOME}/code/scalapack/scalapack_gnu64/libscalapack.a
 PAPI_INC = -I/usr/include 
 PAPI = -lpapi
-MAGMA = -L ${HOME}/code/magma/magma_0.2/lib -lmagma -lmagmablas
+MAGMA = -L ${HOME}/code/magma/magma_0.2/lib -lmagma -lmagmablas ${HOME}/code/magma/magma_0.2/lib/libmagma_64.a
 
 # set the MODE to "serial" or "parallel"
 
@@ -80,7 +80,7 @@ endif
 
 BOUNDS = -fbounds-check 
 WARN = #-Wall
-DEBUG = -pg -g -fbacktrace -fsignaling-nans -ffpe-trap=zero,invalid#,overflow#,underflow
+DEBUG = #-pg -g -fbacktrace -fsignaling-nans -ffpe-trap=zero,invalid#,overflow#,underflow
 DOUBLE = -fdefault-real-8
 ifeq (${MODE},"parallel")
 	F90 = mpif90

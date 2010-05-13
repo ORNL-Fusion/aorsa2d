@@ -173,6 +173,9 @@ contains
 
                             enddo species
 
+                            ! Metal
+                            ! -----
+
                             if ( capR(i) < metalLeft .or. capR(i) > metalRight &
                                 .or. y(j) > metalTop .or. y(j) < metalBot ) then 
 
@@ -189,6 +192,27 @@ contains
                                 sigPrlPrl = metal 
 
                             endif
+
+                            ! Short of k's above the xkPerp_cutOff 
+                            ! ------------------------------------
+
+                            if ( abs(kxSav(n))> xk_cutOff &
+                                .or. abs(kySav(m))> xk_cutOff ) then 
+                                  
+                                sigAlpAlp = metal 
+                                sigAlpBet = 0
+                                sigAlpPrl = 0 
+                                        
+                                sigBetAlp = 0 
+                                sigBetBet = metal 
+                                sigBetPrl = 0 
+                                        
+                                sigPrlAlp = 0 
+                                sigPrlBet = 0 
+                                sigPrlPrl = metal 
+
+                            endif
+
 
                             cexpkxky = xx(n, i) * yy(m, j)
 
@@ -540,22 +564,6 @@ contains
 
                                         endif
 
-                                        !if ( n<kxL/4.0 .or. n>kxR/4.0 &
-                                        !    .or. m<kyL/4.0 .or. m>kyR/4.0 ) then 
-                                        !    
-                                        !    if (ii==0 .and. jj==0) aMat(localRow,localCol) = 1 
-                                        !    if (ii==1 .and. jj==0) aMat(localRow,localCol) = 0  
-                                        !    if (ii==2 .and. jj==0) aMat(localRow,localCol) = 0  
-                                   
-                                        !    if (ii==0 .and. jj==1) aMat(localRow,localCol) = 0  
-                                        !    if (ii==1 .and. jj==1) aMat(localRow,localCol) = 1   
-                                        !    if (ii==2 .and. jj==1) aMat(localRow,localCol) = 0   
-                                   
-                                        !    if (ii==0 .and. jj==2) aMat(localRow,localCol) = 0   
-                                        !    if (ii==1 .and. jj==2) aMat(localRow,localCol) = 0   
-                                        !    if (ii==2 .and. jj==2) aMat(localRow,localCol) = 1   
-
-                                        !endif
 #ifdef par
                                     endif myProc
 #endif

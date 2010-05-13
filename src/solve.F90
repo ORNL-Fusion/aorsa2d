@@ -61,7 +61,7 @@ contains
 
             call zgesv ( nRow, 1, aMat, nRow, ipiv, brhs, nRow, info )
 
-            !! MAGMA Cuda solve
+            ! MAGMA Cuda solve
 
             !nb  = magma_get_zgetrf_nb (nRow)
             !k1  = 32 - mod ( maxVal ( (/nRow,1/) ), 32 )

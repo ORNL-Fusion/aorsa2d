@@ -12,8 +12,6 @@ pro contour_field, field, x, y, nLevs, scale, $
 		/zoom_on_resize, $
 		xTickFont_size = 26.0, $
 		yTickFont_size = 26.0, $
-		xTitle = 'R [m]', $
-		yTitle = 'z [m]', $
 		overplot = id, $
 		view_number = view
 
@@ -56,8 +54,8 @@ pro plot_solution
 		nCdf_varGet, cdfId, 'xx_im', xx_im
 		nCdf_varGet, cdfId, 'yy_re', yy_re 
 		nCdf_varGet, cdfId, 'yy_im', yy_im
-		nCdf_varGet, cdfId, 'kxsav',  kxsav
-		nCdf_varGet, cdfId, 'kysav', kysav 
+		nCdf_varGet, cdfId, 'kxsav',  kx
+		nCdf_varGet, cdfId, 'kysav', ky 
 	ncdf_close, cdfId
 
 	xx	= complex ( xx_re, xx_im )
