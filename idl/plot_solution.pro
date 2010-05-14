@@ -118,7 +118,7 @@ pro plot_solution
 
 	contour_field, abs(ealphak),	kx, ky, nLevs, scale, id = specPID, view = 1
 	contour_field, abs(ebetak),		kx, ky, nLevs, scale, id = specPID, view = 2
-	contour_field, abs(ebk),		kx, ky, nLevs, scale, id = specPID, view = 3
+	contour_field, abs(ebk),		kx, ky, nLevs, scalePar, id = specPID, view = 3
 
 	;; Reconstruct the fields using only a specific set of
 	;; basis vectors

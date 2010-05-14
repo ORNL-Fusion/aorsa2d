@@ -9,7 +9,7 @@ real :: dx, dy, xRange, yRange
 
 !   init_k
 real, allocatable, dimension(:) :: kxsav, kysav
-real :: xk_cutOff
+real :: k_cutOff, kx_cutOff, ky_cutOff
 integer :: kxL, kxR, kyL, kyR
 
 !   init_basis_functions
@@ -62,7 +62,7 @@ contains
     subroutine init_k ()
 
         use aorsa2din_mod, &
-        only: nModesX, nModesY, xkperp_cutoff
+        only: nModesX, nModesY, xkperp_cutOff, xkx_cutOff, xky_cutOff
         use constants
         use parallel
 
@@ -93,15 +93,18 @@ contains
             kysav (kyL:kyR) )
 
         do n = kxL, kxR 
-            kxsav(n) = 2.0 * pi * n / (xRange+dx)
+            kxSav(n) = 2.0 * pi * n / (xRange+dx)
         enddo
 
         do m = kyL, kyR 
-            kysav(m) = 2.0 * pi * m / (yRange+dy) 
+            kySav(m) = 2.0 * pi * m / (yRange+dy) 
         enddo
 
-        xk_cutOff   = sqrt ( maxVal ( abs(kxsav) )**2 &
-                                + maxVal ( abs(kysav) )**2 ) * xkPerp_cutOff
+        k_cutOff   = sqrt ( maxVal ( abs(kxSav) )**2 &
+                                + maxVal ( abs(kySav) )**2 ) * xkPerp_cutOff
+        kx_cutOff   = maxVal ( abs(kxSav) ) * xkx_cutOff
+        ky_cutOff   = maxVal ( abs(kySav) ) * xky_cutOff
+
 
     end subroutine init_k
 
@@ -123,13 +126,13 @@ contains
 
         do i = 1, nPtsX
             do n = kxL, kxR 
-                xx(n, i) = exp(zi * kxsav(n) * ( capR(i)-rwLeft+dx/2 ) )
+                xx(n, i) = exp(zi * kxsav(n) * ( capR(i)-rwLeft-xRange/2 ) )
             enddo
         enddo
 
         do j = 1, nPtsY
             do m = kyL, kyR 
-                yy(m,j) = exp(zi * kysav(m) * ( y(j)-yBot+dy/2 ) )
+                yy(m,j) = exp(zi * kysav(m) * ( y(j)-yBot-yRange/2 ) )
             enddo
         enddo
 

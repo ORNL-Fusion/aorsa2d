@@ -63,6 +63,8 @@ implicit none
       logical :: particleDensity = .true.
       logical :: ana_maxwellian = .false.
 
+      real :: xkx_cutOff = 0.5
+      real :: xky_cutOff = 0.5
       real :: xkperp_cutoff = 0.75    ! fraction of xkperp above which the electron conductivity (sig3) 
                                       !  is enhanced to short out noise in E_parallel (default = 0.75)
                       
@@ -447,7 +449,7 @@ implicit none
      &    tAlphaIn, tBetaIn, dAlphaIn, dBetaIn, useFluxProfiles, square, &
      &    metalLeft, metalRight, metalTop, metalBot, useSoloviev, a, psiExp, &
      &    noPoloidalField, rhoScale, rhoWidth, rhoPower, useCircular, &
-     &    bPol_frac, useCircularProfiles, lsWeightFac
+     &    bPol_frac, useCircularProfiles, lsWeightFac, xkx_cutOff, xky_cutOff
                 
 contains
 

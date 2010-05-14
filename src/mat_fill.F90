@@ -92,7 +92,7 @@ contains
 #endif
 
         aMat    = 0
-        metal   = ( 0,1e4 )
+        metal   = ( 1e8,1e8 )
 
         if(square) lsWeightFac = 1
 
@@ -150,7 +150,7 @@ contains
                                     ktSpec(i,j,s), omgc(i,j,s), omgp2(i,j,s), &
                                     kxsav(n), kysav(m), capr(i), &
                                     omgrf, k0, &
-                                    xk_cutoff, s, &
+                                    k_cutoff, s, &
                                     bMod(i,j), gradPrlB(i,j), &
                                     U_xyz(i,j,:,:), U_cyl(i,j,:,:), nuOmg2D(i,j) )
                               
@@ -196,8 +196,8 @@ contains
                             ! Short of k's above the xkPerp_cutOff 
                             ! ------------------------------------
 
-                            if ( abs(kxSav(n))> xk_cutOff &
-                                .or. abs(kySav(m))> xk_cutOff ) then 
+                            if ( abs(kxSav(n))> kx_cutOff &
+                                .or. abs(kySav(m))> ky_cutOff ) then 
                                   
                                 sigAlpAlp = metal 
                                 sigAlpBet = 0
