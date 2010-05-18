@@ -69,13 +69,24 @@ contains
                 !   boundary conditions
                 !   -------------------
 
+                if(nPtsX/=1) then
                 if ( i==1 .or. i==nPtsX &
-                        .or. j==1 .or. j==nPtsY &
                         .or. (.not. mask(i,j)) ) then
                     xjx(i,j)    = 0
                     xjy(i,j)    = 0
                     xjz(i,j)    = 0
                 endif
+                endif
+
+                if(nPtsY/=1) then
+                if ( j==1 .or. j==nPtsY &
+                        .or. (.not. mask(i,j)) ) then
+                    xjx(i,j)    = 0
+                    xjy(i,j)    = 0
+                    xjz(i,j)    = 0
+                endif
+                endif
+
 
                 if ( capR(i) < metalLeft .or. capR(i) > metalRight &
                         .or. y(j) > metalTop .or. y(j) < metalBot ) then 

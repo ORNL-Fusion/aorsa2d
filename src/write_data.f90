@@ -13,7 +13,7 @@ contains
         use antenna, &
         only: xjx, xjy, xjz
         use grid, &
-        only: capR, y, kxsav, kysav, xx, yy
+        only: capR, y, xx, yy
         use profiles
         use constants
 
@@ -56,10 +56,10 @@ contains
         call check ( nf90_def_var ( nc_id, "xjy_im", NF90_REAL, &
             (/nX_id,nY_id/), jy_im_id ) ) 
 
-        call check ( nf90_def_var ( nc_id, "kxsav", NF90_REAL, &
-            (/nModesX_id/), kx_id ) ) 
-        call check ( nf90_def_var ( nc_id, "kysav", NF90_REAL, &
-            (/nModesY_id/), ky_id ) ) 
+        !call check ( nf90_def_var ( nc_id, "kxsav", NF90_REAL, &
+        !    (/nModesX_id/), kx_id ) ) 
+        !call check ( nf90_def_var ( nc_id, "kysav", NF90_REAL, &
+        !    (/nModesY_id/), ky_id ) ) 
  
         call check ( nf90_def_var ( nc_id, "xx_re", NF90_REAL, &
             (/nModesX_id,nX_id/), xx_re_id ) ) 
@@ -85,8 +85,8 @@ contains
         call check ( nf90_put_var ( nc_id, bmod_id, bmod ) )
         call check ( nf90_put_var ( nc_id, jy_re_id, real(xjy) ) )
         call check ( nf90_put_var ( nc_id, jy_im_id, aimag(xjy) ) )
-        call check ( nf90_put_var ( nc_id, kx_id, kxsav ) )
-        call check ( nf90_put_var ( nc_id, ky_id, kysav ) )
+        !call check ( nf90_put_var ( nc_id, kx_id, kxsav ) )
+        !call check ( nf90_put_var ( nc_id, ky_id, kysav ) )
         nc_stat = nf90_put_var ( nc_id, dens_id, densitySpec )
         nc_stat = nf90_put_var ( nc_id, temp_id, ktSpec / q )
 

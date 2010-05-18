@@ -4,49 +4,34 @@ implicit none
 
 contains
 
-    subroutine sftinv2d( a, f, fx, fy )
+    subroutine sftinv2d( a, f )
 
         use aorsa2din_mod, &
         only: nPtsX, nPtsY, nModesX, nModesY
-        use grid, &
-        only: kxL, kxR, kyL, kyR, kxsav, kysav, xx, yy
+        use grid
  
         implicit none
         
         complex, intent(in) :: a(:,:)
         complex, intent(inout), optional, allocatable :: &
-            f(:,:), fx(:,:), fy(:,:)
+            f(:,:)
 
-        complex :: cexpkxky
+        complex :: bFn
         integer :: i, j, n, m
 
         if (.not. allocated ( f ) ) allocate ( f(nPtsX,nPtsY) )
-        if ( present ( fx ) ) then
-            if (.not. allocated ( fx ) ) allocate ( fx(nPtsX,nPtsY) )
-        endif
-        if ( present ( fy ) ) then 
-            if (.not. allocated ( fy ) ) allocate ( fy(nPtsX,nPtsY) )
-        endif
 
         f = 0
-        if (present(fx)) fx = 0
-        if (present(fy)) fy = 0
 
         do i = 1, nPtsX
             do j = 1, nPtsY
         
-                do n = 1, nModesX 
-                    do m = 1, nModesY 
+                do n = nMin, nMax
+                    do m = mMin, mMax
 
-                      !----------------------------------------------------
-                      !cexpkxky = exp(zi * (xkx(n) * x(i) + xky(m) * y(j)))
-                      !----------------------------------------------------
+                      bFn = xBasis(n,xGrid_basis(i)) * yBasis(m,yGrid_basis(j))
 
-                      cexpkxky = xx(kxL+n-1, i) * yy(kyL+m-1, j)
-
-                      f(i,j) = f(i,j) + a(n,m) * cexpkxky
-                      if (present(fx)) fx(i,j) = f(i,j) + kxsav(kxL+n-1) * a(n,m) * cexpkxky
-                      if (present(fy)) fy(i,j) = f(i,j) + kysav(kyL+m-1) * a(n,m) * cexpkxky
+                      f(i,j) = f(i,j) + a(n-nMin+1,m-mMin+1) * bFn
 
                     enddo
                 enddo

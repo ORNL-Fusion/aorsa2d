@@ -1,69 +1,69 @@
-module rotation
+modUle rotation
 
 implicit none
 
-real, allocatable, dimension(:,:) :: btau
+real, allocatable, dimension(:,:) :: btaU
 real :: sqx
 real, allocatable, dimension(:,:) :: &
-    uxx, uxy, uxz, uyx, uyy, uyz, uzx, uzy, uzz
+    Uxx, Uxy, Uxz, Uyx, Uyy, Uyz, Uzx, Uzy, Uzz
 
 real, allocatable, dimension(:,:) :: &
-    urr_, urth_, urz_, uthr_, uthth_, uthz_, uzr_, uzth_, uzz_
+    Urr_, Urt_, Urz_, Utr_, Utt_, Utz_, Uzr_, Uzt_, Uzz_
 
 real, allocatable, dimension(:,:,:,:) :: U_xyz, U_cyl
 
 real :: sinTh
 real, allocatable, dimension(:,:) :: gradPrlB
 real, allocatable, dimension(:,:) :: &
-    dxuxx, dxxuxx, dxuxy, dxxuxy, dxuxz, dxxuxz, &
-    dxuyx, dxxuyx, dxuyy, dxxuyy, dxuyz, dxxuyz, &
-    dxuzx, dxxuzx, dxuzy, dxxuzy, dxuzz, dxxuzz
+    dxUxx, dxxUxx, dxUxy, dxxUxy, dxUxz, dxxUxz, &
+    dxUyx, dxxUyx, dxUyy, dxxUyy, dxUyz, dxxUyz, &
+    dxUzx, dxxUzx, dxUzy, dxxUzy, dxUzz, dxxUzz
 real, allocatable, dimension(:,:) :: &
-    dyuxx, dyyuxx, dyuxy, dyyuxy, dyuxz, dyyuxz, &
-    dyuyx, dyyuyx, dyuyy, dyyuyy, dyuyz, dyyuyz, &
-    dyuzx, dyyuzx, dyuzy, dyyuzy, dyuzz, dyyuzz
+    dyUxx, dyyUxx, dyUxy, dyyUxy, dyUxz, dyyUxz, &
+    dyUyx, dyyUyx, dyUyy, dyyUyy, dyUyz, dyyUyz, &
+    dyUzx, dyyUzx, dyUzy, dyyUzy, dyUzz, dyyUzz
 real, allocatable, dimension(:,:) :: &
-        dxyuxx, dxyuxy, dxyuxz, &
-        dxyuyx, dxyuyy, dxyuyz, &
-        dxyuzx, dxyuzy, dxyuzz
+        dxyUxx, dxyUxy, dxyUxz, &
+        dxyUyx, dxyUyy, dxyUyz, &
+        dxyUzx, dxyUzy, dxyUzz
 
 ! dr first derivatives
 real, allocatable, dimension(:,:) :: &
-    drUrr, drUrth, drUrz, &
-    drUthr, drUthth, drUthz, &
-    drUzr, drUzth, drUzz
+    drUrr, drUrt, drUrz, &
+    drUtr, drUtt, drUtz, &
+    drUzr, drUzt, drUzz
 
 ! dz first derivatives
 real, allocatable, dimension(:,:) :: &
-    dzUrr, dzUrth, dzUrz, &
-    dzUthr, dzUthth, dzUthz, &
-    dzUzr, dzUzth, dzUzz
+    dzUrr, dzUrt, dzUrz, &
+    dzUtr, dzUtt, dzUtz, &
+    dzUzr, dzUzt, dzUzz
 
 ! drr second derivatives
 real, allocatable, dimension(:,:) :: &
-    drrUrr, drrUrth, drrUrz, &
-    drrUthr, drrUthth, drrUthz, &
-    drrUzr, drrUzth, drrUzz
+    drrUrr, drrUrt, drrUrz, &
+    drrUtr, drrUtt, drrUtz, &
+    drrUzr, drrUzt, drrUzz
 
 ! dzz second derivatives
 real, allocatable, dimension(:,:) :: &
-    dzzUrr, dzzUrth, dzzUrz, &
-    dzzUthr, dzzUthth, dzzUthz, &
-    dzzUzr, dzzUzth, dzzUzz
+    dzzUrr, dzzUrt, dzzUrz, &
+    dzzUtr, dzzUtt, dzzUtz, &
+    dzzUzr, dzzUzt, dzzUzz
 
 !drz derivatives
 real, allocatable, dimension(:,:) :: &
-    drzUrr, drzUrth, drzUrz, &
-    drzUthr, drzUthth, drzUthz, &
-    drzUzr, drzUzth, drzUzz
+    drzUrr, drzUrt, drzUrz, &
+    drzUtr, drzUtt, drzUtz, &
+    drzUzr, drzUzt, drzUzz
 
 contains
 
-    subroutine init_rotation ()
+    sUbroUtine init_rotation ()
 
-        use aorsa2din_mod, &
+        Use aorsa2din_mod, &
         only: nPtsX, nPtsY
-        use bField
+        Use bField
 
         implicit none
 
@@ -72,35 +72,35 @@ contains
         real, allocatable :: det(:,:)
 
         allocate ( sqr ( nPtsx, nPtsY ) )
-        allocate ( btau ( nPtsX, nPtsY ) )
+        allocate ( btaU ( nPtsX, nPtsY ) )
 
         allocate ( &
-            uxx( nPtsX, nPtsY ), & 
-            uxy( nPtsX, nPtsY ), &
-            uxz( nPtsX, nPtsY ), &
-            uyx( nPtsX, nPtsY ), & 
-            uyy( nPtsX, nPtsY ), &
-            uyz( nPtsX, nPtsY ), &
-            uzx( nPtsX, nPtsY ), & 
-            uzy( nPtsX, nPtsY ), &
-            uzz( nPtsX, nPtsY ) )
+            Uxx( nPtsX, nPtsY ), & 
+            Uxy( nPtsX, nPtsY ), &
+            Uxz( nPtsX, nPtsY ), &
+            Uyx( nPtsX, nPtsY ), & 
+            Uyy( nPtsX, nPtsY ), &
+            Uyz( nPtsX, nPtsY ), &
+            Uzx( nPtsX, nPtsY ), & 
+            Uzy( nPtsX, nPtsY ), &
+            Uzz( nPtsX, nPtsY ) )
 
         do i = 1, nPtsX
             do j = 1, nPtsY
 
-                btau(i,j) = sqrt(bxn(i,j)**2 + byn(i,j)**2)
+                btaU(i,j) = sqrt(bxn(i,j)**2 + byn(i,j)**2)
 
                 sqx = sqrt(1.0 - bxn(i,j)**2)
 
-                uxx(i, j) =   sqx
-                uxy(i, j) = - bxn(i, j) * byn(i, j) / sqx
-                uxz(i, j) = - bxn(i, j) * bzn(i, j) / sqx
-                uyx(i, j) =   0.0
-                uyy(i, j) =   bzn(i, j) / sqx
-                uyz(i, j) = - byn(i, j) / sqx
-                uzx(i, j) =   bxn(i, j)
-                uzy(i, j) =   byn(i, j)
-                uzz(i, j) =   bzn(i, j)
+                Uxx(i, j) =   sqx
+                Uxy(i, j) = - bxn(i, j) * byn(i, j) / sqx
+                Uxz(i, j) = - bxn(i, j) * bzn(i, j) / sqx
+                Uyx(i, j) =   0.0
+                Uyy(i, j) =   bzn(i, j) / sqx
+                Uyz(i, j) = - byn(i, j) / sqx
+                Uzx(i, j) =   bxn(i, j)
+                Uzy(i, j) =   byn(i, j)
+                Uzz(i, j) =   bzn(i, j)
 
             enddo
         enddo
@@ -113,41 +113,41 @@ contains
 
         allocate ( &
             Urr_( nPtsX, nPtsY ), & 
-            Urth_( nPtsX, nPtsY ), &
+            Urt_( nPtsX, nPtsY ), &
             Urz_( nPtsX, nPtsY ), &
-            Uthr_( nPtsX, nPtsY ), & 
-            Uthth_( nPtsX, nPtsY ), &
-            Uthz_( nPtsX, nPtsY ), &
+            Utr_( nPtsX, nPtsY ), & 
+            Utt_( nPtsX, nPtsY ), &
+            Utz_( nPtsX, nPtsY ), &
             Uzr_( nPtsX, nPtsY ), & 
-            Uzth_( nPtsX, nPtsY ), &
+            Uzt_( nPtsX, nPtsY ), &
             Uzz_( nPtsX, nPtsY ) )
 
         sqr     = sqrt ( 1d0 - brn_**2 )
 
         Urr_     = sqr
-        Urth_    = -brn_ * bthn_ / sqr
+        Urt_    = -brn_ * bthn_ / sqr
         Urz_     = -brn_ * bzn_ / sqr
 
-        Uthr_    = 0
-        Uthth_   = bzn_ / sqr
-        Uthz_    = -bthn_ / sqr
+        Utr_    = 0
+        Utt_   = bzn_ / sqr
+        Utz_    = -bthn_ / sqr
 
         Uzr_     = brn_
-        Uzth_    = bthn_
+        Uzt_    = bthn_
         Uzz_     = bzn_
 
 
-        ! Check the determinant, should = 1
+        ! Check the determinant, shoUld = 1
         ! ---------------------------------
     
         allocate(det(nPtsX,nPtsY))
 
-        det = Urr_ * Uthth_ * Uzz_ &
-            + Urth_ * Uthz_ * Uzr_ &
-            + Urz_ * Uthr_ * Uzth_ &
-            - Urr_ * Uthz_ * Uzth_ &
-            - Urth_ * Uthr_ * Uzz_ &
-            - Urz_ * Uthth_ * Uzr_
+        det = Urr_ * Utt_ * Uzz_ &
+            + Urt_ * Utz_ * Uzr_ &
+            + Urz_ * Utr_ * Uzt_ &
+            - Urr_ * Utz_ * Uzt_ &
+            - Urt_ * Utr_ * Uzz_ &
+            - Urz_ * Utt_ * Uzr_
 
         if ( any(1-det>1e-4) ) then
 
@@ -173,28 +173,28 @@ contains
         U_xyz(:,:,3,3)  = Uzz
 
         U_cyl(:,:,1,1)  = Urr_
-        U_cyl(:,:,2,1)  = Urth_
+        U_cyl(:,:,2,1)  = Urt_
         U_cyl(:,:,3,1)  = Urz_
         
-        U_cyl(:,:,1,2)  = Uthr_
-        U_cyl(:,:,2,2)  = Uthth_
-        U_cyl(:,:,3,2)  = Uthz_
+        U_cyl(:,:,1,2)  = Utr_
+        U_cyl(:,:,2,2)  = Utt_
+        U_cyl(:,:,3,2)  = Utz_
 
         U_cyl(:,:,1,3)  = Uzr_
-        U_cyl(:,:,2,3)  = Uzth_
+        U_cyl(:,:,2,3)  = Uzt_
         U_cyl(:,:,3,3)  = Uzz_
 
-    end subroutine init_rotation
+    end sUbroUtine init_rotation
 
 
-    subroutine deriv_rotation
+    sUbroUtine deriv_rotation
 
-        use aorsa2din_mod, &
-        only: nPtsX, nPtsY, nZFun, r0
-        use grid
-        use derivatives 
-        use bField
-        use eqdsk_dlg
+        Use aorsa2din_mod, &
+        only: nPtsX, nPtsY, nZFUn, r0
+        Use grid
+        Use derivatives 
+        Use bField
+        Use eqdsk_dlg
 
         implicit none
 
@@ -206,31 +206,31 @@ contains
         ! -----------
 
         allocate ( &  
-            dxuxx(nPtsX,nPtsY), dxxuxx(nPtsX,nPtsY), &
-            dxuxy(nPtsX,nPtsY), dxxuxy(nPtsX,nPtsY), &
-            dxuxz(nPtsX,nPtsY), dxxuxz(nPtsX,nPtsY), &
-            dxuyx(nPtsX,nPtsY), dxxuyx(nPtsX,nPtsY), &
-            dxuyy(nPtsX,nPtsY), dxxuyy(nPtsX,nPtsY), &
-            dxuyz(nPtsX,nPtsY), dxxuyz(nPtsX,nPtsY), &
-            dxuzx(nPtsX,nPtsY), dxxuzx(nPtsX,nPtsY), &
-            dxuzy(nPtsX,nPtsY), dxxuzy(nPtsX,nPtsY), &
-            dxuzz(nPtsX,nPtsY), dxxuzz(nPtsX,nPtsY) )
+            dxUxx(nPtsX,nPtsY), dxxUxx(nPtsX,nPtsY), &
+            dxUxy(nPtsX,nPtsY), dxxUxy(nPtsX,nPtsY), &
+            dxUxz(nPtsX,nPtsY), dxxUxz(nPtsX,nPtsY), &
+            dxUyx(nPtsX,nPtsY), dxxUyx(nPtsX,nPtsY), &
+            dxUyy(nPtsX,nPtsY), dxxUyy(nPtsX,nPtsY), &
+            dxUyz(nPtsX,nPtsY), dxxUyz(nPtsX,nPtsY), &
+            dxUzx(nPtsX,nPtsY), dxxUzx(nPtsX,nPtsY), &
+            dxUzy(nPtsX,nPtsY), dxxUzy(nPtsX,nPtsY), &
+            dxUzz(nPtsX,nPtsY), dxxUzz(nPtsX,nPtsY) )
 
         allocate ( &  
-            dyuxx(nPtsX,nPtsY), dyyuxx(nPtsX,nPtsY), &
-            dyuxy(nPtsX,nPtsY), dyyuxy(nPtsX,nPtsY), &
-            dyuxz(nPtsX,nPtsY), dyyuxz(nPtsX,nPtsY), &
-            dyuyx(nPtsX,nPtsY), dyyuyx(nPtsX,nPtsY), &
-            dyuyy(nPtsX,nPtsY), dyyuyy(nPtsX,nPtsY), &
-            dyuyz(nPtsX,nPtsY), dyyuyz(nPtsX,nPtsY), &
-            dyuzx(nPtsX,nPtsY), dyyuzx(nPtsX,nPtsY), &
-            dyuzy(nPtsX,nPtsY), dyyuzy(nPtsX,nPtsY), &
-            dyuzz(nPtsX,nPtsY), dyyuzz(nPtsX,nPtsY) )
+            dyUxx(nPtsX,nPtsY), dyyUxx(nPtsX,nPtsY), &
+            dyUxy(nPtsX,nPtsY), dyyUxy(nPtsX,nPtsY), &
+            dyUxz(nPtsX,nPtsY), dyyUxz(nPtsX,nPtsY), &
+            dyUyx(nPtsX,nPtsY), dyyUyx(nPtsX,nPtsY), &
+            dyUyy(nPtsX,nPtsY), dyyUyy(nPtsX,nPtsY), &
+            dyUyz(nPtsX,nPtsY), dyyUyz(nPtsX,nPtsY), &
+            dyUzx(nPtsX,nPtsY), dyyUzx(nPtsX,nPtsY), &
+            dyUzy(nPtsX,nPtsY), dyyUzy(nPtsX,nPtsY), &
+            dyUzz(nPtsX,nPtsY), dyyUzz(nPtsX,nPtsY) )
 
         allocate ( &
-            dxyuxx(nPtsX,nPtsY), dxyuxy(nPtsX,nPtsY), dxyuxz(nPtsX,nPtsY), &
-            dxyuyx(nPtsX,nPtsY), dxyuyy(nPtsX,nPtsY), dxyuyz(nPtsX,nPtsY), &
-            dxyuzx(nPtsX,nPtsY), dxyuzy(nPtsX,nPtsY), dxyuzz(nPtsX,nPtsY) )
+            dxyUxx(nPtsX,nPtsY), dxyUxy(nPtsX,nPtsY), dxyUxz(nPtsX,nPtsY), &
+            dxyUyx(nPtsX,nPtsY), dxyUyy(nPtsX,nPtsY), dxyUyz(nPtsX,nPtsY), &
+            dxyUzx(nPtsX,nPtsY), dxyUzy(nPtsX,nPtsY), dxyUzz(nPtsX,nPtsY) )
                     
         do i = 1, nPtsX
             do j = 1, nPtsY
@@ -242,45 +242,45 @@ contains
                 if (abs(y(j))>0) &
                 sinTh =  y(j) / sqrt ( (capR(i)-r0)**2 + y(j)**2 )
 
-                gradprlb(i,j) = bMod(i,j) / capr(i) * abs ( btau(i,j) * sinTh )
+                gradprlb(i,j) = bMod(i,j) / capr(i) * abs ( btaU(i,j) * sinTh )
 
-                !if (nzfun == 0) gradPrlB(i,j) = 1.0e-10
+                !if (nzfUn == 0) gradPrlB(i,j) = 1.0e-10
 
-                call deriv_x(uxx, i, j, dx, dfdx = dxuxx(i,j), d2fdx2 = dxxuxx(i,j))
-                call deriv_x(uxy, i, j, dx, dfdx = dxuxy(i,j), d2fdx2 = dxxuxy(i,j))
-                call deriv_x(uxz, i, j, dx, dfdx = dxuxz(i,j), d2fdx2 = dxxuxz(i,j))
+                call deriv_x(Uxx, i, j, dx, dfdx = dxUxx(i,j), d2fdx2 = dxxUxx(i,j))
+                call deriv_x(Uxy, i, j, dx, dfdx = dxUxy(i,j), d2fdx2 = dxxUxy(i,j))
+                call deriv_x(Uxz, i, j, dx, dfdx = dxUxz(i,j), d2fdx2 = dxxUxz(i,j))
 
-                call deriv_x(uyx, i, j, dx, dfdx = dxuyx(i,j), d2fdx2 = dxxuyx(i,j))
-                call deriv_x(uyy, i, j, dx, dfdx = dxuyy(i,j), d2fdx2 = dxxuyy(i,j))
-                call deriv_x(uyz, i, j, dx, dfdx = dxuyz(i,j), d2fdx2 = dxxuyz(i,j))
+                call deriv_x(Uyx, i, j, dx, dfdx = dxUyx(i,j), d2fdx2 = dxxUyx(i,j))
+                call deriv_x(Uyy, i, j, dx, dfdx = dxUyy(i,j), d2fdx2 = dxxUyy(i,j))
+                call deriv_x(Uyz, i, j, dx, dfdx = dxUyz(i,j), d2fdx2 = dxxUyz(i,j))
 
-                call deriv_x(uzx, i, j, dx, dfdx = dxuzx(i,j), d2fdx2 = dxxuzx(i,j))
-                call deriv_x(uzy, i, j, dx, dfdx = dxuzy(i,j), d2fdx2 = dxxuzy(i,j))
-                call deriv_x(uzz, i, j, dx, dfdx = dxuzz(i,j), d2fdx2 = dxxuzz(i,j))
+                call deriv_x(Uzx, i, j, dx, dfdx = dxUzx(i,j), d2fdx2 = dxxUzx(i,j))
+                call deriv_x(Uzy, i, j, dx, dfdx = dxUzy(i,j), d2fdx2 = dxxUzy(i,j))
+                call deriv_x(Uzz, i, j, dx, dfdx = dxUzz(i,j), d2fdx2 = dxxUzz(i,j))
 
-                call deriv_y(uxx, i, j, dy, dfdy = dyuxx(i,j), d2fdy2 = dyyuxx(i,j))
-                call deriv_y(uxy, i, j, dy, dfdy = dyuxy(i,j), d2fdy2 = dyyuxy(i,j))
-                call deriv_y(uxz, i, j, dy, dfdy = dyuxz(i,j), d2fdy2 = dyyuxz(i,j))
+                call deriv_y(Uxx, i, j, dy, dfdy = dyUxx(i,j), d2fdy2 = dyyUxx(i,j))
+                call deriv_y(Uxy, i, j, dy, dfdy = dyUxy(i,j), d2fdy2 = dyyUxy(i,j))
+                call deriv_y(Uxz, i, j, dy, dfdy = dyUxz(i,j), d2fdy2 = dyyUxz(i,j))
 
-                call deriv_y(uyx, i, j, dy, dfdy = dyuyx(i,j), d2fdy2 = dyyuyx(i,j))
-                call deriv_y(uyy, i, j, dy, dfdy = dyuyy(i,j), d2fdy2 = dyyuyy(i,j))
-                call deriv_y(uyz, i, j, dy, dfdy = dyuyz(i,j), d2fdy2 = dyyuyz(i,j))
+                call deriv_y(Uyx, i, j, dy, dfdy = dyUyx(i,j), d2fdy2 = dyyUyx(i,j))
+                call deriv_y(Uyy, i, j, dy, dfdy = dyUyy(i,j), d2fdy2 = dyyUyy(i,j))
+                call deriv_y(Uyz, i, j, dy, dfdy = dyUyz(i,j), d2fdy2 = dyyUyz(i,j))
 
-                call deriv_y(uzx, i, j, dy, dfdy = dyuzx(i,j), d2fdy2 = dyyuzx(i,j))
-                call deriv_y(uzy, i, j, dy, dfdy = dyuzy(i,j), d2fdy2 = dyyuzy(i,j))
-                call deriv_y(uzz, i, j, dy, dfdy = dyuzz(i,j), d2fdy2 = dyyuzz(i,j))
+                call deriv_y(Uzx, i, j, dy, dfdy = dyUzx(i,j), d2fdy2 = dyyUzx(i,j))
+                call deriv_y(Uzy, i, j, dy, dfdy = dyUzy(i,j), d2fdy2 = dyyUzy(i,j))
+                call deriv_y(Uzz, i, j, dy, dfdy = dyUzz(i,j), d2fdy2 = dyyUzz(i,j))
 
-                call deriv_xy(uxx, i, j, dx, dy, d2fdxy = dxyuxx(i,j))
-                call deriv_xy(uxy, i, j, dx, dy, d2fdxy = dxyuxy(i,j))
-                call deriv_xy(uxz, i, j, dx, dy, d2fdxy = dxyuxz(i,j))
+                call deriv_xy(Uxx, i, j, dx, dy, d2fdxy = dxyUxx(i,j))
+                call deriv_xy(Uxy, i, j, dx, dy, d2fdxy = dxyUxy(i,j))
+                call deriv_xy(Uxz, i, j, dx, dy, d2fdxy = dxyUxz(i,j))
 
-                call deriv_xy(uyx, i, j, dx, dy, d2fdxy = dxyuyx(i,j))
-                call deriv_xy(uyy, i, j, dx, dy, d2fdxy = dxyuyy(i,j))
-                call deriv_xy(uyz, i, j, dx, dy, d2fdxy = dxyuyz(i,j))
+                call deriv_xy(Uyx, i, j, dx, dy, d2fdxy = dxyUyx(i,j))
+                call deriv_xy(Uyy, i, j, dx, dy, d2fdxy = dxyUyy(i,j))
+                call deriv_xy(Uyz, i, j, dx, dy, d2fdxy = dxyUyz(i,j))
 
-                call deriv_xy(uzx, i, j, dx, dy, d2fdxy = dxyuzx(i,j))
-                call deriv_xy(uzy, i, j, dx, dy, d2fdxy = dxyuzy(i,j))
-                call deriv_xy(uzz, i, j, dx, dy, d2fdxy = dxyuzz(i,j))
+                call deriv_xy(Uzx, i, j, dx, dy, d2fdxy = dxyUzx(i,j))
+                call deriv_xy(Uzy, i, j, dx, dy, d2fdxy = dxyUzy(i,j))
+                call deriv_xy(Uzz, i, j, dx, dy, d2fdxy = dxyUzz(i,j))
 
            enddo
         enddo
@@ -290,74 +290,74 @@ contains
 
         allocate ( &
             drUrr(nPtsX,nPtsY), drrUrr(nPtsX,nPtsY), &
-            drUrth(nPtsX,nPtsY), drrUrth(nPtsX,nPtsY), &
+            drUrt(nPtsX,nPtsY), drrUrt(nPtsX,nPtsY), &
             drUrz(nPtsX,nPtsY), drrUrz(nPtsX,nPtsY), &
-            drUthr(nPtsX,nPtsY), drrUthr(nPtsX,nPtsY), &
-            drUthth(nPtsX,nPtsY), drrUthth(nPtsX,nPtsY), &
-            drUthz(nPtsX,nPtsY), drrUthz(nPtsX,nPtsY), &
+            drUtr(nPtsX,nPtsY), drrUtr(nPtsX,nPtsY), &
+            drUtt(nPtsX,nPtsY), drrUtt(nPtsX,nPtsY), &
+            drUtz(nPtsX,nPtsY), drrUtz(nPtsX,nPtsY), &
             drUzr(nPtsX,nPtsY), drrUzr(nPtsX,nPtsY), &
-            drUzth(nPtsX,nPtsY), drrUzth(nPtsX,nPtsY), &
+            drUzt(nPtsX,nPtsY), drrUzt(nPtsX,nPtsY), &
             drUzz(nPtsX,nPtsY), drrUzz(nPtsX,nPtsY) )
 
         allocate ( &
             dzUrr(nPtsX,nPtsY), dzzUrr(nPtsX,nPtsY), &
-            dzUrth(nPtsX,nPtsY), dzzUrth(nPtsX,nPtsY), &
+            dzUrt(nPtsX,nPtsY), dzzUrt(nPtsX,nPtsY), &
             dzUrz(nPtsX,nPtsY), dzzUrz(nPtsX,nPtsY), &
-            dzUthr(nPtsX,nPtsY), dzzUthr(nPtsX,nPtsY), &
-            dzUthth(nPtsX,nPtsY), dzzUthth(nPtsX,nPtsY), &
-            dzUthz(nPtsX,nPtsY), dzzUthz(nPtsX,nPtsY), &
+            dzUtr(nPtsX,nPtsY), dzzUtr(nPtsX,nPtsY), &
+            dzUtt(nPtsX,nPtsY), dzzUtt(nPtsX,nPtsY), &
+            dzUtz(nPtsX,nPtsY), dzzUtz(nPtsX,nPtsY), &
             dzUzr(nPtsX,nPtsY), dzzUzr(nPtsX,nPtsY), &
-            dzUzth(nPtsX,nPtsY), dzzUzth(nPtsX,nPtsY), &
+            dzUzt(nPtsX,nPtsY), dzzUzt(nPtsX,nPtsY), &
             dzUzz(nPtsX,nPtsY), dzzUzz(nPtsX,nPtsY) )
 
         allocate ( &
-            drzUrr(nPtsX,nPtsY), drzUrth(nPtsX,nPtsY), drzUrz(nPtsX,nPtsY), &
-            drzUthr(nPtsX,nPtsY), drzUthth(nPtsX,nPtsY), drzUthz(nPtsX,nPtsY), &
-            drzUzr(nPtsX,nPtsY), drzUzth(nPtsX,nPtsY), drzUzz(nPtsX,nPtsY) ) 
+            drzUrr(nPtsX,nPtsY), drzUrt(nPtsX,nPtsY), drzUrz(nPtsX,nPtsY), &
+            drzUtr(nPtsX,nPtsY), drzUtt(nPtsX,nPtsY), drzUtz(nPtsX,nPtsY), &
+            drzUzr(nPtsX,nPtsY), drzUzt(nPtsX,nPtsY), drzUzz(nPtsX,nPtsY) ) 
 
         do i = 1, nPtsX
             do j = 1, nPtsY
 
                 call deriv_x(Urr_, i, j, dx, dfdx = drUrr(i,j), d2fdx2 = drrUrr(i,j))
-                call deriv_x(Urth_, i, j, dx, dfdx = drUrth(i,j), d2fdx2 = drrUrth(i,j))
+                call deriv_x(Urt_, i, j, dx, dfdx = drUrt(i,j), d2fdx2 = drrUrt(i,j))
                 call deriv_x(Urz_, i, j, dx, dfdx = drUrz(i,j), d2fdx2 = drrUrz(i,j))
 
-                call deriv_x(Uthr_, i, j, dx, dfdx = drUthr(i,j), d2fdx2 = drrUthr(i,j))
-                call deriv_x(Uthth_, i, j, dx, dfdx = drUthth(i,j), d2fdx2 = drrUthth(i,j))
-                call deriv_x(Uthz_, i, j, dx, dfdx = drUthz(i,j), d2fdx2 = drrUthz(i,j))
+                call deriv_x(Utr_, i, j, dx, dfdx = drUtr(i,j), d2fdx2 = drrUtr(i,j))
+                call deriv_x(Utt_, i, j, dx, dfdx = drUtt(i,j), d2fdx2 = drrUtt(i,j))
+                call deriv_x(Utz_, i, j, dx, dfdx = drUtz(i,j), d2fdx2 = drrUtz(i,j))
 
                 call deriv_x(Uzr_, i, j, dx, dfdx = drUzr(i,j), d2fdx2 = drrUzr(i,j))
-                call deriv_x(Uzth_, i, j, dx, dfdx = drUzth(i,j), d2fdx2 = drrUzth(i,j))
+                call deriv_x(Uzt_, i, j, dx, dfdx = drUzt(i,j), d2fdx2 = drrUzt(i,j))
                 call deriv_x(Uzz_, i, j, dx, dfdx = drUzz(i,j), d2fdx2 = drrUzz(i,j))
 
                 call deriv_y(Urr_, i, j, dy, dfdy = drUrr(i,j), d2fdy2 = drrUrr(i,j))
-                call deriv_y(Urth_, i, j, dy, dfdy = drUrth(i,j), d2fdy2 = drrUrth(i,j))
+                call deriv_y(Urt_, i, j, dy, dfdy = drUrt(i,j), d2fdy2 = drrUrt(i,j))
                 call deriv_y(Urz_, i, j, dy, dfdy = drUrz(i,j), d2fdy2 = drrUrz(i,j))
 
-                call deriv_y(Uthr_, i, j, dy, dfdy = drUthr(i,j), d2fdy2 = drrUthr(i,j))
-                call deriv_y(Uthth_, i, j, dy, dfdy = drUthth(i,j), d2fdy2 = drrUthth(i,j))
-                call deriv_y(Uthz_, i, j, dy, dfdy = drUthz(i,j), d2fdy2 = drrUthz(i,j))
+                call deriv_y(Utr_, i, j, dy, dfdy = drUtr(i,j), d2fdy2 = drrUtr(i,j))
+                call deriv_y(Utt_, i, j, dy, dfdy = drUtt(i,j), d2fdy2 = drrUtt(i,j))
+                call deriv_y(Utz_, i, j, dy, dfdy = drUtz(i,j), d2fdy2 = drrUtz(i,j))
 
                 call deriv_y(Uzr_, i, j, dy, dfdy = drUzr(i,j), d2fdy2 = drrUzr(i,j))
-                call deriv_y(Uzth_, i, j, dy, dfdy = drUzth(i,j), d2fdy2 = drrUzth(i,j))
+                call deriv_y(Uzt_, i, j, dy, dfdy = drUzt(i,j), d2fdy2 = drrUzt(i,j))
                 call deriv_y(Uzz_, i, j, dy, dfdy = drUzz(i,j), d2fdy2 = drrUzz(i,j))
 
                 call deriv_xy(Urr_, i, j, dx, dy, d2fdxy = drzUrr(i,j))
-                call deriv_xy(Urth_, i, j, dx, dy, d2fdxy = drzUrth(i,j))
+                call deriv_xy(Urt_, i, j, dx, dy, d2fdxy = drzUrt(i,j))
                 call deriv_xy(Urz_, i, j, dx, dy, d2fdxy = drzUrz(i,j))
 
-                call deriv_xy(Uthr_, i, j, dx, dy, d2fdxy = drzUthr(i,j))
-                call deriv_xy(Uthth_, i, j, dx, dy, d2fdxy = drzUthth(i,j))
-                call deriv_xy(Uthz_, i, j, dx, dy, d2fdxy = drzUthz(i,j))
+                call deriv_xy(Utr_, i, j, dx, dy, d2fdxy = drzUtr(i,j))
+                call deriv_xy(Utt_, i, j, dx, dy, d2fdxy = drzUtt(i,j))
+                call deriv_xy(Utz_, i, j, dx, dy, d2fdxy = drzUtz(i,j))
 
                 call deriv_xy(Uzr_, i, j, dx, dy, d2fdxy = drzUzr(i,j))
-                call deriv_xy(Uzth_, i, j, dx, dy, d2fdxy = drzUzth(i,j))
+                call deriv_xy(Uzt_, i, j, dx, dy, d2fdxy = drzUzt(i,j))
                 call deriv_xy(Uzz_, i, j, dx, dy, d2fdxy = drzUzz(i,j))
 
            enddo
         enddo
 
 
-    end subroutine deriv_rotation
+    end sUbroUtine deriv_rotation
 
-end module rotation
+end modUle rotation

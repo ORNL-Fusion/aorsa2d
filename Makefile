@@ -1,24 +1,16 @@
 .SUFFIXES : .o .f90 .f .F90
 
-EXEC = xaorsa2d
+AORSA2D = xaorsa2d
+AORSA1D = xaorsa1d
 SRC_DIR = src
 OBJ_DIR = obj
 MOD_DIR = mod
 
-FFT_DIR = $(SRC_DIR)/fftpack
-CQL_DIR = $(SRC_DIR)/cql3d
-INCLUDE_DIR = $(SRC_DIR)/cql3d
-DLG_DIR = $(SRC_DIR)/dlg
-
-
 # objects
 # -------
 
-OBJ_FILES := $(patsubst src/%,obj/%.o,$(basename $(wildcard src/*.*)))
-OBJ_DLG := $(patsubst src/dlg/%,obj/%.o,$(basename $(wildcard src/dlg/*)))
-
-#OBJ_CQL3D := $(patsubst src/cql3d/%,obj/%.o,$(basename $(wildcard src/cql3d/*.*)))
-#OBJ_FFT := $(patsubst src/fftpack/%,obj/%.o,$(basename $(wildcard src/fftpack/*)))
+#OBJ_FILES := $(patsubst src/%,obj/%.o,$(basename $(wildcard src/*.*)))
+OBJ_FILES = $(wildcard obj/*.o)
 
 # libraries 
 # ---------
@@ -54,6 +46,10 @@ COORDSYS = "cylXYZ"
 
 ZFUN = "zFunHammett"
 
+# use the Chebychev basis set
+
+BASIS = "chebychev"
+
 
 # pre-processor directives
 # ------------------------
@@ -74,6 +70,9 @@ ifeq (${ZFUN},"zFunHammett")
 	CPP_DIRECTIVES := -DzFunHammett ${CPP_DIRECTIVES}
 endif
 
+ifeq (${BASIS},"chebychev")
+	CPP_DIRECTIVES := -Dchebychev ${CPP_DIRECTIVES}
+endif
 
 # compile flags
 # -------------
@@ -114,14 +113,12 @@ LINK_FLAGS =
 
 .PHONY: depend clean
 
-$(EXEC): $(OBJ_FILES) $(OBJ_FFT) $(OBJ_CQL3D_SETUP) $(OBJ_DLG) 
-	$(F90) -o $(EXEC) $(OBJ_FILES) $(OBJ_FFT) $(OBJ_CQL3D) $(OBJ_DLG) $(LIBS) ${LINK_FLAGS}
+${AORSA2D}: ${SRC_DIR}/aorsa2dMain.F90  
+	$(F90) ${F90FLAGS} ${SRC_DIR}/aorsa2dMain.F90 -o ${AORSA2D} $(OBJ_FILES) $(LIBS) ${LINK_FLAGS} ${CPP_DIRECTIVES} ${INC_DIR}
+
+${AORSA1D}: ${SRC_DIR}/aorsa1dMain.F90  
+	$(F90) ${F90FLAGS} ${SRC_DIR}/aorsa1dMain.F90 -o ${AORSA1D} $(OBJ_FILES) $(LIBS) ${LINK_FLAGS} ${CPP_DIRECTIVES} ${INC_DIR}
 			    		    		     		   			     			     				
-## FFT files
-#
-#${OBJ_DIR}/%.o: ${FFT_DIR}/%.f
-#	${F90} -c ${F90FLAGS} $< -o $@ 
-				
 # SRC files
 
 ${OBJ_DIR}/%.o: ${SRC_DIR}/%.f90
@@ -130,18 +127,6 @@ ${OBJ_DIR}/%.o: ${SRC_DIR}/%.f90
 ${OBJ_DIR}/%.o: ${SRC_DIR}/%.F90
 	${F90} -c ${F90FLAGS} $< -o $@ ${BOUNDS} ${NETCDF} ${CPP_DIRECTIVES} ${INC_DIR}
 
-## CQL files
-#
-#${OBJ_DIR}/%.o: ${CQL_DIR}/%.*
-#	${F90} -c ${F90FLAGS} $< -o $@ ${BOUNDS} ${NETCDF}
-
-# DLG files
-		
-${OBJ_DIR}/%.o: ${DLG_DIR}/%.f90
-	${F90} -c ${F90FLAGS} $< -o $@ ${NETCDF} ${INC_DIR} ${CPP_DIRECTIVES}
-
-${OBJ_DIR}/%.o: ${DLG_DIR}/%.F90
-	${F90} -c ${F90FLAGS} $< -o $@ ${NETCDF} ${INC_DIR} ${CPP_DIRECTIVES}
 
 # Double precision routines
 # -------------------------
@@ -154,6 +139,6 @@ include Makefile.double
 include Makefile.deps
 
 clean:
-	rm $(EXEC) $(OBJ_DIR)/*.o $(MOD_DIR)/*.mod
+	rm ${AORSA1D} ${AORSA2D} $(OBJ_DIR)/*.o $(MOD_DIR)/*.mod
 
 

@@ -50,13 +50,14 @@ contains
         use profiles
         use bField
         use parallel
+        use chebyshev_mod
 
         implicit none
 
         integer :: iRow, iCol, i, j, n, m, p, s, ii, jj
         integer :: localRow, localCol
         complex :: metal
-        real :: kr, kz, z
+        real :: kr, kt, kz, r, z
         complex :: &
             dxx, dxy, dxz, &
             dyx, dyy, dyz, &
@@ -66,6 +67,8 @@ contains
             mat_r_alp, mat_r_bet, mat_r_prl, &
             mat_th_alp, mat_th_bet, mat_th_prl, &
             mat_z_alp, mat_z_bet, mat_z_prl
+
+        integer :: nr, nz
 
 #ifdef par
 
@@ -113,13 +116,13 @@ contains
                 iRow = (i-1) * 3 * nPtsY + (j-1) * 3 + 1
 
                 n_loop: &
-                do n=kxL,kxR
+                do n=nMin,nMax
                     m_loop: &
-                    do m=kyL,kyR
+                    do m=mMin,mMax
 
-                        !write(*,*) i, j, m, n, kxL, kxR, kyL, kyR
+                        !write(*,*) i, j, m, n, nMin, nMax, mMin, mMax
 
-                        iCol = (n-kxL) * 3 * nModesY + (m-kyL) * 3 + 1
+                        iCol = (n-nMin) * 3 * nModesY + (m-mMin) * 3 + 1
 #ifdef par
                         pr_sp_thisPt   = mod ( rowStartProc + (iRow-1+(/0,1,2/))/rowBlockSize, npRow )
                         pc_sp_thisPt   = mod ( colStartProc + (iCol-1+(/0,1,2/))/colBlockSize, npCol )
@@ -144,15 +147,15 @@ contains
                             species: &
                             do s=1,nSpec
 
-                                if (iSigma==1) & ! hot plasma        
-                                sigma_tmp = sigmaHot_maxwellian&
-                                    ( mSpec(s), &
-                                    ktSpec(i,j,s), omgc(i,j,s), omgp2(i,j,s), &
-                                    kxsav(n), kysav(m), capr(i), &
-                                    omgrf, k0, &
-                                    k_cutoff, s, &
-                                    bMod(i,j), gradPrlB(i,j), &
-                                    U_xyz(i,j,:,:), U_cyl(i,j,:,:), nuOmg2D(i,j) )
+                                !if (iSigma==1) & ! hot plasma        
+                                !sigma_tmp = sigmaHot_maxwellian&
+                                !    ( mSpec(s), &
+                                !    ktSpec(i,j,s), omgc(i,j,s), omgp2(i,j,s), &
+                                !    kxsav(n), kysav(m), capr(i), &
+                                !    omgrf, k0, &
+                                !    k_cutoff, s, &
+                                !    bMod(i,j), gradPrlB(i,j), &
+                                !    U_xyz(i,j,:,:), U_cyl(i,j,:,:), nuOmg2D(i,j) )
                               
                                 if (iSigma==0) & ! cold plasma 
                                 sigma_tmp = sigmaCold_stix &
@@ -193,28 +196,30 @@ contains
 
                             endif
 
-                            ! Short of k's above the xkPerp_cutOff 
-                            ! ------------------------------------
+                            !! Short of k's above the xkPerp_cutOff 
+                            !! ------------------------------------
 
-                            if ( abs(kxSav(n))> kx_cutOff &
-                                .or. abs(kySav(m))> ky_cutOff ) then 
-                                  
-                                sigAlpAlp = metal 
-                                sigAlpBet = 0
-                                sigAlpPrl = 0 
-                                        
-                                sigBetAlp = 0 
-                                sigBetBet = metal 
-                                sigBetPrl = 0 
-                                        
-                                sigPrlAlp = 0 
-                                sigPrlBet = 0 
-                                sigPrlPrl = metal 
+                            !if ( abs(kxSav(n))> kx_cutOff &
+                            !    .or. abs(kySav(m))> ky_cutOff ) then 
+                            !      
+                            !    sigAlpAlp = metal 
+                            !    sigAlpBet = 0
+                            !    sigAlpPrl = 0 
+                            !            
+                            !    sigBetAlp = 0 
+                            !    sigBetBet = metal 
+                            !    sigBetPrl = 0 
+                            !            
+                            !    sigPrlAlp = 0 
+                            !    sigPrlBet = 0 
+                            !    sigPrlPrl = metal 
 
-                            endif
+                            !endif
 
 
                             cexpkxky = xx(n, i) * yy(m, j)
+                            !if(n==nMin .or. n==nMax) cexpkxky = cexpkxky / 2
+                            !if(m==mMin .or. m==mMax) cexpkxky = cexpkxky / 2
 
                             kAlpAlp = 1.0 + zi / (eps0 * omgrf) * sigAlpAlp
                             kAlpBet =       zi / (eps0 * omgrf) * sigAlpBet
@@ -228,149 +233,107 @@ contains
                             kPrlBet =       zi / (eps0 * omgrf) * sigPrlBet
                             kPrlPrl = 1.0 + zi / (eps0 * omgrf) * sigPrlPrl
 
-                            rnx = kxsav(n) / k0
-                            rny = kysav(m) / k0
-                            rnPhi = xkphi(i) / k0
+                            !rnx = kxsav(n) / k0
+                            !rny = kysav(m) / k0
+                            !rnPhi = xkphi(i) / k0
 
-                            kz  = kysav(m)  
-                            kr  = kxsav(n) 
+                            !kz  = kysav(m)  
+                            !kr  = kxsav(n) 
+
                             z   = y(j)
-#ifdef cylProper
-                            mat_r_alp = -((nPhi**2*Urr_(i,j))/capR(i)**2) &
-                                - kz**2*Urr_(i,j) + &
-                                k0**2*KAlpAlp*Urr_(i,j) + &
-                                ((-zi + capR(i)*kr)*nPhi*Urth_(i,j))/capR(i)**2 &
-                                + kr*kz*Urz_(i,j) + &
-                                k0**2*KBetAlp*Uthr_(i,j) + &
-                                k0**2*KPrlAlp*Uzr_(i,j) + &
-                                2*zi*kz*dzUrr(i,j) - &
-                                zi*kr*dzUrz(i,j) + &
-                                dzzUrr(i,j) - &
-                                (zi*nPhi*drUrth(i,j))/capR(i) - &
-                                zi*kz*drUrz(i,j) - drzUrz(i,j)
+                            r   = capR(i)
+                            kt  = nPhi / r
 
-                            mat_r_bet = k0**2*KAlpBet*Urr_(i,j) &
-                                - (nPhi**2*Uthr_(i,j))/capR(i)**2 - &
-                                kz**2*Uthr_(i,j) + k0**2*KBetBet*Uthr_(i,j) - &
-                                (zi*nPhi*Uthth_(i,j))/capR(i)**2 &
-                                + (kr*nPhi*Uthth_(i,j))/capR(i) + &
-                                kr*kz*Uthz_(i,j) + k0**2*KPrlBet*Uzr_(i,j) + &
-                                2*zi*kz*dzUthr(i,j) &
-                                - zi*kr*dzUthz(i,j) + &
-                                dzzUthr(i,j) &
-                                - (zi*nPhi*drUthth(i,j))/capR(i) - &
-                                zi*kz*drUthz(i,j) &
-                                - drzUthz(i,j)
+        !if(i/=1 .and. i/=nPtsX .and. j/=1 .and. j/=nPtsY) then
 
-                            mat_r_prl = k0**2*KAlpPrl*Urr_(i,j) + &
-                                k0**2*KBetPrl*Uthr_(i,j) - &
-                                (nPhi**2*Uzr_(i,j))/capR(i)**2 - kz**2*Uzr_(i,j) + &
-                                k0**2*KPrlPrl*Uzr_(i,j) &
-                                - (zi*nPhi*Uzth_(i,j))/capR(i)**2 + &
-                                (kr*nPhi*Uzth_(i,j))/capR(i) + kr*kz*Uzz_(i,j) + &
-                                2*zi*kz*dzUzr(i,j) &
-                                - zi*kr*dzUzz(i,j) + &
-                                dzzUzr(i,j) &
-                                - (zi*nPhi*drUzth(i,j))/capR(i) - &
-                                zi*kz*drUzz(i,j) &
-                                - drzUzz(i,j)
+        mat_r_alp = (-((kt**2*Urr_(i,j))/r**2) + k0**2*KAlpAlp*Urr_(i,j) - (zi*kt*Urt_(i,j))/r**2 + &
+          k0**2*KBetAlp*Utr_(i,j) + k0**2*KPrlAlp*Uzr_(i,j) + &
+          (2*dzbfn_bfn(i,j,n,m)*dzUrr(i,j)) + &
+          (Urr_(i,j)*dzzbfn_bfn(i,j,n,m)) + dzzUrr(i,j) - &
+          (zi*kt*Urt_(i,j)*drbfn_bfn(i,j,n,m))/(r) - &
+          (dzUrz(i,j)*drbfn_bfn(i,j,n,m)) - &
+          (zi*kt*drUrt(i,j))/r - &
+          (dzbfn_bfn(i,j,n,m)*drUrz(i,j)) - &
+          (Urz_(i,j)*drzbfn_bfn(i,j,n,m)) - drzUrz(i,j)) 
 
-                            mat_th_alp = (((zi + capR(i)*kr)*nPhi*Urr_(i,j) &
-                                - Urth_(i,j) + zi*capR(i)*kr*Urth_(i,j) - &
-                                capR(i)**2*kr**2*Urth_(i,j) - capR(i)**2*kz**2*Urth_(i,j) + &
-                                capR(i)**2*k0**2*KAlpAlp*Urth_(i,j) &
-                                + capR(i)*kz*nPhi*Urz_(i,j) + &
-                                capR(i)**2*k0**2*KBetAlp*Uthth_(i,j) + &
-                                capR(i)**2*k0**2*KPrlAlp*Uzth_(i,j) + &
-                                2*zi*capR(i)**2*kz*dzUrth(i,j) - &
-                                zi*capR(i)*nPhi*dzUrz(i,j) + &
-                                capR(i)**2*dzzUrth(i,j) - &
-                                zi*capR(i)*nPhi*drUrr(i,j) + &
-                                capR(i)*drUrth(i,j) + &
-                                2*zi*capR(i)**2*kr*drUrth(i,j) + &
-                                capR(i)**2*drrUrth(i,j)))/capR(i)**2 
+       mat_r_bet = (k0**2*KAlpBet*Urr_(i,j) - (kt**2*Utr_(i,j))/r**2 + k0**2*KBetBet*Utr_(i,j) - &
+          (zi*kt*Utt_(i,j))/r**2 + k0**2*KPrlBet*Uzr_(i,j) + &
+          (2*dzbfn_bfn(i,j,n,m)*dzUtr(i,j)) + &
+          (Utr_(i,j)*dzzbfn_bfn(i,j,n,m)) + dzzUtr(i,j) - &
+          (zi*kt*Utt_(i,j)*drbfn_bfn(i,j,n,m))/(r) - &
+          (dzUtz(i,j)*drbfn_bfn(i,j,n,m)) - &
+          (zi*kt*drUtt(i,j))/r - &
+          (dzbfn_bfn(i,j,n,m)*drUtz(i,j)) - &
+          (Utz_(i,j)*drzbfn_bfn(i,j,n,m)) - drzUtz(i,j)) 
 
-                            mat_th_bet = ((capR(i)**2*k0**2*KAlpBet*Urth_(i,j) &
-                                + zi*nPhi*Uthr_(i,j) + &
-                                capR(i)*kr*nPhi*Uthr_(i,j) &
-                                - Uthth_(i,j) + zi*capR(i)*kr*Uthth_(i,j) - &
-                                capR(i)**2*kr**2*Uthth_(i,j) &
-                                - capR(i)**2*kz**2*Uthth_(i,j) + &
-                                capR(i)**2*k0**2*KBetBet*Uthth_(i,j) &
-                                + capR(i)*kz*nPhi*Uthz_(i,j) + &
-                                capR(i)**2*k0**2*KPrlBet*Uzth_(i,j) + &
-                                2*zi*capR(i)**2*kz*dzUthth(i,j) - &
-                                zi*capR(i)*nPhi*dzUthz(i,j) + &
-                                capR(i)**2*dzzUthth(i,j) - &
-                                zi*capR(i)*nPhi*drUthr(i,j) + &
-                                capR(i)*drUthth(i,j) + &
-                                2*zi*capR(i)**2*kr*drUthth(i,j) + &
-                                capR(i)**2*drrUthth(i,j)))/capR(i)**2 
+       mat_r_prl = (k0**2*KAlpPrl*Urr_(i,j) + k0**2*KBetPrl*Utr_(i,j) - (kt**2*Uzr_(i,j))/r**2 + &
+          k0**2*KPrlPrl*Uzr_(i,j) - (zi*kt*Uzt_(i,j))/r**2 + &
+          (2*dzbfn_bfn(i,j,n,m)*dzUzr(i,j)) + &
+          (Uzr_(i,j)*dzzbfn_bfn(i,j,n,m)) + dzzUzr(i,j) - &
+          (zi*kt*Uzt_(i,j)*drbfn_bfn(i,j,n,m))/(r) - &
+          (dzUzz(i,j)*drbfn_bfn(i,j,n,m)) - &
+          (zi*kt*drUzt(i,j))/r - &
+          (dzbfn_bfn(i,j,n,m)*drUzz(i,j)) - &
+          (Uzz_(i,j)*drzbfn_bfn(i,j,n,m)) - drzUzz(i,j))
 
-                            mat_th_prl = ((capR(i)**2*k0**2*KAlpPrl*Urth_(i,j) + &
-                                capR(i)**2*k0**2*KBetPrl*Uthth_(i,j) &
-                                + zi*nPhi*Uzr_(i,j) + &
-                                capR(i)*kr*nPhi*Uzr_(i,j) - Uzth_(i,j) &
-                                + zi*capR(i)*kr*Uzth_(i,j) - &
-                                capR(i)**2*kr**2*Uzth_(i,j) - capR(i)**2*kz**2*Uzth_(i,j) + &
-                                capR(i)**2*k0**2*KPrlPrl*Uzth_(i,j) &
-                                + capR(i)*kz*nPhi*Uzz_(i,j) + &
-                                2*zi*capR(i)**2*kz*dzUzth(i,j) - &
-                                zi*capR(i)*nPhi*dzUzz(i,j) + &
-                                capR(i)**2*dzzUzth(i,j) - &
-                                zi*capR(i)*nPhi*drUzr(i,j) + &
-                                capR(i)*drUzth(i,j) + &
-                                2*zi*capR(i)**2*kr*drUzth(i,j) + &
-                                capR(i)**2*drrUzth(i,j)))/capR(i)**2 
+       mat_th_alp = ((zi*kt*Urr_(i,j))/r**2 - Urt_(i,j)/r**2 + k0**2*KAlpAlp*Urt_(i,j) + k0**2*KBetAlp*Utt_(i,j) + &
+          k0**2*KPrlAlp*Uzt_(i,j) - (zi*kt*Urz_(i,j)*dzbfn_bfn(i,j,n,m))/(r) + &
+          (2*dzbfn_bfn(i,j,n,m)*dzUrt(i,j)) - &
+          (zi*kt*dzUrz(i,j))/r + (Urt_(i,j)*dzzbfn_bfn(i,j,n,m)) + &
+          dzzUrt(i,j) - (zi*kt*Urr_(i,j)*drbfn_bfn(i,j,n,m))/(r) + &
+          (Urt_(i,j)*drbfn_bfn(i,j,n,m))/(r) - (zi*kt*drUrr(i,j))/r + &
+          drUrt(i,j)/r + (2*drbfn_bfn(i,j,n,m)*drUrt(i,j)) + &
+          (Urt_(i,j)*drrbfn_bfn(i,j,n,m)) + drrUrt(i,j))
 
-                            mat_z_alp = ((-zi + capR(i)*kr)*kz*Urr_(i,j))/capR(i) &
-                                + (kz*nPhi*Urth_(i,j))/capR(i) + &
-                                (zi*kr*Urz_(i,j))/capR(i) - kr**2*Urz_(i,j) &
-                                - (nPhi**2*Urz_(i,j))/capR(i)**2 + &
-                                k0**2*KAlpAlp*Urz_(i,j) &
-                                + k0**2*KBetAlp*Uthz_(i,j) + &
-                                k0**2*KPrlAlp*Uzz_(i,j) &
-                                - dzUrr(i,j)/capR(i) - &
-                                zi*kr*dzUrr(i,j) - &
-                                (zi*nPhi*dzUrth(i,j))/capR(i) - &
-                                zi*kz*drUrr(i,j) &
-                                + drUrz(i,j)/capR(i) + &
-                                2*zi*kr*drUrz(i,j) &
-                                - drzUrr(i,j) + &
-                                drrUrz(i,j)
+       mat_th_bet = (k0**2*KAlpBet*Urt_(i,j) + (zi*kt*Utr_(i,j))/r**2 - Utt_(i,j)/r**2 + k0**2*KBetBet*Utt_(i,j) + &
+          k0**2*KPrlBet*Uzt_(i,j) - (zi*kt*Utz_(i,j)*dzbfn_bfn(i,j,n,m))/(r) + &
+          (2*dzbfn_bfn(i,j,n,m)*dzUtt(i,j)) - &
+          (zi*kt*dzUtz(i,j))/r + (Utt_(i,j)*dzzbfn_bfn(i,j,n,m)) + &
+          dzzUtt(i,j) - (zi*kt*Utr_(i,j)*drbfn_bfn(i,j,n,m))/(r) + &
+          (Utt_(i,j)*drbfn_bfn(i,j,n,m))/(r) - (zi*kt*drUtr(i,j))/r + &
+          drUtt(i,j)/r + (2*drbfn_bfn(i,j,n,m)*drUtt(i,j)) + &
+          (Utt_(i,j)*drrbfn_bfn(i,j,n,m)) + drrUtt(i,j))
 
-                            mat_z_bet = k0**2*KAlpBet*Urz_(i,j) &
-                                - (zi*kz*Uthr_(i,j))/capR(i) + &
-                                kr*kz*Uthr_(i,j) + (kz*nPhi*Uthth_(i,j))/capR(i) &
-                                + (zi*kr*Uthz_(i,j))/capR(i) - &
-                                kr**2*Uthz_(i,j) - (nPhi**2*Uthz_(i,j))/capR(i)**2 + &
-                                k0**2*KBetBet*Uthz_(i,j) &
-                                + k0**2*KPrlBet*Uzz_(i,j) - &
-                                dzUthr(i,j)/capR(i) &
-                                - zi*kr*dzUthr(i,j) - &
-                                (zi*nPhi*dzUthth(i,j))/capR(i) - &
-                                zi*kz*drUthr(i,j) &
-                                + drUthz(i,j)/capR(i) + &
-                                2*zi*kr*drUthz(i,j) &
-                                - drzUthr(i,j) + &
-                                drrUthz(i,j)
+       mat_th_prl = (k0**2*KAlpPrl*Urt_(i,j) + k0**2*KBetPrl*Utt_(i,j) + (zi*kt*Uzr_(i,j))/r**2 - Uzt_(i,j)/r**2 + &
+          k0**2*KPrlPrl*Uzt_(i,j) - (zi*kt*Uzz_(i,j)*dzbfn_bfn(i,j,n,m))/(r) + &
+          (2*dzbfn_bfn(i,j,n,m)*dzUzt(i,j)) - &
+          (zi*kt*dzUzz(i,j))/r + (Uzt_(i,j)*dzzbfn_bfn(i,j,n,m)) + &
+          dzzUzt(i,j) - (zi*kt*Uzr_(i,j)*drbfn_bfn(i,j,n,m))/(r) + &
+          (Uzt_(i,j)*drbfn_bfn(i,j,n,m))/(r) - (zi*kt*drUzr(i,j))/r + &
+          drUzt(i,j)/r + (2*drbfn_bfn(i,j,n,m)*drUzt(i,j)) + &
+          (Uzt_(i,j)*drrbfn_bfn(i,j,n,m)) + drrUzt(i,j)) 
 
-                            mat_z_prl =k0**2*KAlpPrl*Urz_(i,j) &
-                                + k0**2*KBetPrl*Uthz_(i,j) - &
-                                (zi*kz*Uzr_(i,j))/capR(i) + kr*kz*Uzr_(i,j) &
-                                + (kz*nPhi*Uzth_(i,j))/capR(i) + &
-                                (zi*kr*Uzz_(i,j))/capR(i) - kr**2*Uzz_(i,j) &
-                                - (nPhi**2*Uzz_(i,j))/capR(i)**2 + &
-                                k0**2*KPrlPrl*Uzz_(i,j) &
-                                - dzUzr(i,j)/capR(i) - &
-                                zi*kr*dzUzr(i,j) - &
-                                (zi*nPhi*dzUzth(i,j))/capR(i) - &
-                                zi*kz*drUzr(i,j) &
-                                + drUzz(i,j)/capR(i) + &
-                                2*zi*kr*drUzz(i,j) &
-                                - drzUzr(i,j) + &
-                                drrUzz(i,j) 
-                                
+
+        mat_z_alp = (-((kt**2*Urz_(i,j))/r**2) + k0**2*KAlpAlp*Urz_(i,j) + k0**2*KBetAlp*Utz_(i,j) + &
+          k0**2*KPrlAlp*Uzz_(i,j) - (Urr_(i,j)*dzbfn_bfn(i,j,n,m))/(r) - &
+          (zi*kt*Urt_(i,j)*dzbfn_bfn(i,j,n,m))/(r) - dzUrr(i,j)/r - &
+          (zi*kt*dzUrt(i,j))/r + (Urz_(i,j)*drbfn_bfn(i,j,n,m))/(r) - &
+          (dzUrr(i,j)*drbfn_bfn(i,j,n,m)) - &
+          (dzbfn_bfn(i,j,n,m)*drUrr(i,j)) + drUrz(i,j)/r + &
+          (2*drbfn_bfn(i,j,n,m)*drUrz(i,j)) - &
+          (Urr_(i,j)*drzbfn_bfn(i,j,n,m)) - drzUrr(i,j) + &
+          (Urz_(i,j)*drrbfn_bfn(i,j,n,m)) + drrUrz(i,j))
+
+       mat_z_bet = (k0**2*KAlpBet*Urz_(i,j) - (kt**2*Utz_(i,j))/r**2 + k0**2*KBetBet*Utz_(i,j) + &
+          k0**2*KPrlBet*Uzz_(i,j) - (Utr_(i,j)*dzbfn_bfn(i,j,n,m))/(r) - &
+          (zi*kt*Utt_(i,j)*dzbfn_bfn(i,j,n,m))/(r) - dzUtr(i,j)/r - &
+          (zi*kt*dzUtt(i,j))/r + (Utz_(i,j)*drbfn_bfn(i,j,n,m))/(r) - &
+          (dzUtr(i,j)*drbfn_bfn(i,j,n,m)) - &
+          (dzbfn_bfn(i,j,n,m)*drUtr(i,j)) + drUtz(i,j)/r + &
+          (2*drbfn_bfn(i,j,n,m)*drUtz(i,j)) - &
+          (Utr_(i,j)*drzbfn_bfn(i,j,n,m)) - drzUtr(i,j) + &
+          (Utz_(i,j)*drrbfn_bfn(i,j,n,m)) + drrUtz(i,j))
+
+       mat_z_prl = (k0**2*KAlpPrl*Urz_(i,j) + k0**2*KBetPrl*Utz_(i,j) - (kt**2*Uzz_(i,j))/r**2 + &
+          k0**2*KPrlPrl*Uzz_(i,j) - (Uzr_(i,j)*drbfn_bfn(i,j,n,m))/(r) - &
+          (zi*kt*Uzt_(i,j)*dzbfn_bfn(i,j,n,m))/(r) - dzUzr(i,j)/r - &
+          (zi*kt*dzUzt(i,j))/r + (Uzz_(i,j)*drbfn_bfn(i,j,n,m))/(r) - &
+          (dzUzr(i,j)*drbfn_bfn(i,j,n,m)) - &
+          (dzbfn_bfn(i,j,n,m)*drUzr(i,j)) + drUzz(i,j)/r + &
+          (2*drbfn_bfn(i,j,n,m)*drUzz(i,j)) - &
+          (Uzr_(i,j)*drzbfn_bfn(i,j,n,m)) - drzUzr(i,j) + &
+          (Uzz_(i,j)*drrbfn_bfn(i,j,n,m)) + drrUzz(i,j))
+
                             dxx = mat_r_alp / k0**2
                             dxy = mat_r_bet / k0**2
                             dxz = mat_r_prl / k0**2
@@ -383,108 +346,109 @@ contains
                             dzy = mat_z_bet / k0**2
                             dzz = mat_z_prl / k0**2
 
-#else
-                            dxx = (kAlpAlp - rny**2 - rnphi**2) * uxx(i,j) &
-                                +  kBetAlp * uyx(i,j) &
-                                +  kPrlAlp * uzx(i,j) &
-                                + rnx * (rny * uxy(i,j) + rnphi * uxz(i,j)) &
-                                - zi * rnphi / k0 * &
-                                         (uxz(i,j) / capr(i) + dxuxz(i,j)) &
-                                - zi * rny / k0 * (dxuxy(i,j) - 2. * dyuxx(i,j)) &
-                                - zi * rnx / k0 * dyuxy(i,j) &
-                                + 1. / k0**2 * (dyyuxx(i,j) - dxyuxy(i,j))
+           !endif
 
-                            dxy =  kAlpBet * uxx(i,j) &
-                                + (kBetBet - rny**2 - rnphi**2) * uyx(i,j) &
-                                +  kPrlBet * uzx(i,j) &
-                                + rnx * (rny * uyy(i,j) + rnphi * uyz(i,j)) &
-                                - zi * rnphi / k0 * &
-                                         (uyz(i,j) / capr(i) + dxuyz(i,j)) &
-                                - zi * rny / k0 * (dxuyy(i,j) - 2. * dyuyx(i,j)) &
-                                - zi * rnx / k0 * dyuyy(i,j) &
-                                + 1. / k0**2 * (dyyuyx(i,j) - dxyuyy(i,j))
-                            dxz =  kAlpPrl * uxx(i,j) &
-                                +  kBetPrl * uyx(i,j) &
-                                + (kPrlPrl - rny**2 - rnphi**2) * uzx(i,j) &
-                                + rnx * (rny * uzy(i,j) + rnphi * uzz(i,j)) &
-                                - zi * rnphi / k0 * &
-                                         (uzz(i,j) / capr(i) + dxuzz(i,j)) &
-                                - zi * rny / k0 * (dxuzy(i,j) - 2. * dyuzx(i,j)) &
-                                - zi * rnx / k0 * dyuzy(i,j) &
-                                + 1. / k0**2 * (dyyuzx(i,j) - dxyuzy(i,j))
-                           dyx = (kAlpAlp - rnx**2 - rnphi**2) * uxy(i,j) &
-                                +  kBetAlp * uyy(i,j) &
-                                +  kPrlAlp * uzy(i,j) &
-                                + rny * (rnx * uxx(i,j) + rnphi * uxz(i,j)) &
-                                - zi * rny / k0 * &
-                                         (dxuxx(i,j) + uxx(i,j) / capr(i)) &
-                                - zi * rnphi / k0 * dyuxz(i,j) &
-                                - zi * rnx / k0 * &
-                                (dyuxx(i,j) - uxy(i,j) / capr(i) - 2.* dxuxy(i,j)) &
-                                + 1. / k0**2 * (dxxuxy(i,j) - dxyuxx(i,j) &
-                                - dyuxx(i,j)/ capr(i) + dxuxy(i,j) / capr(i))
-                            dyy =  kAlpBet * uxy(i,j) &
-                                + (kBetBet - rnx**2 - rnphi**2) * uyy(i,j) &
-                                +  kPrlBet * uzy(i,j) &
-                                + rny * (rnx * uyx(i,j) + rnphi * uyz(i,j)) &
-                                - zi * rny / k0 * &
-                                         (dxuyx(i,j) + uyx(i,j) / capr(i)) &
-                                - zi * rnphi / k0 * dyuyz(i,j) &
-                                - zi * rnx / k0 * &
-                                (dyuyx(i,j) - uyy(i,j) / capr(i) - 2.* dxuyy(i,j)) &
-                                + 1. / k0**2 * (dxxuyy(i,j) - dxyuyx(i,j) &
-                                - dyuyx(i,j)/ capr(i) + dxuyy(i,j) / capr(i))
-                            dyz =  kAlpPrl * uxy(i,j) &
-                                +  kBetPrl * uyy(i,j) &
-                                + (kPrlPrl - rnx**2 - rnphi**2) * uzy(i,j) &
-                                + rny * (rnx * uzx(i,j) + rnphi * uzz(i,j)) &
-                                - zi * rny / k0 * &
-                                         (dxuzx(i,j) + uzx(i,j) / capr(i)) &
-                                - zi * rnphi / k0 * dyuzz(i,j) &
-                                - zi * rnx / k0 * &
-                                (dyuzx(i,j) - uzy(i,j) / capr(i) - 2.* dxuzy(i,j)) &
-                                + 1. / k0**2 * (dxxuzy(i,j) - dxyuzx(i,j) &
-                                - dyuzx(i,j)/ capr(i) + dxuzy(i,j) / capr(i))
+                            !dxx = (kAlpAlp - rny**2 - rnphi**2) * uxx(i,j) &
+                            !    +  kBetAlp * uyx(i,j) &
+                            !    +  kPrlAlp * uzx(i,j) &
+                            !    + rnx * (rny * uxy(i,j) + rnphi * uxz(i,j)) &
+                            !    - zi * rnphi / k0 * &
+                            !             (uxz(i,j) / capr(i) + dxuxz(i,j)) &
+                            !    - zi * rny / k0 * (dxuxy(i,j) - 2. * dyuxx(i,j)) &
+                            !    - zi * rnx / k0 * dyuxy(i,j) &
+                            !    + 1. / k0**2 * (dyyuxx(i,j) - dxyuxy(i,j))
 
-                            dzx = (kAlpAlp - rnx**2 - rny**2) * uxz(i,j) &
-                                +  kBetAlp * uyz(i,j) &
-                                +  kPrlAlp * uzz(i,j) &
-                                + rnphi * (rny * uxy(i,j) + rnx * uxx(i,j)) &
-                                + zi * rny / k0 * 2. * dyuxz(i,j) &
-                                - zi * rnphi / k0 * &
-                                   (dyuxy(i,j) + dxuxx(i,j) - uxx(i,j) / capr(i)) &
-                                + zi * rnx / k0 * &
-                                   (uxz(i,j) / capr(i) + 2.* dxuxz(i,j)) &
-                                - 1. / (k0**2 * capr(i)) * &
-                                   (uxz(i,j)/ capr(i) - dxuxz(i,j)) &
-                                + 1. / k0**2  * (dxxuxz(i,j) + dyyuxz(i,j))
+                            !dxy =  kAlpBet * uxx(i,j) &
+                            !    + (kBetBet - rny**2 - rnphi**2) * uyx(i,j) &
+                            !    +  kPrlBet * uzx(i,j) &
+                            !    + rnx * (rny * uyy(i,j) + rnphi * uyz(i,j)) &
+                            !    - zi * rnphi / k0 * &
+                            !             (uyz(i,j) / capr(i) + dxuyz(i,j)) &
+                            !    - zi * rny / k0 * (dxuyy(i,j) - 2. * dyuyx(i,j)) &
+                            !    - zi * rnx / k0 * dyuyy(i,j) &
+                            !    + 1. / k0**2 * (dyyuyx(i,j) - dxyuyy(i,j))
+                            !dxz =  kAlpPrl * uxx(i,j) &
+                            !    +  kBetPrl * uyx(i,j) &
+                            !    + (kPrlPrl - rny**2 - rnphi**2) * uzx(i,j) &
+                            !    + rnx * (rny * uzy(i,j) + rnphi * uzz(i,j)) &
+                            !    - zi * rnphi / k0 * &
+                            !             (uzz(i,j) / capr(i) + dxuzz(i,j)) &
+                            !    - zi * rny / k0 * (dxuzy(i,j) - 2. * dyuzx(i,j)) &
+                            !    - zi * rnx / k0 * dyuzy(i,j) &
+                            !    + 1. / k0**2 * (dyyuzx(i,j) - dxyuzy(i,j))
+                            !dyx = (kAlpAlp - rnx**2 - rnphi**2) * uxy(i,j) &
+                            !    +  kBetAlp * uyy(i,j) &
+                            !    +  kPrlAlp * uzy(i,j) &
+                            !    + rny * (rnx * uxx(i,j) + rnphi * uxz(i,j)) &
+                            !    - zi * rny / k0 * &
+                            !             (dxuxx(i,j) + uxx(i,j) / capr(i)) &
+                            !    - zi * rnphi / k0 * dyuxz(i,j) &
+                            !    - zi * rnx / k0 * &
+                            !    (dyuxx(i,j) - uxy(i,j) / capr(i) - 2.* dxuxy(i,j)) &
+                            !    + 1. / k0**2 * (dxxuxy(i,j) - dxyuxx(i,j) &
+                            !    - dyuxx(i,j)/ capr(i) + dxuxy(i,j) / capr(i))
+                            !dyy =  kAlpBet * uxy(i,j) &
+                            !    + (kBetBet - rnx**2 - rnphi**2) * uyy(i,j) &
+                            !    +  kPrlBet * uzy(i,j) &
+                            !    + rny * (rnx * uyx(i,j) + rnphi * uyz(i,j)) &
+                            !    - zi * rny / k0 * &
+                            !             (dxuyx(i,j) + uyx(i,j) / capr(i)) &
+                            !    - zi * rnphi / k0 * dyuyz(i,j) &
+                            !    - zi * rnx / k0 * &
+                            !    (dyuyx(i,j) - uyy(i,j) / capr(i) - 2.* dxuyy(i,j)) &
+                            !    + 1. / k0**2 * (dxxuyy(i,j) - dxyuyx(i,j) &
+                            !    - dyuyx(i,j)/ capr(i) + dxuyy(i,j) / capr(i))
+                            !dyz =  kAlpPrl * uxy(i,j) &
+                            !    +  kBetPrl * uyy(i,j) &
+                            !    + (kPrlPrl - rnx**2 - rnphi**2) * uzy(i,j) &
+                            !    + rny * (rnx * uzx(i,j) + rnphi * uzz(i,j)) &
+                            !    - zi * rny / k0 * &
+                            !             (dxuzx(i,j) + uzx(i,j) / capr(i)) &
+                            !    - zi * rnphi / k0 * dyuzz(i,j) &
+                            !    - zi * rnx / k0 * &
+                            !    (dyuzx(i,j) - uzy(i,j) / capr(i) - 2.* dxuzy(i,j)) &
+                            !    + 1. / k0**2 * (dxxuzy(i,j) - dxyuzx(i,j) &
+                            !    - dyuzx(i,j)/ capr(i) + dxuzy(i,j) / capr(i))
 
-                            dzy =  kAlpBet * uxz(i,j) &
-                                + (kBetBet - rnx**2 - rny**2) * uyz(i,j) &
-                                +  kPrlBet * uzz(i,j) &
-                                + rnphi * (rny * uyy(i,j) + rnx * uyx(i,j)) &
-                                + zi * rny / k0 * 2. * dyuyz(i,j) &
-                                - zi * rnphi / k0 * &
-                                   (dyuyy(i,j) + dxuyx(i,j) - uyx(i,j) / capr(i)) &
-                                + zi * rnx / k0 * &
-                                   (uyz(i,j) / capr(i) + 2.* dxuyz(i,j)) &
-                                - 1. / (k0**2 * capr(i)) * &
-                                   (uyz(i,j)/ capr(i) - dxuyz(i,j)) &
-                                + 1. / k0**2  * (dxxuyz(i,j) + dyyuyz(i,j))
+                            !dzx = (kAlpAlp - rnx**2 - rny**2) * uxz(i,j) &
+                            !    +  kBetAlp * uyz(i,j) &
+                            !    +  kPrlAlp * uzz(i,j) &
+                            !    + rnphi * (rny * uxy(i,j) + rnx * uxx(i,j)) &
+                            !    + zi * rny / k0 * 2. * dyuxz(i,j) &
+                            !    - zi * rnphi / k0 * &
+                            !       (dyuxy(i,j) + dxuxx(i,j) - uxx(i,j) / capr(i)) &
+                            !    + zi * rnx / k0 * &
+                            !       (uxz(i,j) / capr(i) + 2.* dxuxz(i,j)) &
+                            !    - 1. / (k0**2 * capr(i)) * &
+                            !       (uxz(i,j)/ capr(i) - dxuxz(i,j)) &
+                            !    + 1. / k0**2  * (dxxuxz(i,j) + dyyuxz(i,j))
 
-                            dzz =  kAlpPrl * uxz(i,j) &
-                                +  kBetPrl * uyz(i,j) &
-                                + (kPrlPrl - rnx**2 - rny**2) * uzz(i,j) &
-                                + rnphi * (rny * uzy(i,j) + rnx * uzx(i,j)) &
-                                + zi * rny / k0 * 2. * dyuzz(i,j) &
-                                - zi * rnphi / k0 * &
-                                   (dyuzy(i,j) + dxuzx(i,j) - uzx(i,j) / capr(i)) &
-                                + zi * rnx / k0 * &
-                                   (uzz(i,j) / capr(i) + 2.* dxuzz(i,j)) &
-                                - 1. / (k0**2 * capr(i)) * &
-                                   (uzz(i,j)/ capr(i) - dxuzz(i,j)) &
-                                + 1. / k0**2  * (dxxuzz(i,j) + dyyuzz(i,j))
-#endif
+                            !dzy =  kAlpBet * uxz(i,j) &
+                            !    + (kBetBet - rnx**2 - rny**2) * uyz(i,j) &
+                            !    +  kPrlBet * uzz(i,j) &
+                            !    + rnphi * (rny * uyy(i,j) + rnx * uyx(i,j)) &
+                            !    + zi * rny / k0 * 2. * dyuyz(i,j) &
+                            !    - zi * rnphi / k0 * &
+                            !       (dyuyy(i,j) + dxuyx(i,j) - uyx(i,j) / capr(i)) &
+                            !    + zi * rnx / k0 * &
+                            !       (uyz(i,j) / capr(i) + 2.* dxuyz(i,j)) &
+                            !    - 1. / (k0**2 * capr(i)) * &
+                            !       (uyz(i,j)/ capr(i) - dxuyz(i,j)) &
+                            !    + 1. / k0**2  * (dxxuyz(i,j) + dyyuyz(i,j))
+
+                            !dzz =  kAlpPrl * uxz(i,j) &
+                            !    +  kBetPrl * uyz(i,j) &
+                            !    + (kPrlPrl - rnx**2 - rny**2) * uzz(i,j) &
+                            !    + rnphi * (rny * uzy(i,j) + rnx * uzx(i,j)) &
+                            !    + zi * rny / k0 * 2. * dyuzz(i,j) &
+                            !    - zi * rnphi / k0 * &
+                            !       (dyuzy(i,j) + dxuzx(i,j) - uzx(i,j) / capr(i)) &
+                            !    + zi * rnx / k0 * &
+                            !       (uzz(i,j) / capr(i) + 2.* dxuzz(i,j)) &
+                            !    - 1. / (k0**2 * capr(i)) * &
+                            !       (uzz(i,j)/ capr(i) - dxuzz(i,j)) &
+                            !    + 1. / k0**2  * (dxxuzz(i,j) + dyyuzz(i,j))
+
 
                             !if(iAm==0) then
                             !   write(*,*) dxx, dxy, dxz
@@ -530,7 +494,7 @@ contains
                                         !write(*,*) iRow+ii, iCol+jj, l_sp, m_sp, &
                                         !    pr_sp, pc_sp, x_sp, y_sp, localRow, localCol
 
-                                        if (ii==0 .and. jj==0) aMat(localRow,localCol) = cexpkxky * dxx  
+                                        if (ii==0 .and. jj==0) aMat(localRow,localCol) = cexpkxky * dxx 
                                         if (ii==1 .and. jj==0) aMat(localRow,localCol) = cexpkxky * dxy  
                                         if (ii==2 .and. jj==0) aMat(localRow,localCol) = cexpkxky * dxz  
                                    
@@ -543,26 +507,47 @@ contains
                                         if (ii==2 .and. jj==2) aMat(localRow,localCol) = cexpkxky * dzz  
 
 
-                                        !   boundary conditions
-                                        !   -------------------
+                                        !!   boundary conditions
+                                        !!   -------------------
 
-                                        if ( i==1 .or. i==nPtsX &
-                                                .or. j==1 .or. j==nPtsY &
-                                                .or. (.not. mask(i,j)) ) then 
+                                        !if (nPtsX/=1) then
+                                        !if ( i==1 .or. i==nPtsX &
+                                        !        .or. (.not. mask(i,j)) ) then 
 
-                                            if (ii==0 .and. jj==0) aMat(localRow,localCol) = cexpkxky * lsWeightFac 
-                                            if (ii==1 .and. jj==0) aMat(localRow,localCol) = 0  
-                                            if (ii==2 .and. jj==0) aMat(localRow,localCol) = 0  
+                                        !    if (ii==0 .and. jj==0) aMat(localRow,localCol) = cexpkxky * lsWeightFac 
+                                        !    if (ii==1 .and. jj==0) aMat(localRow,localCol) = 0  
+                                        !    if (ii==2 .and. jj==0) aMat(localRow,localCol) = 0  
                                    
-                                            if (ii==0 .and. jj==1) aMat(localRow,localCol) = 0  
-                                            if (ii==1 .and. jj==1) aMat(localRow,localCol) = cexpkxky * lsWeightFac  
-                                            if (ii==2 .and. jj==1) aMat(localRow,localCol) = 0   
+                                        !    if (ii==0 .and. jj==1) aMat(localRow,localCol) = 0  
+                                        !    if (ii==1 .and. jj==1) aMat(localRow,localCol) = cexpkxky * lsWeightFac  
+                                        !    if (ii==2 .and. jj==1) aMat(localRow,localCol) = 0   
                                    
-                                            if (ii==0 .and. jj==2) aMat(localRow,localCol) = 0   
-                                            if (ii==1 .and. jj==2) aMat(localRow,localCol) = 0   
-                                            if (ii==2 .and. jj==2) aMat(localRow,localCol) = cexpkxky * lsWeightFac 
+                                        !    if (ii==0 .and. jj==2) aMat(localRow,localCol) = 0   
+                                        !    if (ii==1 .and. jj==2) aMat(localRow,localCol) = 0   
+                                        !    if (ii==2 .and. jj==2) aMat(localRow,localCol) = cexpkxky * lsWeightFac 
 
-                                        endif
+                                        !endif
+                                        !endif
+
+                                        !if (nPtsY/=1) then
+                                        !if ( j==1 .or. j==nPtsY &
+                                        !        .or. (.not. mask(i,j)) ) then 
+
+                                        !    if (ii==0 .and. jj==0) aMat(localRow,localCol) = cexpkxky * lsWeightFac 
+                                        !    if (ii==1 .and. jj==0) aMat(localRow,localCol) = 0  
+                                        !    if (ii==2 .and. jj==0) aMat(localRow,localCol) = 0  
+                                   
+                                        !    if (ii==0 .and. jj==1) aMat(localRow,localCol) = 0  
+                                        !    if (ii==1 .and. jj==1) aMat(localRow,localCol) = cexpkxky * lsWeightFac  
+                                        !    if (ii==2 .and. jj==1) aMat(localRow,localCol) = 0   
+                                   
+                                        !    if (ii==0 .and. jj==2) aMat(localRow,localCol) = 0   
+                                        !    if (ii==1 .and. jj==2) aMat(localRow,localCol) = 0   
+                                        !    if (ii==2 .and. jj==2) aMat(localRow,localCol) = cexpkxky * lsWeightFac 
+
+                                        !endif
+                                        !endif
+
 
 #ifdef par
                                     endif myProc

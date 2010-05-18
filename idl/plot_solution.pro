@@ -36,7 +36,7 @@ pro contour_field, field, x, y, nLevs, scale, $
 
 end
 
-pro plot_solution
+pro plot_solution, oneD = oneD
 
 	cdfId = ncdf_open ( 'runData.nc', /noWrite ) 
 		nCdf_varGet, cdfId, 'capR', x 
@@ -54,8 +54,8 @@ pro plot_solution
 		nCdf_varGet, cdfId, 'xx_im', xx_im
 		nCdf_varGet, cdfId, 'yy_re', yy_re 
 		nCdf_varGet, cdfId, 'yy_im', yy_im
-		nCdf_varGet, cdfId, 'kxsav',  kx
-		nCdf_varGet, cdfId, 'kysav', ky 
+		;nCdf_varGet, cdfId, 'kxsav',  kx
+		;nCdf_varGet, cdfId, 'kysav', ky 
 	ncdf_close, cdfId
 
 	xx	= complex ( xx_re, xx_im )
@@ -92,6 +92,19 @@ pro plot_solution
 
 	ncdf_close, cdfId
 
+	; 1D catch
+	; --------
+
+	if (keyword_set(oneD) ) then begin
+
+		iPlot, x, eAlpha, view_grid=[1,3], /stretch_to_fit
+		iPlot, x, eBeta, /view_next, /stretch_to_fit
+		iPlot, x, eB, /view_next, /stretch_to_fit
+		stop
+	endif
+
+
+
 	; Field contour plot
 	; ------------------
 
@@ -120,32 +133,38 @@ pro plot_solution
 	contour_field, abs(ebetak),		kx, ky, nLevs, scale, id = specPID, view = 2
 	contour_field, abs(ebk),		kx, ky, nLevs, scalePar, id = specPID, view = 3
 
-	;; Reconstruct the fields using only a specific set of
-	;; basis vectors
-	;; ---------------------------------------------------
+	; Reconstruct the fields using only a specific set of
+	; basis vectors
+	; ---------------------------------------------------
 
-	;ealpha_	= complexArr ( nX, nY )
-	;ebeta_	= complexArr ( nX, nY )
-	;eb_	= complexArr ( nX, nY )
+	ealpha_	= complexArr ( nX, nY )
+	ebeta_	= complexArr ( nX, nY )
+	eb_	= complexArr ( nX, nY )
 
-    ;for i = 0, nX-1 do begin
-    ;	for j = 0, nY-1 do begin
-    ;   		for n = nN/4, nN-nN/4-1 do begin
-    ;        	for m = nM/4, nM-nM/4-1 do begin
+    for i = 0, nX-1 do begin
+    	for j = 0, nY-1 do begin
+       		for n = nN/6, nN-nN/6-1 do begin
+            	for m = nM/4, nM-nM/4-1 do begin
 
-    ;                  cexpkxky = xx(n, i) * yy(m, j)
-    ;                  ealpha_(i,j) = ealpha_(i,j) + ealphak(n,m) * cexpkxky
+                      cexpkxky = xx(n, i) * yy(m, j)
+                      ealpha_(i,j) = ealpha_(i,j) + ealphak(n,m) * cexpkxky
+                      ebeta_(i,j) = ebeta_(i,j) + ebetak(n,m) * cexpkxky
+                      eb_(i,j) = eb_(i,j) + ebk(n,m) * cexpkxky
 
-    ;        	endfor
-    ;   	 	endfor
-    ;	endfor
-  	;endfor
+            	endfor
+       	 	endfor
+    	endfor
+  	endfor
 
- 	;scale = max ( abs ( [ealpha_[*],ebeta_[*],eb_[*]] ) ) 
-	;contour_field, ealpha_, x, y, nLevs, scale, /initial
-	;;contour_field, ebeta, x, y, nLevs, scale
-	;;contour_field, eb, x, y, nLevs, scalePrl
+ 	scale = max ( abs ( [ealpha_[*],ebeta_[*],eb_[*]] ) ) 
+	scalePrl = max ( abs(abs ( [eb_[*]] )) ) 
 
+	redPID = 4
+	iContour, id = redPID, view_grid = [3,1], dimensions = [1200,300]
+
+	contour_field, ealpha_,x,y, nLevs, scale, id = redPID, view = 1
+	contour_field, ebeta_, x, y, nLevs, scale, id = redPID, view = 2
+	contour_field, eb_, x, y, nLevs, scalePrl, id = redPID, view = 3
 
 stop
 end

@@ -67,6 +67,7 @@ omgrf = 2.0 * pi * freq
 k0 = omgrf / clight
 U_xyz   = real( reshape ( (/1,0,0,0,1,0,0,0,1/) , (/3,3/) ) )
 U_cyl   = real( reshape ( (/1,0,0,0,1,0,0,0,1/) , (/3,3/) ) )
+xNuOmg = 0.02
 
 nK = 512
 
@@ -92,7 +93,7 @@ do i=1,nPts
         omgrf, k0, &
         k_cutoff, 1, &
         b(i), 0.0, &
-        U_xyz, U_cyl )
+        U_xyz, U_cyl, xnuOmg )
 
         sig11(i,j) = sigma_tmp(1,1)
         sig12(i,j) = sigma_tmp(1,2)

@@ -21,7 +21,8 @@ CPP_DIRECTIVES = -DcylXYZ -DzFunHammett
 .PHONY : clean
 
 all: ${EXE_DIR}/test_expBesselI \
-		${EXE_DIR}/test_sigma
+		${EXE_DIR}/test_sigma \
+		${EXE_DIR}/test_chebyshev
 
 ${EXE_DIR}/%: ${SRC_TST}/%.f90 
 	${F90} ${F90FLAGS} $< -o $@ ${OBJ_DIR}/*.o ${NETCDF}
@@ -47,6 +48,9 @@ ${EXE_DIR}/test_sigma: \
 		${OBJ_DIR}/constants.o \
 		${OBJ_DIR}/sigma.o \
 		${OBJ_DIR}/check_mod.o
+
+${EXE_DIR}/test_chebyshev: \
+		${OBJ_DIR}/chebyshev_mod.o
 
 include ../Makefile.deps
 

@@ -58,7 +58,6 @@ contains
 #ifndef dblprec
             call cgesv ( nRow, 1, aMat, nRow, ipiv, brhs, nRow, info )
 #else            
-
             call zgesv ( nRow, 1, aMat, nRow, ipiv, brhs, nRow, info )
 
             ! MAGMA Cuda solve
@@ -107,6 +106,7 @@ contains
         if  (info/=0) then
 
             write(*,*) '    solve.F90: ERROR, solve did not complete successfully'
+            write(*,*) '    info: ', info
             stop
 
         else
@@ -300,7 +300,7 @@ contains
     subroutine extract_coeffs ()
 
         use grid, &
-        only: kxL, kxR, kyL, kyR
+        only: nMin, nMax, mMin, mMax
         use aorsa2din_mod, &
         only: nPtsX, nPtsY, nModesX, nModesY
         use antenna, &
@@ -315,14 +315,14 @@ contains
         !   -------------------------------------------
 
         allocate ( &
-            ealphak(kxL:kxR,kyL:kyR), &
-            ebetak(kxL:kxR,kyL:kyR), &
-            eBk(kxL:kxR,kyL:kyR) )
+            ealphak(nMin:nMax,mMin:mMax), &
+            ebetak(nMin:nMax,mMin:mMax), &
+            eBk(nMin:nMax,mMin:mMax) )
 
-        do n=kxL,kxR
-            do m=kyL,kyR
+        do n=nMin,nMax
+            do m=mMin,mMax
 
-                iCol = (m-kyL) * 3 + (n-kxL) * nModesY * 3 + 1
+                iCol = (m-mMin) * 3 + (n-nMin) * nModesY * 3 + 1
        
                 ealphak(n,m)    = brhs_global(iCol+0)
                 ebetak(n,m)     = brhs_global(iCol+1)
