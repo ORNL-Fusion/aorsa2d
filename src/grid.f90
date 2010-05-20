@@ -48,7 +48,6 @@ contains
                     if(chebyshev) then
                         ! Gauss-Lobatto grid [-1,1] (Chebyshev basis)
                         xGrid_basis(i)  = -cos(pi*(i-1)/(nPtsX-1))
-                        xGrid_basis(i)  = (i-1) * 2.0 / ( nPtsX - 1 ) - 1.0
                     else
                         ! Uniform grid [0,2pi] (Fourier basis)
                         xGrid_basis(i)  = (i-1) * 2 * pi / ( nPtsX - 1 )
@@ -90,7 +89,6 @@ contains
                     if(chebyshev) then
                         ! Gauss-Lobatto grid [-1,1] (Chebyshev basis)
                         yGrid_basis(j)  = -cos(pi*(j-1)/(nPtsY-1))
-                        yGrid_basis(j)  = (j-1) * 2.0 / ( nPtsY - 1 ) - 1.0
                     else
                         ! Uniform grid [0,2pi] (Fourier basis)
                         yGrid_basis(j)  = (j-1) * 2 * pi / ( nPtsY - 1 )

@@ -170,40 +170,40 @@ pro plot_solution, oneD = oneD
 	contour_field, ebeta_, x, y, nLevs, scale, id = redPID, view = 2
 	contour_field, eb_, x, y, nLevs, scalePrl, id = redPID, view = 3
 
-	; Old slow version of reconstruction 
+	;; Old slow version of reconstruction 
 
-	ealpha2_	= complexArr ( nX, nY )
-	ebeta2_	= complexArr ( nX, nY )
-	eb2_	= complexArr ( nX, nY )
+	;ealpha2_	= complexArr ( nX, nY )
+	;ebeta2_	= complexArr ( nX, nY )
+	;eb2_	= complexArr ( nX, nY )
 
-	ealpha2_[*,*]	= 0 
-	ebeta2_[*,*]	= 0 
-	eb2_[*,*]		= 0 
+	;ealpha2_[*,*]	= 0 
+	;ebeta2_[*,*]	= 0 
+	;eb2_[*,*]		= 0 
 
-    for i = 0, nX-1 do begin
-    	for j = 0, nY-1 do begin
-       		for n = 0, nN-1 do begin
-            	for m = 0, nM-1 do begin
+    ;for i = 0, nX-1 do begin
+    ;	for j = 0, nY-1 do begin
+    ;   		for n = 0, nN-1 do begin
+    ;        	for m = 0, nM-1 do begin
 
-                      cexpkxky = xx(n, i) * yy(m, j)
-                      ealpha2_(i,j) = ealpha2_(i,j) + ealphak(n,m) * cexpkxky
-                      ebeta2_(i,j) = ebeta2_(i,j) + ebetak(n,m) * cexpkxky
-                      eb2_(i,j) = eb2_(i,j) + ebk(n,m) * cexpkxky
+    ;                  cexpkxky = xx(n, i) * yy(m, j)
+    ;                  ealpha2_(i,j) = ealpha2_(i,j) + ealphak(n,m) * cexpkxky
+    ;                  ebeta2_(i,j) = ebeta2_(i,j) + ebetak(n,m) * cexpkxky
+    ;                  eb2_(i,j) = eb2_(i,j) + ebk(n,m) * cexpkxky
 
-            	endfor
-       	 	endfor
-    	endfor
-  	endfor
+    ;        	endfor
+    ;   	 	endfor
+    ;	endfor
+  	;endfor
 
- 	scale = max ( abs ( [ealpha2_[*],ebeta2_[*],eb2_[*]] ) ) * 0.1
-	scalePrl = max ( abs(abs ( [eb2_[*]] )) ) 
+ 	;scale = max ( abs ( [ealpha2_[*],ebeta2_[*],eb2_[*]] ) ) * 0.1
+	;scalePrl = max ( abs(abs ( [eb2_[*]] )) ) 
 
-	redPID = 5
-	iContour, id = redPID, view_grid = [3,1], dimensions = [1200,300]
+	;redPID = 5
+	;iContour, id = redPID, view_grid = [3,1], dimensions = [1200,300]
 
-	contour_field, ealpha2_,x,y, nLevs, scale, id = redPID, view = 1
-	contour_field, ebeta2_, x, y, nLevs, scale, id = redPID, view = 2
-	contour_field, eb2_, x, y, nLevs, scalePrl, id = redPID, view = 3
+	;contour_field, ealpha2_,x,y, nLevs, scale, id = redPID, view = 1
+	;contour_field, ebeta2_, x, y, nLevs, scale, id = redPID, view = 2
+	;contour_field, eb2_, x, y, nLevs, scalePrl, id = redPID, view = 3
 
 
 stop
