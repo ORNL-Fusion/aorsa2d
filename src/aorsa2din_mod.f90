@@ -34,6 +34,7 @@ implicit none
     real :: rhoWidth = 0.2
     real :: rhoPower = 3.0
     real :: lsWeightFac = 1.0 ! Least squares boundary weighting value O(10^3)
+    logical :: chebyshev = .false.
  
 !     --------------------------------------------------------
 !     Declarations and defaults for aorsa2d.in input variables
@@ -449,7 +450,8 @@ implicit none
      &    tAlphaIn, tBetaIn, dAlphaIn, dBetaIn, useFluxProfiles, square, &
      &    metalLeft, metalRight, metalTop, metalBot, useSoloviev, a, psiExp, &
      &    noPoloidalField, rhoScale, rhoWidth, rhoPower, useCircular, &
-     &    bPol_frac, useCircularProfiles, lsWeightFac, xkx_cutOff, xky_cutOff
+     &    bPol_frac, useCircularProfiles, lsWeightFac, xkx_cutOff, xky_cutOff, &
+     &    chebyshev
                 
 contains
 

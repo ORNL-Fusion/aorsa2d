@@ -26,7 +26,10 @@ BLACS = \
 SCALAPACK = ${HOME}/code/scalapack/scalapack_gnu64/libscalapack.a
 PAPI_INC = -I/usr/include 
 PAPI = -lpapi
-MAGMA = -L ${HOME}/code/magma/magma_0.2/lib -lmagma -lmagmablas ${HOME}/code/magma/magma_0.2/lib/libmagma_64.a
+CUDA_DIR = ${HOME}/code/cuda/3.0/cuda
+CUDA = -L ${CUDA_DIR}/lib64 -lcublas -lcudart
+MAGMA_DIR = ${HOME}/code/magma/magma_0.2
+MAGMA = -L ${MAGMA_DIR}/lib -lmagma -lmagmablas ${MAGMA_DIR}/lib/libmagma_64.a
 
 # set the MODE to "serial" or "parallel"
 
@@ -79,7 +82,7 @@ endif
 
 BOUNDS = -fbounds-check 
 WARN = #-Wall
-DEBUG = -pg -g -fbacktrace -fsignaling-nans -ffpe-trap=zero,invalid#,overflow#,underflow
+DEBUG = -g -fbacktrace -fsignaling-nans -ffpe-trap=zero,invalid#,overflow#,underflow
 DOUBLE = -fdefault-real-8
 ifeq (${MODE},"parallel")
 	F90 = mpif90
@@ -104,7 +107,7 @@ endif
 ifeq (${MODE},"parallel")
 	LIBS = ${SCALAPACK} ${BLACS} ${BLAS} ${LAPACK} ${NETCDF} ${PAPI}
 else
-	LIBS = ${BLAS} ${LAPACK} ${NETCDF} ${PAPI} ${MAGMA}
+	LIBS = ${BLAS} ${LAPACK} ${NETCDF} ${PAPI} ${CUDA} ${MAGMA} -lstdc++
 endif
 INC_DIR = ${PAPI_INC}
 
@@ -126,6 +129,15 @@ ${OBJ_DIR}/%.o: ${SRC_DIR}/%.f90
 
 ${OBJ_DIR}/%.o: ${SRC_DIR}/%.F90
 	${F90} -c ${F90FLAGS} $< -o $@ ${BOUNDS} ${NETCDF} ${CPP_DIRECTIVES} ${INC_DIR}
+
+#${OBJ_DIR}/solve.o: ${SRC_DIR}/solve.F90
+#	${F90} -c ${F90FLAGS} $< -o $@ ${BOUNDS} ${NETCDF} ${CPP_DIRECTIVES} ${INC_DIR} -fno-underscoring
+#
+#${OBJ_DIR}/get_nb.o: ${MAGMA_DIR}/testing/get_nb.cpp
+#	${F90} -c $< -o $@
+#
+#${OBJ_DIR}/fortran.o: ${CUDA_DIR}/src/fortran.c
+#	gcc -c $< -o $@ -I ${CUDA_DIR}/include
 
 
 # Double precision routines

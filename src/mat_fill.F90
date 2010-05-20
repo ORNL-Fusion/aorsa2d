@@ -4,7 +4,7 @@ use constants
 
 implicit none
 
-complex :: cexpkxky
+complex :: bFn
 complex :: &
     sigAlpAlp, sigAlpBet, sigAlpPrl, &
     sigBetAlp, sigBetBet, sigBetPrl, &
@@ -217,9 +217,9 @@ contains
                             !endif
 
 
-                            cexpkxky = xx(n, i) * yy(m, j)
-                            !if(n==nMin .or. n==nMax) cexpkxky = cexpkxky / 2
-                            !if(m==mMin .or. m==mMax) cexpkxky = cexpkxky / 2
+                            bFn = xx(n, i) * yy(m, j)
+                            !if(n==nMin .or. n==nMax) bFn = bFn / 2
+                            !if(m==mMin .or. m==mMax) bFn = bFn / 2
 
                             kAlpAlp = 1.0 + zi / (eps0 * omgrf) * sigAlpAlp
                             kAlpBet =       zi / (eps0 * omgrf) * sigAlpBet
@@ -244,7 +244,15 @@ contains
                             r   = capR(i)
                             kt  = nPhi / r
 
-        !if(i/=1 .and. i/=nPtsX .and. j/=1 .and. j/=nPtsY) then
+        ! Matrix elements. See mathematica worksheet for calculation of 
+        ! these. They are for a general basis set.
+        ! This section will fail if you try and fill the boundary pts
+        ! using the Chebyshev basis. So don't do it. The boundary pts
+        ! are filled later. See below. Runs fine for Fourier basis as
+        ! the boundary conds are periodic.
+        ! -------------------------------------------------------------
+
+        if(i/=1 .and. i/=nPtsX .and. j/=1 .and. j/=nPtsY) then
 
         mat_r_alp = (-((kt**2*Urr_(i,j))/r**2) + k0**2*KAlpAlp*Urr_(i,j) - (zi*kt*Urt_(i,j))/r**2 + &
           k0**2*KBetAlp*Utr_(i,j) + k0**2*KPrlAlp*Uzr_(i,j) + &
@@ -346,7 +354,7 @@ contains
                             dzy = mat_z_bet / k0**2
                             dzz = mat_z_prl / k0**2
 
-           !endif
+           endif
 
                             !dxx = (kAlpAlp - rny**2 - rnphi**2) * uxx(i,j) &
                             !    +  kBetAlp * uyx(i,j) &
@@ -491,62 +499,63 @@ contains
                                         localRow    = iRow+ii
                                         localCol    = iCol+jj
 #endif
-                                        !write(*,*) iRow+ii, iCol+jj, l_sp, m_sp, &
-                                        !    pr_sp, pc_sp, x_sp, y_sp, localRow, localCol
+                                        if (ii==0 .and. jj==0) aMat(localRow,localCol) = dxx * bFn  
+                                        if (ii==1 .and. jj==0) aMat(localRow,localCol) = dxy * bFn   
+                                        if (ii==2 .and. jj==0) aMat(localRow,localCol) = dxz * bFn   
+                                                                                                        
+                                        if (ii==0 .and. jj==1) aMat(localRow,localCol) = dyx * bFn   
+                                        if (ii==1 .and. jj==1) aMat(localRow,localCol) = dyy * bFn   
+                                        if (ii==2 .and. jj==1) aMat(localRow,localCol) = dyz * bFn   
+                                                                                                        
+                                        if (ii==0 .and. jj==2) aMat(localRow,localCol) = dzx * bFn   
+                                        if (ii==1 .and. jj==2) aMat(localRow,localCol) = dzy * bFn   
+                                        if (ii==2 .and. jj==2) aMat(localRow,localCol) = dzz * bFn   
 
-                                        if (ii==0 .and. jj==0) aMat(localRow,localCol) = cexpkxky * dxx 
-                                        if (ii==1 .and. jj==0) aMat(localRow,localCol) = cexpkxky * dxy  
-                                        if (ii==2 .and. jj==0) aMat(localRow,localCol) = cexpkxky * dxz  
+
+                                        ! Boundary Conditions
+                                        ! The seperate X and Y sections are
+                                        ! there to catch the scenario where the
+                                        ! 2D code is run as 1D and there is only
+                                        ! a single Y or X grid pt. 
+                                        ! --------------------------------------
+
+                                        if (nPtsX/=1) then
+                                        if ( i==1 .or. i==nPtsX &
+                                                .or. (.not. mask(i,j)) ) then 
+
+                                            if (ii==0 .and. jj==0) aMat(localRow,localCol) = bFn * lsWeightFac 
+                                            if (ii==1 .and. jj==0) aMat(localRow,localCol) = 0  
+                                            if (ii==2 .and. jj==0) aMat(localRow,localCol) = 0  
                                    
-                                        if (ii==0 .and. jj==1) aMat(localRow,localCol) = cexpkxky * dyx  
-                                        if (ii==1 .and. jj==1) aMat(localRow,localCol) = cexpkxky * dyy  
-                                        if (ii==2 .and. jj==1) aMat(localRow,localCol) = cexpkxky * dyz  
+                                            if (ii==0 .and. jj==1) aMat(localRow,localCol) = 0  
+                                            if (ii==1 .and. jj==1) aMat(localRow,localCol) = bFn * lsWeightFac  
+                                            if (ii==2 .and. jj==1) aMat(localRow,localCol) = 0   
                                    
-                                        if (ii==0 .and. jj==2) aMat(localRow,localCol) = cexpkxky * dzx  
-                                        if (ii==1 .and. jj==2) aMat(localRow,localCol) = cexpkxky * dzy  
-                                        if (ii==2 .and. jj==2) aMat(localRow,localCol) = cexpkxky * dzz  
+                                            if (ii==0 .and. jj==2) aMat(localRow,localCol) = 0   
+                                            if (ii==1 .and. jj==2) aMat(localRow,localCol) = 0   
+                                            if (ii==2 .and. jj==2) aMat(localRow,localCol) = bFn * lsWeightFac 
 
+                                        endif
+                                        endif
 
-                                        !!   boundary conditions
-                                        !!   -------------------
+                                        if (nPtsY/=1) then
+                                        if ( j==1 .or. j==nPtsY &
+                                                .or. (.not. mask(i,j)) ) then 
 
-                                        !if (nPtsX/=1) then
-                                        !if ( i==1 .or. i==nPtsX &
-                                        !        .or. (.not. mask(i,j)) ) then 
-
-                                        !    if (ii==0 .and. jj==0) aMat(localRow,localCol) = cexpkxky * lsWeightFac 
-                                        !    if (ii==1 .and. jj==0) aMat(localRow,localCol) = 0  
-                                        !    if (ii==2 .and. jj==0) aMat(localRow,localCol) = 0  
+                                            if (ii==0 .and. jj==0) aMat(localRow,localCol) = bFn * lsWeightFac 
+                                            if (ii==1 .and. jj==0) aMat(localRow,localCol) = 0  
+                                            if (ii==2 .and. jj==0) aMat(localRow,localCol) = 0  
                                    
-                                        !    if (ii==0 .and. jj==1) aMat(localRow,localCol) = 0  
-                                        !    if (ii==1 .and. jj==1) aMat(localRow,localCol) = cexpkxky * lsWeightFac  
-                                        !    if (ii==2 .and. jj==1) aMat(localRow,localCol) = 0   
+                                            if (ii==0 .and. jj==1) aMat(localRow,localCol) = 0  
+                                            if (ii==1 .and. jj==1) aMat(localRow,localCol) = bFn * lsWeightFac  
+                                            if (ii==2 .and. jj==1) aMat(localRow,localCol) = 0   
                                    
-                                        !    if (ii==0 .and. jj==2) aMat(localRow,localCol) = 0   
-                                        !    if (ii==1 .and. jj==2) aMat(localRow,localCol) = 0   
-                                        !    if (ii==2 .and. jj==2) aMat(localRow,localCol) = cexpkxky * lsWeightFac 
+                                            if (ii==0 .and. jj==2) aMat(localRow,localCol) = 0   
+                                            if (ii==1 .and. jj==2) aMat(localRow,localCol) = 0   
+                                            if (ii==2 .and. jj==2) aMat(localRow,localCol) = bFn * lsWeightFac 
 
-                                        !endif
-                                        !endif
-
-                                        !if (nPtsY/=1) then
-                                        !if ( j==1 .or. j==nPtsY &
-                                        !        .or. (.not. mask(i,j)) ) then 
-
-                                        !    if (ii==0 .and. jj==0) aMat(localRow,localCol) = cexpkxky * lsWeightFac 
-                                        !    if (ii==1 .and. jj==0) aMat(localRow,localCol) = 0  
-                                        !    if (ii==2 .and. jj==0) aMat(localRow,localCol) = 0  
-                                   
-                                        !    if (ii==0 .and. jj==1) aMat(localRow,localCol) = 0  
-                                        !    if (ii==1 .and. jj==1) aMat(localRow,localCol) = cexpkxky * lsWeightFac  
-                                        !    if (ii==2 .and. jj==1) aMat(localRow,localCol) = 0   
-                                   
-                                        !    if (ii==0 .and. jj==2) aMat(localRow,localCol) = 0   
-                                        !    if (ii==1 .and. jj==2) aMat(localRow,localCol) = 0   
-                                        !    if (ii==2 .and. jj==2) aMat(localRow,localCol) = cexpkxky * lsWeightFac 
-
-                                        !endif
-                                        !endif
+                                        endif
+                                        endif
 
 
 #ifdef par

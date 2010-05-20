@@ -10,10 +10,10 @@
 NotebookFileLineBreakTest
 NotebookFileLineBreakTest
 NotebookDataPosition[       145,          7]
-NotebookDataLength[   1263895,      21471]
-NotebookOptionsPosition[   1261166,      21383]
-NotebookOutlinePosition[   1261578,      21399]
-CellTagsIndexPosition[   1261535,      21396]
+NotebookDataLength[   1264633,      21483]
+NotebookOptionsPosition[   1261862,      21394]
+NotebookOutlinePosition[   1262274,      21410]
+CellTagsIndexPosition[   1262231,      21407]
 WindowFrame->Normal*)
 
 (* Beginning of Notebook Content *)
@@ -21215,6 +21215,16 @@ Cell[CellGroupData[{
 Cell["Basis derivative terms", "Section",
  CellChangeTimes->{{3.483181554936611*^9, 3.4831815589546537`*^9}}],
 
+Cell["\<\
+Remember that the spatial derivatives introduce a length scale. This is \
+accounted for by the normFacX and normFacY variables in the code. The old kx, \
+ky variables have been removed and the whole code is done in terms of the n \
+and m labels, i.e., the integer order of the chosen basis. The scale factors \
+are either 2\[Pi]/xRange or 2/xRange depending on the choice of Fourier \
+evenly spaced [0,2\[Pi]] grid or the Gauss-Labotto [-1,1] grid. \
+\>", "Text",
+ CellChangeTimes->{{3.483350703886528*^9, 3.483350853711545*^9}}],
+
 Cell[CellGroupData[{
 
 Cell[BoxData[{
@@ -21224,8 +21234,8 @@ Cell[BoxData[{
     RowBox[{"I", " ", 
      RowBox[{"(", 
       RowBox[{
-       RowBox[{"kr", " ", "r"}], " ", "+", " ", 
-       RowBox[{"kz", " ", "z"}]}], ")"}]}], "]"}]}], 
+       RowBox[{"n", " ", "r"}], " ", "+", " ", 
+       RowBox[{"m", " ", "z"}]}], ")"}]}], "]"}]}], 
   ";"}], "\[IndentingNewLine]", 
  RowBox[{
   RowBox[{"bfn", "=", 
@@ -21260,7 +21270,8 @@ Cell[BoxData[{
   3.483181961286384*^9}, {3.4831822382382803`*^9, 3.483182326495721*^9}, {
   3.483182365508436*^9, 3.483182422505528*^9}, {3.4831824741663437`*^9, 
   3.483182565134376*^9}, {3.483184099844139*^9, 3.4831841043561974`*^9}, {
-  3.4832008282684393`*^9, 3.483200830388604*^9}}],
+  3.4832008282684393`*^9, 3.483200830388604*^9}, {3.483351802075782*^9, 
+  3.48335180521437*^9}}],
 
 Cell[BoxData[
  FractionBox[
@@ -21275,7 +21286,7 @@ Cell[BoxData[
   3.4831817177315397`*^9, 3.4831819623790493`*^9, 3.4831822440743*^9, 
    3.483182280738915*^9, 3.483182327431638*^9, 3.483182382344838*^9, {
    3.483182492823496*^9, 3.4831825657169847`*^9}, 3.4831841053598547`*^9, 
-   3.483200831181355*^9}],
+   3.483200831181355*^9, 3.483351807917469*^9}],
 
 Cell[BoxData[
  FractionBox[
@@ -21290,7 +21301,7 @@ Cell[BoxData[
   3.4831817177315397`*^9, 3.4831819623790493`*^9, 3.4831822440743*^9, 
    3.483182280738915*^9, 3.483182327431638*^9, 3.483182382344838*^9, {
    3.483182492823496*^9, 3.4831825657169847`*^9}, 3.4831841053598547`*^9, 
-   3.4832008311831417`*^9}],
+   3.483200831181355*^9, 3.4833518079383574`*^9}],
 
 Cell[BoxData[
  FractionBox[
@@ -21322,7 +21333,7 @@ Cell[BoxData[
   3.4831817177315397`*^9, 3.4831819623790493`*^9, 3.4831822440743*^9, 
    3.483182280738915*^9, 3.483182327431638*^9, 3.483182382344838*^9, {
    3.483182492823496*^9, 3.4831825657169847`*^9}, 3.4831841053598547`*^9, 
-   3.4832008311845083`*^9}],
+   3.483200831181355*^9, 3.4833518079557247`*^9}],
 
 Cell[BoxData[
  FractionBox[
@@ -21354,7 +21365,7 @@ Cell[BoxData[
   3.4831817177315397`*^9, 3.4831819623790493`*^9, 3.4831822440743*^9, 
    3.483182280738915*^9, 3.483182327431638*^9, 3.483182382344838*^9, {
    3.483182492823496*^9, 3.4831825657169847`*^9}, 3.4831841053598547`*^9, 
-   3.483200831185999*^9}],
+   3.483200831181355*^9, 3.483351807990535*^9}],
 
 Cell[BoxData[
  FractionBox[
@@ -21376,13 +21387,13 @@ Cell[BoxData[
   3.4831817177315397`*^9, 3.4831819623790493`*^9, 3.4831822440743*^9, 
    3.483182280738915*^9, 3.483182327431638*^9, 3.483182382344838*^9, {
    3.483182492823496*^9, 3.4831825657169847`*^9}, 3.4831841053598547`*^9, 
-   3.4832008312081947`*^9}]
+   3.483200831181355*^9, 3.483351808012621*^9}]
 }, Open  ]]
 }, Open  ]]
 }, Open  ]]
 },
 WindowSize->{953, 714},
-WindowMargins->{{Automatic, 165}, {Automatic, 10}},
+WindowMargins->{{143, Automatic}, {Automatic, 10}},
 FrontEndVersion->"7.0 for Mac OS X x86 (32-bit) (November 10, 2008)",
 StyleDefinitions->FrontEnd`FileName[{"Report"}, "StandardReport.nb", 
   CharacterEncoding -> "UTF-8"]
@@ -21463,13 +21474,14 @@ Cell[1252955, 21152, 2744, 56, 387, "Output"]
 }, Closed]],
 Cell[CellGroupData[{
 Cell[1255748, 21214, 109, 1, 39, "Section"],
+Cell[1255860, 21217, 539, 8, 56, "Text"],
 Cell[CellGroupData[{
-Cell[1255882, 21219, 1536, 43, 127, "Input"],
-Cell[1257421, 21264, 506, 13, 58, "Output"],
-Cell[1257930, 21279, 508, 13, 58, "Output"],
-Cell[1258441, 21294, 977, 30, 61, "Output"],
-Cell[1259421, 21326, 975, 30, 61, "Output"],
-Cell[1260399, 21358, 727, 20, 58, "Output"]
+Cell[1256424, 21229, 1582, 44, 127, "Input"],
+Cell[1258009, 21275, 528, 13, 58, "Output"],
+Cell[1258540, 21290, 530, 13, 58, "Output"],
+Cell[1259073, 21305, 999, 30, 61, "Output"],
+Cell[1260075, 21337, 997, 30, 61, "Output"],
+Cell[1261075, 21369, 747, 20, 58, "Output"]
 }, Open  ]]
 }, Open  ]]
 }, Open  ]]

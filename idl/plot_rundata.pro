@@ -16,8 +16,6 @@ pro plot_rundata
 		nCdf_varGet, cdfId, 'xx_im', xx_im
 		nCdf_varGet, cdfId, 'yy_re', yy_re 
 		nCdf_varGet, cdfId, 'yy_im', yy_im
-		nCdf_varGet, cdfId, 'kxsav',  kxsav
-		nCdf_varGet, cdfId, 'kysav', kysav 
 	ncdf_close, cdfId
 
 	xx	= complex ( xx_re, xx_im )

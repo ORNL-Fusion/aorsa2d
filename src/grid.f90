@@ -2,13 +2,15 @@ module grid
 
 use constants
 use chebyshev_mod
+use aorsa2din_mod, &
+only: chebyshev
 
 implicit none
 
 !   init_grid
 real, allocatable, dimension(:) :: capR, xkphi
 real, allocatable, dimension(:) :: y, xGrid_basis, yGrid_basis
-real :: dx, dy, xRange, yRange
+real :: dx, dy, xRange, yRange, normFacX, normFacY
 
 !   init_k
 !real, allocatable, dimension(:) :: kxsav, kysav
@@ -30,8 +32,8 @@ contains
 
         integer :: i, j
 
-        !   define x mesh: capr(i)
-        !   ----------------------
+        ! define x mesh: capr(i)
+        ! ----------------------
         
             allocate ( &
                 capR ( nPtsX ), &
@@ -42,24 +44,38 @@ contains
                 xRange  = rwRight - rwLeft
                 dx = xRange / (nPtsX-1)
                 do i = 1, nPtsX
-      
-                    !xGrid_basis(i)  = -cos(pi*(i-1)/(nPtsX-1))
-                    xGrid_basis(i)  = (i-1) * 2 * pi / ( nPtsX - 1 ) - pi
-
-                    capR(i) = (i-1) * dx + rwLeft 
-                    xkphi(i) = nPhi / capR(i)
-        
+     
+                    if(chebyshev) then
+                        ! Gauss-Lobatto grid [-1,1] (Chebyshev basis)
+                        xGrid_basis(i)  = -cos(pi*(i-1)/(nPtsX-1))
+                    else
+                        ! Uniform grid [0,2pi] (Fourier basis)
+                        xGrid_basis(i)  = (i-1) * 2 * pi / ( nPtsX - 1 )
+                    endif
+       
                 enddo
             else
 
                 capR(1) = rwLeft
-                xkphi(1) = nPhi / capR(1)
+                xGrid_basis(1) = 0
                 
             endif
 
+            if(nPtsX>1) &
+            capR = (xGrid_basis-xGrid_basis(1)) &
+                / (xGrid_basis(nPtsX)-xGrid_basis(1)) * xRange + rwLeft
+
+            xkphi = nPhi / capR
+
+            if(chebyshev)then
+                normFacX = 2 / xRange
+            else
+                normFacX = 2 * pi / xRange
+            endif
+
        
-        !   define y mesh: y(j)
-        !----------------------
+        ! define y mesh: y(j)
+        !--------------------
         
             allocate ( y ( nPtsY ), &
                 yGrid_basis(nPtsY) )
@@ -70,16 +86,28 @@ contains
                 dy = yRange / (nPtsY-1)
                 do j = 1, nPtsY
 
-                    !yGrid_basis(j)  = -cos(pi*(j-1)/(nPtsY-1))
-                    yGrid_basis(j)  = (j-1) * 2 * pi / ( nPtsY - 1 ) - pi
+                    if(chebyshev) then
+                        ! Gauss-Lobatto grid [-1,1] (Chebyshev basis)
+                        yGrid_basis(j)  = -cos(pi*(j-1)/(nPtsY-1))
+                    else
+                        ! Uniform grid [0,2pi] (Fourier basis)
+                        yGrid_basis(j)  = (j-1) * 2 * pi / ( nPtsY - 1 )
+                    endif
 
-                    y(j) = (j-1) * dy + yBot 
-                    !y(j) = (yGrid_basis(j)+1)/2 * yRange + yBot
-        
                 enddo
             else
                 y(1)    = 0
                 yGrid_basis(1) = 0
+            endif
+
+            if(nPtsY>1) &
+            y = (yGrid_basis-yGrid_basis(1)) &
+                / (yGrid_basis(nPtsY)-yGrid_basis(1)) * yRange + yBot
+
+            if(chebyshev) then
+                normFacY = 2 / yRange
+            else 
+                normFacY = 2 * pi / yRange
             endif
 
     end subroutine init_grid
@@ -97,22 +125,28 @@ contains
 
         integer :: n, m
 
-        nMin = -nModesX/2
-        nMax =  nModesX/2
-        mMin = -nModesY/2
-        mMax =  nModesY/2
+        if(chebyshev) then
 
-        ! Catch for even number of modes
-        ! for producing a square matrix
-        ! ------------------------------
+            nMin    = 0
+            nMax    = nModesX-1
+            mMin    = 0
+            mMax    = nModesY-1
 
-        if (mod(nModesX,2)==0) nMin = nMin+1
-        if (mod(nModesY,2)==0) mMin = mMin+1
+        else
 
-        !nMin    = 0
-        !nMax    = nModesX-1
-        !mMin    = 0
-        !mMax    = nModesY-1
+            nMin = -nModesX/2
+            nMax =  nModesX/2
+            mMin = -nModesY/2
+            mMax =  nModesY/2
+
+            ! Catch for even number of modes
+            ! for producing a square matrix
+            ! ------------------------------
+
+            if (mod(nModesX,2)==0) nMin = nMin+1
+            if (mod(nModesY,2)==0) mMin = mMin+1
+
+        endif
 
         if (iAm==0) then
             write(*,*) '    n: ', nMin, nMax
@@ -168,116 +202,22 @@ contains
 
         do i = 1, nPtsX
             do n = nMin, nMax 
-                !xx(n,i) = exp(zi * kxsav(n) * ( capR(i)-rwLeft-xRange/2 ) )
-                !xx(n,i) = exp(zi * n * xGrid_basis(i) )
                 xx(n,i) = xBasis(n,xGrid_basis(i))
-                !xx(n,i) = exp(zi * kxsav(n) * ( capR(i)-rwLeft ) )
-                !xx(n,i) = chebT(n+nMin,xGrid_basis(i))
             enddo
         enddo
 
         do j = 1, nPtsY
             do m = mMin, mMax 
-                !yy(m,j) = exp(zi * kysav(m) * ( y(j)-yBot-yRange/2 ) )
-                !yy(m,j) = exp(zi * m * yGrid_basis(j) )
                 yy(m,j) = yBasis(m,yGrid_basis(j))
-                !yy(m,j) = chebT(m+mMin,yGrid_basis(j))
             enddo
         enddo
 
     end subroutine init_basis_functions 
 
 
-    ! Basis function derivative routines
+    ! Basis function and their derivative routines
     ! for Fourier & Chebyshev
-    ! ----------------------------------
-
-    function drBfn_bfn(i,j,n,m)
-
-        implicit none
-
-        integer, intent(in) :: i, j, n, m
-        complex :: drBfn_bfn
-        real :: kx
-
-        kx = 2 * pi * n / xRange
-        drBfn_bfn = zi * kx
-        !drBfn_bfn = n * chebT(-1+n,xGrid_basis(i)) &
-        !    / chebT(n,xGrid_basis(i))
-
-    end function drBfn_bfn
-
-
-    function dzBfn_bfn(i,j,n,m)
-
-        implicit none
-
-        integer, intent(in) :: i, j, n, m
-        complex :: dzBfn_bfn
-        real :: ky
-
-        ky = 2 * pi * m / yRange
-        dzBfn_bfn = zi * ky
-        !dzBfn_bfn = m * chebU(-1+m,yGrid_basis(j)) &
-        !    / chebT(m,yGrid_basis(j))
-
-    end function dzBfn_bfn
-
-
-    function drrBfn_bfn(i,j,n,m)
-
-        implicit none
-
-        integer, intent(in) :: i, j, n, m
-        complex :: drrBfn_bfn
-        real :: kx
-
-        kx = 2 * pi * n / xRange
-        drrBfn_bfn = - kx**2
-        !drrBfn_bfn = n * &
-        !    ( -n * chebU(-2+n,xGrid_basis(i)) &
-        !        + (-1+n)*xGrid_basis(i) * chebU(-1+n,xGrid_basis(i) )) &
-        !    / ((-1+xGrid_basis(i)**2)*chebT(n,xGrid_basis(i)))
-
-    end function drrBfn_bfn
-
-
-    function dzzBfn_bfn(i,j,n,m)
-
-        implicit none
-
-        integer, intent(in) :: i, j, n, m
-        complex :: dzzBfn_bfn
-        real :: ky
-
-        ky = 2 * pi * m / yRange
-        dzzBfn_bfn = - ky**2
-        !dzzBfn_bfn = m * &
-        !    ( -m*chebU(-2+m,yGrid_basis(j)) &
-        !        + (-1+m)*yGrid_basis(j)*chebU(-1+m,yGrid_basis(j))) &
-        !    / ( (-1+yGrid_basis(j)**2)*chebT(m,yGrid_basis(j)))
-
-    end function dzzBfn_bfn
-
-
-    function drzBfn_bfn(i,j,n,m)
-
-        implicit none
-
-        integer, intent(in) :: i, j, n, m
-        complex :: drzBfn_bfn
-        real :: kx, ky
-
-        kx = 2 * pi * n / xRange
-        ky = 2 * pi * m / yRange
-
-        drzBfn_bfn = - kx * ky
-        !drzBfn_bfn = ( m * n * &
-        !    chebU(-1+m,yGrid_basis(j)) * chebU(-1+n,xGrid_basis(i)) ) &
-        !    / ( chebT(m,yGrid_basis(j))*chebT(n,xGrid_basis(i)))
-
-    end function drzBfn_bfn
-
+    ! --------------------------------------------
 
     function xBasis (n,x)
 
@@ -286,8 +226,11 @@ contains
         real, intent(in) :: x
         complex :: xBasis
 
-        xBasis = exp ( zi * n * x )
-        !xBasis = chebT ( n, x )
+        if(chebyshev) then
+            xBasis = chebT ( n, x )
+        else
+            xBasis = exp ( zi * n * x )
+        endif
 
     end function xBasis
 
@@ -299,10 +242,113 @@ contains
         real, intent(in) :: y
         complex :: yBasis
 
-        yBasis = exp ( zi * m * y )
-        !yBasis = chebT ( m, y )
+        if(chebyshev) then
+            yBasis = chebT ( m, y )
+        else
+            yBasis = exp ( zi * m * y )
+        endif
 
     end function yBasis
 
+
+    function drBfn_bfn(i,j,n,m)
+
+        implicit none
+
+        integer, intent(in) :: i, j, n, m
+        complex :: drBfn_bfn
+
+        if(chebyshev) then
+            drBfn_bfn = n * chebT(-1+n,xGrid_basis(i)) &
+                / chebT(n,xGrid_basis(i))
+        else
+            drBfn_bfn = zi * n
+        endif
+
+        drBfn_bfn = drBfn_bfn * normFacX
+
+    end function drBfn_bfn
+
+
+    function dzBfn_bfn(i,j,n,m)
+
+        implicit none
+
+        integer, intent(in) :: i, j, n, m
+        complex :: dzBfn_bfn
+        
+        if(chebyshev) then
+            dzBfn_bfn = m * chebU(-1+m,yGrid_basis(j)) &
+                / chebT(m,yGrid_basis(j))
+        else
+            dzBfn_bfn = zi * m
+        endif
+
+        dzBfn_bfn = dzBfn_bfn * normFacY
+
+    end function dzBfn_bfn
+
+
+    function drrBfn_bfn(i,j,n,m)
+
+        implicit none
+
+        integer, intent(in) :: i, j, n, m
+        complex :: drrBfn_bfn
+
+        if(chebyshev) then
+
+            drrBfn_bfn = n * &
+                ( -n * chebU(-2+n,xGrid_basis(i)) &
+                    + (-1+n)*xGrid_basis(i) * chebU(-1+n,xGrid_basis(i) )) &
+                / ((-1+xGrid_basis(i)**2)*chebT(n,xGrid_basis(i)))
+        else
+            drrBfn_bfn = - n**2
+        endif
+
+        drrBfn_bfn = drrBfn_bfn * normFacX**2
+
+    end function drrBfn_bfn
+
+
+    function dzzBfn_bfn(i,j,n,m)
+
+        implicit none
+
+        integer, intent(in) :: i, j, n, m
+        complex :: dzzBfn_bfn
+
+        if(chebyshev) then 
+            dzzBfn_bfn = m * &
+                ( -m*chebU(-2+m,yGrid_basis(j)) &
+                    + (-1+m)*yGrid_basis(j)*chebU(-1+m,yGrid_basis(j))) &
+                / ( (-1+yGrid_basis(j)**2)*chebT(m,yGrid_basis(j)))
+        else
+            dzzBfn_bfn = - m**2
+        endif
+
+        dzzBfn_bfn = dzzBfn_bfn * normFacY**2
+
+    end function dzzBfn_bfn
+
+
+    function drzBfn_bfn(i,j,n,m)
+
+        implicit none
+
+        integer, intent(in) :: i, j, n, m
+        complex :: drzBfn_bfn
+
+        if(chebyshev) then
+            drzBfn_bfn = ( m * n * &
+                chebU(-1+m,yGrid_basis(j)) * chebU(-1+n,xGrid_basis(i)) ) &
+                / ( chebT(m,yGrid_basis(j))*chebT(n,xGrid_basis(i)))
+        else
+            drzBfn_bfn = - n * m 
+        endif
+
+        drzBfn_bfn = drzBfn_bfn * ( normFacX * normFacY )
+
+    end function drzBfn_bfn
 
 end module grid

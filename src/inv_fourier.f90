@@ -7,8 +7,11 @@ contains
     subroutine sftinv2d( a, f )
 
         use aorsa2din_mod, &
-        only: nPtsX, nPtsY, nModesX, nModesY
-        use grid
+        only: nPtsX, nPtsY
+        use grid, &
+        only: nMin, nMax, mMin, mMax, &
+            xGrid_basis, yGrid_basis, &
+            xBasis, yBasis
  
         implicit none
         

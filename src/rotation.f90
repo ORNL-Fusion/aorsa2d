@@ -357,7 +357,66 @@ contains
            enddo
         enddo
 
+        !drUrr =0 
+        !drUrt =0 
+        !drUrz =0 
 
-    end sUbroUtine deriv_rotation
+        !drUtr =0 
+        !drUtt =0 
+        !drUtz =0 
 
-end modUle rotation
+        !drUzr =0 
+        !drUzt =0 
+        !drUzz =0 
+
+        !drUrr =0 
+        !drUrt =0 
+        !drUrz =0 
+
+        !drUtr =0 
+        !drUtt =0 
+        !drUtz =0 
+
+        !drUzr =0 
+        !drUzt =0 
+        !drUzz =0 
+
+        !drrUrr=0 
+        !drrUrt=0
+        !drrUrz=0
+
+        !drrUtr=0
+        !drrUtt=0
+        !drrUtz=0
+
+        !drrUzr=0
+        !drrUzt=0
+        !drrUzz=0
+
+        !drrUrr=0
+        !drrUrt=0
+        !drrUrz=0
+
+        !drrUtr=0
+        !drrUtt=0
+        !drrUtz=0
+
+        !drrUzr=0
+        !drrUzt=0
+        !drrUzz=0
+
+        !drzUrr=0 
+        !drzUrt=0
+        !drzUrz=0
+
+        !drzUtr=0
+        !drzUtt=0
+        !drzUtz=0
+
+        !drzUzr=0
+        !drzUzt=0
+        !drzUzz=0
+
+    end subroutine deriv_rotation
+
+end module rotation
