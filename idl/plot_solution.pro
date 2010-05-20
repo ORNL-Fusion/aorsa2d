@@ -137,24 +137,28 @@ pro plot_solution, oneD = oneD
 	; basis vectors
 	; ---------------------------------------------------
 
-	ealpha_	= complexArr ( nX, nY )
-	ebeta_	= complexArr ( nX, nY )
-	eb_	= complexArr ( nX, nY )
+	ealphak_	= ealphak * 0
+	ebetak_	= ebetak * 0
+	ebk_	= ebk * 0
 
-    for i = 0, nX-1 do begin
-    	for j = 0, nY-1 do begin
-       		for n = nN/6, nN-nN/6-1 do begin
-            	for m = nM/4, nM-nM/4-1 do begin
+	for n = nN/6, nN-nN/6-1 do begin
+       	for m = nM/6, nM-nM/6-1 do begin
 
-                      cexpkxky = xx(n, i) * yy(m, j)
-                      ealpha_(i,j) = ealpha_(i,j) + ealphak(n,m) * cexpkxky
-                      ebeta_(i,j) = ebeta_(i,j) + ebetak(n,m) * cexpkxky
-                      eb_(i,j) = eb_(i,j) + ebk(n,m) * cexpkxky
+         ealphak_(n,m) = ealphak(n,m) 
+         ebetak_(n,m) = ebetak(n,m) 
+         ebk_(n,m) = ebk(n,m) 
 
-            	endfor
-       	 	endfor
-    	endfor
-  	endfor
+       	endfor
+    endfor
+
+	; While this is not entirely correct due to the 
+	; missing symmetry in the number of left/right or
+	; up/down basis functions (due to requiring a square
+	; matrix) but it's close enough
+
+	ealpha_	= fft ( ealphak_, /inv, /center )
+	ebeta_	= fft ( ebetak_, /inv, /center )
+	eb_	= fft ( ebk_, /inv, /center )
 
  	scale = max ( abs ( [ealpha_[*],ebeta_[*],eb_[*]] ) ) 
 	scalePrl = max ( abs(abs ( [eb_[*]] )) ) 
@@ -165,6 +169,42 @@ pro plot_solution, oneD = oneD
 	contour_field, ealpha_,x,y, nLevs, scale, id = redPID, view = 1
 	contour_field, ebeta_, x, y, nLevs, scale, id = redPID, view = 2
 	contour_field, eb_, x, y, nLevs, scalePrl, id = redPID, view = 3
+
+	; Old slow version of reconstruction 
+
+	ealpha2_	= complexArr ( nX, nY )
+	ebeta2_	= complexArr ( nX, nY )
+	eb2_	= complexArr ( nX, nY )
+
+	ealpha2_[*,*]	= 0 
+	ebeta2_[*,*]	= 0 
+	eb2_[*,*]		= 0 
+
+    for i = 0, nX-1 do begin
+    	for j = 0, nY-1 do begin
+       		for n = 0, nN-1 do begin
+            	for m = 0, nM-1 do begin
+
+                      cexpkxky = xx(n, i) * yy(m, j)
+                      ealpha2_(i,j) = ealpha2_(i,j) + ealphak(n,m) * cexpkxky
+                      ebeta2_(i,j) = ebeta2_(i,j) + ebetak(n,m) * cexpkxky
+                      eb2_(i,j) = eb2_(i,j) + ebk(n,m) * cexpkxky
+
+            	endfor
+       	 	endfor
+    	endfor
+  	endfor
+
+ 	scale = max ( abs ( [ealpha2_[*],ebeta2_[*],eb2_[*]] ) ) * 0.1
+	scalePrl = max ( abs(abs ( [eb2_[*]] )) ) 
+
+	redPID = 5
+	iContour, id = redPID, view_grid = [3,1], dimensions = [1200,300]
+
+	contour_field, ealpha2_,x,y, nLevs, scale, id = redPID, view = 1
+	contour_field, ebeta2_, x, y, nLevs, scale, id = redPID, view = 2
+	contour_field, eb2_, x, y, nLevs, scalePrl, id = redPID, view = 3
+
 
 stop
 end
