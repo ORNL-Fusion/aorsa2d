@@ -168,8 +168,8 @@ contains
 
         rho = maxVal(rho)-rho
 
-        bxn = -dlg_pDeriv ( rho, 2, dy )
-        byn = dlg_pDeriv ( rho, 1, dx )
+        bxn = -dlg_pDeriv ( capR, y, rho, 2 )
+        byn = dlg_pDeriv ( capR, y, rho, 1 )
 
         reScaleFac   = maxVal ( sqrt ( bxn**2 + byn**2 ) )
 

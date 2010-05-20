@@ -10,7 +10,7 @@ implicit none
 !   init_grid
 real, allocatable, dimension(:) :: capR, xkphi
 real, allocatable, dimension(:) :: y, xGrid_basis, yGrid_basis
-real :: dx, dy, xRange, yRange, normFacX, normFacY
+real :: xRange, yRange, normFacX, normFacY
 
 !   init_k
 !real, allocatable, dimension(:) :: kxsav, kysav
@@ -42,7 +42,7 @@ contains
       
             if(nPtsX>1) then 
                 xRange  = rwRight - rwLeft
-                dx = xRange / (nPtsX-1)
+                !dx = xRange / (nPtsX-1)
                 do i = 1, nPtsX
      
                     if(chebyshev) then
@@ -83,7 +83,7 @@ contains
             if(nPtsY>1) then 
 
                 yRange  = yTop - yBot
-                dy = yRange / (nPtsY-1)
+                !dy = yRange / (nPtsY-1)
                 do j = 1, nPtsY
 
                     if(chebyshev) then

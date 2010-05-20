@@ -1,13 +1,14 @@
 module dlg
 
 contains
-    function dlg_pDeriv ( array, dir, dS ) result ( dArray )
+    function dlg_pDeriv ( x, y, array, dir ) result ( dArray )
         implicit none
         
         real, dimension (:,:), allocatable :: dArray
         integer :: nX, nY, i, j
         integer, intent(IN) :: dir
-        real, intent(IN) :: array (:,:), dS
+        real, intent(IN) :: array (:,:), x(:), y(:)
+        real :: dS
 
         nX  = size ( array, 1 )
         nY  = size ( array, 2 )
@@ -20,48 +21,70 @@ contains
             do i=1,nX
                 do j=1,nY
 
-                    if ( j > 1 .AND. j < nY ) &
+                    if ( j > 1 .AND. j < nY ) then
+
+                        dS = ((y(j+1)-y(j)) + (y(j)-y(j-1))) / 2.0
+
                         dArray(i,j) = 1.0 / ( 2.0 * dS ) * &
                             ( array(i,j+1) - array(i,j-1) )
 
-                    if ( j == 1 ) &
+                    elseif ( j == 1 ) then
+
+                        dS = ((y(j+1)-y(j)) + (y(j+2)-y(j+1))) / 2.0
+
                         dArray(i,j) = 1.0 / ( 2.0 * dS ) * &
                             ( &
                             -3.0 * array(i,j) + 4.0 * array(i,j+1) &
                             - array(i,j+2) )
 
-                    if ( j == nY ) &
+                    elseif ( j == nY ) then
+
+                        dS = ((y(j-1)-y(j-2)) + (y(j)-y(j-1))) / 2.0
+
                         dArray(i,j) = 1.0 / ( 2.0 * dS ) * &
                             ( &
                             3.0 * array(i,j) - 4.0 * array(i,j-1) &
                             + array(i,j-2) )
 
-                end do
-            end do
+                    endif
+
+                enddo
+            enddo
        
-        else if ( dir == 1 ) then
+        elseif ( dir == 1 ) then
             
             do i=1,nX
                 do j=1,nY
 
-                    if ( i > 1 .AND. i < nX ) &
+                    if ( i > 1 .AND. i < nX ) then
+
+                        dS = ((x(i+1)-x(i)) + (x(i)-x(i-1))) / 2.0
+
                         dArray(i,j) = 1.0 / ( 2.0 * dS ) * &
                             ( array(i+1,j) - array(i-1,j) )
 
-                    if ( i == 1 ) &
+                    elseif ( i == 1 ) then
+
+                        dS = ((x(i+1)-x(i)) + (x(i+2)-x(i+1))) / 2.0
+
                         dArray(i,j) = 1.0 / ( 2.0 * dS ) * &
                             ( &
                             -3.0 * array(i,j) + 4.0 * array(i+1,j) &
                             - array(i+2,j) )
 
-                    if ( i == nX ) &
+                    elseif ( i == nX ) then
+
+                        dS = ((x(i-1)-x(i-2)) + (x(i)-x(i-1))) / 2.0
+
                         dArray(i,j) = 1.0 / ( 2.0 * dS ) * &
                             ( &
                             3.0 * array(i,j) - 4.0 * array(i-1,j) &
                             + array(i-1,j) )
 
-                end do
-            end do
+                    endif
+
+                enddo
+            enddo
        
         end if 
         

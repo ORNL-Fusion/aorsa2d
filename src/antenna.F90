@@ -60,8 +60,7 @@ contains
             do j = 1, nPtsY
 
                 xjx(i,j) = 0.0
-                xjy(i,j) = 1.0 / dx &
-                    * exp ( &
+                xjy(i,j) = exp ( &
                     -( (capR(i)-rAnt)**2/antSigX**2 + (y(j)-zAnt)**2/antSigY**2 ) &
                           )
                 xjz(i,j) = 0.0

@@ -93,8 +93,8 @@ contains
         allocate ( bR ( nw, nh ), bz__ ( nw, nh ), &
             bPhi ( nw, nh ), bMag__(nw,nh) )
 
-        bR  = dlg_pDeriv ( psizr, 2, zStep )
-        bz__  = -1.0 * dlg_pDeriv ( psizr, 1, rStep )
+        bR  = dlg_pDeriv ( r, z, psizr, 2 )
+        bz__  = -1.0 * dlg_pDeriv ( r, z, psizr, 1 )
 
         !   Remember psi = - R * A
 
