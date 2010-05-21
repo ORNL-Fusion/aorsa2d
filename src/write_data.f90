@@ -16,6 +16,7 @@ contains
         only: capR, y, xx, yy
         use profiles
         use constants
+        use rotation
 
         implicit none
 
@@ -29,6 +30,18 @@ contains
             jy_re_id, jy_im_id, kx_id, ky_id, &
             dens_id, temp_id
         integer :: xx_re_id, yy_re_id, xx_im_id, yy_im_id
+
+        integer :: drUrr_id, drUrt_id, drUrz_id
+        integer :: drUtr_id, drUtt_id, drUtz_id
+        integer :: drUzr_id, drUzt_id, drUzz_id
+
+        integer :: dzUrr_id, dzUrt_id, dzUrz_id
+        integer :: dzUtr_id, dzUtt_id, dzUtz_id
+        integer :: dzUzr_id, dzUzt_id, dzUzz_id
+
+        integer :: Urr_id, Urt_id, Urz_id, &
+            Utr_id, Utt_id, Utz_id, &
+            Uzr_id, Uzt_id, Uzz_id
 
         call check ( nf90_create ( fName, nf90_clobber, nc_id ) )
         call check ( nf90_def_dim ( nc_id, "nPtsX", nPtsX, nX_id ) )
@@ -74,6 +87,42 @@ contains
         nc_stat = nf90_def_var ( nc_id, "densitySpec", NF90_REAL, (/nX_id,nY_id,nSpec_id/), dens_id ) 
         nc_stat = nf90_def_var ( nc_id, "tempSpec", NF90_REAL, (/nX_id,nY_id,nSpec_id/), temp_id ) 
 
+        nc_stat = nf90_def_var ( nc_id, "drUrr", NF90_REAL, (/nX_id,nY_id/), drUrr_id ) 
+        nc_stat = nf90_def_var ( nc_id, "drUrt", NF90_REAL, (/nX_id,nY_id/), drUrt_id ) 
+        nc_stat = nf90_def_var ( nc_id, "drUrz", NF90_REAL, (/nX_id,nY_id/), drUrz_id ) 
+
+        nc_stat = nf90_def_var ( nc_id, "drUtr", NF90_REAL, (/nX_id,nY_id/), drUtr_id ) 
+        nc_stat = nf90_def_var ( nc_id, "drUtt", NF90_REAL, (/nX_id,nY_id/), drUtt_id ) 
+        nc_stat = nf90_def_var ( nc_id, "drUtz", NF90_REAL, (/nX_id,nY_id/), drUtz_id ) 
+
+        nc_stat = nf90_def_var ( nc_id, "drUzr", NF90_REAL, (/nX_id,nY_id/), drUzr_id ) 
+        nc_stat = nf90_def_var ( nc_id, "drUzt", NF90_REAL, (/nX_id,nY_id/), drUzt_id ) 
+        nc_stat = nf90_def_var ( nc_id, "drUzz", NF90_REAL, (/nX_id,nY_id/), drUzz_id ) 
+
+        nc_stat = nf90_def_var ( nc_id, "dzUrr", NF90_REAL, (/nX_id,nY_id/), dzUrr_id ) 
+        nc_stat = nf90_def_var ( nc_id, "dzUrt", NF90_REAL, (/nX_id,nY_id/), dzUrt_id ) 
+        nc_stat = nf90_def_var ( nc_id, "dzUrz", NF90_REAL, (/nX_id,nY_id/), dzUrz_id ) 
+
+        nc_stat = nf90_def_var ( nc_id, "dzUtr", NF90_REAL, (/nX_id,nY_id/), dzUtr_id ) 
+        nc_stat = nf90_def_var ( nc_id, "dzUtt", NF90_REAL, (/nX_id,nY_id/), dzUtt_id ) 
+        nc_stat = nf90_def_var ( nc_id, "dzUtz", NF90_REAL, (/nX_id,nY_id/), dzUtz_id ) 
+
+        nc_stat = nf90_def_var ( nc_id, "dzUzr", NF90_REAL, (/nX_id,nY_id/), dzUzr_id ) 
+        nc_stat = nf90_def_var ( nc_id, "dzUzt", NF90_REAL, (/nX_id,nY_id/), dzUzt_id ) 
+        nc_stat = nf90_def_var ( nc_id, "dzUzz", NF90_REAL, (/nX_id,nY_id/), dzUzz_id ) 
+
+        nc_stat = nf90_def_var ( nc_id, "Urr", NF90_REAL, (/nX_id,nY_id/), Urr_id ) 
+        nc_stat = nf90_def_var ( nc_id, "Urt", NF90_REAL, (/nX_id,nY_id/), Urt_id ) 
+        nc_stat = nf90_def_var ( nc_id, "Urz", NF90_REAL, (/nX_id,nY_id/), Urz_id ) 
+        
+        nc_stat = nf90_def_var ( nc_id, "Utr", NF90_REAL, (/nX_id,nY_id/), Utr_id ) 
+        nc_stat = nf90_def_var ( nc_id, "Utt", NF90_REAL, (/nX_id,nY_id/), Utt_id ) 
+        nc_stat = nf90_def_var ( nc_id, "Utz", NF90_REAL, (/nX_id,nY_id/), Utz_id ) 
+
+        nc_stat = nf90_def_var ( nc_id, "Uzr", NF90_REAL, (/nX_id,nY_id/), Uzr_id ) 
+        nc_stat = nf90_def_var ( nc_id, "Uzt", NF90_REAL, (/nX_id,nY_id/), Uzt_id ) 
+        nc_stat = nf90_def_var ( nc_id, "Uzz", NF90_REAL, (/nX_id,nY_id/), Uzz_id ) 
+
         call check ( nf90_enddef ( nc_id ) )
         
         call check ( nf90_put_var ( nc_id, x_id, capR ) )
@@ -95,6 +144,41 @@ contains
         call check ( nf90_put_var ( nc_id, xx_im_id, aimag ( xx ) ) )
         call check ( nf90_put_var ( nc_id, yy_im_id, aimag ( yy ) ) )
 
+        call check ( nf90_put_var ( nc_id, drUrr_id, drUrr ) )
+        call check ( nf90_put_var ( nc_id, drUrt_id, drUrt ) )
+        call check ( nf90_put_var ( nc_id, drUrz_id, drUrz ) )
+
+        call check ( nf90_put_var ( nc_id, drUtr_id, drUtr ) )
+        call check ( nf90_put_var ( nc_id, drUtt_id, drUtt ) )
+        call check ( nf90_put_var ( nc_id, drUtz_id, drUtz ) )
+
+        call check ( nf90_put_var ( nc_id, drUzr_id, drUzr ) )
+        call check ( nf90_put_var ( nc_id, drUzt_id, drUzt ) )
+        call check ( nf90_put_var ( nc_id, drUzz_id, drUzz ) )
+
+        call check ( nf90_put_var ( nc_id, dzUrr_id, dzUrr ) )
+        call check ( nf90_put_var ( nc_id, dzUrt_id, dzUrt ) )
+        call check ( nf90_put_var ( nc_id, dzUrz_id, dzUrz ) )
+
+        call check ( nf90_put_var ( nc_id, dzUtr_id, dzUtr ) )
+        call check ( nf90_put_var ( nc_id, dzUtt_id, dzUtt ) )
+        call check ( nf90_put_var ( nc_id, dzUtz_id, dzUtz ) )
+
+        call check ( nf90_put_var ( nc_id, dzUzr_id, dzUzr ) )
+        call check ( nf90_put_var ( nc_id, dzUzt_id, dzUzt ) )
+        call check ( nf90_put_var ( nc_id, dzUzz_id, dzUzz ) )
+
+        call check ( nf90_put_var ( nc_id, Urr_id, Urr_ ) )
+        call check ( nf90_put_var ( nc_id, Urt_id, Urt_ ) )
+        call check ( nf90_put_var ( nc_id, Urz_id, Urz_ ) )
+
+        call check ( nf90_put_var ( nc_id, Utr_id, Utr_ ) )
+        call check ( nf90_put_var ( nc_id, Utt_id, Utt_ ) )
+        call check ( nf90_put_var ( nc_id, Utz_id, Utz_ ) )
+
+        call check ( nf90_put_var ( nc_id, Uzr_id, Uzr_ ) )
+        call check ( nf90_put_var ( nc_id, Uzt_id, Uzt_ ) )
+        call check ( nf90_put_var ( nc_id, Uzz_id, Uzz_ ) )
 
         call check ( nf90_close ( nc_id ) )
 

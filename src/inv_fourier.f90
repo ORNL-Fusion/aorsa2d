@@ -7,7 +7,7 @@ contains
     subroutine sftinv2d( a, f )
 
         use aorsa2din_mod, &
-        only: nPtsX, nPtsY
+        only: nPtsX, nPtsY, chebyshev
         use grid, &
         only: nMin, nMax, mMin, mMax, &
             xGrid_basis, yGrid_basis, &
@@ -21,16 +21,29 @@ contains
 
         complex :: bFn
         integer :: i, j, n, m
+        integer :: nS, nF, mS, mF
 
         if (.not. allocated ( f ) ) allocate ( f(nPtsX,nPtsY) )
 
         f = 0
 
+        if(chebyshev)then
+            nS = nMin
+            nF = nMax
+            mS = mMin
+            mF = mMax
+        else
+            nS = nMin*2/3
+            nF = nMax*2/3
+            mS = mMin*2/3
+            mF = mMax*2/3
+        endif
+
         do i = 1, nPtsX
             do j = 1, nPtsY
         
-                do n = nMin, nMax
-                    do m = mMin, mMax
+                do n = nS, nF
+                    do m = mS, mF
 
                       bFn = xBasis(n,xGrid_basis(i)) * yBasis(m,yGrid_basis(j))
 

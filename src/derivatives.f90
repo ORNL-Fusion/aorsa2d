@@ -4,7 +4,6 @@ implicit none
 
 contains
 
-
     subroutine deriv_x ( x, f, i, j, dfdx, d2fdx2 )
     
         implicit none
@@ -55,9 +54,7 @@ contains
     
     end subroutine deriv_x
 
-!
-!***************************************************************************
-!
+    
     subroutine deriv_y ( y, f, i, j, dfdy, d2fdy2 )
 
         implicit none
@@ -104,9 +101,7 @@ contains
 
       end subroutine deriv_y
 
-!
-!***************************************************************************
-!
+
       subroutine deriv_xy ( x, y, f, i, j, d2fdxy)
 
       implicit none
@@ -140,7 +135,5 @@ contains
 
 
       end subroutine deriv_xy
-
-
 
 end module derivatives

@@ -16,6 +16,43 @@ pro plot_rundata
 		nCdf_varGet, cdfId, 'xx_im', xx_im
 		nCdf_varGet, cdfId, 'yy_re', yy_re 
 		nCdf_varGet, cdfId, 'yy_im', yy_im
+
+		nCdf_varGet, cdfId, 'drUrr', drUrr
+		nCdf_varGet, cdfId, 'drUrt', drUrt
+		nCdf_varGet, cdfId, 'drUrz', drUrz
+
+		nCdf_varGet, cdfId, 'drUtr', drUtr
+		nCdf_varGet, cdfId, 'drUtt', drUtt
+		nCdf_varGet, cdfId, 'drUtz', drUtz
+
+		nCdf_varGet, cdfId, 'drUzr', drUzr
+		nCdf_varGet, cdfId, 'drUzt', drUzt
+		nCdf_varGet, cdfId, 'drUzz', drUzz
+
+		nCdf_varGet, cdfId, 'dzUrr', dzUrr
+		nCdf_varGet, cdfId, 'dzUrt', dzUrt
+		nCdf_varGet, cdfId, 'dzUrz', dzUrz
+
+		nCdf_varGet, cdfId, 'dzUtr', dzUtr
+		nCdf_varGet, cdfId, 'dzUtt', dzUtt
+		nCdf_varGet, cdfId, 'dzUtz', dzUtz
+
+		nCdf_varGet, cdfId, 'dzUzr', dzUzr
+		nCdf_varGet, cdfId, 'dzUzt', dzUzt
+		nCdf_varGet, cdfId, 'dzUzz', dzUzz
+
+		nCdf_varGet, cdfId, 'Urr', Urr
+		nCdf_varGet, cdfId, 'Urt', Urt
+		nCdf_varGet, cdfId, 'Urz', Urz
+
+		nCdf_varGet, cdfId, 'Utr', Utr
+		nCdf_varGet, cdfId, 'Utt', Utt
+		nCdf_varGet, cdfId, 'Utz', Utz
+
+		nCdf_varGet, cdfId, 'Uzr', Uzr
+		nCdf_varGet, cdfId, 'Uzt', Uzt
+		nCdf_varGet, cdfId, 'Uzz', Uzz
+
 	ncdf_close, cdfId
 
 	xx	= complex ( xx_re, xx_im )
