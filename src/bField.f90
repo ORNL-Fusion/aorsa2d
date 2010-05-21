@@ -77,7 +77,7 @@ contains
 
         use aorsa2din_mod, &
         only: nPtsX, nPtsY, r0, b0, &
-            bx_frac, by_frac
+            bx_frac, by_frac, noPoloidalField
         use grid
 
         implicit none
@@ -110,11 +110,22 @@ contains
                 brn_(i,j) = bthn_(i,j) * br_frac
                 bzn_(i,j) = bthn_(i,j) * bz_frac 
  
-                bMod(i,j) = sqrt ( bxn(i,j)**2 + byn(i,j)**2 + bzn(i,j)**2 )
 
             enddo
         enddo
 
+        if ( noPoloidalField ) then 
+
+            bxn = 0
+            byn = 0
+
+            brn_   = 0
+            bzn_   = 0
+
+        endif
+
+        bMod = sqrt ( bxn**2 + byn**2 + bzn**2 )
+        
         bxn = bxn / bMod
         byn = byn / bMod
         bzn = bzn / bMod

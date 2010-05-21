@@ -14,18 +14,18 @@ real, allocatable, dimension(:,:,:,:) :: U_xyz, U_cyl
 
 real :: sinTh
 real, allocatable, dimension(:,:) :: gradPrlB
-real, allocatable, dimension(:,:) :: &
-    dxUxx, dxxUxx, dxUxy, dxxUxy, dxUxz, dxxUxz, &
-    dxUyx, dxxUyx, dxUyy, dxxUyy, dxUyz, dxxUyz, &
-    dxUzx, dxxUzx, dxUzy, dxxUzy, dxUzz, dxxUzz
-real, allocatable, dimension(:,:) :: &
-    dyUxx, dyyUxx, dyUxy, dyyUxy, dyUxz, dyyUxz, &
-    dyUyx, dyyUyx, dyUyy, dyyUyy, dyUyz, dyyUyz, &
-    dyUzx, dyyUzx, dyUzy, dyyUzy, dyUzz, dyyUzz
-real, allocatable, dimension(:,:) :: &
-        dxyUxx, dxyUxy, dxyUxz, &
-        dxyUyx, dxyUyy, dxyUyz, &
-        dxyUzx, dxyUzy, dxyUzz
+!real, allocatable, dimension(:,:) :: &
+!    dxUxx, dxxUxx, dxUxy, dxxUxy, dxUxz, dxxUxz, &
+!    dxUyx, dxxUyx, dxUyy, dxxUyy, dxUyz, dxxUyz, &
+!    dxUzx, dxxUzx, dxUzy, dxxUzy, dxUzz, dxxUzz
+!real, allocatable, dimension(:,:) :: &
+!    dyUxx, dyyUxx, dyUxy, dyyUxy, dyUxz, dyyUxz, &
+!    dyUyx, dyyUyx, dyUyy, dyyUyy, dyUyz, dyyUyz, &
+!    dyUzx, dyyUzx, dyUzy, dyyUzy, dyUzz, dyyUzz
+!real, allocatable, dimension(:,:) :: &
+!        dxyUxx, dxyUxy, dxyUxz, &
+!        dxyUyx, dxyUyy, dxyUyz, &
+!        dxyUzx, dxyUzy, dxyUzz
 
 ! dr first derivatives
 real, allocatable, dimension(:,:) :: &

@@ -235,14 +235,14 @@ contains
 
                             !rnx = kxsav(n) / k0
                             !rny = kysav(m) / k0
-                            !rnPhi = xkphi(i) / k0
+                            !rnPhi = kPhi(i) / k0
 
                             !kz  = kysav(m)  
                             !kr  = kxsav(n) 
 
                             z   = y(j)
                             r   = capR(i)
-                            kt  = nPhi / r
+                            kt  = kPhi(i)
 
         ! Matrix elements. See mathematica worksheet for calculation of 
         ! these. They are for a general basis set.

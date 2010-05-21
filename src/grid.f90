@@ -8,7 +8,7 @@ only: chebyshev
 implicit none
 
 !   init_grid
-real, allocatable, dimension(:) :: capR, xkphi
+real, allocatable, dimension(:) :: capR, kPhi
 real, allocatable, dimension(:) :: y, xGrid_basis, yGrid_basis
 real :: xRange, yRange, normFacX, normFacY
 
@@ -37,7 +37,7 @@ contains
         
             allocate ( &
                 capR ( nPtsX ), &
-                xkphi ( nPtsX ), &
+                kPhi ( nPtsX ), &
                 xGrid_basis(nPtsX) )
       
             if(nPtsX>1) then 
@@ -65,7 +65,7 @@ contains
             capR = (xGrid_basis-xGrid_basis(1)) &
                 / (xGrid_basis(nPtsX)-xGrid_basis(1)) * xRange + rwLeft
 
-            xkphi = nPhi / capR
+            kPhi = nPhi / capR
 
             if(chebyshev)then
                 normFacX = 2 / xRange

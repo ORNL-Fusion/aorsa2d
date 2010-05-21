@@ -27,7 +27,7 @@ SCALAPACK = ${HOME}/code/scalapack/scalapack_gnu64/libscalapack.a
 PAPI_INC = -I/usr/include 
 PAPI = -lpapi
 CUDA_DIR = ${HOME}/code/cuda/3.0/cuda
-CUDA = -L ${CUDA_DIR}/lib64 -lcublas -lcudart
+CUDA = -L ${CUDA_DIR}/lib64 -lcublas -lcudart -lcuda -L /usr/lib64
 MAGMA_DIR = ${HOME}/code/magma/magma_0.2
 MAGMA = -L ${MAGMA_DIR}/lib -lmagma -lmagmablas ${MAGMA_DIR}/lib/libmagma_64.a
 
@@ -107,7 +107,7 @@ endif
 ifeq (${MODE},"parallel")
 	LIBS = ${SCALAPACK} ${BLACS} ${BLAS} ${LAPACK} ${NETCDF} ${PAPI}
 else
-	LIBS = ${BLAS} ${LAPACK} ${NETCDF} ${PAPI} ${CUDA} ${MAGMA} -lstdc++
+	LIBS = ${LAPACK} ${NETCDF} ${PAPI} ${MAGMA} ${CUDA} -lstdc++ ${BLAS} 
 endif
 INC_DIR = ${PAPI_INC}
 

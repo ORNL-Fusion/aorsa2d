@@ -25,6 +25,8 @@ contains
 
         implicit none
 
+        include "f90papi.h"
+
         integer :: info, nRow, nCol
         integer, allocatable, dimension(:) :: ipiv
 
@@ -40,7 +42,7 @@ contains
         complex(kind=dbl), allocatable :: work(:)
 #endif
         integer, allocatable, dimension(:) :: jpvt
-        
+
         ! Cuda
         integer :: k1, k2, cublasStatus, dA_dim, devPtr_dA, nb
         integer, external :: magma_get_zgetrf_nb
@@ -58,20 +60,27 @@ contains
 #ifndef dblprec
             call cgesv ( nRow, 1, aMat, nRow, ipiv, brhs, nRow, info )
 #else            
+            !call zgetrf ( nRow, nRow, aMat, nRow, ipiv, info )
+            !call zgetrs ( 'No transpose', nRow, 1, aMat, nRow, ipiv, brhs, nRow, info )
             call zgesv ( nRow, 1, aMat, nRow, ipiv, brhs, nRow, info )
 
-            !! MAGMA Cuda solve
-            !! ----------------
+            ! MAGMA Cuda solve
+            ! ----------------
 
             !nb  = magma_get_zgetrf_nb (nRow)
-            !k1  = 32 - mod ( maxVal ( (/nRow,1/) ), 32 )
-            !k2  = 32 - mod ( nRow, 32 ) 
-            !dA_dim = (maxVal( (/nRow,1/) ) + k1 )**2 &
+            !k1  = mod ( maxVal ( (/nRow,nCol/) ), 32 )
+            !k2  = mod ( nCol, 32 ) 
+            !dA_dim = (maxVal( (/nRow,nCol/) ) + k1 )**2 &
             !    + ( nRow + k2 ) * nb + 2 * nb**2
-            !allocate ( work(1 * nb) )
+            !allocate ( work(nRow * nb) )
+            !work = 0
             !call cublas_init_ ()
-            !cublasStatus = cublas_alloc_ ( dA_dim, sizeOfDbl, devPtr_dA ) 
-            !call magma_zgetrf ( nRow, 1, aMat, nRow, ipiv, work, devPtr_dA, info ) 
+            !cublasStatus = cublas_alloc_ ( dA_dim, dbl, devPtr_dA ) 
+            !call magma_zgetrf ( nRow, nCol, aMat, nRow, ipiv, work, devPtr_dA, info ) 
+            !call cublas_shutdown_ ()
+            !write(*,*) 'MAGMA zgetrf status: ', info
+            !call zgetrs_ ( 'No transpose', nRow, 1, aMat, nRow, ipiv, brhs, nRow, info )
+
 #endif
 
         else
