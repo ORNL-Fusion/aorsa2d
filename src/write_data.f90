@@ -28,7 +28,7 @@ contains
             x_id, y_id, &
             bx_id, by_id, bz_id, bmod_id, &
             jy_re_id, jy_im_id, kx_id, ky_id, &
-            dens_id, temp_id
+            dens_id, temp_id, omgc_id, omgp2_id
         integer :: xx_re_id, yy_re_id, xx_im_id, yy_im_id
 
         integer :: drUrr_id, drUrt_id, drUrz_id
@@ -86,6 +86,8 @@ contains
 
         nc_stat = nf90_def_var ( nc_id, "densitySpec", NF90_REAL, (/nX_id,nY_id,nSpec_id/), dens_id ) 
         nc_stat = nf90_def_var ( nc_id, "tempSpec", NF90_REAL, (/nX_id,nY_id,nSpec_id/), temp_id ) 
+        nc_stat = nf90_def_var ( nc_id, "omgc", NF90_REAL, (/nX_id,nY_id,nSpec_id/), omgc_id ) 
+        nc_stat = nf90_def_var ( nc_id, "omgp2", NF90_REAL, (/nX_id,nY_id,nSpec_id/), omgp2_id ) 
 
         nc_stat = nf90_def_var ( nc_id, "drUrr", NF90_REAL, (/nX_id,nY_id/), drUrr_id ) 
         nc_stat = nf90_def_var ( nc_id, "drUrt", NF90_REAL, (/nX_id,nY_id/), drUrt_id ) 
@@ -138,6 +140,8 @@ contains
         !call check ( nf90_put_var ( nc_id, ky_id, kysav ) )
         nc_stat = nf90_put_var ( nc_id, dens_id, densitySpec )
         nc_stat = nf90_put_var ( nc_id, temp_id, ktSpec / q )
+        nc_stat = nf90_put_var ( nc_id, omgc_id, omgc )
+        nc_stat = nf90_put_var ( nc_id, omgp2_id, omgp2 )
 
         call check ( nf90_put_var ( nc_id, xx_re_id, real ( xx ) ) )
         call check ( nf90_put_var ( nc_id, yy_re_id, real ( yy ) ) )

@@ -252,95 +252,99 @@ contains
         ! the boundary conds are periodic.
         ! -------------------------------------------------------------
 
-        if(i/=1 .and. i/=nPtsX .and. j/=1 .and. j/=nPtsY) then
+        if(  (i/=1 .and. i/=nPtsX .and. j/=1 .and. j/=nPtsY) &
+        .or. (nPtsY==1 .and. i/=1 .and. i/=nPtsX) &
+        .or. (nPtsX==1 .and. j/=1 .and. j/=nPtsY) ) then
 
-        mat_r_alp = (-((kt**2*Urr_(i,j))/r**2) + k0**2*KAlpAlp*Urr_(i,j) - (zi*kt*Urt_(i,j))/r**2 + &
+       mat_r_alp = (-((kt**2*Urr_(i,j))/r**2) + k0**2*KAlpAlp*Urr_(i,j) - (zi*kt*Urt_(i,j))/r**2 + &
           k0**2*KBetAlp*Utr_(i,j) + k0**2*KPrlAlp*Uzr_(i,j) + &
-          (2*dzbfn_bfn(i,j,n,m)*dzUrr(i,j)) + &
-          (Urr_(i,j)*dzzbfn_bfn(i,j,n,m)) + dzzUrr(i,j) - &
-          (zi*kt*Urt_(i,j)*drbfn_bfn(i,j,n,m))/(r) - &
-          (dzUrz(i,j)*drbfn_bfn(i,j,n,m)) - &
+          (2*dzBfn_bfn(i,j,n,m)*dzUrr(i,j)) + &
+          (Urr_(i,j)*dzzBfn_bfn(i,j,n,m)) + dzzUrr(i,j) - &
+          (zi*kt*Urt_(i,j)*drBfn_bfn(i,j,n,m))/r - &
+          (dzUrz(i,j)*drBfn_bfn(i,j,n,m)) - &
           (zi*kt*drUrt(i,j))/r - &
-          (dzbfn_bfn(i,j,n,m)*drUrz(i,j)) - &
-          (Urz_(i,j)*drzbfn_bfn(i,j,n,m)) - drzUrz(i,j)) 
+          (dzBfn_bfn(i,j,n,m)*drUrz(i,j)) - &
+          (Urz_(i,j)*drzBfn_bfn(i,j,n,m)) - drzUrz(i,j))
 
        mat_r_bet = (k0**2*KAlpBet*Urr_(i,j) - (kt**2*Utr_(i,j))/r**2 + k0**2*KBetBet*Utr_(i,j) - &
           (zi*kt*Utt_(i,j))/r**2 + k0**2*KPrlBet*Uzr_(i,j) + &
-          (2*dzbfn_bfn(i,j,n,m)*dzUtr(i,j)) + &
-          (Utr_(i,j)*dzzbfn_bfn(i,j,n,m)) + dzzUtr(i,j) - &
-          (zi*kt*Utt_(i,j)*drbfn_bfn(i,j,n,m))/(r) - &
-          (dzUtz(i,j)*drbfn_bfn(i,j,n,m)) - &
+          (2*dzBfn_bfn(i,j,n,m)*dzUtr(i,j)) + &
+          (Utr_(i,j)*dzzBfn_bfn(i,j,n,m)) + dzzUtr(i,j) - &
+          (zi*kt*Utt_(i,j)*drBfn_bfn(i,j,n,m))/r - &
+          (dzUtz(i,j)*drBfn_bfn(i,j,n,m)) - &
           (zi*kt*drUtt(i,j))/r - &
-          (dzbfn_bfn(i,j,n,m)*drUtz(i,j)) - &
-          (Utz_(i,j)*drzbfn_bfn(i,j,n,m)) - drzUtz(i,j)) 
+          (dzBfn_bfn(i,j,n,m)*drUtz(i,j)) - &
+          (Utz_(i,j)*drzBfn_bfn(i,j,n,m)) - drzUtz(i,j))
 
        mat_r_prl = (k0**2*KAlpPrl*Urr_(i,j) + k0**2*KBetPrl*Utr_(i,j) - (kt**2*Uzr_(i,j))/r**2 + &
           k0**2*KPrlPrl*Uzr_(i,j) - (zi*kt*Uzt_(i,j))/r**2 + &
-          (2*dzbfn_bfn(i,j,n,m)*dzUzr(i,j)) + &
-          (Uzr_(i,j)*dzzbfn_bfn(i,j,n,m)) + dzzUzr(i,j) - &
-          (zi*kt*Uzt_(i,j)*drbfn_bfn(i,j,n,m))/(r) - &
-          (dzUzz(i,j)*drbfn_bfn(i,j,n,m)) - &
+          (2*dzBfn_bfn(i,j,n,m)*dzUzr(i,j)) + &
+          (Uzr_(i,j)*dzzBfn_bfn(i,j,n,m)) + dzzUzr(i,j) - &
+          (zi*kt*Uzt_(i,j)*drBfn_bfn(i,j,n,m))/r - &
+          (dzUzz(i,j)*drBfn_bfn(i,j,n,m)) - &
           (zi*kt*drUzt(i,j))/r - &
-          (dzbfn_bfn(i,j,n,m)*drUzz(i,j)) - &
-          (Uzz_(i,j)*drzbfn_bfn(i,j,n,m)) - drzUzz(i,j))
+          (dzBfn_bfn(i,j,n,m)*drUzz(i,j)) - &
+          (Uzz_(i,j)*drzBfn_bfn(i,j,n,m)) - drzUzz(i,j))
 
-       mat_th_alp = ((zi*kt*Urr_(i,j))/r**2 - Urt_(i,j)/r**2 + k0**2*KAlpAlp*Urt_(i,j) + k0**2*KBetAlp*Utt_(i,j) + &
-          k0**2*KPrlAlp*Uzt_(i,j) - (zi*kt*Urz_(i,j)*dzbfn_bfn(i,j,n,m))/(r) + &
-          (2*dzbfn_bfn(i,j,n,m)*dzUrt(i,j)) - &
-          (zi*kt*dzUrz(i,j))/r + (Urt_(i,j)*dzzbfn_bfn(i,j,n,m)) + &
-          dzzUrt(i,j) - (zi*kt*Urr_(i,j)*drbfn_bfn(i,j,n,m))/(r) + &
-          (Urt_(i,j)*drbfn_bfn(i,j,n,m))/(r) - (zi*kt*drUrr(i,j))/r + &
-          drUrt(i,j)/r + (2*drbfn_bfn(i,j,n,m)*drUrt(i,j)) + &
-          (Urt_(i,j)*drrbfn_bfn(i,j,n,m)) + drrUrt(i,j))
+       mat_th_alp = ((zi*kt*Urr_(i,j))/r**2 - Urt_(i,j)/r**2 + k0**2*KAlpAlp*Urt_(i,j) + &
+          k0**2*KBetAlp*Utt_(i,j) + k0**2*KPrlAlp*Uzt_(i,j) - &
+          (zi*kt*Urz_(i,j)*dzBfn_bfn(i,j,n,m))/r + &
+          (2*dzBfn_bfn(i,j,n,m)*dzUrt(i,j)) - &
+          (zi*kt*dzUrz(i,j))/r + (Urt_(i,j)*dzzBfn_bfn(i,j,n,m)) + &
+          dzzUrt(i,j) - (zi*kt*Urr_(i,j)*drBfn_bfn(i,j,n,m))/r + &
+          (Urt_(i,j)*drBfn_bfn(i,j,n,m))/r - (zi*kt*drUrr(i,j))/r + &
+          drUrt(i,j)/r + (2*drBfn_bfn(i,j,n,m)*drUrt(i,j)) + &
+          (Urt_(i,j)*drrBfn_bfn(i,j,n,m)) + drrUrt(i,j))
 
-       mat_th_bet = (k0**2*KAlpBet*Urt_(i,j) + (zi*kt*Utr_(i,j))/r**2 - Utt_(i,j)/r**2 + k0**2*KBetBet*Utt_(i,j) + &
-          k0**2*KPrlBet*Uzt_(i,j) - (zi*kt*Utz_(i,j)*dzbfn_bfn(i,j,n,m))/(r) + &
-          (2*dzbfn_bfn(i,j,n,m)*dzUtt(i,j)) - &
-          (zi*kt*dzUtz(i,j))/r + (Utt_(i,j)*dzzbfn_bfn(i,j,n,m)) + &
-          dzzUtt(i,j) - (zi*kt*Utr_(i,j)*drbfn_bfn(i,j,n,m))/(r) + &
-          (Utt_(i,j)*drbfn_bfn(i,j,n,m))/(r) - (zi*kt*drUtr(i,j))/r + &
-          drUtt(i,j)/r + (2*drbfn_bfn(i,j,n,m)*drUtt(i,j)) + &
-          (Utt_(i,j)*drrbfn_bfn(i,j,n,m)) + drrUtt(i,j))
+       mat_th_bet = (k0**2*KAlpBet*Urt_(i,j) + (zi*kt*Utr_(i,j))/r**2 - Utt_(i,j)/r**2 + &
+          k0**2*KBetBet*Utt_(i,j) + k0**2*KPrlBet*Uzt_(i,j) - &
+          (zi*kt*Utz_(i,j)*dzBfn_bfn(i,j,n,m))/r + &
+          (2*dzBfn_bfn(i,j,n,m)*dzUtt(i,j)) - &
+          (zi*kt*dzUtz(i,j))/r + (Utt_(i,j)*dzzBfn_bfn(i,j,n,m)) + &
+          dzzUtt(i,j) - (zi*kt*Utr_(i,j)*drBfn_bfn(i,j,n,m))/r + &
+          (Utt_(i,j)*drBfn_bfn(i,j,n,m))/r - (zi*kt*drUtr(i,j))/r + &
+          drUtt(i,j)/r + (2*drBfn_bfn(i,j,n,m)*drUtt(i,j)) + &
+          (Utt_(i,j)*drrBfn_bfn(i,j,n,m)) + drrUtt(i,j))
 
-       mat_th_prl = (k0**2*KAlpPrl*Urt_(i,j) + k0**2*KBetPrl*Utt_(i,j) + (zi*kt*Uzr_(i,j))/r**2 - Uzt_(i,j)/r**2 + &
-          k0**2*KPrlPrl*Uzt_(i,j) - (zi*kt*Uzz_(i,j)*dzbfn_bfn(i,j,n,m))/(r) + &
-          (2*dzbfn_bfn(i,j,n,m)*dzUzt(i,j)) - &
-          (zi*kt*dzUzz(i,j))/r + (Uzt_(i,j)*dzzbfn_bfn(i,j,n,m)) + &
-          dzzUzt(i,j) - (zi*kt*Uzr_(i,j)*drbfn_bfn(i,j,n,m))/(r) + &
-          (Uzt_(i,j)*drbfn_bfn(i,j,n,m))/(r) - (zi*kt*drUzr(i,j))/r + &
-          drUzt(i,j)/r + (2*drbfn_bfn(i,j,n,m)*drUzt(i,j)) + &
-          (Uzt_(i,j)*drrbfn_bfn(i,j,n,m)) + drrUzt(i,j)) 
+       mat_th_prl = (k0**2*KAlpPrl*Urt_(i,j) + k0**2*KBetPrl*Utt_(i,j) + (zi*kt*Uzr_(i,j))/r**2 - &
+          Uzt_(i,j)/r**2 + k0**2*KPrlPrl*Uzt_(i,j) - &
+          (zi*kt*Uzz_(i,j)*dzBfn_bfn(i,j,n,m))/r + &
+          (2*dzBfn_bfn(i,j,n,m)*dzUzt(i,j)) - &
+          (zi*kt*dzUzz(i,j))/r + (Uzt_(i,j)*dzzBfn_bfn(i,j,n,m)) + &
+          dzzUzt(i,j) - (zi*kt*Uzr_(i,j)*drBfn_bfn(i,j,n,m))/r + &
+          (Uzt_(i,j)*drBfn_bfn(i,j,n,m))/r - (zi*kt*drUzr(i,j))/r + &
+          drUzt(i,j)/r + (2*drBfn_bfn(i,j,n,m)*drUzt(i,j)) + &
+          (Uzt_(i,j)*drrBfn_bfn(i,j,n,m)) + drrUzt(i,j))
 
-
-        mat_z_alp = (-((kt**2*Urz_(i,j))/r**2) + k0**2*KAlpAlp*Urz_(i,j) + k0**2*KBetAlp*Utz_(i,j) + &
-          k0**2*KPrlAlp*Uzz_(i,j) - (Urr_(i,j)*dzbfn_bfn(i,j,n,m))/(r) - &
-          (zi*kt*Urt_(i,j)*dzbfn_bfn(i,j,n,m))/(r) - dzUrr(i,j)/r - &
-          (zi*kt*dzUrt(i,j))/r + (Urz_(i,j)*drbfn_bfn(i,j,n,m))/(r) - &
-          (dzUrr(i,j)*drbfn_bfn(i,j,n,m)) - &
-          (dzbfn_bfn(i,j,n,m)*drUrr(i,j)) + drUrz(i,j)/r + &
-          (2*drbfn_bfn(i,j,n,m)*drUrz(i,j)) - &
-          (Urr_(i,j)*drzbfn_bfn(i,j,n,m)) - drzUrr(i,j) + &
-          (Urz_(i,j)*drrbfn_bfn(i,j,n,m)) + drrUrz(i,j))
+       mat_z_alp = (-((kt**2*Urz_(i,j))/r**2) + k0**2*KAlpAlp*Urz_(i,j) + k0**2*KBetAlp*Utz_(i,j) + &
+          k0**2*KPrlAlp*Uzz_(i,j) - (Urr_(i,j)*dzBfn_bfn(i,j,n,m))/r - &
+          (zi*kt*Urt_(i,j)*dzBfn_bfn(i,j,n,m))/r - dzUrr(i,j)/r - &
+          (zi*kt*dzUrt(i,j))/r + (Urz_(i,j)*drBfn_bfn(i,j,n,m))/r - &
+          (dzUrr(i,j)*drBfn_bfn(i,j,n,m)) - &
+          (dzBfn_bfn(i,j,n,m)*drUrr(i,j)) + drUrz(i,j)/r + &
+          (2*drBfn_bfn(i,j,n,m)*drUrz(i,j)) - &
+          (Urr_(i,j)*drzBfn_bfn(i,j,n,m)) - drzUrr(i,j) + &
+          (Urz_(i,j)*drrBfn_bfn(i,j,n,m)) + drrUrz(i,j))
 
        mat_z_bet = (k0**2*KAlpBet*Urz_(i,j) - (kt**2*Utz_(i,j))/r**2 + k0**2*KBetBet*Utz_(i,j) + &
-          k0**2*KPrlBet*Uzz_(i,j) - (Utr_(i,j)*dzbfn_bfn(i,j,n,m))/(r) - &
-          (zi*kt*Utt_(i,j)*dzbfn_bfn(i,j,n,m))/(r) - dzUtr(i,j)/r - &
-          (zi*kt*dzUtt(i,j))/r + (Utz_(i,j)*drbfn_bfn(i,j,n,m))/(r) - &
-          (dzUtr(i,j)*drbfn_bfn(i,j,n,m)) - &
-          (dzbfn_bfn(i,j,n,m)*drUtr(i,j)) + drUtz(i,j)/r + &
-          (2*drbfn_bfn(i,j,n,m)*drUtz(i,j)) - &
-          (Utr_(i,j)*drzbfn_bfn(i,j,n,m)) - drzUtr(i,j) + &
-          (Utz_(i,j)*drrbfn_bfn(i,j,n,m)) + drrUtz(i,j))
+          k0**2*KPrlBet*Uzz_(i,j) - (Utr_(i,j)*dzBfn_bfn(i,j,n,m))/r - &
+          (zi*kt*Utt_(i,j)*dzBfn_bfn(i,j,n,m))/r - dzUtr(i,j)/r - &
+          (zi*kt*dzUtt(i,j))/r + (Utz_(i,j)*drBfn_bfn(i,j,n,m))/r - &
+          (dzUtr(i,j)*drBfn_bfn(i,j,n,m)) - &
+          (dzBfn_bfn(i,j,n,m)*drUtr(i,j)) + drUtz(i,j)/r + &
+          (2*drBfn_bfn(i,j,n,m)*drUtz(i,j)) - &
+          (Utr_(i,j)*drzBfn_bfn(i,j,n,m)) - drzUtr(i,j) + &
+          (Utz_(i,j)*drrBfn_bfn(i,j,n,m)) + drrUtz(i,j)) 
 
        mat_z_prl = (k0**2*KAlpPrl*Urz_(i,j) + k0**2*KBetPrl*Utz_(i,j) - (kt**2*Uzz_(i,j))/r**2 + &
-          k0**2*KPrlPrl*Uzz_(i,j) - (Uzr_(i,j)*drbfn_bfn(i,j,n,m))/(r) - &
-          (zi*kt*Uzt_(i,j)*dzbfn_bfn(i,j,n,m))/(r) - dzUzr(i,j)/r - &
-          (zi*kt*dzUzt(i,j))/r + (Uzz_(i,j)*drbfn_bfn(i,j,n,m))/(r) - &
-          (dzUzr(i,j)*drbfn_bfn(i,j,n,m)) - &
-          (dzbfn_bfn(i,j,n,m)*drUzr(i,j)) + drUzz(i,j)/r + &
-          (2*drbfn_bfn(i,j,n,m)*drUzz(i,j)) - &
-          (Uzr_(i,j)*drzbfn_bfn(i,j,n,m)) - drzUzr(i,j) + &
-          (Uzz_(i,j)*drrbfn_bfn(i,j,n,m)) + drrUzz(i,j))
+          k0**2*KPrlPrl*Uzz_(i,j) - (Uzr_(i,j)*dzBfn_bfn(i,j,n,m))/r - &
+          (zi*kt*Uzt_(i,j)*dzBfn_bfn(i,j,n,m))/r - dzUzr(i,j)/r - &
+          (zi*kt*dzUzt(i,j))/r + (Uzz_(i,j)*drBfn_bfn(i,j,n,m))/r - &
+          (dzUzr(i,j)*drBfn_bfn(i,j,n,m)) - &
+          (dzBfn_bfn(i,j,n,m)*drUzr(i,j)) + drUzz(i,j)/r + &
+          (2*drBfn_bfn(i,j,n,m)*drUzz(i,j)) - &
+          (Uzr_(i,j)*drzBfn_bfn(i,j,n,m)) - drzUzr(i,j) + &
+          (Uzz_(i,j)*drrBfn_bfn(i,j,n,m)) + drrUzz(i,j))
 
                             dxx = mat_r_alp / k0**2
                             dxy = mat_r_bet / k0**2

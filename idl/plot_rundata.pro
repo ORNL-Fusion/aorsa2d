@@ -9,9 +9,12 @@ pro plot_rundata
 		nCdf_varGet, cdfId, 'bxn', bxn
 		nCdf_varGet, cdfId, 'byn', byn
 		nCdf_varGet, cdfId, 'bzn', bzn
+
 		nCdf_varGet, cdfId, 'densitySpec', densitySpec
 		nCdf_varGet, cdfId, 'tempSpec', tempSpec
-		nCdf_varGet, cdfId, 'tempSpec', tempSpec
+		nCdf_varGet, cdfId, 'omgc', omgc 
+		nCdf_varGet, cdfId, 'omgp2', omgp2
+	
 		nCdf_varGet, cdfId, 'xx_re', xx_re 
 		nCdf_varGet, cdfId, 'xx_im', xx_im
 		nCdf_varGet, cdfId, 'yy_re', yy_re 
@@ -85,20 +88,22 @@ pro plot_rundata
 	for i=1,nSpec-1 do $
 		iPlot, x, tempSpec[*,nz/2,i], /over
 
+	if nR > 1 and nZ > 1 then begin
 
-	bxn_	= conGrid ( bxn, 20, 20, /center )
-	byn_	= conGrid ( byn, 20, 20, /center )
-	x_		= conGrid ( x, 20, 20, /center )
-	y_		= conGrid ( y, 20, 20, /center )
+		bxn_	= conGrid ( bxn, 20, 20, /center )
+		byn_	= conGrid ( byn, 20, 20, /center )
+		x_		= conGrid ( x, 20, 20, /center )
+		y_		= conGrid ( y, 20, 20, /center )
 
-	colors	= 256 - ( bytScl ( sqrt ( bxn_^2+byn_^2 ), top = 253 ) + 1 )
+		colors	= 256 - ( bytScl ( sqrt ( bxn_^2+byn_^2 ), top = 253 ) + 1 )
 
-	iVector, bxn_, byn_, x_, y_, $
-			vector_colors = colors, $
-			rgb_table = 1, $
-			scale_isotropic = 1, $
-			/view_next
+		iVector, bxn_, byn_, x_, y_, $
+				vector_colors = colors, $
+				rgb_table = 1, $
+				scale_isotropic = 1, $
+				/view_next
 
+	endif
 stop
 
 end

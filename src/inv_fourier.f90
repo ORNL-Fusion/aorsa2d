@@ -7,7 +7,7 @@ contains
     subroutine sftinv2d( a, f )
 
         use aorsa2din_mod, &
-        only: nPtsX, nPtsY, chebyshev
+        only: nPtsX, nPtsY, chebyshevX, chebyshevY
         use grid, &
         only: nMin, nMax, mMin, mMax, &
             xGrid_basis, yGrid_basis, &
@@ -27,17 +27,22 @@ contains
 
         f = 0
 
-        if(chebyshev)then
+        if(chebyshevX)then
             nS = nMin
             nF = nMax
-            mS = mMin
-            mF = mMax
         else
             nS = nMin*2/3
             nF = nMax*2/3
+        endif
+
+        if(chebyshevY)then
+            mS = mMin
+            mF = mMax
+        else
             mS = mMin*2/3
             mF = mMax*2/3
         endif
+
 
         do i = 1, nPtsX
             do j = 1, nPtsY

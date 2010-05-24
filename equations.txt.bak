@@ -1,0 +1,89 @@
+       mat_r_alp = (-((kt**2*Urr(r,z))/r**2) + k0**2*KAlpAlp(r,z)*Urr(r,z) - ((0,1)*kt*Urt(r,z))/r**2 + 
+          k0**2*KBetAlp(r,z)*Utr(r,z) + k0**2*KPrlAlp(r,z)*Uzr(r,z) + 
+          (2*Derivative(0,1)(bfn)(r,z)*Derivative(0,1)(Urr)(r,z))/bfn(r,z) + 
+          (Urr(r,z)*Derivative(0,2)(bfn)(r,z))/bfn(r,z) + Derivative(0,2)(Urr)(r,z) - 
+          ((0,1)*kt*Urt(r,z)*Derivative(1,0)(bfn)(r,z))/(r*bfn(r,z)) - 
+          (Derivative(0,1)(Urz)(r,z)*Derivative(1,0)(bfn)(r,z))/bfn(r,z) - 
+          ((0,1)*kt*Derivative(1,0)(Urt)(r,z))/r - 
+          (Derivative(0,1)(bfn)(r,z)*Derivative(1,0)(Urz)(r,z))/bfn(r,z) - 
+          (Urz(r,z)*Derivative(1,1)(bfn)(r,z))/bfn(r,z) - Derivative(1,1)(Urz)(r,z))
+
+       mat_r_bet = (k0**2*KAlpBet(r,z)*Urr(r,z) - (kt**2*Utr(r,z))/r**2 + k0**2*KBetBet(r,z)*Utr(r,z) - 
+          ((0,1)*kt*Utt(r,z))/r**2 + k0**2*KPrlBet(r,z)*Uzr(r,z) + 
+          (2*Derivative(0,1)(bfn)(r,z)*Derivative(0,1)(Utr)(r,z))/bfn(r,z) + 
+          (Utr(r,z)*Derivative(0,2)(bfn)(r,z))/bfn(r,z) + Derivative(0,2)(Utr)(r,z) - 
+          ((0,1)*kt*Utt(r,z)*Derivative(1,0)(bfn)(r,z))/(r*bfn(r,z)) - 
+          (Derivative(0,1)(Utz)(r,z)*Derivative(1,0)(bfn)(r,z))/bfn(r,z) - 
+          ((0,1)*kt*Derivative(1,0)(Utt)(r,z))/r - 
+          (Derivative(0,1)(bfn)(r,z)*Derivative(1,0)(Utz)(r,z))/bfn(r,z) - 
+          (Utz(r,z)*Derivative(1,1)(bfn)(r,z))/bfn(r,z) - Derivative(1,1)(Utz)(r,z))
+
+       mat_r_prl = (k0**2*KAlpPrl(r,z)*Urr(r,z) + k0**2*KBetPrl(r,z)*Utr(r,z) - (kt**2*Uzr(r,z))/r**2 + 
+          k0**2*KPrlPrl(r,z)*Uzr(r,z) - ((0,1)*kt*Uzt(r,z))/r**2 + 
+          (2*Derivative(0,1)(bfn)(r,z)*Derivative(0,1)(Uzr)(r,z))/bfn(r,z) + 
+          (Uzr(r,z)*Derivative(0,2)(bfn)(r,z))/bfn(r,z) + Derivative(0,2)(Uzr)(r,z) - 
+          ((0,1)*kt*Uzt(r,z)*Derivative(1,0)(bfn)(r,z))/(r*bfn(r,z)) - 
+          (Derivative(0,1)(Uzz)(r,z)*Derivative(1,0)(bfn)(r,z))/bfn(r,z) - 
+          ((0,1)*kt*Derivative(1,0)(Uzt)(r,z))/r - 
+          (Derivative(0,1)(bfn)(r,z)*Derivative(1,0)(Uzz)(r,z))/bfn(r,z) - 
+          (Uzz(r,z)*Derivative(1,1)(bfn)(r,z))/bfn(r,z) - Derivative(1,1)(Uzz)(r,z))
+
+       mat_th_alp = (((0,1)*kt*Urr(r,z))/r**2 - Urt(r,z)/r**2 + k0**2*KAlpAlp(r,z)*Urt(r,z) + 
+          k0**2*KBetAlp(r,z)*Utt(r,z) + k0**2*KPrlAlp(r,z)*Uzt(r,z) - 
+          ((0,1)*kt*Urz(r,z)*Derivative(0,1)(bfn)(r,z))/(r*bfn(r,z)) + 
+          (2*Derivative(0,1)(bfn)(r,z)*Derivative(0,1)(Urt)(r,z))/bfn(r,z) - 
+          ((0,1)*kt*Derivative(0,1)(Urz)(r,z))/r + (Urt(r,z)*Derivative(0,2)(bfn)(r,z))/bfn(r,z) + 
+          Derivative(0,2)(Urt)(r,z) - ((0,1)*kt*Urr(r,z)*Derivative(1,0)(bfn)(r,z))/(r*bfn(r,z)) + 
+          (Urt(r,z)*Derivative(1,0)(bfn)(r,z))/(r*bfn(r,z)) - ((0,1)*kt*Derivative(1,0)(Urr)(r,z))/r + 
+          Derivative(1,0)(Urt)(r,z)/r + (2*Derivative(1,0)(bfn)(r,z)*Derivative(1,0)(Urt)(r,z))/bfn(r,z) + 
+          (Urt(r,z)*Derivative(2,0)(bfn)(r,z))/bfn(r,z) + Derivative(2,0)(Urt)(r,z))
+
+       mat_th_bet = (k0**2*KAlpBet(r,z)*Urt(r,z) + ((0,1)*kt*Utr(r,z))/r**2 - Utt(r,z)/r**2 + 
+          k0**2*KBetBet(r,z)*Utt(r,z) + k0**2*KPrlBet(r,z)*Uzt(r,z) - 
+          ((0,1)*kt*Utz(r,z)*Derivative(0,1)(bfn)(r,z))/(r*bfn(r,z)) + 
+          (2*Derivative(0,1)(bfn)(r,z)*Derivative(0,1)(Utt)(r,z))/bfn(r,z) - 
+          ((0,1)*kt*Derivative(0,1)(Utz)(r,z))/r + (Utt(r,z)*Derivative(0,2)(bfn)(r,z))/bfn(r,z) + 
+          Derivative(0,2)(Utt)(r,z) - ((0,1)*kt*Utr(r,z)*Derivative(1,0)(bfn)(r,z))/(r*bfn(r,z)) + 
+          (Utt(r,z)*Derivative(1,0)(bfn)(r,z))/(r*bfn(r,z)) - ((0,1)*kt*Derivative(1,0)(Utr)(r,z))/r + 
+          Derivative(1,0)(Utt)(r,z)/r + (2*Derivative(1,0)(bfn)(r,z)*Derivative(1,0)(Utt)(r,z))/bfn(r,z) + 
+          (Utt(r,z)*Derivative(2,0)(bfn)(r,z))/bfn(r,z) + Derivative(2,0)(Utt)(r,z))
+
+       mat_th_prl = (k0**2*KAlpPrl(r,z)*Urt(r,z) + k0**2*KBetPrl(r,z)*Utt(r,z) + ((0,1)*kt*Uzr(r,z))/r**2 - 
+          Uzt(r,z)/r**2 + k0**2*KPrlPrl(r,z)*Uzt(r,z) - 
+          ((0,1)*kt*Uzz(r,z)*Derivative(0,1)(bfn)(r,z))/(r*bfn(r,z)) + 
+          (2*Derivative(0,1)(bfn)(r,z)*Derivative(0,1)(Uzt)(r,z))/bfn(r,z) - 
+          ((0,1)*kt*Derivative(0,1)(Uzz)(r,z))/r + (Uzt(r,z)*Derivative(0,2)(bfn)(r,z))/bfn(r,z) + 
+          Derivative(0,2)(Uzt)(r,z) - ((0,1)*kt*Uzr(r,z)*Derivative(1,0)(bfn)(r,z))/(r*bfn(r,z)) + 
+          (Uzt(r,z)*Derivative(1,0)(bfn)(r,z))/(r*bfn(r,z)) - ((0,1)*kt*Derivative(1,0)(Uzr)(r,z))/r + 
+          Derivative(1,0)(Uzt)(r,z)/r + (2*Derivative(1,0)(bfn)(r,z)*Derivative(1,0)(Uzt)(r,z))/bfn(r,z) + 
+          (Uzt(r,z)*Derivative(2,0)(bfn)(r,z))/bfn(r,z) + Derivative(2,0)(Uzt)(r,z))
+
+       mat_z_alp = (-((kt**2*Urz(r,z))/r**2) + k0**2*KAlpAlp(r,z)*Urz(r,z) + k0**2*KBetAlp(r,z)*Utz(r,z) + 
+          k0**2*KPrlAlp(r,z)*Uzz(r,z) - (Urr(r,z)*Derivative(0,1)(bfn)(r,z))/(r*bfn(r,z)) - 
+          ((0,1)*kt*Urt(r,z)*Derivative(0,1)(bfn)(r,z))/(r*bfn(r,z)) - Derivative(0,1)(Urr)(r,z)/r - 
+          ((0,1)*kt*Derivative(0,1)(Urt)(r,z))/r + (Urz(r,z)*Derivative(1,0)(bfn)(r,z))/(r*bfn(r,z)) - 
+          (Derivative(0,1)(Urr)(r,z)*Derivative(1,0)(bfn)(r,z))/bfn(r,z) - 
+          (Derivative(0,1)(bfn)(r,z)*Derivative(1,0)(Urr)(r,z))/bfn(r,z) + Derivative(1,0)(Urz)(r,z)/r + 
+          (2*Derivative(1,0)(bfn)(r,z)*Derivative(1,0)(Urz)(r,z))/bfn(r,z) - 
+          (Urr(r,z)*Derivative(1,1)(bfn)(r,z))/bfn(r,z) - Derivative(1,1)(Urr)(r,z) + 
+          (Urz(r,z)*Derivative(2,0)(bfn)(r,z))/bfn(r,z) + Derivative(2,0)(Urz)(r,z))
+
+       mat_z_bet = (k0**2*KAlpBet(r,z)*Urz(r,z) - (kt**2*Utz(r,z))/r**2 + k0**2*KBetBet(r,z)*Utz(r,z) + 
+          k0**2*KPrlBet(r,z)*Uzz(r,z) - (Utr(r,z)*Derivative(0,1)(bfn)(r,z))/(r*bfn(r,z)) - 
+          ((0,1)*kt*Utt(r,z)*Derivative(0,1)(bfn)(r,z))/(r*bfn(r,z)) - Derivative(0,1)(Utr)(r,z)/r - 
+          ((0,1)*kt*Derivative(0,1)(Utt)(r,z))/r + (Utz(r,z)*Derivative(1,0)(bfn)(r,z))/(r*bfn(r,z)) - 
+          (Derivative(0,1)(Utr)(r,z)*Derivative(1,0)(bfn)(r,z))/bfn(r,z) - 
+          (Derivative(0,1)(bfn)(r,z)*Derivative(1,0)(Utr)(r,z))/bfn(r,z) + Derivative(1,0)(Utz)(r,z)/r + 
+          (2*Derivative(1,0)(bfn)(r,z)*Derivative(1,0)(Utz)(r,z))/bfn(r,z) - 
+          (Utr(r,z)*Derivative(1,1)(bfn)(r,z))/bfn(r,z) - Derivative(1,1)(Utr)(r,z) + 
+          (Utz(r,z)*Derivative(2,0)(bfn)(r,z))/bfn(r,z) + Derivative(2,0)(Utz)(r,z)) 
+
+       mat_z_prl = (k0**2*KAlpPrl(r,z)*Urz(r,z) + k0**2*KBetPrl(r,z)*Utz(r,z) - (kt**2*Uzz(r,z))/r**2 + 
+          k0**2*KPrlPrl(r,z)*Uzz(r,z) - (Uzr(r,z)*Derivative(0,1)(bfn)(r,z))/(r*bfn(r,z)) - 
+          ((0,1)*kt*Uzt(r,z)*Derivative(0,1)(bfn)(r,z))/(r*bfn(r,z)) - Derivative(0,1)(Uzr)(r,z)/r - 
+          ((0,1)*kt*Derivative(0,1)(Uzt)(r,z))/r + (Uzz(r,z)*Derivative(1,0)(bfn)(r,z))/(r*bfn(r,z)) - 
+          (Derivative(0,1)(Uzr)(r,z)*Derivative(1,0)(bfn)(r,z))/bfn(r,z) - 
+          (Derivative(0,1)(bfn)(r,z)*Derivative(1,0)(Uzr)(r,z))/bfn(r,z) + Derivative(1,0)(Uzz)(r,z)/r + 
+          (2*Derivative(1,0)(bfn)(r,z)*Derivative(1,0)(Uzz)(r,z))/bfn(r,z) - 
+          (Uzr(r,z)*Derivative(1,1)(bfn)(r,z))/bfn(r,z) - Derivative(1,1)(Uzr)(r,z) + 
+          (Uzz(r,z)*Derivative(2,0)(bfn)(r,z))/bfn(r,z) + Derivative(2,0)(Uzz)(r,z))

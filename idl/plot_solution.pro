@@ -98,12 +98,15 @@ pro plot_solution, oneD = oneD
 	if (keyword_set(oneD) ) then begin
 
 		iPlot, x, eAlpha, view_grid=[1,3], /stretch_to_fit
+		iPlot, x, imaginary(eAlpha), /over
+
 		iPlot, x, eBeta, /view_next, /stretch_to_fit
+		iPlot, x, imaginary(eBeta), /over
+
 		iPlot, x, eB, /view_next, /stretch_to_fit
-		stop
-	endif
+		iPlot, x, imaginary(eB), /over
 
-
+	endif else begin
 
 	; Field contour plot
 	; ------------------
@@ -123,7 +126,7 @@ pro plot_solution, oneD = oneD
 	; Spectrum contour plot
 	; ---------------------
 
-	scale = max ( abs ( [ealphak_re[*],ebetak_re[*],ebk_re[*]] ) ) 
+	scale = mean ( abs ( [ealphak_re[*],ebetak_re[*],ebk_re[*]] ) ) 
 	scalePar = max ( abs ( [ebk_re[*]] ) ) 
 
 	specPID = 3
@@ -205,6 +208,6 @@ pro plot_solution, oneD = oneD
 	;contour_field, ebeta2_, x, y, nLevs, scale, id = redPID, view = 2
 	;contour_field, eb2_, x, y, nLevs, scalePrl, id = redPID, view = 3
 
-
+	endelse
 stop
 end

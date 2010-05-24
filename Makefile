@@ -33,7 +33,7 @@ MAGMA = -L ${MAGMA_DIR}/lib -lmagma -lmagmablas ${MAGMA_DIR}/lib/libmagma_64.a
 
 # set the MODE to "serial" or "parallel"
 
-MODE = "parallel"
+MODE = "serial"
 
 # set solve precision to "single" or "double" 
 
