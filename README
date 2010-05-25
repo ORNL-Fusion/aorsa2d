@@ -1,14 +1,42 @@
-How to make the 3D slice movie:
--------------------------------
+All ORders Spectral Algorithm
+-----------------------------
 
-Run plot_aorsa_3d
+Contact
+-------
+David L Green
+greendl1@ornl.gov
 
-then
 
-for f in *.eps; do convert -quality 100 -depth 8 $f `basename $f eps`png; done
+Description
+-----------
+The All ORders Spectral Algorithm (AORSA) is a Frequency Domain (FD) pseudo-spectral (or collocation) full-wave solver. It solves Maxwells equations for either cold or a hot Maxwellian plasma of arbitrary shape and magnetic field configuration. Either conducting or periodic boundary conditions are available. The code is 2D in space (cylindrical coords r,z) with either dimension being able to be reduced to 1 point for 1D simulation. The periodic direction (phi) has an exp(-i.kPhi.phi) dependence. 
 
-then
 
-mencoder "mf://*.png" -mf fps=4:type=png -o test.avi -ovc lavc -lavcopts vcodec=msmpeg4v2:vbitrate=800
 
-done, mplayer test.avi
+Installation
+------------
+
+
+Notes
+-----
+
+
+CUDA / MAGMA Notes
+------------------
+There are preliminary provisions for the implementation of a CUDA MAGMA solve. However, it is as yet not working. The LU decomp results produced on the GPU are not entirely equivilant to those calculated by LAPACK on the CPU. Some columns are identicalwhile some are basically zero in the GPU result. I suspect some problem with the way I am setting up the MAGMA call.
+
+Anyway, to utilize or debug this feature do the following ...
+
+Serial mode
+Uncomment the appropriate 3 rules in Makefile
+Uncomment the appropriate 2 deps in Makefile.deps
+Add trailing underscores to the 2 appropriate LAPACK calls in src/solve.f90
+
+TODO
+----
+
+1. Add grid patching, i.e., variable resolution areas patched together.
+2. Add non-Maxwellian hot plasma conductivity.
+3. Add QL diffusion coefficient calculation.
+4. Couple with CQL3D and NuBeam. 
+

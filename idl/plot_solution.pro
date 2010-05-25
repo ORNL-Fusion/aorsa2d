@@ -1,8 +1,15 @@
 pro contour_field, field, x, y, nLevs, scale, $
-		id = id, view = view
+		id = id, view = view, log = log
 
 	levels	= (fIndGen(nLevs)+1)/(nLevs-1) * scale * 1.1
 	colors	= 256-(bytScl ( levels, top = 253 )+1)
+
+	if keyword_set ( log ) then begin
+
+		levels	= 2.0^fIndGen(nLevs) * 1e-2
+		colors	= 256-(bytScl ( findGen(nLevs), top = 253 )+1)
+
+	endif
 
 	iContour, field, x, y, $
 		c_value = levels, $
@@ -112,7 +119,7 @@ pro plot_solution, oneD = oneD
 		; ------------------
 
 		nLevs	= 21 
-		scale = max ( abs ( [ealpha[*],ebeta[*],eb[*]] ) ) 
+		scale = max ( abs ( [ealpha[*],ebeta[*],eb[*]] ) ) * 0.05
 		scalePrl = max ( abs(abs ( [eb[*]] )) ) 
 
 		fieldPlot = 2
@@ -132,9 +139,9 @@ pro plot_solution, oneD = oneD
 		specPID = 3
 		iContour, id = specPID, view_grid = [3,1], dimensions = [1200,300]
 
-		contour_field, abs(ealphak),	kx, ky, nLevs, scale, id = specPID, view = 1
-		contour_field, abs(ebetak),		kx, ky, nLevs, scale, id = specPID, view = 2
-		contour_field, abs(ebk),		kx, ky, nLevs, scalePar, id = specPID, view = 3
+		contour_field, abs(ealphak),	kx, ky, nLevs, scale, id = specPID, view = 1;, /log
+		contour_field, abs(ebetak),		kx, ky, nLevs, scale, id = specPID, view = 2;, /log
+		contour_field, abs(ebk),		kx, ky, nLevs, scalePar, id = specPID, view = 3;, /log
 
 		;; Reconstruct the fields using only a specific set of
 		;; basis vectors
