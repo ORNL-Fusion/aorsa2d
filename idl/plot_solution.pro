@@ -104,14 +104,23 @@ pro plot_solution, oneD = oneD
 
 	if (keyword_set(oneD) ) then begin
 
-		iPlot, x, eAlpha, view_grid=[1,3], /stretch_to_fit
-		iPlot, x, imaginary(eAlpha), /over
+		; Field solution
 
-		iPlot, x, eBeta, /view_next, /stretch_to_fit
-		iPlot, x, imaginary(eBeta), /over
+		iPlot, x, eAlpha, view_grid=[1,3], /stretch_to_fit, over = 2
+		iPlot, x, imaginary(eAlpha), over = 2
 
-		iPlot, x, eB, /view_next, /stretch_to_fit
-		iPlot, x, imaginary(eB), /over
+		iPlot, x, eBeta, /view_next, /stretch_to_fit, over = 2
+		iPlot, x, imaginary(eBeta), over = 2
+
+		iPlot, x, eB, /view_next, /stretch_to_fit, over = 2
+		iPlot, x, imaginary(eB), over = 2
+
+		; Spectrum 
+
+		iPlot, abs(eAlphak)^2, view_grid=[1,3], /stretch_to_fit, /yLog
+		iPlot, abs(eBetak)^2, /view_next, /stretch_to_fit, over = 1, /yLog
+		iPlot, abs(eBk)^2, /view_next, /stretch_to_fit, over = 1, /yLog
+
 
 	endif else begin
 
@@ -119,7 +128,7 @@ pro plot_solution, oneD = oneD
 		; ------------------
 
 		nLevs	= 21 
-		scale = max ( abs ( [ealpha[*],ebeta[*],eb[*]] ) ) * 0.05
+		scale = max ( abs ( [ealpha[*],ebeta[*],eb[*]] ) )
 		scalePrl = max ( abs(abs ( [eb[*]] )) ) 
 
 		fieldPlot = 2

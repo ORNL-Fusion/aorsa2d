@@ -170,21 +170,21 @@ contains
                                 ! as the Fourier equiv.
 
                                 if(chebyshevX) then
-                                    if(n>1) then
-                                        kr = n / sqrt ( sin ( pi * (xGrid_basis(i)+1)/2  ) ) * normFacX 
-                                    else
+                                    !if(n>1) then
+                                    !    kr = n / sqrt ( sin ( pi * (xGrid_basis(i)+1)/2  ) ) * normFacX 
+                                    !else
                                         kr = n * normFacX
-                                    endif
+                                    !endif
                                 else
                                     kr = n * normFacX
                                 endif
 
                                 if(chebyshevY) then
-                                    if(m>1) then
-                                        kz = m / sqrt ( sin ( pi * (yGrid_basis(j)+1)/2 ) ) * normFacY 
-                                    else
+                                    !if(m>1) then
+                                    !    kz = m / sqrt ( sin ( pi * (yGrid_basis(j)+1)/2 ) ) * normFacY 
+                                    !else
                                         kz = m * normFacY
-                                    endif
+                                    !endif
                                 else
                                     kz = m * normFacY
                                 endif

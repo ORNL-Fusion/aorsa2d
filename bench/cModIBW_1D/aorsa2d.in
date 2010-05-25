@@ -1,0 +1,75 @@
+&aorsa2din
+
+upShift = 1,
+iSigma = 1,
+xNuOmg = 0.00,
+damping = 0.0,
+delta0 = 0.0, 
+xkPerp_cutOff = 1.0,
+xkx_cutOff = 1.0, 
+xky_cutOff = 1.0,
+chebyshevX = .true.,
+chebyshevY = .false., 
+
+nModesX = 512,
+nModesY = 1,
+nPtsX	= 512, 
+nPtsY	= 1,
+npRow = 2,
+npCol = 2,
+square = .true., 
+lsWeightFac = 1e2,
+
+nphi = 10,
+freqcy = 80.0E+06,
+
+rwleft =  0.3,
+rwright = 1.0,
+ytop = 0.5,
+ybot = -0.5,
+
+metalLeft = 0.0,
+metalRight = 10.0,
+metalTop = 10.8,
+metalBot = -10.8,
+
+
+! Antenna
+
+rant = 0.86,
+antSigX = 0.05,
+antSigY = 0.2, 
+
+
+! Magnetic field
+
+useEqdsk = .false.,     
+useSoloviev = .true.,
+noPoloidalField = .true.,
+eqdsk = 'eqdsk',
+b0 = 7.9,
+r0 = 0.66,
+a = 0.22,
+eKappa = 1.82,
+bx_frac = 0.0, 
+by_frac = 0.0,
+
+lmax = 5,
+zeffcd = 2.5,
+
+useFluxProfiles = .true.,
+nSpec = 3,
+zSpecIn     = -1, 1, 2, 0, 0,
+amuSpecIn   =  0, 2, 3, 0, 0,
+
+tSpecIn     = 10.0e3, 10.0e3, 10.0e3, 0.0, 0.0,
+tLimIn      = 0.3e3, 0.3e3, 0.3e3, 0.0, 0.0,
+tAlphaIn    = 1.0, 1.0, 1.0, 0.0, 0.0,
+tBetaIn     = 1.0, 1.0, 1.0, 0.0, 0.0,
+ 
+dSpecIn     = -1.0, 1.25e20, 0.625e20, 0.0, 0.0,   
+dLimIn      = -1.0, 1.25e18, 0.625e18, 0.0, 0.0,   
+dAlphaIn    = -1.0, 5.0, 5.0, 0.0, 0.0,
+dBetaIn     = -1.0, 2.0, 2.0, 0.0, 0.0, 
+
+/
