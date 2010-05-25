@@ -32,6 +32,7 @@ complex, allocatable, dimension(:) :: &
     complex, allocatable :: aMat(:,:)
 #else
     complex(kind=dbl), allocatable :: aMat(:,:)
+    !complex(kind=dbl), allocatable :: aMat_(:,:)
 #endif
 
 contains
@@ -92,6 +93,8 @@ contains
         100 format (' Filling aMat [global size: ',f8.1,' MB]')
 
         allocate ( aMat(nPtsX*nPtsY*3,nModesX*nModesY*3) )
+        !allocate ( aMat_(nPtsX*nPtsY*3,nModesX*nModesY*3) )
+
 #endif
 
         aMat    = 0
@@ -140,6 +143,15 @@ contains
                             sigPrlBet = 0.0
                             sigPrlPrl = 0.0
 
+                            bFn = xx(n, i) * yy(m, j)
+                            !if(n==nMin .or. n==nMax) bFn = bFn / 2
+                            !if(m==mMin .or. m==mMax) bFn = bFn / 2
+
+
+        if(  (i/=1 .and. i/=nPtsX .and. j/=1 .and. j/=nPtsY) &
+            .or. (nPtsY==1 .and. i/=1 .and. i/=nPtsX) &
+            .or. (nPtsX==1 .and. j/=1 .and. j/=nPtsY) ) then
+
 
                             !   interior plasma region:
                             !   ----------------------
@@ -147,15 +159,45 @@ contains
                             species: &
                             do s=1,nSpec
 
-                                !if (iSigma==1) & ! hot plasma        
-                                !sigma_tmp = sigmaHot_maxwellian&
-                                !    ( mSpec(s), &
-                                !    ktSpec(i,j,s), omgc(i,j,s), omgp2(i,j,s), &
-                                !    kxsav(n), kysav(m), capr(i), &
-                                !    omgrf, k0, &
-                                !    k_cutoff, s, &
-                                !    bMod(i,j), gradPrlB(i,j), &
-                                !    U_xyz(i,j,:,:), U_cyl(i,j,:,:), nuOmg2D(i,j) )
+                                ! The chebyshev k will be infinite at the
+                                ! boundaries. However, these should never be
+                                ! calculated anyway. I am still not sure where
+                                ! the sqrt comes from in the below expressions
+                                ! for k? If you figure it out let me know. Also
+                                ! not sure about the n,m == 1 values for k. For
+                                ! n,m == 0 we have simply k = 0 but n,m == 1 the
+                                ! chebT is a straight line. For now leaving it
+                                ! as the Fourier equiv.
+
+                                if(chebyshevX) then
+                                    if(n>1) then
+                                        kr = n / sqrt ( sin ( pi * (xGrid_basis(i)+1)/2  ) ) * normFacX 
+                                    else
+                                        kr = n * normFacX
+                                    endif
+                                else
+                                    kr = n * normFacX
+                                endif
+
+                                if(chebyshevY) then
+                                    if(m>1) then
+                                        kz = m / sqrt ( sin ( pi * (yGrid_basis(j)+1)/2 ) ) * normFacY 
+                                    else
+                                        kz = m * normFacY
+                                    endif
+                                else
+                                    kz = m * normFacY
+                                endif
+
+                                if (iSigma==1) & ! hot plasma        
+                                sigma_tmp = sigmaHot_maxwellian&
+                                    ( mSpec(s), &
+                                    ktSpec(i,j,s), omgc(i,j,s), omgp2(i,j,s), &
+                                    kr, kz, kPhi(i), capr(i), &
+                                    omgrf, k0, &
+                                    k_cutoff, s, &
+                                    bMod(i,j), gradPrlB(i,j), &
+                                    U_xyz(i,j,:,:), U_cyl(i,j,:,:), nuOmg2D(i,j) )
                               
                                 if (iSigma==0) & ! cold plasma 
                                 sigma_tmp = sigmaCold_stix &
@@ -216,11 +258,6 @@ contains
 
                             !endif
 
-
-                            bFn = xx(n, i) * yy(m, j)
-                            !if(n==nMin .or. n==nMax) bFn = bFn / 2
-                            !if(m==mMin .or. m==mMax) bFn = bFn / 2
-
                             kAlpAlp = 1.0 + zi / (eps0 * omgrf) * sigAlpAlp
                             kAlpBet =       zi / (eps0 * omgrf) * sigAlpBet
                             kAlpPrl =       zi / (eps0 * omgrf) * sigAlpPrl
@@ -233,13 +270,6 @@ contains
                             kPrlBet =       zi / (eps0 * omgrf) * sigPrlBet
                             kPrlPrl = 1.0 + zi / (eps0 * omgrf) * sigPrlPrl
 
-                            !rnx = kxsav(n) / k0
-                            !rny = kysav(m) / k0
-                            !rnPhi = kPhi(i) / k0
-
-                            !kz  = kysav(m)  
-                            !kr  = kxsav(n) 
-
                             z   = y(j)
                             r   = capR(i)
                             kt  = kPhi(i)
@@ -251,10 +281,6 @@ contains
         ! are filled later. See below. Runs fine for Fourier basis as
         ! the boundary conds are periodic.
         ! -------------------------------------------------------------
-
-        if(  (i/=1 .and. i/=nPtsX .and. j/=1 .and. j/=nPtsY) &
-        .or. (nPtsY==1 .and. i/=1 .and. i/=nPtsX) &
-        .or. (nPtsX==1 .and. j/=1 .and. j/=nPtsY) ) then
 
        mat_r_alp = (-((kt**2*Urr_(i,j))/r**2) + k0**2*KAlpAlp*Urr_(i,j) - (zi*kt*Urt_(i,j))/r**2 + &
           k0**2*KBetAlp*Utr_(i,j) + k0**2*KPrlAlp*Uzr_(i,j) + &
@@ -359,121 +385,6 @@ contains
                             dzz = mat_z_prl / k0**2
 
            endif
-
-                            !dxx = (kAlpAlp - rny**2 - rnphi**2) * uxx(i,j) &
-                            !    +  kBetAlp * uyx(i,j) &
-                            !    +  kPrlAlp * uzx(i,j) &
-                            !    + rnx * (rny * uxy(i,j) + rnphi * uxz(i,j)) &
-                            !    - zi * rnphi / k0 * &
-                            !             (uxz(i,j) / capr(i) + dxuxz(i,j)) &
-                            !    - zi * rny / k0 * (dxuxy(i,j) - 2. * dyuxx(i,j)) &
-                            !    - zi * rnx / k0 * dyuxy(i,j) &
-                            !    + 1. / k0**2 * (dyyuxx(i,j) - dxyuxy(i,j))
-
-                            !dxy =  kAlpBet * uxx(i,j) &
-                            !    + (kBetBet - rny**2 - rnphi**2) * uyx(i,j) &
-                            !    +  kPrlBet * uzx(i,j) &
-                            !    + rnx * (rny * uyy(i,j) + rnphi * uyz(i,j)) &
-                            !    - zi * rnphi / k0 * &
-                            !             (uyz(i,j) / capr(i) + dxuyz(i,j)) &
-                            !    - zi * rny / k0 * (dxuyy(i,j) - 2. * dyuyx(i,j)) &
-                            !    - zi * rnx / k0 * dyuyy(i,j) &
-                            !    + 1. / k0**2 * (dyyuyx(i,j) - dxyuyy(i,j))
-                            !dxz =  kAlpPrl * uxx(i,j) &
-                            !    +  kBetPrl * uyx(i,j) &
-                            !    + (kPrlPrl - rny**2 - rnphi**2) * uzx(i,j) &
-                            !    + rnx * (rny * uzy(i,j) + rnphi * uzz(i,j)) &
-                            !    - zi * rnphi / k0 * &
-                            !             (uzz(i,j) / capr(i) + dxuzz(i,j)) &
-                            !    - zi * rny / k0 * (dxuzy(i,j) - 2. * dyuzx(i,j)) &
-                            !    - zi * rnx / k0 * dyuzy(i,j) &
-                            !    + 1. / k0**2 * (dyyuzx(i,j) - dxyuzy(i,j))
-                            !dyx = (kAlpAlp - rnx**2 - rnphi**2) * uxy(i,j) &
-                            !    +  kBetAlp * uyy(i,j) &
-                            !    +  kPrlAlp * uzy(i,j) &
-                            !    + rny * (rnx * uxx(i,j) + rnphi * uxz(i,j)) &
-                            !    - zi * rny / k0 * &
-                            !             (dxuxx(i,j) + uxx(i,j) / capr(i)) &
-                            !    - zi * rnphi / k0 * dyuxz(i,j) &
-                            !    - zi * rnx / k0 * &
-                            !    (dyuxx(i,j) - uxy(i,j) / capr(i) - 2.* dxuxy(i,j)) &
-                            !    + 1. / k0**2 * (dxxuxy(i,j) - dxyuxx(i,j) &
-                            !    - dyuxx(i,j)/ capr(i) + dxuxy(i,j) / capr(i))
-                            !dyy =  kAlpBet * uxy(i,j) &
-                            !    + (kBetBet - rnx**2 - rnphi**2) * uyy(i,j) &
-                            !    +  kPrlBet * uzy(i,j) &
-                            !    + rny * (rnx * uyx(i,j) + rnphi * uyz(i,j)) &
-                            !    - zi * rny / k0 * &
-                            !             (dxuyx(i,j) + uyx(i,j) / capr(i)) &
-                            !    - zi * rnphi / k0 * dyuyz(i,j) &
-                            !    - zi * rnx / k0 * &
-                            !    (dyuyx(i,j) - uyy(i,j) / capr(i) - 2.* dxuyy(i,j)) &
-                            !    + 1. / k0**2 * (dxxuyy(i,j) - dxyuyx(i,j) &
-                            !    - dyuyx(i,j)/ capr(i) + dxuyy(i,j) / capr(i))
-                            !dyz =  kAlpPrl * uxy(i,j) &
-                            !    +  kBetPrl * uyy(i,j) &
-                            !    + (kPrlPrl - rnx**2 - rnphi**2) * uzy(i,j) &
-                            !    + rny * (rnx * uzx(i,j) + rnphi * uzz(i,j)) &
-                            !    - zi * rny / k0 * &
-                            !             (dxuzx(i,j) + uzx(i,j) / capr(i)) &
-                            !    - zi * rnphi / k0 * dyuzz(i,j) &
-                            !    - zi * rnx / k0 * &
-                            !    (dyuzx(i,j) - uzy(i,j) / capr(i) - 2.* dxuzy(i,j)) &
-                            !    + 1. / k0**2 * (dxxuzy(i,j) - dxyuzx(i,j) &
-                            !    - dyuzx(i,j)/ capr(i) + dxuzy(i,j) / capr(i))
-
-                            !dzx = (kAlpAlp - rnx**2 - rny**2) * uxz(i,j) &
-                            !    +  kBetAlp * uyz(i,j) &
-                            !    +  kPrlAlp * uzz(i,j) &
-                            !    + rnphi * (rny * uxy(i,j) + rnx * uxx(i,j)) &
-                            !    + zi * rny / k0 * 2. * dyuxz(i,j) &
-                            !    - zi * rnphi / k0 * &
-                            !       (dyuxy(i,j) + dxuxx(i,j) - uxx(i,j) / capr(i)) &
-                            !    + zi * rnx / k0 * &
-                            !       (uxz(i,j) / capr(i) + 2.* dxuxz(i,j)) &
-                            !    - 1. / (k0**2 * capr(i)) * &
-                            !       (uxz(i,j)/ capr(i) - dxuxz(i,j)) &
-                            !    + 1. / k0**2  * (dxxuxz(i,j) + dyyuxz(i,j))
-
-                            !dzy =  kAlpBet * uxz(i,j) &
-                            !    + (kBetBet - rnx**2 - rny**2) * uyz(i,j) &
-                            !    +  kPrlBet * uzz(i,j) &
-                            !    + rnphi * (rny * uyy(i,j) + rnx * uyx(i,j)) &
-                            !    + zi * rny / k0 * 2. * dyuyz(i,j) &
-                            !    - zi * rnphi / k0 * &
-                            !       (dyuyy(i,j) + dxuyx(i,j) - uyx(i,j) / capr(i)) &
-                            !    + zi * rnx / k0 * &
-                            !       (uyz(i,j) / capr(i) + 2.* dxuyz(i,j)) &
-                            !    - 1. / (k0**2 * capr(i)) * &
-                            !       (uyz(i,j)/ capr(i) - dxuyz(i,j)) &
-                            !    + 1. / k0**2  * (dxxuyz(i,j) + dyyuyz(i,j))
-
-                            !dzz =  kAlpPrl * uxz(i,j) &
-                            !    +  kBetPrl * uyz(i,j) &
-                            !    + (kPrlPrl - rnx**2 - rny**2) * uzz(i,j) &
-                            !    + rnphi * (rny * uzy(i,j) + rnx * uzx(i,j)) &
-                            !    + zi * rny / k0 * 2. * dyuzz(i,j) &
-                            !    - zi * rnphi / k0 * &
-                            !       (dyuzy(i,j) + dxuzx(i,j) - uzx(i,j) / capr(i)) &
-                            !    + zi * rnx / k0 * &
-                            !       (uzz(i,j) / capr(i) + 2.* dxuzz(i,j)) &
-                            !    - 1. / (k0**2 * capr(i)) * &
-                            !       (uzz(i,j)/ capr(i) - dxuzz(i,j)) &
-                            !    + 1. / k0**2  * (dxxuzz(i,j) + dyyuzz(i,j))
-
-
-                            !if(iAm==0) then
-                            !   write(*,*) dxx, dxy, dxz
-                            !   write(*,*) dyx, dyy, dyz
-                            !   write(*,*) dzx, dzy, dzz
-
-                            !   write(*,*)
-
-                            !   write(*,*) mat_r_alp/k0**2, mat_r_bet/k0**2, mat_r_prl/k0**2
-                            !   write(*,*) mat_th_alp/k0**2, mat_th_bet/k0**2, mat_th_prl/k0**2
-                            !   write(*,*) mat_z_alp/k0**2, mat_z_bet/k0**2, mat_z_prl/k0**2
-                            !endif
-                            !stop
 
                             ii_loop: &
                             do ii=0,2
@@ -583,6 +494,7 @@ contains
         !enddo
         !endif
 
+        !aMat_   = aMat
     end subroutine amat_fill
 
 end module mat_fill

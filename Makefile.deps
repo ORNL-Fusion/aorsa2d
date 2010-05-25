@@ -108,6 +108,7 @@ ${OBJ_DIR}/inv_fourier.o: \
 		${OBJ_DIR}/aorsa2din_mod.o \
 		${OBJ_DIR}/grid.o
 
+# Uncomment the two lines here for MAGMA 
 ${OBJ_DIR}/solve.o: \
 		${OBJ_DIR}/parallel.o \
 		${OBJ_DIR}/antenna.o #\

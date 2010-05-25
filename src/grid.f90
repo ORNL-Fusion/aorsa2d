@@ -14,7 +14,7 @@ real :: xRange, yRange, normFacX, normFacY
 
 !   init_k
 !real, allocatable, dimension(:) :: kxsav, kysav
-!real :: k_cutOff, kx_cutOff, ky_cutOff
+real :: k_cutOff!, kx_cutOff, ky_cutOff
 integer :: nMin, nMax, mMin, mMax
 
 !   init_basis_functions
@@ -161,6 +161,9 @@ contains
             write(*,*) '    n: ', nMin, nMax
             write(*,*) '    m: ', mMin, mMax
         endif
+
+        k_cutOff = xkPerp_cutOff * sqrt(&
+           (nMax * normFacX)**2+(mMax*normFacY)**2)
 
         !allocate ( &
         !    kxSav (nMin:nMax), &

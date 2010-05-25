@@ -33,7 +33,7 @@ MAGMA = -L ${MAGMA_DIR}/lib -lmagma -lmagmablas ${MAGMA_DIR}/lib/libmagma_64.a
 
 # set the MODE to "serial" or "parallel"
 
-MODE = "serial"
+MODE = "parallel"
 
 # set solve precision to "single" or "double" 
 
@@ -42,7 +42,7 @@ SOLVE_PREC = "double"
 # set the coordinate system to an understandable 
 # cylindrical ("cylProper") or old version ("cylXYZ")
 
-COORDSYS = "cylXYZ"
+COORDSYS = "cylProper"
 
 # set the z function to use
 # either "zFunOriginal" or "zFunHammett"
@@ -130,6 +130,10 @@ ${OBJ_DIR}/%.o: ${SRC_DIR}/%.f90
 ${OBJ_DIR}/%.o: ${SRC_DIR}/%.F90
 	${F90} -c ${F90FLAGS} $< -o $@ ${BOUNDS} ${NETCDF} ${CPP_DIRECTIVES} ${INC_DIR}
 
+# Uncomment the following 3 rules for MAGMA implementation
+# in addition to two lines in Makefile.deps and adding two 
+# trailing underscores in src/solve.f90
+#
 #${OBJ_DIR}/solve.o: ${SRC_DIR}/solve.F90
 #	${F90} -c ${F90FLAGS} $< -o $@ ${BOUNDS} ${NETCDF} ${CPP_DIRECTIVES} ${INC_DIR} -fno-underscoring
 #

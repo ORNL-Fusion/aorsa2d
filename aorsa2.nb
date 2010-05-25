@@ -10,10 +10,10 @@
 NotebookFileLineBreakTest
 NotebookFileLineBreakTest
 NotebookDataPosition[       145,          7]
-NotebookDataLength[   1265058,      21490]
+NotebookDataLength[   1265057,      21490]
 NotebookOptionsPosition[   1262266,      21400]
-NotebookOutlinePosition[   1262697,      21417]
-CellTagsIndexPosition[   1262654,      21414]
+NotebookOutlinePosition[   1262696,      21417]
+CellTagsIndexPosition[   1262653,      21414]
 WindowFrame->Normal*)
 
 (* Beginning of Notebook Content *)
@@ -21398,7 +21398,7 @@ Cell[BoxData[
 }, Open  ]]
 }, Open  ]]
 },
-WindowSize->{1393, 789},
+WindowSize->{905, 752},
 WindowMargins->{{3, Automatic}, {Automatic, 0}},
 Magnification->1.25,
 FrontEndVersion->"7.0 for Mac OS X x86 (32-bit) (November 10, 2008)",
@@ -21481,7 +21481,7 @@ Cell[1252969, 21155, 3024, 59, 483, "Output"]
 }, Open  ]],
 Cell[CellGroupData[{
 Cell[1256042, 21220, 109, 1, 86, "Section"],
-Cell[1256154, 21223, 539, 8, 70, "Text"],
+Cell[1256154, 21223, 539, 8, 89, "Text"],
 Cell[CellGroupData[{
 Cell[1256718, 21235, 1582, 44, 160, "Input"],
 Cell[1258303, 21281, 550, 13, 68, "Output"],

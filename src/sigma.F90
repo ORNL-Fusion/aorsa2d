@@ -4,7 +4,7 @@ contains
 
     function sigmaHot_maxwellian( &
         xm, kt, omgc, omgp2, &
-        kxsav, kysav, capr, &
+        kx, ky, kPhi, capr, &
         omgrf, k0, &
         k_cutoff, specNo, &
         bMod, gradPrlB, U_xyz, U_cyl, nuOmg )
@@ -32,6 +32,7 @@ contains
         complex :: sigmaHot_maxwellian(3,3)
         integer, intent(in) :: specNo
         real, intent(in) :: k_cutOff, nuOmg
+        real, intent(in) :: kx, ky, kPhi, capr
 
         integer :: l, labs, i, j
         real :: kPerp, kPrl, xm, kt, omgc, omgp2, kPrlTmp
@@ -42,8 +43,6 @@ contains
         real :: akPrl,  alpha, omgrf
         real(kind=dbl) :: gammaBroaden(-lmax:lmax), gamma_coll(-lmax:lmax)
         real :: rhol
-        real :: kxsav, kysav, capr
-        real :: kPhi
         real :: kAlp, kBet, k0, rgamma
         real(kind=dbl) :: kr, step
         complex :: omgrfc
@@ -62,7 +61,6 @@ contains
         zieps0 = zi * eps0
         alpha = sqrt(2. * kt / xm)
         rhol = alpha / omgc
-        kPhi = nphi / capr
         omgrfc = omgrf * (1. + zi * nuOmg)
 
 
@@ -71,24 +69,24 @@ contains
 
 #ifdef cylProper 
 
-        !kAlp = Urr_(i,j) * kxsav + Urth_(i,j) * kPhi + Urz_(i,j) * kysav
-        !kBet = Uthr_(i,j) * kxsav + Uthth_(i,j) * kPhi + Uthz_(i,j) * kysav
-        !kPrl = Uzr_(i,j) * kxsav + Uzth_(i,j) * kPhi + Uzz_(i,j) * kysav
+        !kAlp = Urr_(i,j) * kx + Urth_(i,j) * kPhi + Urz_(i,j) * ky
+        !kBet = Uthr_(i,j) * kx + Uthth_(i,j) * kPhi + Uthz_(i,j) * ky
+        !kPrl = Uzr_(i,j) * kx + Uzth_(i,j) * kPhi + Uzz_(i,j) * ky
 
-        kAlp = U_cyl(1,1) * kxsav + U_cyl(1,2) * kPhi + U_cyl(1,3) * kysav
-        kBet = U_cyl(2,1) * kxsav + U_cyl(2,2) * kPhi + U_cyl(2,3) * kysav
-        kPrl = U_cyl(3,1) * kxsav + U_cyl(3,2) * kPhi + U_cyl(3,3) * kysav
+        kAlp = U_cyl(1,1) * kx + U_cyl(1,2) * kPhi + U_cyl(1,3) * ky
+        kBet = U_cyl(2,1) * kx + U_cyl(2,2) * kPhi + U_cyl(2,3) * ky
+        kPrl = U_cyl(3,1) * kx + U_cyl(3,2) * kPhi + U_cyl(3,3) * ky
 
         !if ( upShift == 0 ) kPrl = Uzth_(i,j) * kPhi
         if ( upShift == 0 ) kPrl = U_cyl(3,2) * kPhi
 #else 
-        !kAlp = uxx(i,j) * kxsav + uxy(i,j) * kysav + uxz(i,j) * kPhi
-        !kBet = uyx(i,j) * kxsav + uyy(i,j) * kysav + uyz(i,j) * kPhi
-        !kPrl = uzx(i,j) * kxsav + uzy(i,j) * kysav + uzz(i,j) * kPhi
+        !kAlp = uxx(i,j) * kx + uxy(i,j) * ky + uxz(i,j) * kPhi
+        !kBet = uyx(i,j) * kx + uyy(i,j) * ky + uyz(i,j) * kPhi
+        !kPrl = uzx(i,j) * kx + uzy(i,j) * ky + uzz(i,j) * kPhi
 
-        kAlp = U_xyz(1,1) * kxsav + U_xyz(1,2) * kPhi + U_xyz(1,3) * kysav
-        kBet = U_xyz(2,1) * kxsav + U_xyz(2,2) * kPhi + U_xyz(2,3) * kysav
-        kPrl = U_xyz(3,1) * kxsav + U_xyz(3,2) * kPhi + U_xyz(3,3) * kysav
+        kAlp = U_xyz(1,1) * kx + U_xyz(1,2) * kPhi + U_xyz(1,3) * ky
+        kBet = U_xyz(2,1) * kx + U_xyz(2,2) * kPhi + U_xyz(2,3) * ky
+        kPrl = U_xyz(3,1) * kx + U_xyz(3,2) * kPhi + U_xyz(3,3) * ky
 
         !if (upshift == 0)  kPrl = uzz(i,j) * kPhi
         if (upshift == 0)  kPrl = U_xyz(3,3) * kPhi
@@ -96,7 +94,6 @@ contains
 #endif
 
         kPerp = sqrt(kAlp**2 + kBet**2)
-
 
         if (kPrl  == 0.0) kPrl  = 1.0e-08
         if (kPerp == 0.0) kPerp = 1.0e-08

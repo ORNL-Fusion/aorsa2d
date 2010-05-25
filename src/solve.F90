@@ -19,7 +19,7 @@ contains
         use aorsa2din_mod, &
         only: nPtsX, nPtsY, nModesX, nModesY, square
         use mat_fill, &
-        only: aMat
+        only: aMat!, aMat_
         use antenna, &
         only: brhs, brhs_global
 
@@ -49,6 +49,7 @@ contains
         external :: cublas_init_
         integer :: cublas_alloc_
         integer, parameter :: sizeOfDbl = 8
+        integer :: i,j 
           
         nRow    = nPtsX * nPtsY * 3
         nCol    = nModesX * nModesY * 3
@@ -63,9 +64,9 @@ contains
             !call zgetrf ( nRow, nRow, aMat, nRow, ipiv, info )
             !call zgetrs ( 'No transpose', nRow, 1, aMat, nRow, ipiv, brhs, nRow, info )
             call zgesv ( nRow, 1, aMat, nRow, ipiv, brhs, nRow, info )
-
-            ! MAGMA Cuda solve
-            ! ----------------
+          
+            !! MAGMA Cuda solve
+            !! ----------------
 
             !nb  = magma_get_zgetrf_nb (nRow)
             !k1  = mod ( maxVal ( (/nRow,nCol/) ), 32 )
@@ -76,10 +77,18 @@ contains
             !work = 0
             !call cublas_init_ ()
             !cublasStatus = cublas_alloc_ ( dA_dim, dbl, devPtr_dA ) 
-            !call magma_zgetrf ( nRow, nCol, aMat, nRow, ipiv, work, devPtr_dA, info ) 
+            !call magma_zgetrf ( nRow, nCol, aMat_, nRow, ipiv, work, devPtr_dA, info ) 
             !call cublas_shutdown_ ()
             !write(*,*) 'MAGMA zgetrf status: ', info
-            !call zgetrs_ ( 'No transpose', nRow, 1, aMat, nRow, ipiv, brhs, nRow, info )
+            !if(any(aMat_/=aMat))then
+            !    do i=1,nRow
+            !        do j=1,nCol
+            !            if(aMat_(i,j)/=aMat(i,j)) write(*,*) aMat_(i,j), aMat(i,j)
+            !        enddo
+            !    enddo
+            !    stop
+            !endif
+            !call zgetrs_ ( 'No transpose', nRow, 1, aMat_, nRow, ipiv, brhs, nRow, info )
 
 #endif
 
