@@ -88,7 +88,7 @@ pro plot_rundata
 	for i=1,nSpec-1 do $
 		iPlot, x, tempSpec[*,nz/2,i], /over
 
-	if nR > 1 and nZ > 1 then begin
+	if (nR gt 1) and (nZ gt 1) then begin
 
 		bxn_	= conGrid ( bxn, 20, 20, /center )
 		byn_	= conGrid ( byn, 20, 20, /center )

@@ -111,9 +111,10 @@ ${OBJ_DIR}/inv_fourier.o: \
 # Uncomment the two lines here for MAGMA 
 ${OBJ_DIR}/solve.o: \
 		${OBJ_DIR}/parallel.o \
-		${OBJ_DIR}/antenna.o #\
-#		${OBJ_DIR}/get_nb.o \
-#		${OBJ_DIR}/fortran.o
+		${OBJ_DIR}/antenna.o \
+		${OBJ_DIR}/get_nb.o \
+		${OBJ_DIR}/fortran.o \
+		${OBJ_DIR}/magma_solve.o
 
 ${OBJ_DIR}/write_data.o: \
 		${OBJ_DIR}/check_mod.o

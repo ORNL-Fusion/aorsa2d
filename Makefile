@@ -33,7 +33,7 @@ MAGMA = -L ${MAGMA_DIR}/lib -lmagma -lmagmablas ${MAGMA_DIR}/lib/libmagma_64.a
 
 # set the MODE to "serial" or "parallel"
 
-MODE = "parallel"
+MODE = "serial"
 
 # set solve precision to "single" or "double" 
 
@@ -133,15 +133,18 @@ ${OBJ_DIR}/%.o: ${SRC_DIR}/%.F90
 # Uncomment the following 3 rules for MAGMA implementation
 # in addition to two lines in Makefile.deps and adding two 
 # trailing underscores in src/solve.f90
-#
-#${OBJ_DIR}/solve.o: ${SRC_DIR}/solve.F90
-#	${F90} -c ${F90FLAGS} $< -o $@ ${BOUNDS} ${NETCDF} ${CPP_DIRECTIVES} ${INC_DIR} -fno-underscoring
-#
-#${OBJ_DIR}/get_nb.o: ${MAGMA_DIR}/testing/get_nb.cpp
-#	${F90} -c $< -o $@
-#
-#${OBJ_DIR}/fortran.o: ${CUDA_DIR}/src/fortran.c
-#	gcc -c $< -o $@ -I ${CUDA_DIR}/include
+
+${OBJ_DIR}/solve.o: ${SRC_DIR}/solve.F90
+	${F90} -c ${F90FLAGS} $< -o $@ ${BOUNDS} ${NETCDF} ${CPP_DIRECTIVES} ${INC_DIR} -fno-underscoring
+
+${OBJ_DIR}/get_nb.o: ${MAGMA_DIR}/testing/get_nb.cpp
+	${F90} -c $< -o $@ -fPIC
+
+${OBJ_DIR}/fortran.o: ${CUDA_DIR}/src/fortran.c
+	gcc -c $< -o $@ -I ${CUDA_DIR}/include
+
+${OBJ_DIR}/magma_solve.o: ${SRC_DIR}/magma_solve.cpp 
+	gcc -c -g $< -o $@ -I ${CUDA_DIR}/include -I ${MAGMA_DIR}/include
 
 
 # Double precision routines

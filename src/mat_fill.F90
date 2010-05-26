@@ -32,7 +32,7 @@ complex, allocatable, dimension(:) :: &
     complex, allocatable :: aMat(:,:)
 #else
     complex(kind=dbl), allocatable :: aMat(:,:)
-    !complex(kind=dbl), allocatable :: aMat_(:,:)
+    complex(kind=dbl), allocatable :: aMat_(:,:)
 #endif
 
 contains

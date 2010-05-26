@@ -17,7 +17,7 @@ contains
     subroutine solve_lsq ()
 
         use aorsa2din_mod, &
-        only: nPtsX, nPtsY, nModesX, nModesY, square
+        only: nPtsX, nPtsY, nModesX, nModesY, square, magma
         use mat_fill, &
         only: aMat!, aMat_
         use antenna, &
@@ -44,51 +44,48 @@ contains
         integer, allocatable, dimension(:) :: jpvt
 
         ! Cuda
-        integer :: k1, k2, cublasStatus, dA_dim, devPtr_dA, nb
+        integer(kind=long) :: k1, k2, nb
         integer, external :: magma_get_zgetrf_nb
-        external :: cublas_init_
-        integer :: cublas_alloc_
-        integer, parameter :: sizeOfDbl = 8
-        integer :: i,j 
-          
+        integer :: magma_solve, magStat
+        integer :: dA_dim
+
         nRow    = nPtsX * nPtsY * 3
         nCol    = nModesX * nModesY * 3
 
         if(square) then
 
-            allocate ( ipiv ( nRow ) )
+            allocate ( ipiv(nRow) )
             ipiv = 0
 #ifndef dblprec
             call cgesv ( nRow, 1, aMat, nRow, ipiv, brhs, nRow, info )
 #else            
-            !call zgetrf ( nRow, nRow, aMat, nRow, ipiv, info )
-            !call zgetrs ( 'No transpose', nRow, 1, aMat, nRow, ipiv, brhs, nRow, info )
-            call zgesv ( nRow, 1, aMat, nRow, ipiv, brhs, nRow, info )
-          
-            !! MAGMA Cuda solve
-            !! ----------------
+            if(magma)then
 
-            !nb  = magma_get_zgetrf_nb (nRow)
-            !k1  = mod ( maxVal ( (/nRow,nCol/) ), 32 )
-            !k2  = mod ( nCol, 32 ) 
-            !dA_dim = (maxVal( (/nRow,nCol/) ) + k1 )**2 &
-            !    + ( nRow + k2 ) * nb + 2 * nb**2
-            !allocate ( work(nRow * nb) )
-            !work = 0
-            !call cublas_init_ ()
-            !cublasStatus = cublas_alloc_ ( dA_dim, dbl, devPtr_dA ) 
-            !call magma_zgetrf ( nRow, nCol, aMat_, nRow, ipiv, work, devPtr_dA, info ) 
-            !call cublas_shutdown_ ()
-            !write(*,*) 'MAGMA zgetrf status: ', info
-            !if(any(aMat_/=aMat))then
-            !    do i=1,nRow
-            !        do j=1,nCol
-            !            if(aMat_(i,j)/=aMat(i,j)) write(*,*) aMat_(i,j), aMat(i,j)
-            !        enddo
-            !    enddo
-            !    stop
-            !endif
-            !call zgetrs_ ( 'No transpose', nRow, 1, aMat_, nRow, ipiv, brhs, nRow, info )
+                ! MAGMA Cuda solve
+                ! ----------------
+
+                nb  = magma_get_zgetrf_nb (nRow)
+                k1  = 32 - mod ( maxVal ( (/nRow,nCol/) ), 32 )
+                k2  = 32 - mod ( nCol, 32 ) 
+                if(k1==32)k1=0
+                if(k2==32)k2=0
+
+                lWork = nRow * nb
+                dA_dim = ( nRow + k1 )**2 &
+                    + (nCol + k2 ) * nb + 2 * nb**2
+
+                magStat = magma_solve ( dA_dim, lWork, aMat, ipiv, nRow )
+
+                call zgetrs_ ( 'N', nRow, 1, aMat, nRow, ipiv, brhs, nRow, info )
+
+            else 
+
+                ! CPU LAPACK
+                ! ----------
+
+                call zgesv_ ( nRow, 1, aMat, nRow, ipiv, brhs, nRow, info )
+
+            endif
 
 #endif
 
@@ -116,7 +113,7 @@ contains
             call cgelsy ( M_, N_, NRHS, aMat, LDA, brhs, LDB, JPVT, RCOND, RANK, &
                                 WORK, LWORK, RWORK, info )
 #else
-            call zgelsy ( M_, N_, NRHS, aMat, LDA, brhs, LDB, JPVT, RCOND, RANK, &
+            call zgelsy_ ( M_, N_, NRHS, aMat, LDA, brhs, LDB, JPVT, RCOND, RANK, &
                                 WORK, LWORK, RWORK, info )
 #endif
 

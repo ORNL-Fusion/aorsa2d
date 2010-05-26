@@ -29,7 +29,7 @@ contains
 
         if(chebyshevX)then
             nS = nMin
-            nF = nMax
+            nF = nMax*2/3
         else
             nS = nMin*2/3
             nF = nMax*2/3
@@ -37,7 +37,7 @@ contains
 
         if(chebyshevY)then
             mS = mMin
-            mF = mMax
+            mF = mMax*2/3
         else
             mS = mMin*2/3
             mF = mMax*2/3
