@@ -30,10 +30,12 @@ CUDA_DIR = ${HOME}/code/cuda/3.0/cuda
 CUDA = -L ${CUDA_DIR}/lib64 -lcublas -lcudart -lcuda -L /usr/lib64
 MAGMA_DIR = ${HOME}/code/magma/magma_0.2
 MAGMA = -L ${MAGMA_DIR}/lib -lmagma -lmagmablas ${MAGMA_DIR}/lib/libmagma_64.a
+GPTL_DIR = #${HOME}/code/gptl
+GPTL = #-I ${GPTL_DIR}/include -L ${GPTL_DIR} -lgptl
 
 # set the MODE to "serial" or "parallel"
 
-MODE = "serial"
+MODE = "parallel"
 
 # set solve precision to "single" or "double" 
 
@@ -48,10 +50,6 @@ COORDSYS = "cylProper"
 # either "zFunOriginal" or "zFunHammett"
 
 ZFUN = "zFunHammett"
-
-# use the Chebychev basis set
-
-BASIS = "chebychev"
 
 
 # pre-processor directives
@@ -73,9 +71,6 @@ ifeq (${ZFUN},"zFunHammett")
 	CPP_DIRECTIVES := -DzFunHammett ${CPP_DIRECTIVES}
 endif
 
-ifeq (${BASIS},"chebychev")
-	CPP_DIRECTIVES := -Dchebychev ${CPP_DIRECTIVES}
-endif
 
 # compile flags
 # -------------
@@ -109,7 +104,7 @@ ifeq (${MODE},"parallel")
 else
 	LIBS = ${LAPACK} ${NETCDF} ${PAPI} ${MAGMA} ${CUDA} -lstdc++ ${BLAS} 
 endif
-INC_DIR = ${PAPI_INC}
+INC_DIR = ${PAPI_INC} ${GPTL}
 
 F90FLAGS = ${WARN} ${DEBUG} ${BOUNDS} ${MOD_LOC} 
 LINK_FLAGS = 
@@ -117,11 +112,8 @@ LINK_FLAGS =
 .PHONY: depend clean
 
 ${AORSA2D}: ${SRC_DIR}/aorsa2dMain.F90  
-	$(F90) ${F90FLAGS} ${SRC_DIR}/aorsa2dMain.F90 -o ${AORSA2D} $(OBJ_FILES) $(LIBS) ${LINK_FLAGS} ${CPP_DIRECTIVES} ${INC_DIR}
+	$(F90) ${F90FLAGS} ${SRC_DIR}/aorsa2dMain.F90 -o ${AORSA2D} $(OBJ_FILES) ${GPTL} $(LIBS) ${LINK_FLAGS} ${CPP_DIRECTIVES} ${INC_DIR}
 
-${AORSA1D}: ${SRC_DIR}/aorsa1dMain.F90  
-	$(F90) ${F90FLAGS} ${SRC_DIR}/aorsa1dMain.F90 -o ${AORSA1D} $(OBJ_FILES) $(LIBS) ${LINK_FLAGS} ${CPP_DIRECTIVES} ${INC_DIR}
-			    		    		     		   			     			     				
 # SRC files
 
 ${OBJ_DIR}/%.o: ${SRC_DIR}/%.f90
@@ -130,21 +122,21 @@ ${OBJ_DIR}/%.o: ${SRC_DIR}/%.f90
 ${OBJ_DIR}/%.o: ${SRC_DIR}/%.F90
 	${F90} -c ${F90FLAGS} $< -o $@ ${BOUNDS} ${NETCDF} ${CPP_DIRECTIVES} ${INC_DIR}
 
-# Uncomment the following 3 rules for MAGMA implementation
+# Uncomment the following 4 rules for MAGMA implementation
 # in addition to two lines in Makefile.deps and adding two 
 # trailing underscores in src/solve.f90
 
-${OBJ_DIR}/solve.o: ${SRC_DIR}/solve.F90
-	${F90} -c ${F90FLAGS} $< -o $@ ${BOUNDS} ${NETCDF} ${CPP_DIRECTIVES} ${INC_DIR} -fno-underscoring
-
-${OBJ_DIR}/get_nb.o: ${MAGMA_DIR}/testing/get_nb.cpp
-	${F90} -c $< -o $@ -fPIC
-
-${OBJ_DIR}/fortran.o: ${CUDA_DIR}/src/fortran.c
-	gcc -c $< -o $@ -I ${CUDA_DIR}/include
-
-${OBJ_DIR}/magma_solve.o: ${SRC_DIR}/magma_solve.cpp 
-	gcc -c -g $< -o $@ -I ${CUDA_DIR}/include -I ${MAGMA_DIR}/include
+#${OBJ_DIR}/solve.o: ${SRC_DIR}/solve.F90
+#	${F90} -c ${F90FLAGS} $< -o $@ ${BOUNDS} ${NETCDF} ${CPP_DIRECTIVES} ${INC_DIR} -fno-underscoring
+#
+#${OBJ_DIR}/get_nb.o: ${MAGMA_DIR}/testing/get_nb.cpp
+#	${F90} -c $< -o $@ -fPIC
+#
+#${OBJ_DIR}/fortran.o: ${CUDA_DIR}/src/fortran.c
+#	gcc -c $< -o $@ -I ${CUDA_DIR}/include
+#
+#${OBJ_DIR}/magma_solve.o: ${SRC_DIR}/magma_solve.cpp 
+#	gcc -c -g $< -o $@ -I ${CUDA_DIR}/include -I ${MAGMA_DIR}/include
 
 
 # Double precision routines

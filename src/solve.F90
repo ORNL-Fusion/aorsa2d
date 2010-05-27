@@ -61,29 +61,29 @@ contains
 #else            
             if(magma)then
 
-                ! MAGMA Cuda solve
-                ! ----------------
+                !! MAGMA Cuda solve
+                !! ----------------
 
-                nb  = magma_get_zgetrf_nb (nRow)
-                k1  = 32 - mod ( maxVal ( (/nRow,nCol/) ), 32 )
-                k2  = 32 - mod ( nCol, 32 ) 
-                if(k1==32)k1=0
-                if(k2==32)k2=0
+                !nb  = magma_get_zgetrf_nb (nRow)
+                !k1  = 32 - mod ( maxVal ( (/nRow,nCol/) ), 32 )
+                !k2  = 32 - mod ( nCol, 32 ) 
+                !if(k1==32)k1=0
+                !if(k2==32)k2=0
 
-                lWork = nRow * nb
-                dA_dim = ( nRow + k1 )**2 &
-                    + (nCol + k2 ) * nb + 2 * nb**2
+                !lWork = nRow * nb
+                !dA_dim = ( nRow + k1 )**2 &
+                !    + (nCol + k2 ) * nb + 2 * nb**2
 
-                magStat = magma_solve ( dA_dim, lWork, aMat, ipiv, nRow )
+                !magStat = magma_solve ( dA_dim, lWork, aMat, ipiv, nRow )
 
-                call zgetrs_ ( 'N', nRow, 1, aMat, nRow, ipiv, brhs, nRow, info )
+                !call zgetrs ( 'N', nRow, 1, aMat, nRow, ipiv, brhs, nRow, info )
 
             else 
 
                 ! CPU LAPACK
                 ! ----------
 
-                call zgesv_ ( nRow, 1, aMat, nRow, ipiv, brhs, nRow, info )
+                call zgesv ( nRow, 1, aMat, nRow, ipiv, brhs, nRow, info )
 
             endif
 
@@ -113,7 +113,7 @@ contains
             call cgelsy ( M_, N_, NRHS, aMat, LDA, brhs, LDB, JPVT, RCOND, RANK, &
                                 WORK, LWORK, RWORK, info )
 #else
-            call zgelsy_ ( M_, N_, NRHS, aMat, LDA, brhs, LDB, JPVT, RCOND, RANK, &
+            call zgelsy ( M_, N_, NRHS, aMat, LDA, brhs, LDB, JPVT, RCOND, RANK, &
                                 WORK, LWORK, RWORK, info )
 #endif
 

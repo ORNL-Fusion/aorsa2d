@@ -28,6 +28,8 @@ contains
 
         implicit none
 
+        !include "gptl.inc"
+
         real, intent(in) :: bMod, gradPrlB, U_xyz(:,:), U_cyl(:,:)
         complex :: sigmaHot_maxwellian(3,3)
         integer, intent(in) :: specNo
@@ -46,7 +48,7 @@ contains
         real :: kAlp, kBet, k0, rgamma
         real(kind=dbl) :: kr, step
         complex :: omgrfc
-        complex(kind=dbl) :: z0, z1, z2
+        complex(kind=dbl), allocatable :: z0(:), z1(:), z2(:)
         complex :: sig0, sig1, sig2, sig3, sig4, sig5
         complex :: sig0l, sig1l, sig2l, sig3l, sig4l, sig5l
         integer, parameter :: lmaxdim = 99
@@ -56,6 +58,7 @@ contains
         complex :: zieps0, al, bl, cl 
         complex(kind=dbl) ::gamma_
         real :: dR
+        integer :: stat
 
         !nu_coll =  .01 * omgrf
         zieps0 = zi * eps0
@@ -154,18 +157,21 @@ contains
         sig4 = 0.0
         sig5 = 0.0
 
+        allocate ( z0(-lMax:lMax), z1(-lMax:lMax), z2(-lMax:lMax) )
+
+        call z_approx ( sgn_kPrl, zetal, gammaBroaden, z0, z1, z2)
+
         do l = -lmax, lmax
 
             labs = abs(l)
 
             !if(nzfun .eq. 0) call z_approx(sgn_kPrl, zetal(l), 0.0, z0, z1, z2)
-            if(nzfun .eq. 1) call z_approx ( sgn_kPrl, zetal(l), gammaBroaden(l), z0, z1, z2)
             !if(nzfun .eq. 2) call z_smithe(sgn_kPrl,zetal(l),gammaBroaden(l), z0, z1, z2)
             !if(nzfun .eq. 3) call z_table(sgn_kPrl,zetal(l),gammaBroaden(l), gamma_coll(l), z0, z1, z2)
 
-            al = 1.0 / (kPrl * alpha) * z0
-            bl = 1.0 / (kPrl * alpha) * z1
-            cl = 1.0 / (kPrl * alpha) * z2
+            al = 1.0 / (kPrl * alpha) * z0(l)
+            bl = 1.0 / (kPrl * alpha) * z1(l)
+            cl = 1.0 / (kPrl * alpha) * z2(l)
 
             sig0l = - zieps0 * omgp2 * rhol**2 * (expBesselI(labs) - expBesselIPrime(labs)) * al
             sig1l = - zieps0 * omgp2 * l**2 * expBesselIOverGam(labs) * al

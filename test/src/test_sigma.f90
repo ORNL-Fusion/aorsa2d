@@ -36,6 +36,7 @@ integer :: nc_id, n_id, nK_id, &
     sig33_re_id, sig33_im_id
 
 real, allocatable :: kArr(:)
+real :: kPhi
 
 fileName = 'test_sigma.in'
 
@@ -83,13 +84,14 @@ do i=1,nPts
     do j=1,nK
 
     nPhi = j
+    kPhi = nPhi/r(i)
 
     kArr(j) = j
 
     sigma_tmp = sigmaHot_maxwellian&
         ( mSpec, &
         ktSpec, omgc(i), omgp2, &
-        kx, ky, r(i), &
+        kx, ky, kPhi, r(i), &
         omgrf, k0, &
         k_cutoff, 1, &
         b(i), 0.0, &

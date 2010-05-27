@@ -13,11 +13,9 @@ complex function Zfun(zeta)
   
   real(kind=dbl) :: x, y
   logical :: flag
-  !     real*8, parameter :: sqrt_pi = sqrt(abs(cos(-1.0)))
   real*8, parameter :: sqrt_pi = 1.772453850905516
   
   call wofz(real(zeta,kind=dbl), real(aimag(zeta),kind=dbl), x, y, flag)
-  ! Z(z) = i*sqrt(Pi)*w(z):
   Zfun = sqrt_pi*cmplx(-y,x)
   
   return
@@ -33,11 +31,9 @@ complex function Zfunr(z_real)
   real(kind=dbl) :: x, y
   logical :: flag
   
-  !     real*8, parameter :: sqrt_pi = sqrt(abs(cos(-1.0)))
   real*8, parameter :: sqrt_pi = 1.772453850905516
   
   call wofz(real(z_real,kind=dbl), 0d0, x, y, flag)
-  ! Z(z) = i*sqrt(Pi)*w(z):
   Zfunr = sqrt_pi*cmplx(-y,x)
   
   return

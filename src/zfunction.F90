@@ -135,36 +135,41 @@ contains
 #endif
       implicit none
 
-!     ------------------
-!     Finite k_parallel:
-!     ------------------
-      real gamma_, fgam, y0, y, sgn_kprl, descrim
-      complex zeta, z0, z1, z2, zfunct, zetat, fzeta
-        complex :: zFunctCheck
+      real, intent(in) :: sgn_kPrl, gamma_(:)
+      complex, intent(in) :: zeta(:)
+      complex, intent(out) :: z0(:), z1(:), z2(:)
 
-      y0 = 1.5
+      real, parameter :: y0 = 1.5
+      real, allocatable :: fGam(:), y(:), descrim(:)
+      complex, allocatable :: zetat(:), zFunct(:)
+      complex :: fzeta
+      complex :: zFunctCheck
+      integer :: nL, i
+
+      nL = size ( zeta )
+
+      allocate ( zFunct(nL), fGam(nL), y(nL), descrim(nL) )
       y = y0
+      fGam = 1.0
 
+      if(sgn_kprl>=0.0)then
 
-      if(sgn_kprl .ge. 0.0)then
+        where(gamma_>1.0e-5)
+            fgam = (sqrt(1. +  4. * gamma_ * y0) - 1.) &
+                / (2. * gamma_ * y0)
+        endwhere
 
-         fgam = 1.0
-         if(gamma_ .gt. 1.0e-05)then
-            y = y0
-            fgam = (sqrt(1. +  4. * gamma_ * y) - 1.) &
-               / (2. * gamma_ * y)
-         endif
-
-         zetat = fgam * zeta
-!        zfunct = fzeta(zetat)
+        do i=1,nL 
 #ifdef zFunHammett
-        zfunct =  zfun_hammett (zetat)
+            zFunct(i) = zfun_hammett ( fGam(i) * zeta(i) )
 #else
-        ! this zfun gives NaNs when argument close to zero?
-        call zfun (zetat, zfunct)
-        zFunctCheck =  zfun_hammett (zetat)
-        write(*,*) zetat, zfunct, zFunctCheck
+            ! this zfun gives NaNs when argument close to zero?
+            call zfun (zetat, zfunct)
+            zFunctCheck =  zfun_hammett (zetat)
+            write(*,*) zetat, zfunct, zFunctCheck
 #endif
+
+        enddo
 
          z0 = fgam * zfunct
          z1 = fgam * (1.0 + fgam * zeta * zfunct)
@@ -172,39 +177,34 @@ contains
 
       else
 
-         fgam = 1.0
+        descrim = 1. - 4. * gamma_ * y0
+        where(descrim>=0.0)
+                y = y0
+        elsewhere
+                y = -y0
+        endwhere
 
-         if(gamma_ .gt. 1.0e-05)then
-            descrim = 1. - 4. * gamma_ * y0
-            if (descrim .ge. 0.0) y =   y0
-            if (descrim .lt. 0.0) y = - y0
+        where(gamma_>1.0e-5)
             fgam = (1. - sqrt(1. -  4. * gamma_ * y) ) &
                / (2. * gamma_ * y)
-         endif
+        endwhere
 
-
-         zetat = - fgam * zeta
-!         zfunct = fzeta( zetat)
-
+        do i=1,nL
 #ifdef zFunHammett
-        zfunct = zfun_hammett (zetat)
+            zfunct(i) = zfun_hammett (-fGam(i)*zeta(i))
 #else
         ! this zfun gives NaNs when argument close to zero?
         call zfun (zetat, zfunct)
         zFunctCheck = zfun_hammett (zetat)
         write(*,*) zetat, zfunct, zFunctCheck
 #endif
+        enddo
+
          z0 = - fgam * zfunct
          z1 = y / abs(y) * fgam * (1.0 - fgam * zeta * zfunct)
          z2 =  fgam**2 * zeta * (1.0 - fgam * zeta * zfunct)
 
       endif
-
-      !if(abs(real(zeta))<1) then
-      !        write(*,'(5("("f7.3,","1x,f7.3,1x")"))') real(zeta), aimag(zeta), &
-      !          real(zfunct), aimag(zfunct),&
-      !          real(z0), aimag(z0), real(z1), aimag(z1) , real(z2), aimag(z2)
-      !endif
 
       return
       end subroutine z_approx

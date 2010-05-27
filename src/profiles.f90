@@ -170,7 +170,8 @@ contains
 
         implicit none
 
-        integer :: s, i, j
+        integer :: s, i, j, sWidthX, sWidthY, nS
+        real, allocatable :: smoothingTmp(:,:), smoothingDen(:,:)
 
         allocate ( &
             densitySpec ( nPtsX, nPtsY, nSpec ), & 
@@ -238,6 +239,41 @@ contains
 
             enddo
         enddo
+
+
+        ! smooth densities
+        ! ----------------
+
+        sWidthX = nPtsX/20 
+        sWidthY = nPtsY/20
+        allocate ( smoothingTmp(1-sWidthX:nPtsX+sWidthX,1-sWidthY:nPtsY+sWidthY) )
+        allocate ( smoothingDen(1-sWidthX:nPtsX+sWidthX,1-sWidthY:nPtsY+sWidthY) )
+
+        do s=1,nSpec
+            smoothingTmp = minVal(ktSpec(:,:,s))
+            smoothingTmp(1:nPtsX,1:nPtsY) = ktSpec(:,:,s)
+            smoothingDen = minVal(densitySpec(:,:,s))
+            smoothingDen(1:nPtsX,1:nPtsY) = densitySpec(:,:,s)
+
+            do nS = 1, 5
+                do i=1,nPtsX
+                    do j=1,nPtsY
+
+                        smoothingTmp(i,j)  = &
+                            sum ( smoothingTmp(i-sWidthX:i+sWidthX,j-sWidthY:j+sWidthY) ) &
+                            / ((sWidthX*2+1) * (sWidthY*2+1))
+                        smoothingDen(i,j)  = &
+                            sum ( smoothingDen(i-sWidthX:i+sWidthX,j-sWidthY:j+sWidthY) ) &
+                            / ((sWidthX*2+1) * (sWidthY*2+1))
+
+                    enddo
+                enddo
+            enddo
+            densitySpec(:,:,s) = smoothingDen(1:nPtsX,1:nPtsY)
+            ktSpec(:,:,s) = smoothingTmp(1:nPtsX,1:nPtsY)
+        enddo
+
+        deallocate ( smoothingTmp, smoothingDen )
 
         call omega_freqs ()
 

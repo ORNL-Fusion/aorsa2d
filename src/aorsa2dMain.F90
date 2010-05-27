@@ -19,6 +19,7 @@ program aorsa2dMain
     implicit none
 
     include "f90papi.h"
+    !include "gptl.inc"
 
     !   Timer variables
 
@@ -34,7 +35,16 @@ program aorsa2dMain
     real :: papi_ptime_fill, papi_ptime_solve
     integer(kind=long) :: papi_flpins
 
-    call start_timer ( tTotal )
+    !! GPTL vars
+
+    !integer :: stat
+
+    !stat = gptlSetUTR ( GPTLpapitime)
+    !write(*,*) 'gptl papiTime stat: ', stat
+    !stat = gptlInitialize ()
+    !stat = gptlStart ( 'total' )
+
+    !call start_timer ( tTotal )
 
 
 !   read namelist input data
@@ -265,6 +275,11 @@ program aorsa2dMain
 #ifdef par
     call release_grid ()
 #endif
+
+
+    !stat = gptlStop ('total')
+    !stat = gptlpr (0)
+    !stat = gptlFinalize ()
 
 !
 !!     ----------------------------------------------
