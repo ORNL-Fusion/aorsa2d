@@ -44,7 +44,8 @@ contains
             delta0, nSpec, &
             iSigma, nPtsX, nPtsY, npRow, npCol, &
             metalLeft, metalRight, &
-            metalTop, metalBot, nPhi, square, lsWeightFac
+            metalTop, metalBot, nPhi, square, lsWeightFac, &
+            useEqdsk
         use grid
         use sigma_mod
         use rotation
@@ -58,6 +59,7 @@ contains
         integer :: iRow, iCol, i, j, n, m, p, s, ii, jj
         integer :: localRow, localCol
         complex :: metal
+        logical, allocatable :: isMetal(:,:)
         real :: kr, kt, kz, r, z
         complex :: &
             dxx, dxy, dxz, &
@@ -93,14 +95,38 @@ contains
         100 format (' Filling aMat [global size: ',f8.1,' MB]')
 
         allocate ( aMat(nPtsX*nPtsY*3,nModesX*nModesY*3) )
-        !allocate ( aMat_(nPtsX*nPtsY*3,nModesX*nModesY*3) )
 
 #endif
 
         aMat    = 0
         metal   = ( 1e8,1e8 )
 
+
+        ! Set the metal regions
+        ! ---------------------
+
+        allocate (isMetal(nPtsX,nPtsY))
+        isMetal = .false.
+
+        if(useEqdsk)then
+        where(rho>=0.99)
+                isMetal = .true.
+        endwhere
+        endif
+
+        do i=1,nPtsX
+            do j=1,nPtsY
+                if ( capR(i) < metalLeft .or. capR(i) > metalRight &
+                        .or. y(j) > metalTop .or. y(j) < metalBot ) &
+                    isMetal(i,j) = .true.
+            enddo
+        enddo
+
         if(square) lsWeightFac = 1
+
+
+        ! Begin loop
+        ! ----------
 
         i_loop: &
         do i=1,nPtsX
@@ -123,8 +149,6 @@ contains
                     m_loop: &
                     do m=mMin,mMax
 
-                        !write(*,*) i, j, m, n, nMin, nMax, mMin, mMax
-
                         iCol = (n-nMin) * 3 * nModesY + (m-mMin) * 3 + 1
 #ifdef par
                         pr_sp_thisPt   = mod ( rowStartProc + (iRow-1+(/0,1,2/))/rowBlockSize, npRow )
@@ -144,9 +168,6 @@ contains
                             sigPrlPrl = 0.0
 
                             bFn = xx(n, i) * yy(m, j)
-                            !if(n==nMin .or. n==nMax) bFn = bFn / 2
-                            !if(m==mMin .or. m==mMax) bFn = bFn / 2
-
 
         if(  (i/=1 .and. i/=nPtsX .and. j/=1 .and. j/=nPtsY) &
             .or. (nPtsY==1 .and. i/=1 .and. i/=nPtsX) &
@@ -170,26 +191,26 @@ contains
                                 ! as the Fourier equiv.
 
                                 if(chebyshevX) then
-                                    !if(n>1) then
-                                    !    kr = n / sqrt ( sin ( pi * (xGrid_basis(i)+1)/2  ) ) * normFacX 
-                                    !else
+                                    if(n>1) then
+                                        kr = n / sqrt ( sin ( pi * (xGrid_basis(i)+1)/2  ) ) * normFacX 
+                                    else
                                         kr = n * normFacX
-                                    !endif
+                                    endif
                                 else
                                     kr = n * normFacX
                                 endif
 
                                 if(chebyshevY) then
-                                    !if(m>1) then
-                                    !    kz = m / sqrt ( sin ( pi * (yGrid_basis(j)+1)/2 ) ) * normFacY 
-                                    !else
+                                    if(m>1) then
+                                        kz = m / sqrt ( sin ( pi * (yGrid_basis(j)+1)/2 ) ) * normFacY 
+                                    else
                                         kz = m * normFacY
-                                    !endif
+                                    endif
                                 else
                                     kz = m * normFacY
                                 endif
 
-                                if (iSigma==1) & ! hot plasma        
+                                if (iSigma==1 .and. (.not. isMetal(i,j)) ) & ! hot plasma        
                                 sigma_tmp = sigmaHot_maxwellian&
                                     ( mSpec(s), &
                                     ktSpec(i,j,s), omgc(i,j,s), omgp2(i,j,s), &
@@ -221,8 +242,7 @@ contains
                             ! Metal
                             ! -----
 
-                            if ( capR(i) < metalLeft .or. capR(i) > metalRight &
-                                .or. y(j) > metalTop .or. y(j) < metalBot ) then 
+                            if (isMetal(i,j)) then 
 
                                 sigAlpAlp = metal 
                                 sigAlpBet = 0

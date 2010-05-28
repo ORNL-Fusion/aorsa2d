@@ -21,12 +21,13 @@ contains
         use aorsa2din_mod, &
         only: rAnt, zAnt, nPtsX, nPtsY, npRow, npCol, &
             antSigX, antSigY, &
-            metalLeft, metalRight, metalTop, metalBot
+            metalLeft, metalRight, metalTop, metalBot, &
+            useEqdsk, r0, rhoAnt, antSigRho
         use grid
         use profiles
         use parallel
         use bField, &
-        only: mask
+        only: mask, rho
 
         implicit none
 
@@ -60,9 +61,16 @@ contains
             do j = 1, nPtsY
 
                 xjx(i,j) = 0.0
-                xjy(i,j) = exp ( &
+                if(useEqdsk) then
+                    if(capR(i)>r0) &
+                    xjy(i,j) = exp ( &
+                    -( (rho(i,j)-rhoAnt)**2/antSigRho**2 + (y(j)-zAnt)**2/antSigY**2 ) &
+                          )
+                else
+                    xjy(i,j) = exp ( &
                     -( (capR(i)-rAnt)**2/antSigX**2 + (y(j)-zAnt)**2/antSigY**2 ) &
                           )
+                endif
                 xjz(i,j) = 0.0
 
                 !   boundary conditions

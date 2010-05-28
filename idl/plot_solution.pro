@@ -20,17 +20,20 @@ pro contour_field, field, x, y, nLevs, scale, $
 		xTickFont_size = 26.0, $
 		yTickFont_size = 26.0, $
 		overplot = id, $
+		/iso, $
 		view_number = view
 
 	iContour, field, x, y, $
 		c_value = levels/2, $
 		rgb_indices = colors, $
+		/zoom_on_resize, $
 		rgb_table = 1, $
 		over = id
 
 	iContour, -field, x, y, $
 		c_value = levels, $
 		rgb_indices = colors, $
+		/zoom_on_resize, $
 		over = id, $
 		/fill, $
 		rgb_table = 3
@@ -38,6 +41,7 @@ pro contour_field, field, x, y, nLevs, scale, $
 	iContour, -field, x, y, $
 		c_value = levels/2, $
 		rgb_indices = colors, $
+		/zoom_on_resize, $
 		rgb_table = 3, $
 		over = id 
 
@@ -138,7 +142,8 @@ pro plot_solution, oneD = oneD, $
 		print, 'ScalePrl: ', scale2
 
 		fieldPlot = 2
-		iContour, id = fieldPlot, view_grid = [3,1], dimensions = [1200,300]
+		iContour, id = fieldPlot, view_grid = [3,1], $
+				/zoom_on_resize
 
 		contour_field, ealpha, x, y, nLevs, scale1, id = fieldPlot, view = 1
 		contour_field, ebeta, x, y, nLevs, scale1, id = fieldPlot, view = 2
@@ -148,15 +153,16 @@ pro plot_solution, oneD = oneD, $
 		; Spectrum contour plot
 		; ---------------------
 
-		scale = max ( abs ( [ealphak_re[*],ebetak_re[*],ebk_re[*]] ) ) 
-		scalePar = max ( abs ( [ebk_re[*]] ) ) 
+		scale1 = max ( abs ( [ealphak_re[*]] ) ) * 0.5
+		scale2 = max ( abs ( [ebetak_re[*]] ) ) * 0.5 
+		scale3_ = max ( abs ( [ebk_re[*]] ) ) * 0.5 
 
 		specPID = 3
 		iContour, id = specPID, view_grid = [3,1], dimensions = [1200,300]
 
-		contour_field, abs(ealphak),	kx, ky, nLevs, scale, id = specPID, view = 1;, /log
-		contour_field, abs(ebetak),		kx, ky, nLevs, scale, id = specPID, view = 2;, /log
-		contour_field, abs(ebk),		kx, ky, nLevs, scalePar, id = specPID, view = 3;, /log
+		contour_field, abs(ealphak),	kx, ky, nLevs, scale1, id = specPID, view = 1;, /log
+		contour_field, abs(ebetak),		kx, ky, nLevs, scale2, id = specPID, view = 2;, /log
+		contour_field, abs(ebk),		kx, ky, nLevs, scale3_, id = specPID, view = 3;, /log
 
 		;; Reconstruct the fields using only a specific set of
 		;; basis vectors

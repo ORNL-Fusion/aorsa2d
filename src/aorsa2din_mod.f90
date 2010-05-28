@@ -37,6 +37,8 @@ implicit none
     logical :: chebyshevX = .false.
     logical :: chebyshevY = .false.
     logical :: magma = .false.
+    real :: rhoAnt = 0.97
+    real :: antSigRho = 0.1
 
 !     --------------------------------------------------------
 !     Declarations and defaults for aorsa2d.in input variables
@@ -453,7 +455,7 @@ implicit none
      &    metalLeft, metalRight, metalTop, metalBot, useSoloviev, a, psiExp, &
      &    noPoloidalField, rhoScale, rhoWidth, rhoPower, useCircular, &
      &    bPol_frac, useCircularProfiles, lsWeightFac, xkx_cutOff, xky_cutOff, &
-     &    chebyshevX, chebyshevY, magma
+     &    chebyshevX, chebyshevY, magma, rhoAnt, antSigRho
                 
 contains
 
