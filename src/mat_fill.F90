@@ -455,8 +455,7 @@ contains
                                         ! --------------------------------------
 
                                         if (nPtsX/=1) then
-                                        if ( i==1 .or. i==nPtsX &
-                                                .or. (.not. mask(i,j)) ) then 
+                                        if ( i==1 .or. i==nPtsX ) then 
 
                                             if (ii==0 .and. jj==0) aMat(localRow,localCol) = bFn * lsWeightFac 
                                             if (ii==1 .and. jj==0) aMat(localRow,localCol) = 0  
@@ -474,8 +473,7 @@ contains
                                         endif
 
                                         if (nPtsY/=1) then
-                                        if ( j==1 .or. j==nPtsY &
-                                                .or. (.not. mask(i,j)) ) then 
+                                        if ( j==1 .or. j==nPtsY ) then 
 
                                             if (ii==0 .and. jj==0) aMat(localRow,localCol) = bFn * lsWeightFac 
                                             if (ii==1 .and. jj==0) aMat(localRow,localCol) = 0  
