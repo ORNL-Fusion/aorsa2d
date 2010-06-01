@@ -60,7 +60,7 @@ contains
         integer :: localRow, localCol
         complex :: metal
         logical, allocatable :: isMetal(:,:)
-        real :: kr, kt, kz, r, z
+        real :: kr, kt, kz, r, z, kVec_stix(3)
         complex :: &
             dxx, dxy, dxz, &
             dyx, dyy, dyz, &
@@ -210,15 +210,20 @@ contains
                                     kz = m * normFacY
                                 endif
 
-                                if (iSigma==1 .and. (.not. isMetal(i,j)) ) & ! hot plasma        
-                                sigma_tmp = sigmaHot_maxwellian&
-                                    ( mSpec(s), &
-                                    ktSpec(i,j,s), omgc(i,j,s), omgp2(i,j,s), &
-                                    kr, kz, kPhi(i), capr(i), &
-                                    omgrf, k0, &
-                                    k_cutoff, s, &
-                                    bMod(i,j), gradPrlB(i,j), &
-                                    U_xyz(i,j,:,:), U_cyl(i,j,:,:), nuOmg2D(i,j) )
+                                if (iSigma==1 .and. (.not. isMetal(i,j)) ) then ! hot plasma        
+
+                                    kVec_stix = matMul( U_cyl(i,j,:,:), (/ kr, kPhi(i), kz /) ) 
+
+                                    sigma_tmp = sigmaHot_maxwellian&
+                                        ( mSpec(s), &
+                                        ktSpec(i,j,s), omgc(i,j,s), omgp2(i,j,s), &
+                                        kVec_stix, capr(i), &
+                                        omgrf, k0, &
+                                        k_cutoff, s, &
+                                        sinTh(i,j), bPol(i,j), bMod(i,j), gradPrlB(i,j), &
+                                        nuOmg2D(i,j) )
+
+                                endif
                               
                                 if (iSigma==0) & ! cold plasma 
                                 sigma_tmp = sigmaCold_stix &

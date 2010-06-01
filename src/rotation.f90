@@ -2,7 +2,7 @@ modUle rotation
 
 implicit none
 
-real, allocatable, dimension(:,:) :: btaU
+real, allocatable, dimension(:,:) :: bPol
 real :: sqx
 real, allocatable, dimension(:,:) :: &
     Uxx, Uxy, Uxz, Uyx, Uyy, Uyz, Uzx, Uzy, Uzz
@@ -12,7 +12,7 @@ real, allocatable, dimension(:,:) :: &
 
 real, allocatable, dimension(:,:,:,:) :: U_xyz, U_cyl
 
-real :: sinTh
+real, allocatable :: sinTh(:,:)
 real, allocatable, dimension(:,:) :: gradPrlB
 !real, allocatable, dimension(:,:) :: &
 !    dxUxx, dxxUxx, dxUxy, dxxUxy, dxUxz, dxxUxz, &
@@ -74,7 +74,7 @@ contains
         real, allocatable :: det(:,:)
 
         allocate ( sqr ( nPtsx, nPtsY ) )
-        allocate ( btaU ( nPtsX, nPtsY ) )
+        allocate ( bPol ( nPtsX, nPtsY ) )
 
         allocate ( &
             Uxx( nPtsX, nPtsY ), & 
@@ -90,7 +90,7 @@ contains
         do i = 1, nPtsX
             do j = 1, nPtsY
 
-                btaU(i,j) = sqrt(bxn(i,j)**2 + byn(i,j)**2)
+                bPol(i,j) = sqrt(bxn(i,j)**2 + byn(i,j)**2)
 
                 sqx = sqrt(1.0 - bxn(i,j)**2)
 
@@ -201,91 +201,33 @@ contains
         implicit none
 
         integer :: i, j
+        real :: distance
 
-        allocate ( gradPrlB (nPtsX,nPtsY) )
+        allocate ( gradPrlB (nPtsX,nPtsY), sinTh(nPtsX,nPtsY) )
+        gradPrlB = 0
 
-        !! XYZ version
-        !! -----------
+        do i = 1, nPtsX
+            do j = 1, nPtsY
 
-        !allocate ( &  
-        !    dxUxx(nPtsX,nPtsY), dxxUxx(nPtsX,nPtsY), &
-        !    dxUxy(nPtsX,nPtsY), dxxUxy(nPtsX,nPtsY), &
-        !    dxUxz(nPtsX,nPtsY), dxxUxz(nPtsX,nPtsY), &
-        !    dxUyx(nPtsX,nPtsY), dxxUyx(nPtsX,nPtsY), &
-        !    dxUyy(nPtsX,nPtsY), dxxUyy(nPtsX,nPtsY), &
-        !    dxUyz(nPtsX,nPtsY), dxxUyz(nPtsX,nPtsY), &
-        !    dxUzx(nPtsX,nPtsY), dxxUzx(nPtsX,nPtsY), &
-        !    dxUzy(nPtsX,nPtsY), dxxUzy(nPtsX,nPtsY), &
-        !    dxUzz(nPtsX,nPtsY), dxxUzz(nPtsX,nPtsY) )
+                ! Brambillas approximation to dBdPar
+                ! ----------------------------------
 
-        !allocate ( &  
-        !    dyUxx(nPtsX,nPtsY), dyyUxx(nPtsX,nPtsY), &
-        !    dyUxy(nPtsX,nPtsY), dyyUxy(nPtsX,nPtsY), &
-        !    dyUxz(nPtsX,nPtsY), dyyUxz(nPtsX,nPtsY), &
-        !    dyUyx(nPtsX,nPtsY), dyyUyx(nPtsX,nPtsY), &
-        !    dyUyy(nPtsX,nPtsY), dyyUyy(nPtsX,nPtsY), &
-        !    dyUyz(nPtsX,nPtsY), dyyUyz(nPtsX,nPtsY), &
-        !    dyUzx(nPtsX,nPtsY), dyyUzx(nPtsX,nPtsY), &
-        !    dyUzy(nPtsX,nPtsY), dyyUzy(nPtsX,nPtsY), &
-        !    dyUzz(nPtsX,nPtsY), dyyUzz(nPtsX,nPtsY) )
+                distance = sqrt ( (capR(i)-r0)**2 + y(j)**2 )
+                if ( distance > 0 ) then
 
-        !allocate ( &
-        !    dxyUxx(nPtsX,nPtsY), dxyUxy(nPtsX,nPtsY), dxyUxz(nPtsX,nPtsY), &
-        !    dxyUyx(nPtsX,nPtsY), dxyUyy(nPtsX,nPtsY), dxyUyz(nPtsX,nPtsY), &
-        !    dxyUzx(nPtsX,nPtsY), dxyUzy(nPtsX,nPtsY), dxyUzz(nPtsX,nPtsY) )
-        !            
-        !do i = 1, nPtsX
-        !    do j = 1, nPtsY
+                    sinTh(i,j) =  y(j) / distance
+                    gradPrlB(i,j) = bMod(i,j) / capR(i) * abs ( bPol(i,j) * sinTh(i,j) )
 
-        !        !   Brambilla approximation:
-        !        !   -----------------------
+                else ! on magnetic axis (r=r0, y=y0=0)
 
-        !        sinTh = y(j) 
-        !        if (abs(y(j))>0) &
-        !        sinTh =  y(j) / sqrt ( (capR(i)-r0)**2 + y(j)**2 )
+                    gradPrlB(i,j) = 0
 
-        !        gradprlb(i,j) = bMod(i,j) / capr(i) * abs ( btaU(i,j) * sinTh )
+                endif
 
-        !        !if (nzfUn == 0) gradPrlB(i,j) = 1.0e-10
+                !if (nzfUn == 0) gradPrlB(i,j) = 1.0e-10
 
-        !        call deriv_x(Uxx, i, j, dx, dfdx = dxUxx(i,j), d2fdx2 = dxxUxx(i,j))
-        !        call deriv_x(Uxy, i, j, dx, dfdx = dxUxy(i,j), d2fdx2 = dxxUxy(i,j))
-        !        call deriv_x(Uxz, i, j, dx, dfdx = dxUxz(i,j), d2fdx2 = dxxUxz(i,j))
-
-        !        call deriv_x(Uyx, i, j, dx, dfdx = dxUyx(i,j), d2fdx2 = dxxUyx(i,j))
-        !        call deriv_x(Uyy, i, j, dx, dfdx = dxUyy(i,j), d2fdx2 = dxxUyy(i,j))
-        !        call deriv_x(Uyz, i, j, dx, dfdx = dxUyz(i,j), d2fdx2 = dxxUyz(i,j))
-
-        !        call deriv_x(Uzx, i, j, dx, dfdx = dxUzx(i,j), d2fdx2 = dxxUzx(i,j))
-        !        call deriv_x(Uzy, i, j, dx, dfdx = dxUzy(i,j), d2fdx2 = dxxUzy(i,j))
-        !        call deriv_x(Uzz, i, j, dx, dfdx = dxUzz(i,j), d2fdx2 = dxxUzz(i,j))
-
-        !        call deriv_y(Uxx, i, j, dy, dfdy = dyUxx(i,j), d2fdy2 = dyyUxx(i,j))
-        !        call deriv_y(Uxy, i, j, dy, dfdy = dyUxy(i,j), d2fdy2 = dyyUxy(i,j))
-        !        call deriv_y(Uxz, i, j, dy, dfdy = dyUxz(i,j), d2fdy2 = dyyUxz(i,j))
-
-        !        call deriv_y(Uyx, i, j, dy, dfdy = dyUyx(i,j), d2fdy2 = dyyUyx(i,j))
-        !        call deriv_y(Uyy, i, j, dy, dfdy = dyUyy(i,j), d2fdy2 = dyyUyy(i,j))
-        !        call deriv_y(Uyz, i, j, dy, dfdy = dyUyz(i,j), d2fdy2 = dyyUyz(i,j))
-
-        !        call deriv_y(Uzx, i, j, dy, dfdy = dyUzx(i,j), d2fdy2 = dyyUzx(i,j))
-        !        call deriv_y(Uzy, i, j, dy, dfdy = dyUzy(i,j), d2fdy2 = dyyUzy(i,j))
-        !        call deriv_y(Uzz, i, j, dy, dfdy = dyUzz(i,j), d2fdy2 = dyyUzz(i,j))
-
-        !        call deriv_xy(Uxx, i, j, dx, dy, d2fdxy = dxyUxx(i,j))
-        !        call deriv_xy(Uxy, i, j, dx, dy, d2fdxy = dxyUxy(i,j))
-        !        call deriv_xy(Uxz, i, j, dx, dy, d2fdxy = dxyUxz(i,j))
-
-        !        call deriv_xy(Uyx, i, j, dx, dy, d2fdxy = dxyUyx(i,j))
-        !        call deriv_xy(Uyy, i, j, dx, dy, d2fdxy = dxyUyy(i,j))
-        !        call deriv_xy(Uyz, i, j, dx, dy, d2fdxy = dxyUyz(i,j))
-
-        !        call deriv_xy(Uzx, i, j, dx, dy, d2fdxy = dxyUzx(i,j))
-        !        call deriv_xy(Uzy, i, j, dx, dy, d2fdxy = dxyUzy(i,j))
-        !        call deriv_xy(Uzz, i, j, dx, dy, d2fdxy = dxyUzz(i,j))
-
-        !   enddo
-        !enddo
+           enddo
+        enddo
 
         ! R,Th,z version
         ! --------------

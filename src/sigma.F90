@@ -4,10 +4,10 @@ contains
 
     function sigmaHot_maxwellian( &
         xm, kt, omgc, omgp2, &
-        kx, ky, kPhi, capr, &
+        kVec, capr, &
         omgrf, k0, &
         k_cutoff, specNo, &
-        bMod, gradPrlB, U_xyz, U_cyl, nuOmg )
+        sinTh, bPol, bMod, gradPrlB, nuOmg )
 
         use constants
         use zfunction_mod
@@ -17,123 +17,123 @@ contains
         use bessel_mod
 
         ! Calculate the hot Maxwellian sigma at a single
-        ! point in space
-        !-----------------------------------------------
-
-        ! This routine uses the modified Z functions Z0, Z1, Z2
-        ! with the appropriate sign changes for k_parallel < 0.0
-        ! No rotation is made.  Result is in the Stix frame,
-        ! (alp,bet,prl)
-        ! ---------------------------------------------------------
+        ! point in space in Stix frame including toriodal
+        ! broadening using either Smithe or Brambilla
+        ! methods. Stix frame is (alp,bet,prl).
+        !------------------------------------------------
 
         implicit none
 
         !include "gptl.inc"
 
-        real, intent(in) :: bMod, gradPrlB, U_xyz(:,:), U_cyl(:,:)
+        real, intent(in) :: sinTh, bPol, bMod, gradPrlB
         complex :: sigmaHot_maxwellian(3,3)
         integer, intent(in) :: specNo
         real, intent(in) :: k_cutOff, nuOmg
-        real, intent(in) :: kx, ky, kPhi, capr
+        real, intent(in) :: kVec(:), capr
 
         integer :: l, labs, i, j
         real :: kPerp, kPrl, xm, kt, omgc, omgp2, kPrlTmp
-        real :: kPrl_eff, fgam, y0, y
+        real :: kPrlEff, fgam, y0, y
         real(kind=dbl) :: sgn_kPrl
         real :: descrim
         real :: nu_coll
-        real :: akPrl,  alpha, omgrf
-        real(kind=dbl) :: gammaBroaden(-lmax:lmax), gamma_coll(-lmax:lmax)
+        real :: vTh, omgrf
+        real(kind=dbl) :: alpha_smithe(-lmax:lmax), gamma_smithe(-lmax:lmax)
+        real(kind=dbl) :: gamma_brambilla(-lmax:lmax)
         real :: rhol
         real :: kAlp, kBet, k0, rgamma
         real(kind=dbl) :: kr, step
         complex :: omgrfc
-        complex(kind=dbl), allocatable :: z0(:), z1(:), z2(:)
+        complex(kind=dbl), allocatable :: Z(:), ZPrime(:), zetaZPrime(:)
         complex :: sig0, sig1, sig2, sig3, sig4, sig5
         complex :: sig0l, sig1l, sig2l, sig3l, sig4l, sig5l
         integer, parameter :: lmaxdim = 99
         complex(kind=dbl), allocatable, dimension(:) :: &
           expBesselI, expBesselIPrime, expBesselIOverGam
         complex(kind=dbl) :: zetal(-lmax:lmax)
-        complex :: zieps0, al, bl, cl 
+        complex :: zieps0, P, PPrime 
         complex(kind=dbl) ::gamma_
-        real :: dR
+        real :: dR, Lpar
         integer :: stat
+        real :: sinPh
 
-        !nu_coll =  .01 * omgrf
         zieps0 = zi * eps0
-        alpha = sqrt(2. * kt / xm)
-        rhol = alpha / omgc
+        vTh = sqrt(2. * kt / xm)
+        rhol = vTh / omgc
         omgrfc = omgrf * (1. + zi * nuOmg)
-
 
         ! k in Stix frame
         ! ---------------
 
-#ifdef cylProper 
-
-        !kAlp = Urr_(i,j) * kx + Urth_(i,j) * kPhi + Urz_(i,j) * ky
-        !kBet = Uthr_(i,j) * kx + Uthth_(i,j) * kPhi + Uthz_(i,j) * ky
-        !kPrl = Uzr_(i,j) * kx + Uzth_(i,j) * kPhi + Uzz_(i,j) * ky
-
-        kAlp = U_cyl(1,1) * kx + U_cyl(1,2) * kPhi + U_cyl(1,3) * ky
-        kBet = U_cyl(2,1) * kx + U_cyl(2,2) * kPhi + U_cyl(2,3) * ky
-        kPrl = U_cyl(3,1) * kx + U_cyl(3,2) * kPhi + U_cyl(3,3) * ky
-
-        !if ( upShift == 0 ) kPrl = Uzth_(i,j) * kPhi
-        if ( upShift == 0 ) kPrl = U_cyl(3,2) * kPhi
-#else 
-        !kAlp = uxx(i,j) * kx + uxy(i,j) * ky + uxz(i,j) * kPhi
-        !kBet = uyx(i,j) * kx + uyy(i,j) * ky + uyz(i,j) * kPhi
-        !kPrl = uzx(i,j) * kx + uzy(i,j) * ky + uzz(i,j) * kPhi
-
-        kAlp = U_xyz(1,1) * kx + U_xyz(1,2) * kPhi + U_xyz(1,3) * ky
-        kBet = U_xyz(2,1) * kx + U_xyz(2,2) * kPhi + U_xyz(2,3) * ky
-        kPrl = U_xyz(3,1) * kx + U_xyz(3,2) * kPhi + U_xyz(3,3) * ky
-
-        !if (upshift == 0)  kPrl = uzz(i,j) * kPhi
-        if (upshift == 0)  kPrl = U_xyz(3,3) * kPhi
-
-#endif
+        kAlp = kVec(1)
+        kBet = kVec(2)
+        kPrl = kVec(3)
 
         kPerp = sqrt(kAlp**2 + kBet**2)
 
         if (kPrl  == 0.0) kPrl  = 1.0e-08
         if (kPerp == 0.0) kPerp = 1.0e-08
 
-        sgn_kPrl    = sign ( 1.0, kPrl )
-        akPrl       = abs ( kPrl )
+        !sgn_kPrl    = sign ( 1.0, kPrl )
 
 
-        ! Calculate zetal(l) and gammaBroaden(l)
-        ! ---------------------------------
+        ! Calculate Z function argument
+        ! -----------------------------
+
+        nu_coll =  .01 * omgrf
 
         do l = -lmax, lmax
 
-            kPrlTmp = kPrl
-            dR      = real(omgc) / ( real(kPrl) * alpha )
-            !if((abs(dR)/10.0)<abs(dx)) 
-            !write(*,*) dx, dR, kPrl, alpha
-            !if(abs(kPrlTmp)>25) kPrlTmp=sgn_kPrl * 25 
-            zetal(l) = (omgrfc - l * omgc) / (kPrlTmp * alpha) 
 
-            gammaBroaden(l) = abs(l * omgc / (2.0 * alpha * kPrlTmp**2) &
-                                                    * gradPrlB / bMod)
-            !gamma_coll(l) = nu_coll / (akPrl * alpha)
+            ! Two toroidal broadening terms from 
+            ! Smithe et al., PRL Vol 60, No. 9, Feb 1988
+            ! ------------------------------------------
 
-            ! electrons
-            if(specNo==1) &
-            gammaBroaden(l) = 0.0
-           
-            ! not sure why this is nescessary yet ... ask EFJ 
-            if ( abs(gammaBroaden(l) ) < .01 ) &
-            gammaBroaden(l) = .01
+            !alpha_smithe(l) = l * omgc / ( kPrl * abs( kPrl ) * gradPrlB * vTh )
+            !gamma_smithe(l) = nu_coll / (abs(kPrl) * vTh)
+
+
+            ! Brambilla has a single approximate broadening term
+            ! Phys. Lett. A, 188, 376-383, 1994
+            ! ---------------------------------
+    
+            sinPh = bPol / bMod
+            gamma_brambilla(l) = omgrf / ( 2.0 * kPrl**2 * capR * vTh ) * abs ( sinTh * sinPh ) 
+
+
+            ! ions only 
+            ! ---------
+
+            if(specNo==1) then 
+
+                alpha_smithe(l) = 0
+                gamma_brambilla(l) = 0
+
+            endif
+
+
+            ! Create and effective kPrl that includes toroial broadening
+            ! ----------------------------------------------------------
+
+            if(gamma_brambilla(l)>0)  then
+
+                kPrlEff = kPrl * ( sqrt ( 1 + 4 * gamma_brambilla(l) ) - 1 ) &
+                                / ( 2 * gamma_brambilla(l))
+            else
+
+                kPrlEff = kPrl
+
+            endif
+         
+
+            zetal(l) = (omgrfc - l * omgc) / ( abs( kPrlEff ) * vTh) 
 
         enddo
 
 
-        ! Maxwellian distribution
-        ! -----------------------
+        ! Exp(-Gamma) * Il etc 
+        ! --------------------
 
         gamma_ = 0.5 * kPerp**2 * rhol**2
         
@@ -143,12 +143,22 @@ contains
             expBesselIOverGam(0:lMax) )
 
         if ( real (gamma_) >= 1.0e-08 ) then
-
             call besIExp ( gamma_, lMax, expBesselI, expBesselIPrime, expBesselIOverGam )
         else
             call bes_expand ( gamma_, lMax, expBesselI, expBesselIPrime, expBesselIOverGam )
-
         endif
+
+        
+        ! Calculate Z function
+        ! --------------------
+
+        allocate ( Z(-lMax:lMax), ZPrime(-lMax:lMax), zetaZPrime(-lMax:lMax) )
+
+        call z_approx_dlg ( zetal, Z, ZPrime )
+
+
+        ! Calculate sigmas according to Swanson
+        ! -------------------------------------
 
         sig0 = 0.0
         sig1 = 0.0
@@ -157,28 +167,19 @@ contains
         sig4 = 0.0
         sig5 = 0.0
 
-        allocate ( z0(-lMax:lMax), z1(-lMax:lMax), z2(-lMax:lMax) )
-
-        call z_approx ( sgn_kPrl, zetal, gammaBroaden, z0, z1, z2)
-
         do l = -lmax, lmax
 
             labs = abs(l)
 
-            !if(nzfun .eq. 0) call z_approx(sgn_kPrl, zetal(l), 0.0, z0, z1, z2)
-            !if(nzfun .eq. 2) call z_smithe(sgn_kPrl,zetal(l),gammaBroaden(l), z0, z1, z2)
-            !if(nzfun .eq. 3) call z_table(sgn_kPrl,zetal(l),gammaBroaden(l), gamma_coll(l), z0, z1, z2)
+            P = omgp2 / (abs(kPrlEff) * vTh) * Z(l)
+            PPrime = omgp2 / (abs(kPrlEff) * vTh) * ZPrime(l)
 
-            al = 1.0 / (kPrl * alpha) * z0(l)
-            bl = 1.0 / (kPrl * alpha) * z1(l)
-            cl = 1.0 / (kPrl * alpha) * z2(l)
-
-            sig0l = - zieps0 * omgp2 * rhol**2 * (expBesselI(labs) - expBesselIPrime(labs)) * al
-            sig1l = - zieps0 * omgp2 * l**2 * expBesselIOverGam(labs) * al
-            sig2l = - eps0 * omgp2 * l * (expBesselI(labs) - expBesselIPrime(labs)) * al
-            sig3l = - zieps0 * omgp2 * 2.0 * expBesselI(labs) * cl
-            sig4l = - zieps0 * omgp2 * rhol * l * expBesselIOverGam(labs) * bl
-            sig5l = - eps0 * omgp2 * rhol * (expBesselI(labs) - expBesselIPrime(labs)) * bl
+            sig0l = - zieps0 * rhol**2 * (expBesselI(labs) - expBesselIPrime(labs)) * P 
+            sig1l = - zieps0 * l**2 * expBesselIOverGam(labs) * P
+            sig2l = - eps0 * l * (expBesselI(labs) - expBesselIPrime(labs)) * P
+            sig3l =   zieps0 * expBesselI(labs) * zetal(l) * PPrime
+            sig4l =   0.5 * zieps0 * rhol * l * expBesselIOverGam(labs) * PPrime
+            sig5l =   0.5 * eps0 * rhol * (expBesselI(labs) - expBesselIPrime(labs)) * PPrime
 
             sig0 = sig0 + sig0l
             sig1 = sig1 + sig1l

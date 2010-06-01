@@ -123,16 +123,42 @@ contains
 !***************************************************************************
 !
 
+    subroutine z_approx_dlg ( zeta, Z, zPrime )
+
+        ! This routine is for the Brambilla toroidal broadening
+        ! method ... NOT the Smithe approach. i.e., gamma_ is 
+        ! gamma_brambilla
+
+        use hammett, zfun_hammett => zfun
+
+        implicit none
+
+        complex, intent(in) :: zeta(:)
+        complex, intent(out) :: Z(:), ZPrime(:)
+
+        complex, allocatable :: zFunct(:)
+        integer :: nL, i
+
+        nL = size ( zeta )
+
+        do i=1,nL 
+          Z(i) = zfun_hammett ( zeta(i) )
+        enddo
+
+        ZPrime      = -2 * ( 1.0 + zeta * Z )
+
+   end subroutine z_approx_dlg
+
 
       subroutine z_approx(sgn_kprl, zeta, gamma_, z0, z1, z2)
 
+      ! This routine is for the Brambilla toroidal broadening
+      ! method ... NOT the Smithe approach. i.e., gamma_ is 
+      ! gamma_brambilla
+
       use ztable_mod
-#ifdef zFunHammett
       use hammett, zfun_hammett => zfun
-#else
-      use hammett, zfun_hammett => zfun
-      use zfunOriginal
-#endif
+
       implicit none
 
       real, intent(in) :: sgn_kPrl, gamma_(:)
@@ -145,6 +171,14 @@ contains
       complex :: fzeta
       complex :: zFunctCheck
       integer :: nL, i
+
+        if(any(gamma_<0))then
+
+            write(*,*) "ERROR [z_approx]: gamma_ should be >= 0"
+            write(*,*) "    gamma_ = ", gamma_
+            stop
+
+        endif   
 
       nL = size ( zeta )
 
@@ -160,15 +194,7 @@ contains
         endwhere
 
         do i=1,nL 
-#ifdef zFunHammett
             zFunct(i) = zfun_hammett ( fGam(i) * zeta(i) )
-#else
-            ! this zfun gives NaNs when argument close to zero?
-            call zfun (zetat, zfunct)
-            zFunctCheck =  zfun_hammett (zetat)
-            write(*,*) zetat, zfunct, zFunctCheck
-#endif
-
         enddo
 
          z0 = fgam * zfunct
@@ -190,14 +216,7 @@ contains
         endwhere
 
         do i=1,nL
-#ifdef zFunHammett
             zfunct(i) = zfun_hammett (-fGam(i)*zeta(i))
-#else
-        ! this zfun gives NaNs when argument close to zero?
-        call zfun (zetat, zfunct)
-        zFunctCheck = zfun_hammett (zetat)
-        write(*,*) zetat, zfunct, zFunctCheck
-#endif
         enddo
 
          z0 = - fgam * zfunct
