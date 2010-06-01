@@ -54,9 +54,6 @@ contains
 
         !   note curden is in Amps per meter of toroidal length (2.*pi*rt).
 
-        !antSigX = 0.1
-        !antSigY = 0.3
-
         do i = 1, nPtsX
             do j = 1, nPtsY
 
@@ -77,8 +74,7 @@ contains
                 !   -------------------
 
                 if(nPtsX/=1) then
-                if ( i==1 .or. i==nPtsX &
-                        .or. (.not. mask(i,j)) ) then
+                if ( i==1 .or. i==nPtsX ) then
                     xjx(i,j)    = 0
                     xjy(i,j)    = 0
                     xjz(i,j)    = 0
@@ -86,8 +82,7 @@ contains
                 endif
 
                 if(nPtsY/=1) then
-                if ( j==1 .or. j==nPtsY &
-                        .or. (.not. mask(i,j)) ) then
+                if ( j==1 .or. j==nPtsY ) then
                     xjx(i,j)    = 0
                     xjy(i,j)    = 0
                     xjz(i,j)    = 0
@@ -95,12 +90,12 @@ contains
                 endif
 
 
-                if ( capR(i) < metalLeft .or. capR(i) > metalRight &
-                        .or. y(j) > metalTop .or. y(j) < metalBot ) then 
-                    xjx(i,j)    = 0
-                    xjy(i,j)    = 0
-                    xjz(i,j)    = 0
-                endif
+                !if ( capR(i) < metalLeft .or. capR(i) > metalRight &
+                !        .or. y(j) > metalTop .or. y(j) < metalBot ) then 
+                !    xjx(i,j)    = 0
+                !    xjy(i,j)    = 0
+                !    xjz(i,j)    = 0
+                !endif
 
 
            enddo

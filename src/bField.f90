@@ -68,6 +68,7 @@ contains
 
         allocate ( mask(nPtsX,nPtsY) )
         mask = is_inside_bbbs ()
+        mask = .true.
 
 
     end subroutine bFieldEqdsk

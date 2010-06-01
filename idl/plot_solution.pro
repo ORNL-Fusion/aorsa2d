@@ -48,7 +48,7 @@ pro contour_field, field, x, y, nLevs, scale, $
 end
 
 pro plot_solution, oneD = oneD, $
-		scale1 = scale1, scale2 = scale2
+		scale1 = scale1, scale2 = scale2, scale3_ = scale3_
 
 	cdfId = ncdf_open ( 'runData.nc', /noWrite ) 
 		nCdf_varGet, cdfId, 'capR', x 
@@ -135,27 +135,30 @@ pro plot_solution, oneD = oneD, $
 		nLevs	= 21 
 
 		if(not keyword_set(scale1)) then $
-		scale1 = max ( abs ( [ealpha[*],ebeta[*],eb[*]] ) )
+		scale1 = max ( abs ( [ealpha] ) )
 		if(not keyword_set(scale2)) then $
-		scale2 = max ( abs(abs ( [eb[*]] )) ) 
-		print, 'Scale: ', scale1
-		print, 'ScalePrl: ', scale2
+		scale2 = max ( abs ( [ebeta] ) )
+		if(not keyword_set(scale3_)) then $
+		scale3_ = max ( abs(abs ( [eb[*]] )) ) 
+		print, 'Scale1: ', scale1
+		print, 'Scale2: ', scale2
+		print, 'Scale3: ', scale3_
 
 		fieldPlot = 2
 		iContour, id = fieldPlot, view_grid = [3,1], $
 				/zoom_on_resize
 
 		contour_field, ealpha, x, y, nLevs, scale1, id = fieldPlot, view = 1
-		contour_field, ebeta, x, y, nLevs, scale1, id = fieldPlot, view = 2
-		contour_field, eb, x, y, nLevs, scale2, id = fieldPlot, view = 3
+		contour_field, ebeta, x, y, nLevs, scale2, id = fieldPlot, view = 2
+		contour_field, eb, x, y, nLevs, scale3_, id = fieldPlot, view = 3
 
 
 		; Spectrum contour plot
 		; ---------------------
 
-		scale1 = max ( abs ( [ealphak_re[*]] ) ) * 0.5
-		scale2 = max ( abs ( [ebetak_re[*]] ) ) * 0.5 
-		scale3_ = max ( abs ( [ebk_re[*]] ) ) * 0.5 
+		scale1 = max ( abs ( [ealphak] ) ) * 0.8
+		scale2 = max ( abs ( [ebetak] ) ) * 0.8 
+		scale3_ = max ( abs ( [ebk] ) ) * 0.8 
 
 		specPID = 3
 		iContour, id = specPID, view_grid = [3,1], dimensions = [1200,300]
