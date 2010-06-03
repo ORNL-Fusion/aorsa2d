@@ -15,6 +15,7 @@ program aorsa2dMain
     use solve
     use parallel
     use timer_mod
+    use E_to_lab
 
     implicit none
 
@@ -256,11 +257,20 @@ program aorsa2dMain
 !   -------------------------------------------
 
     if (iAm==0) &
-    write(*,*) 'Inverse Fourier transforming the k coeffs'
+    write(*,*) 'Constructin E solution from basis set (alpha,beta,b)'
     
     call sftInv2d ( ealphak, f = ealpha )
     call sftInv2d ( ebetak, f = ebeta )
     call sftInv2d ( eBk, f = eB )
+
+
+!   Rotation E solution to Lab frame 
+!   --------------------------------
+
+    if (iAm==0) &
+    write(*,*) 'Rotating E solution to lab frame (R,Th,z)'
+ 
+    call rotate_E_to_lab ()
 
 
 !   Write data to file
@@ -276,37 +286,9 @@ program aorsa2dMain
     call release_grid ()
 #endif
 
-
     !stat = gptlStop ('total')
     !stat = gptlpr (0)
     !stat = gptlFinalize ()
-
-!
-!!     ----------------------------------------------
-!!     Calculate E in the Lab frame and eplus, eminus
-!!     ----------------------------------------------
-!      isq2 = SQRT(0.5)
-!      do i = 1, nModesX
-!         do j = 1, nModesY
-!
-!            ex(i,j)   = uxx(i,j) * ealpha(i,j) &
-!                      + uyx(i,j) * ebeta(i,j) &
-!                      + uzx(i,j) * eb(i,j)
-!
-!            ey(i,j)   = uxy(i,j) * ealpha(i,j) &
-!                      + uyy(i,j) * ebeta(i,j) &
-!                      + uzy(i,j) * eb(i,j)
-!
-!            ez(i,j)   = uxz(i,j) * ealpha(i,j) &
-!                      + uyz(i,j) * ebeta(i,j) &
-!                      + uzz(i,j) * eb(i,j)
-!
-!            eplus(i,j)  = isq2 * (ealpha(i,j) + zi * ebeta(i,j))
-!          eminus(i,j) = isq2 * (ealpha(i,j) - zi * ebeta(i,j))
-!
-!         end do
-!      end do
-!
 
     if (iAm==0) &
     write(*,*) 'Total time: ', end_timer ( tTotal )

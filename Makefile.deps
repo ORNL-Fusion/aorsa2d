@@ -15,7 +15,8 @@ ${AORSA2D}: \
 		${OBJ_DIR}/mat_fill.o \
 		${OBJ_DIR}/antenna.o \
 		${OBJ_DIR}/solve.o \
-		${OBJ_DIR}/timer.o
+		${OBJ_DIR}/timer.o \
+		${OBJ_DIR}/rotateEToLab.o
 
 ${AORSA1D}: \
 		${OBJ_DIR}/constants.o \
@@ -118,5 +119,10 @@ ${OBJ_DIR}/solve.o: \
 
 ${OBJ_DIR}/write_data.o: \
 		${OBJ_DIR}/check_mod.o
+
+${OBJ_DIR}/rotateEToLab.o: \
+		${OBJ_DIR}/solve.o \
+		${OBJ_DIR}/aorsa2din_mod.o \
+		${OBJ_DIR}/rotation.o
 
 

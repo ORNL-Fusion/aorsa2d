@@ -7,13 +7,22 @@ only: chebyshevX, chebyshevY
 
 implicit none
 
+type :: gridBlock
+
+    integer :: nX, nY
+    real, allocatable, dimension(:) :: xNorm, yNorm, R, z 
+    real :: rMin, rMax, zMin, zMax
+
+end type gridBlock
+
+type(gridBlock), allocatable :: allGrids(:)
+
 !   init_grid
 real, allocatable, dimension(:) :: capR, kPhi
 real, allocatable, dimension(:) :: y, xGrid_basis, yGrid_basis
 real :: xRange, yRange, normFacX, normFacY
 
 !   init_k
-!real, allocatable, dimension(:) :: kxsav, kysav
 real :: k_cutOff!, kx_cutOff, ky_cutOff
 integer :: nMin, nMax, mMin, mMax
 
@@ -75,7 +84,7 @@ contains
 
        
         ! define y mesh: y(j)
-        !--------------------
+        ! -------------------
         
             allocate ( y ( nPtsY ), &
                 yGrid_basis(nPtsY) )
@@ -165,31 +174,6 @@ contains
         k_cutOff = xkPerp_cutOff * sqrt(&
            (nMax * normFacX)**2+(mMax*normFacY)**2)
 
-        !allocate ( &
-        !    kxSav (nMin:nMax), &
-        !    kySav (mMin:mMax) )
-
-        !if(nPtsX/=1)then
-
-        !    do n = nMin, nMax 
-        !        !kxSav(n) = 2.0 * pi * n / (xRange+dx)
-        !        kxSav(n) = 2.0 * pi * n / xRange
-        !    enddo
-        !else
-        !        kxSav(0) = 0
-        !endif
-
-        !if(nPtsY/=1)then
-        !    do m = mMin, mMax 
-        !        !kySav(m) = 2.0 * pi * m / (yRange+dy) 
-        !        kySav(m) = 2.0 * pi * m / yRange 
-        !    enddo
-        !else
-        !        kySav(0) = 0
-        !endif
-
-        !k_cutOff   = sqrt ( maxVal ( abs(kxSav) )**2 &
-        !                        + maxVal ( abs(kySav) )**2 ) * xkPerp_cutOff
         !kx_cutOff   = maxVal ( abs(kxSav) ) * xkx_cutOff
         !ky_cutOff   = maxVal ( abs(kySav) ) * xky_cutOff
 

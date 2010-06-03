@@ -40,6 +40,18 @@ pro plot_sigma
 	sig32	= complex ( sig32_re, sig32_im )
 	sig33	= complex ( sig33_re, sig33_im )
 
+	isurface, imaginary(sig11), r, k, view_grid=[3,3], /zoom_on_resize
+	isurface, imaginary(sig12), r, k, /view_next
+	isurface, imaginary(sig13), r, k, /view_next
+
+	isurface, imaginary(sig21), r, k, /view_next
+	isurface, imaginary(sig22), r, k, /view_next
+	isurface, imaginary(sig23), r, k, /view_next
+
+	isurface, imaginary(sig31), r, k, /view_next
+	isurface, imaginary(sig32), r, k, /view_next
+	isurface, imaginary(sig33), r, k, /view_next
+
 	isurface, sig11, r, k, view_grid=[3,3], /zoom_on_resize
 	isurface, sig12, r, k, /view_next
 	isurface, sig13, r, k, /view_next
@@ -51,5 +63,6 @@ pro plot_sigma
 	isurface, sig31, r, k, /view_next
 	isurface, sig32, r, k, /view_next
 	isurface, sig33, r, k, /view_next
+
 stop
 end

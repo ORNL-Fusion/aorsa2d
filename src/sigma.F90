@@ -57,6 +57,7 @@ contains
         real :: dR, Lpar
         integer :: stat
         real :: sinPh
+        real :: cosPsi, sinPsi
 
         zieps0 = zi * eps0
         vTh = sqrt(2. * kt / xm)
@@ -125,7 +126,9 @@ contains
                 kPrlEff = kPrl
 
             endif
-         
+
+            ! NOTE: kPrlEff hardwired to kPrl
+            kPrlEff = kPrl         
 
             zetal(l) = (omgrfc - l * omgc) / ( abs( kPrlEff ) * vTh) 
 
@@ -212,20 +215,25 @@ contains
         end if
 
         
-        ! Swanson's rotation (original), to
-        ! (alp,bet,prl)
-        ! -----------------------------
+        ! Swanson's sigma tensor in the 
+        ! (alp,bet,prl) system where alp and bet
+        ! are NOT related to kPerp as in the Stix
+        ! case where Psi=0. See pg 176 of Swanson.
+        ! ----------------------------------------
 
-        sigmaHot_maxwellian(1,1) = sig1 + sig0 * kBet**2
-        sigmaHot_maxwellian(1,2) = sig2 - sig0 * kBet * kAlp
-        sigmaHot_maxwellian(1,3) = sig4 * kAlp + sig5 * kBet
+        cosPsi = kAlp / kPerp
+        sinPsi = kBet / kPerp
 
-        sigmaHot_maxwellian(2,1) = - sig2 - sig0 * kBet * kAlp
-        sigmaHot_maxwellian(2,2) =   sig1 + sig0 * kAlp**2
-        sigmaHot_maxwellian(2,3) =   sig4 * kBet - sig5 * kAlp
+        sigmaHot_maxwellian(1,1) = sig1 + sig0 * sinPsi**2
+        sigmaHot_maxwellian(1,2) = sig2 - sig0 * cosPsi * sinPsi
+        sigmaHot_maxwellian(1,3) = sig4 * cosPsi + sig5 * sinPsi
 
-        sigmaHot_maxwellian(3,1) = sig4 * kAlp - sig5 * kBet
-        sigmaHot_maxwellian(3,2) = sig4 * kBet + sig5 * kAlp
+        sigmaHot_maxwellian(2,1) = - sig2 - sig0 * cosPsi * sinPsi
+        sigmaHot_maxwellian(2,2) =   sig1 + sig0 * cosPsi**2
+        sigmaHot_maxwellian(2,3) =   sig4 * sinPsi - sig5 * cosPsi
+
+        sigmaHot_maxwellian(3,1) = sig4 * cosPsi - sig5 * sinPsi
+        sigmaHot_maxwellian(3,2) = sig4 * sinPsi + sig5 * cosPsi
         sigmaHot_maxwellian(3,3) = sig3
 
         return
@@ -234,7 +242,7 @@ contains
 
 
     function sigmaCold_stix &
-        ( i, j, omgC, omgP2, omgRF, nuOmg )
+        ( omgC, omgP2, omgRF, nuOmg )
 
         use constants 
 
@@ -244,7 +252,6 @@ contains
 
         implicit none
 
-        integer, intent(in) :: i, j
         real, intent(in) :: omgc, omgp2
         real, intent(in) :: omgrf, nuOmg
 

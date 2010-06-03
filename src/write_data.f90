@@ -194,7 +194,9 @@ contains
         use aorsa2din_mod, &
         only: nPtsX, nPtsY, nModesX, nModesY
         use solve, &
-        only: ealpha, ebeta, eB, ealphak, ebetak, eBk
+        only: ealpha, ebeta, eB, &
+            ealphak, ebetak, eBk, &
+            eR, eTh, eZ
 
         implicit none
 
@@ -209,7 +211,11 @@ contains
             e1k_re_id, e1k_im_id, &
             e2k_re_id, e2k_im_id, &
             e3k_re_id, e3k_im_id
-
+        integer :: &
+            er_re_id, er_im_id, &
+            et_re_id, et_im_id, &
+            ez_re_id, ez_im_id
+ 
         call check ( nf90_create ( fName, nf90_clobber, nc_id ) )
         call check ( nf90_def_dim ( nc_id, "nX", nPtsX, nX_id ) )
         call check ( nf90_def_dim ( nc_id, "nY", nPtsY, nY_id ) )
@@ -242,6 +248,19 @@ contains
             (/nModesX_id,nModesY_id/), e3k_re_id ) ) 
         call check ( nf90_def_var ( nc_id, "eBk_im", NF90_REAL, &
             (/nModesX_id,nModesY_id/), e3k_im_id ) ) 
+
+        call check ( nf90_def_var ( nc_id, "er_re", NF90_REAL, &
+            (/nX_id,nY_id/), er_re_id ) ) 
+        call check ( nf90_def_var ( nc_id, "er_im", NF90_REAL, &
+            (/nX_id,nY_id/), er_im_id ) ) 
+        call check ( nf90_def_var ( nc_id, "et_re", NF90_REAL, &
+            (/nX_id,nY_id/), et_re_id ) ) 
+        call check ( nf90_def_var ( nc_id, "et_im", NF90_REAL, &
+            (/nX_id,nY_id/), et_im_id ) ) 
+        call check ( nf90_def_var ( nc_id, "ez_re", NF90_REAL, &
+            (/nX_id,nY_id/), ez_re_id ) ) 
+        call check ( nf90_def_var ( nc_id, "ez_im", NF90_REAL, &
+            (/nX_id,nY_id/), ez_im_id ) ) 
  
         call check ( nf90_enddef ( nc_id ) )
 
@@ -258,6 +277,13 @@ contains
         call check ( nf90_put_var ( nc_id, e2k_im_id, aimag ( ebetak ) ) )
         call check ( nf90_put_var ( nc_id, e3k_re_id, real ( eBk ) ) )
         call check ( nf90_put_var ( nc_id, e3k_im_id, aimag ( eBk ) ) )
+
+        call check ( nf90_put_var ( nc_id, er_re_id, real ( eR ) ) )
+        call check ( nf90_put_var ( nc_id, er_im_id, aimag ( eR ) ) )
+        call check ( nf90_put_var ( nc_id, et_re_id, real ( eTh ) ) )
+        call check ( nf90_put_var ( nc_id, et_im_id, aimag ( eTh ) ) )
+        call check ( nf90_put_var ( nc_id, ez_re_id, real ( eZ ) ) )
+        call check ( nf90_put_var ( nc_id, ez_im_id, aimag ( eZ ) ) )
 
         call check ( nf90_close ( nc_id ) )
 

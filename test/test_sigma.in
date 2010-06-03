@@ -2,11 +2,11 @@
 
 upshift = 1,
 xnuomg = 0.00, 
-damping = 100.0, 
-xkPerp_cutOff = 0.5,
+damping = 0.0, 
+xkPerp_cutOff = 1.0,
 delta0 = 0,
-lmax = 20,
-nPhi = 20,
+lmax = 5,
+nPhi = 10,
 nzfun = 1,
 
 /

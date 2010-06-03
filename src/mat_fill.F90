@@ -176,43 +176,44 @@ contains
 
                             !   interior plasma region:
                             !   ----------------------
-                            
-                            species: &
-                            do s=1,nSpec
 
-                                ! The chebyshev k will be infinite at the
-                                ! boundaries. However, these should never be
-                                ! calculated anyway. I am still not sure where
-                                ! the sqrt comes from in the below expressions
-                                ! for k? If you figure it out let me know. Also
-                                ! not sure about the n,m == 1 values for k. For
-                                ! n,m == 0 we have simply k = 0 but n,m == 1 the
-                                ! chebT is a straight line. For now leaving it
-                                ! as the Fourier equiv.
+                            ! The chebyshev k will be infinite at the
+                            ! boundaries. However, these should never be
+                            ! calculated anyway. I am still not sure where
+                            ! the sqrt comes from in the below expressions
+                            ! for k? If you figure it out let me know. Also
+                            ! not sure about the n,m == 1 values for k. For
+                            ! n,m == 0 we have simply k = 0 but n,m == 1 the
+                            ! chebT is a straight line. For now leaving it
+                            ! as the Fourier equiv.
 
-                                if(chebyshevX) then
-                                    if(n>1) then
-                                        kr = n / sqrt ( sin ( pi * (xGrid_basis(i)+1)/2  ) ) * normFacX 
-                                    else
-                                        kr = n * normFacX
-                                    endif
+                            if(chebyshevX) then
+                                if(n>1) then
+                                    kr = n / sqrt ( sin ( pi * (xGrid_basis(i)+1)/2  ) ) * normFacX 
                                 else
                                     kr = n * normFacX
                                 endif
+                            else
+                                kr = n * normFacX
+                            endif
 
-                                if(chebyshevY) then
-                                    if(m>1) then
-                                        kz = m / sqrt ( sin ( pi * (yGrid_basis(j)+1)/2 ) ) * normFacY 
-                                    else
-                                        kz = m * normFacY
-                                    endif
+                            if(chebyshevY) then
+                                if(m>1) then
+                                    kz = m / sqrt ( sin ( pi * (yGrid_basis(j)+1)/2 ) ) * normFacY 
                                 else
                                     kz = m * normFacY
                                 endif
+                            else
+                                kz = m * normFacY
+                            endif
+
+                           
+                            species: &
+                            do s=1,nSpec
 
                                 if (iSigma==1 .and. (.not. isMetal(i,j)) ) then ! hot plasma        
 
-                                    kVec_stix = matMul( U_cyl(i,j,:,:), (/ kr, kPhi(i), kz /) ) 
+                                    kVec_stix = matMul( U_RTZ_to_ABb(i,j,:,:), (/ kr, kPhi(i), kz /) ) 
 
                                     sigma_tmp = sigmaHot_maxwellian&
                                         ( mSpec(s), &
@@ -227,7 +228,7 @@ contains
                               
                                 if (iSigma==0) & ! cold plasma 
                                 sigma_tmp = sigmaCold_stix &
-                                    ( i, j, omgc(i,j,s), omgp2(i,j,s), omgrf, &
+                                    ( omgc(i,j,s), omgp2(i,j,s), omgrf, &
                                     nuOmg2D(i,j) )
 
                                 sigAlpAlp = sigAlpAlp + sigma_tmp(1,1) 

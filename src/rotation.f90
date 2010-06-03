@@ -4,28 +4,14 @@ implicit none
 
 real, allocatable, dimension(:,:) :: bPol
 real :: sqx
-real, allocatable, dimension(:,:) :: &
-    Uxx, Uxy, Uxz, Uyx, Uyy, Uyz, Uzx, Uzy, Uzz
 
 real, allocatable, dimension(:,:) :: &
     Urr_, Urt_, Urz_, Utr_, Utt_, Utz_, Uzr_, Uzt_, Uzz_
 
-real, allocatable, dimension(:,:,:,:) :: U_xyz, U_cyl
+real, allocatable, dimension(:,:,:,:) :: U_xyz, U_RTZ_to_ABb
 
 real, allocatable :: sinTh(:,:)
 real, allocatable, dimension(:,:) :: gradPrlB
-!real, allocatable, dimension(:,:) :: &
-!    dxUxx, dxxUxx, dxUxy, dxxUxy, dxUxz, dxxUxz, &
-!    dxUyx, dxxUyx, dxUyy, dxxUyy, dxUyz, dxxUyz, &
-!    dxUzx, dxxUzx, dxUzy, dxxUzy, dxUzz, dxxUzz
-!real, allocatable, dimension(:,:) :: &
-!    dyUxx, dyyUxx, dyUxy, dyyUxy, dyUxz, dyyUxz, &
-!    dyUyx, dyyUyx, dyUyy, dyyUyy, dyUyz, dyyUyz, &
-!    dyUzx, dyyUzx, dyUzy, dyyUzy, dyUzz, dyyUzz
-!real, allocatable, dimension(:,:) :: &
-!        dxyUxx, dxyUxy, dxyUxz, &
-!        dxyUyx, dxyUyy, dxyUyz, &
-!        dxyUzx, dxyUzy, dxyUzz
 
 ! dr first derivatives
 real, allocatable, dimension(:,:) :: &
@@ -75,37 +61,6 @@ contains
 
         allocate ( sqr ( nPtsx, nPtsY ) )
         allocate ( bPol ( nPtsX, nPtsY ) )
-
-        allocate ( &
-            Uxx( nPtsX, nPtsY ), & 
-            Uxy( nPtsX, nPtsY ), &
-            Uxz( nPtsX, nPtsY ), &
-            Uyx( nPtsX, nPtsY ), & 
-            Uyy( nPtsX, nPtsY ), &
-            Uyz( nPtsX, nPtsY ), &
-            Uzx( nPtsX, nPtsY ), & 
-            Uzy( nPtsX, nPtsY ), &
-            Uzz( nPtsX, nPtsY ) )
-
-        do i = 1, nPtsX
-            do j = 1, nPtsY
-
-                bPol(i,j) = sqrt(bxn(i,j)**2 + byn(i,j)**2)
-
-                sqx = sqrt(1.0 - bxn(i,j)**2)
-
-                Uxx(i, j) =   sqx
-                Uxy(i, j) = - bxn(i, j) * byn(i, j) / sqx
-                Uxz(i, j) = - bxn(i, j) * bzn(i, j) / sqx
-                Uyx(i, j) =   0.0
-                Uyy(i, j) =   bzn(i, j) / sqx
-                Uyz(i, j) = - byn(i, j) / sqx
-                Uzx(i, j) =   bxn(i, j)
-                Uzy(i, j) =   byn(i, j)
-                Uzz(i, j) =   bzn(i, j)
-
-            enddo
-        enddo
 
         
         ! Create a cylindrical coordinate version of the 
@@ -160,31 +115,19 @@ contains
 
         deallocate(det)
 
-        allocate ( U_xyz(nPtsX,nPtsY,3,3), U_cyl(nPtsX,nPtsY,3,3) )
+        allocate ( U_RTZ_to_ABb(nPtsX,nPtsY,3,3) )
 
-        U_xyz(:,:,1,1)  = Uxx
-        U_xyz(:,:,2,1)  = Uxy
-        U_xyz(:,:,3,1)  = Uxz
+        U_RTZ_to_ABb(:,:,1,1)  = Urr_
+        U_RTZ_to_ABb(:,:,1,2)  = Urt_
+        U_RTZ_to_ABb(:,:,1,3)  = Urz_
         
-        U_xyz(:,:,1,2)  = Uyx
-        U_xyz(:,:,2,2)  = Uyy
-        U_xyz(:,:,3,2)  = Uyz
+        U_RTZ_to_ABb(:,:,2,1)  = Utr_
+        U_RTZ_to_ABb(:,:,2,2)  = Utt_
+        U_RTZ_to_ABb(:,:,2,3)  = Utz_
 
-        U_xyz(:,:,1,3)  = Uzx
-        U_xyz(:,:,2,3)  = Uzy
-        U_xyz(:,:,3,3)  = Uzz
-
-        U_cyl(:,:,1,1)  = Urr_
-        U_cyl(:,:,2,1)  = Urt_
-        U_cyl(:,:,3,1)  = Urz_
-        
-        U_cyl(:,:,1,2)  = Utr_
-        U_cyl(:,:,2,2)  = Utt_
-        U_cyl(:,:,3,2)  = Utz_
-
-        U_cyl(:,:,1,3)  = Uzr_
-        U_cyl(:,:,2,3)  = Uzt_
-        U_cyl(:,:,3,3)  = Uzz_
+        U_RTZ_to_ABb(:,:,3,1)  = Uzr_
+        U_RTZ_to_ABb(:,:,3,2)  = Uzt_
+        U_RTZ_to_ABb(:,:,3,3)  = Uzz_
 
     end sUbroUtine init_rotation
 

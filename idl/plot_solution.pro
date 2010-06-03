@@ -1,5 +1,5 @@
 pro contour_field, field, x, y, nLevs, scale, $
-		id = id, view = view, log = log
+		id = id, view = view, log = log, nolines = nolines
 
 	levels	= (fIndGen(nLevs)+1)/(nLevs-1) * scale * 1.1
 	colors	= 256-(bytScl ( levels, top = 253 )+1)
@@ -23,6 +23,7 @@ pro contour_field, field, x, y, nLevs, scale, $
 		/iso, $
 		view_number = view
 
+	if not keyword_set(noLines) then $
 	iContour, field, x, y, $
 		c_value = levels/2, $
 		rgb_indices = colors, $
@@ -37,7 +38,8 @@ pro contour_field, field, x, y, nLevs, scale, $
 		over = id, $
 		/fill, $
 		rgb_table = 3
-	
+
+	if not keyword_set(noLines) then $
 	iContour, -field, x, y, $
 		c_value = levels/2, $
 		rgb_indices = colors, $
@@ -94,6 +96,13 @@ pro plot_solution, oneD = oneD, $
 		nCdf_varGet, cdfId, 'ebetak_im', ebetak_im 
 		nCdf_varGet, cdfId, 'eBk_im', eBk_im 
 
+		nCdf_varGet, cdfId, 'er_re', er_re 
+		nCdf_varGet, cdfId, 'et_re', et_re 
+		nCdf_varGet, cdfId, 'ez_re', ez_re 
+		nCdf_varGet, cdfId, 'er_im', er_im 
+		nCdf_varGet, cdfId, 'et_im', et_im 
+		nCdf_varGet, cdfId, 'ez_im', ez_im 
+
 		ealpha	= complex ( ealpha_re, ealpha_im )
 		ebeta	= complex ( ebeta_re, ebeta_im )
 		eb	= complex ( eb_re, eb_im )
@@ -101,6 +110,10 @@ pro plot_solution, oneD = oneD, $
 		ealphak	= complex ( ealphak_re, ealphak_im )
 		ebetak	= complex ( ebetak_re, ebetak_im )
 		ebk	= complex ( ebk_re, ebk_im )
+
+		eR	= complex ( er_re, er_im )
+		eTh	= complex ( et_re, et_im )
+		eZ	= complex ( ez_re, ez_im )
 
 	ncdf_close, cdfId
 
@@ -119,6 +132,18 @@ pro plot_solution, oneD = oneD, $
 
 		iPlot, x, eB, /view_next, /stretch_to_fit, over = 2
 		iPlot, x, imaginary(eB), over = 2
+
+		; Rotated Field solution
+
+		iPlot, x, eR, view_grid=[1,3], /stretch_to_fit
+		iPlot, x, imaginary(eR), over = 1
+
+		iPlot, x, eTh, /view_next, /stretch_to_fit
+		iPlot, x, imaginary(eTh), over = 1
+
+		iPlot, x, eZ, /view_next, /stretch_to_fit
+		iPlot, x, imaginary(eZ), over = 1
+
 
 		; Spectrum 
 
@@ -151,6 +176,32 @@ pro plot_solution, oneD = oneD, $
 		contour_field, ealpha, x, y, nLevs, scale1, id = fieldPlot, view = 1
 		contour_field, ebeta, x, y, nLevs, scale2, id = fieldPlot, view = 2
 		contour_field, eb, x, y, nLevs, scale3_, id = fieldPlot, view = 3
+
+		fieldPlot = 5
+		iContour, id = fieldPlot, view_grid = [3,1], $
+				/zoom_on_resize
+
+		contour_field, abs(ealpha), x, y, nLevs, scale1, $
+				id = fieldPlot, view = 1, /noLines
+		contour_field, abs(ebeta), x, y, nLevs, scale2, $
+				id = fieldPlot, view = 2, /noLines
+		contour_field, abs(eb), x, y, nLevs, scale3_, $
+				id = fieldPlot, view = 3, /noLines
+
+		scale1 = max ( abs ( er ) )
+		scale2 = max ( abs ( eth ) )
+		scale3_ = max ( abs(abs ( ez )) ) 
+		print, 'Scale1: ', scale1
+		print, 'Scale2: ', scale2
+		print, 'Scale3: ', scale3_
+
+		fieldPlot = 4
+		iContour, id = fieldPlot, view_grid = [3,1], $
+				/zoom_on_resize
+
+		contour_field, er, x, y, nLevs, scale1, id = fieldPlot, view = 1
+		contour_field, eth, x, y, nLevs, scale2, id = fieldPlot, view = 2
+		contour_field, ez, x, y, nLevs, scale3_, id = fieldPlot, view = 3
 
 
 		; Spectrum contour plot

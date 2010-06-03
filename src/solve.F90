@@ -7,9 +7,9 @@ implicit none
 complex, allocatable, dimension(:,:) :: &
     ealphak, ebetak, eBk
 complex, allocatable, dimension(:,:) :: &
-   ealpha, ealphax, ealphay, &
-   ebeta, ebetax, ebetay, &
-   eB, eBx, eBy
+   ealpha,  ebeta, eB 
+complex, allocatable, dimension(:,:) :: &
+   eR,  eTh, eZ 
 
 
 contains
