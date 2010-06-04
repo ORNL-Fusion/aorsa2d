@@ -6,9 +6,9 @@ real, allocatable, dimension(:,:) :: bPol
 real :: sqx
 
 real, allocatable, dimension(:,:) :: &
-    Urr_, Urt_, Urz_, Utr_, Utt_, Utz_, Uzr_, Uzt_, Uzz_
+    Urr, Urt, Urz, Utr, Utt, Utz, Uzr, Uzt, Uzz
 
-real, allocatable, dimension(:,:,:,:) :: U_xyz, U_RTZ_to_ABb
+real, allocatable, dimension(:,:,:,:) :: U_RTZ_to_ABb
 
 real, allocatable :: sinTh(:,:)
 real, allocatable, dimension(:,:) :: gradPrlB
@@ -45,7 +45,7 @@ real, allocatable, dimension(:,:) :: &
 
 contains
 
-    sUbroUtine init_rotation ()
+    subroutine init_rotation ()
 
         use aorsa2din_mod, &
         only: nPtsX, nPtsY
@@ -69,42 +69,42 @@ contains
         ! what is left of my sanity
 
         allocate ( &
-            Urr_( nPtsX, nPtsY ), & 
-            Urt_( nPtsX, nPtsY ), &
-            Urz_( nPtsX, nPtsY ), &
-            Utr_( nPtsX, nPtsY ), & 
-            Utt_( nPtsX, nPtsY ), &
-            Utz_( nPtsX, nPtsY ), &
-            Uzr_( nPtsX, nPtsY ), & 
-            Uzt_( nPtsX, nPtsY ), &
-            Uzz_( nPtsX, nPtsY ) )
+            Urr( nPtsX, nPtsY ), & 
+            Urt( nPtsX, nPtsY ), &
+            Urz( nPtsX, nPtsY ), &
+            Utr( nPtsX, nPtsY ), & 
+            Utt( nPtsX, nPtsY ), &
+            Utz( nPtsX, nPtsY ), &
+            Uzr( nPtsX, nPtsY ), & 
+            Uzt( nPtsX, nPtsY ), &
+            Uzz( nPtsX, nPtsY ) )
 
         sqr     = sqrt ( 1d0 - brn_**2 )
 
-        Urr_     = sqr
-        Urt_    = -brn_ * bthn_ / sqr
-        Urz_     = -brn_ * bzn_ / sqr
+        Urr     = sqr
+        Urt    = -brn_ * bthn_ / sqr
+        Urz     = -brn_ * bzn_ / sqr
 
-        Utr_    = 0
-        Utt_   = bzn_ / sqr
-        Utz_    = -bthn_ / sqr
+        Utr    = 0
+        Utt   = bzn_ / sqr
+        Utz    = -bthn_ / sqr
 
-        Uzr_     = brn_
-        Uzt_    = bthn_
-        Uzz_     = bzn_
+        Uzr     = brn_
+        Uzt    = bthn_
+        Uzz     = bzn_
 
 
-        ! Check the determinant, shoUld = 1
+        ! Check the determinant, should = 1
         ! ---------------------------------
     
         allocate(det(nPtsX,nPtsY))
 
-        det = Urr_ * Utt_ * Uzz_ &
-            + Urt_ * Utz_ * Uzr_ &
-            + Urz_ * Utr_ * Uzt_ &
-            - Urr_ * Utz_ * Uzt_ &
-            - Urt_ * Utr_ * Uzz_ &
-            - Urz_ * Utt_ * Uzr_
+        det = Urr * Utt * Uzz &
+            + Urt * Utz * Uzr &
+            + Urz * Utr * Uzt &
+            - Urr * Utz * Uzt &
+            - Urt * Utr * Uzz &
+            - Urz * Utt * Uzr
 
         if ( any(1-det>1e-4) ) then
 
@@ -117,17 +117,17 @@ contains
 
         allocate ( U_RTZ_to_ABb(nPtsX,nPtsY,3,3) )
 
-        U_RTZ_to_ABb(:,:,1,1)  = Urr_
-        U_RTZ_to_ABb(:,:,1,2)  = Urt_
-        U_RTZ_to_ABb(:,:,1,3)  = Urz_
+        U_RTZ_to_ABb(:,:,1,1)  = Urr
+        U_RTZ_to_ABb(:,:,1,2)  = Urt
+        U_RTZ_to_ABb(:,:,1,3)  = Urz
         
-        U_RTZ_to_ABb(:,:,2,1)  = Utr_
-        U_RTZ_to_ABb(:,:,2,2)  = Utt_
-        U_RTZ_to_ABb(:,:,2,3)  = Utz_
+        U_RTZ_to_ABb(:,:,2,1)  = Utr
+        U_RTZ_to_ABb(:,:,2,2)  = Utt
+        U_RTZ_to_ABb(:,:,2,3)  = Utz
 
-        U_RTZ_to_ABb(:,:,3,1)  = Uzr_
-        U_RTZ_to_ABb(:,:,3,2)  = Uzt_
-        U_RTZ_to_ABb(:,:,3,3)  = Uzz_
+        U_RTZ_to_ABb(:,:,3,1)  = Uzr
+        U_RTZ_to_ABb(:,:,3,2)  = Uzt
+        U_RTZ_to_ABb(:,:,3,3)  = Uzz
 
     end sUbroUtine init_rotation
 
@@ -205,41 +205,41 @@ contains
         do i = 1, nPtsX
             do j = 1, nPtsY
 
-                call deriv_x(capR, Urr_, i, j, dfdx = drUrr(i,j), d2fdx2 = drrUrr(i,j))
-                call deriv_x(capR, Urt_, i, j, dfdx = drUrt(i,j), d2fdx2 = drrUrt(i,j))
-                call deriv_x(capR, Urz_, i, j, dfdx = drUrz(i,j), d2fdx2 = drrUrz(i,j))
+                call deriv_x(capR, Urr, i, j, dfdx = drUrr(i,j), d2fdx2 = drrUrr(i,j))
+                call deriv_x(capR, Urt, i, j, dfdx = drUrt(i,j), d2fdx2 = drrUrt(i,j))
+                call deriv_x(capR, Urz, i, j, dfdx = drUrz(i,j), d2fdx2 = drrUrz(i,j))
 
-                call deriv_x(capR, Utr_, i, j, dfdx = drUtr(i,j), d2fdx2 = drrUtr(i,j))
-                call deriv_x(capR, Utt_, i, j, dfdx = drUtt(i,j), d2fdx2 = drrUtt(i,j))
-                call deriv_x(capR, Utz_, i, j, dfdx = drUtz(i,j), d2fdx2 = drrUtz(i,j))
+                call deriv_x(capR, Utr, i, j, dfdx = drUtr(i,j), d2fdx2 = drrUtr(i,j))
+                call deriv_x(capR, Utt, i, j, dfdx = drUtt(i,j), d2fdx2 = drrUtt(i,j))
+                call deriv_x(capR, Utz, i, j, dfdx = drUtz(i,j), d2fdx2 = drrUtz(i,j))
 
-                call deriv_x(capR, Uzr_, i, j, dfdx = drUzr(i,j), d2fdx2 = drrUzr(i,j))
-                call deriv_x(capR, Uzt_, i, j, dfdx = drUzt(i,j), d2fdx2 = drrUzt(i,j))
-                call deriv_x(capR, Uzz_, i, j, dfdx = drUzz(i,j), d2fdx2 = drrUzz(i,j))
+                call deriv_x(capR, Uzr, i, j, dfdx = drUzr(i,j), d2fdx2 = drrUzr(i,j))
+                call deriv_x(capR, Uzt, i, j, dfdx = drUzt(i,j), d2fdx2 = drrUzt(i,j))
+                call deriv_x(capR, Uzz, i, j, dfdx = drUzz(i,j), d2fdx2 = drrUzz(i,j))
 
-                call deriv_y(y, Urr_, i, j, dfdy = drUrr(i,j), d2fdy2 = drrUrr(i,j))
-                call deriv_y(y, Urt_, i, j, dfdy = drUrt(i,j), d2fdy2 = drrUrt(i,j))
-                call deriv_y(y, Urz_, i, j, dfdy = drUrz(i,j), d2fdy2 = drrUrz(i,j))
+                call deriv_y(y, Urr, i, j, dfdy = drUrr(i,j), d2fdy2 = drrUrr(i,j))
+                call deriv_y(y, Urt, i, j, dfdy = drUrt(i,j), d2fdy2 = drrUrt(i,j))
+                call deriv_y(y, Urz, i, j, dfdy = drUrz(i,j), d2fdy2 = drrUrz(i,j))
 
-                call deriv_y(y, Utr_, i, j, dfdy = drUtr(i,j), d2fdy2 = drrUtr(i,j))
-                call deriv_y(y, Utt_, i, j, dfdy = drUtt(i,j), d2fdy2 = drrUtt(i,j))
-                call deriv_y(y, Utz_, i, j, dfdy = drUtz(i,j), d2fdy2 = drrUtz(i,j))
+                call deriv_y(y, Utr, i, j, dfdy = drUtr(i,j), d2fdy2 = drrUtr(i,j))
+                call deriv_y(y, Utt, i, j, dfdy = drUtt(i,j), d2fdy2 = drrUtt(i,j))
+                call deriv_y(y, Utz, i, j, dfdy = drUtz(i,j), d2fdy2 = drrUtz(i,j))
 
-                call deriv_y(y, Uzr_, i, j, dfdy = drUzr(i,j), d2fdy2 = drrUzr(i,j))
-                call deriv_y(y, Uzt_, i, j, dfdy = drUzt(i,j), d2fdy2 = drrUzt(i,j))
-                call deriv_y(y, Uzz_, i, j, dfdy = drUzz(i,j), d2fdy2 = drrUzz(i,j))
+                call deriv_y(y, Uzr, i, j, dfdy = drUzr(i,j), d2fdy2 = drrUzr(i,j))
+                call deriv_y(y, Uzt, i, j, dfdy = drUzt(i,j), d2fdy2 = drrUzt(i,j))
+                call deriv_y(y, Uzz, i, j, dfdy = drUzz(i,j), d2fdy2 = drrUzz(i,j))
 
-                call deriv_xy(capR, y, Urr_, i, j, d2fdxy = drzUrr(i,j))
-                call deriv_xy(capR, y, Urt_, i, j, d2fdxy = drzUrt(i,j))
-                call deriv_xy(capR, y, Urz_, i, j, d2fdxy = drzUrz(i,j))
+                call deriv_xy(capR, y, Urr, i, j, d2fdxy = drzUrr(i,j))
+                call deriv_xy(capR, y, Urt, i, j, d2fdxy = drzUrt(i,j))
+                call deriv_xy(capR, y, Urz, i, j, d2fdxy = drzUrz(i,j))
 
-                call deriv_xy(capR, y, Utr_, i, j, d2fdxy = drzUtr(i,j))
-                call deriv_xy(capR, y, Utt_, i, j, d2fdxy = drzUtt(i,j))
-                call deriv_xy(capR, y, Utz_, i, j, d2fdxy = drzUtz(i,j))
+                call deriv_xy(capR, y, Utr, i, j, d2fdxy = drzUtr(i,j))
+                call deriv_xy(capR, y, Utt, i, j, d2fdxy = drzUtt(i,j))
+                call deriv_xy(capR, y, Utz, i, j, d2fdxy = drzUtz(i,j))
 
-                call deriv_xy(capR, y, Uzr_, i, j, d2fdxy = drzUzr(i,j))
-                call deriv_xy(capR, y, Uzt_, i, j, d2fdxy = drzUzt(i,j))
-                call deriv_xy(capR, y, Uzz_, i, j, d2fdxy = drzUzz(i,j))
+                call deriv_xy(capR, y, Uzr, i, j, d2fdxy = drzUzr(i,j))
+                call deriv_xy(capR, y, Uzt, i, j, d2fdxy = drzUzt(i,j))
+                call deriv_xy(capR, y, Uzz, i, j, d2fdxy = drzUzz(i,j))
 
            enddo
         enddo

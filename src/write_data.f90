@@ -31,17 +31,17 @@ contains
             dens_id, temp_id, omgc_id, omgp2_id
         integer :: xx_re_id, yy_re_id, xx_im_id, yy_im_id
 
-        integer :: drUrr_id, drUrt_id, drUrz_id
-        integer :: drUtr_id, drUtt_id, drUtz_id
-        integer :: drUzr_id, drUzt_id, drUzz_id
+        integer :: drUrrid, drUrtid, drUrzid
+        integer :: drUtrid, drUttid, drUtzid
+        integer :: drUzrid, drUztid, drUzzid
 
-        integer :: dzUrr_id, dzUrt_id, dzUrz_id
-        integer :: dzUtr_id, dzUtt_id, dzUtz_id
-        integer :: dzUzr_id, dzUzt_id, dzUzz_id
+        integer :: dzUrrid, dzUrtid, dzUrzid
+        integer :: dzUtrid, dzUttid, dzUtzid
+        integer :: dzUzrid, dzUztid, dzUzzid
 
-        integer :: Urr_id, Urt_id, Urz_id, &
-            Utr_id, Utt_id, Utz_id, &
-            Uzr_id, Uzt_id, Uzz_id
+        integer :: Urrid, Urtid, Urzid, &
+            Utrid, Uttid, Utzid, &
+            Uzrid, Uztid, Uzzid
 
         call check ( nf90_create ( fName, nf90_clobber, nc_id ) )
         call check ( nf90_def_dim ( nc_id, "nPtsX", nPtsX, nX_id ) )
@@ -89,41 +89,41 @@ contains
         nc_stat = nf90_def_var ( nc_id, "omgc", NF90_REAL, (/nX_id,nY_id,nSpec_id/), omgc_id ) 
         nc_stat = nf90_def_var ( nc_id, "omgp2", NF90_REAL, (/nX_id,nY_id,nSpec_id/), omgp2_id ) 
 
-        nc_stat = nf90_def_var ( nc_id, "drUrr", NF90_REAL, (/nX_id,nY_id/), drUrr_id ) 
-        nc_stat = nf90_def_var ( nc_id, "drUrt", NF90_REAL, (/nX_id,nY_id/), drUrt_id ) 
-        nc_stat = nf90_def_var ( nc_id, "drUrz", NF90_REAL, (/nX_id,nY_id/), drUrz_id ) 
+        nc_stat = nf90_def_var ( nc_id, "drUrr", NF90_REAL, (/nX_id,nY_id/), drUrrid ) 
+        nc_stat = nf90_def_var ( nc_id, "drUrt", NF90_REAL, (/nX_id,nY_id/), drUrtid ) 
+        nc_stat = nf90_def_var ( nc_id, "drUrz", NF90_REAL, (/nX_id,nY_id/), drUrzid ) 
 
-        nc_stat = nf90_def_var ( nc_id, "drUtr", NF90_REAL, (/nX_id,nY_id/), drUtr_id ) 
-        nc_stat = nf90_def_var ( nc_id, "drUtt", NF90_REAL, (/nX_id,nY_id/), drUtt_id ) 
-        nc_stat = nf90_def_var ( nc_id, "drUtz", NF90_REAL, (/nX_id,nY_id/), drUtz_id ) 
+        nc_stat = nf90_def_var ( nc_id, "drUtr", NF90_REAL, (/nX_id,nY_id/), drUtrid ) 
+        nc_stat = nf90_def_var ( nc_id, "drUtt", NF90_REAL, (/nX_id,nY_id/), drUttid ) 
+        nc_stat = nf90_def_var ( nc_id, "drUtz", NF90_REAL, (/nX_id,nY_id/), drUtzid ) 
 
-        nc_stat = nf90_def_var ( nc_id, "drUzr", NF90_REAL, (/nX_id,nY_id/), drUzr_id ) 
-        nc_stat = nf90_def_var ( nc_id, "drUzt", NF90_REAL, (/nX_id,nY_id/), drUzt_id ) 
-        nc_stat = nf90_def_var ( nc_id, "drUzz", NF90_REAL, (/nX_id,nY_id/), drUzz_id ) 
+        nc_stat = nf90_def_var ( nc_id, "drUzr", NF90_REAL, (/nX_id,nY_id/), drUzrid ) 
+        nc_stat = nf90_def_var ( nc_id, "drUzt", NF90_REAL, (/nX_id,nY_id/), drUztid ) 
+        nc_stat = nf90_def_var ( nc_id, "drUzz", NF90_REAL, (/nX_id,nY_id/), drUzzid ) 
 
-        nc_stat = nf90_def_var ( nc_id, "dzUrr", NF90_REAL, (/nX_id,nY_id/), dzUrr_id ) 
-        nc_stat = nf90_def_var ( nc_id, "dzUrt", NF90_REAL, (/nX_id,nY_id/), dzUrt_id ) 
-        nc_stat = nf90_def_var ( nc_id, "dzUrz", NF90_REAL, (/nX_id,nY_id/), dzUrz_id ) 
+        nc_stat = nf90_def_var ( nc_id, "dzUrr", NF90_REAL, (/nX_id,nY_id/), dzUrrid ) 
+        nc_stat = nf90_def_var ( nc_id, "dzUrt", NF90_REAL, (/nX_id,nY_id/), dzUrtid ) 
+        nc_stat = nf90_def_var ( nc_id, "dzUrz", NF90_REAL, (/nX_id,nY_id/), dzUrzid ) 
 
-        nc_stat = nf90_def_var ( nc_id, "dzUtr", NF90_REAL, (/nX_id,nY_id/), dzUtr_id ) 
-        nc_stat = nf90_def_var ( nc_id, "dzUtt", NF90_REAL, (/nX_id,nY_id/), dzUtt_id ) 
-        nc_stat = nf90_def_var ( nc_id, "dzUtz", NF90_REAL, (/nX_id,nY_id/), dzUtz_id ) 
+        nc_stat = nf90_def_var ( nc_id, "dzUtr", NF90_REAL, (/nX_id,nY_id/), dzUtrid ) 
+        nc_stat = nf90_def_var ( nc_id, "dzUtt", NF90_REAL, (/nX_id,nY_id/), dzUttid ) 
+        nc_stat = nf90_def_var ( nc_id, "dzUtz", NF90_REAL, (/nX_id,nY_id/), dzUtzid ) 
 
-        nc_stat = nf90_def_var ( nc_id, "dzUzr", NF90_REAL, (/nX_id,nY_id/), dzUzr_id ) 
-        nc_stat = nf90_def_var ( nc_id, "dzUzt", NF90_REAL, (/nX_id,nY_id/), dzUzt_id ) 
-        nc_stat = nf90_def_var ( nc_id, "dzUzz", NF90_REAL, (/nX_id,nY_id/), dzUzz_id ) 
+        nc_stat = nf90_def_var ( nc_id, "dzUzr", NF90_REAL, (/nX_id,nY_id/), dzUzrid ) 
+        nc_stat = nf90_def_var ( nc_id, "dzUzt", NF90_REAL, (/nX_id,nY_id/), dzUztid ) 
+        nc_stat = nf90_def_var ( nc_id, "dzUzz", NF90_REAL, (/nX_id,nY_id/), dzUzzid ) 
 
-        nc_stat = nf90_def_var ( nc_id, "Urr", NF90_REAL, (/nX_id,nY_id/), Urr_id ) 
-        nc_stat = nf90_def_var ( nc_id, "Urt", NF90_REAL, (/nX_id,nY_id/), Urt_id ) 
-        nc_stat = nf90_def_var ( nc_id, "Urz", NF90_REAL, (/nX_id,nY_id/), Urz_id ) 
+        nc_stat = nf90_def_var ( nc_id, "Urr", NF90_REAL, (/nX_id,nY_id/), Urrid ) 
+        nc_stat = nf90_def_var ( nc_id, "Urt", NF90_REAL, (/nX_id,nY_id/), Urtid ) 
+        nc_stat = nf90_def_var ( nc_id, "Urz", NF90_REAL, (/nX_id,nY_id/), Urzid ) 
         
-        nc_stat = nf90_def_var ( nc_id, "Utr", NF90_REAL, (/nX_id,nY_id/), Utr_id ) 
-        nc_stat = nf90_def_var ( nc_id, "Utt", NF90_REAL, (/nX_id,nY_id/), Utt_id ) 
-        nc_stat = nf90_def_var ( nc_id, "Utz", NF90_REAL, (/nX_id,nY_id/), Utz_id ) 
+        nc_stat = nf90_def_var ( nc_id, "Utr", NF90_REAL, (/nX_id,nY_id/), Utrid ) 
+        nc_stat = nf90_def_var ( nc_id, "Utt", NF90_REAL, (/nX_id,nY_id/), Uttid ) 
+        nc_stat = nf90_def_var ( nc_id, "Utz", NF90_REAL, (/nX_id,nY_id/), Utzid ) 
 
-        nc_stat = nf90_def_var ( nc_id, "Uzr", NF90_REAL, (/nX_id,nY_id/), Uzr_id ) 
-        nc_stat = nf90_def_var ( nc_id, "Uzt", NF90_REAL, (/nX_id,nY_id/), Uzt_id ) 
-        nc_stat = nf90_def_var ( nc_id, "Uzz", NF90_REAL, (/nX_id,nY_id/), Uzz_id ) 
+        nc_stat = nf90_def_var ( nc_id, "Uzr", NF90_REAL, (/nX_id,nY_id/), Uzrid ) 
+        nc_stat = nf90_def_var ( nc_id, "Uzt", NF90_REAL, (/nX_id,nY_id/), Uztid ) 
+        nc_stat = nf90_def_var ( nc_id, "Uzz", NF90_REAL, (/nX_id,nY_id/), Uzzid ) 
 
         call check ( nf90_enddef ( nc_id ) )
         
@@ -148,41 +148,41 @@ contains
         call check ( nf90_put_var ( nc_id, xx_im_id, aimag ( xx ) ) )
         call check ( nf90_put_var ( nc_id, yy_im_id, aimag ( yy ) ) )
 
-        call check ( nf90_put_var ( nc_id, drUrr_id, drUrr ) )
-        call check ( nf90_put_var ( nc_id, drUrt_id, drUrt ) )
-        call check ( nf90_put_var ( nc_id, drUrz_id, drUrz ) )
+        call check ( nf90_put_var ( nc_id, drUrrid, drUrr ) )
+        call check ( nf90_put_var ( nc_id, drUrtid, drUrt ) )
+        call check ( nf90_put_var ( nc_id, drUrzid, drUrz ) )
 
-        call check ( nf90_put_var ( nc_id, drUtr_id, drUtr ) )
-        call check ( nf90_put_var ( nc_id, drUtt_id, drUtt ) )
-        call check ( nf90_put_var ( nc_id, drUtz_id, drUtz ) )
+        call check ( nf90_put_var ( nc_id, drUtrid, drUtr ) )
+        call check ( nf90_put_var ( nc_id, drUttid, drUtt ) )
+        call check ( nf90_put_var ( nc_id, drUtzid, drUtz ) )
 
-        call check ( nf90_put_var ( nc_id, drUzr_id, drUzr ) )
-        call check ( nf90_put_var ( nc_id, drUzt_id, drUzt ) )
-        call check ( nf90_put_var ( nc_id, drUzz_id, drUzz ) )
+        call check ( nf90_put_var ( nc_id, drUzrid, drUzr ) )
+        call check ( nf90_put_var ( nc_id, drUztid, drUzt ) )
+        call check ( nf90_put_var ( nc_id, drUzzid, drUzz ) )
 
-        call check ( nf90_put_var ( nc_id, dzUrr_id, dzUrr ) )
-        call check ( nf90_put_var ( nc_id, dzUrt_id, dzUrt ) )
-        call check ( nf90_put_var ( nc_id, dzUrz_id, dzUrz ) )
+        call check ( nf90_put_var ( nc_id, dzUrrid, dzUrr ) )
+        call check ( nf90_put_var ( nc_id, dzUrtid, dzUrt ) )
+        call check ( nf90_put_var ( nc_id, dzUrzid, dzUrz ) )
 
-        call check ( nf90_put_var ( nc_id, dzUtr_id, dzUtr ) )
-        call check ( nf90_put_var ( nc_id, dzUtt_id, dzUtt ) )
-        call check ( nf90_put_var ( nc_id, dzUtz_id, dzUtz ) )
+        call check ( nf90_put_var ( nc_id, dzUtrid, dzUtr ) )
+        call check ( nf90_put_var ( nc_id, dzUttid, dzUtt ) )
+        call check ( nf90_put_var ( nc_id, dzUtzid, dzUtz ) )
 
-        call check ( nf90_put_var ( nc_id, dzUzr_id, dzUzr ) )
-        call check ( nf90_put_var ( nc_id, dzUzt_id, dzUzt ) )
-        call check ( nf90_put_var ( nc_id, dzUzz_id, dzUzz ) )
+        call check ( nf90_put_var ( nc_id, dzUzrid, dzUzr ) )
+        call check ( nf90_put_var ( nc_id, dzUztid, dzUzt ) )
+        call check ( nf90_put_var ( nc_id, dzUzzid, dzUzz ) )
 
-        call check ( nf90_put_var ( nc_id, Urr_id, Urr_ ) )
-        call check ( nf90_put_var ( nc_id, Urt_id, Urt_ ) )
-        call check ( nf90_put_var ( nc_id, Urz_id, Urz_ ) )
+        call check ( nf90_put_var ( nc_id, Urrid, Urr ) )
+        call check ( nf90_put_var ( nc_id, Urtid, Urt ) )
+        call check ( nf90_put_var ( nc_id, Urzid, Urz ) )
 
-        call check ( nf90_put_var ( nc_id, Utr_id, Utr_ ) )
-        call check ( nf90_put_var ( nc_id, Utt_id, Utt_ ) )
-        call check ( nf90_put_var ( nc_id, Utz_id, Utz_ ) )
+        call check ( nf90_put_var ( nc_id, Utrid, Utr ) )
+        call check ( nf90_put_var ( nc_id, Uttid, Utt ) )
+        call check ( nf90_put_var ( nc_id, Utzid, Utz ) )
 
-        call check ( nf90_put_var ( nc_id, Uzr_id, Uzr_ ) )
-        call check ( nf90_put_var ( nc_id, Uzt_id, Uzt_ ) )
-        call check ( nf90_put_var ( nc_id, Uzz_id, Uzz_ ) )
+        call check ( nf90_put_var ( nc_id, Uzrid, Uzr ) )
+        call check ( nf90_put_var ( nc_id, Uztid, Uzt ) )
+        call check ( nf90_put_var ( nc_id, Uzzid, Uzz ) )
 
         call check ( nf90_close ( nc_id ) )
 

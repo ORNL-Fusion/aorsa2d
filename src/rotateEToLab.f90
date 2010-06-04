@@ -26,13 +26,13 @@ subroutine rotate_E_to_lab ()
     do i = 1, nPtsX
         do j = 1, nPtsY
 
-            !ELab_RTZ = &
-            !    matMul ( transpose ( U_RTZ_to_ABb(i,j,:,:) ), &
-            !        (/ eAlpha(i,j), eBeta(i,j), eb(i,j) /) )
-
             ELab_RTZ = &
-                matMul ( U_RTZ_to_ABb(i,j,:,:), &
+                matMul ( transpose ( U_RTZ_to_ABb(i,j,:,:) ), &
                     (/ eAlpha(i,j), eBeta(i,j), eb(i,j) /) )
+
+            !ELab_RTZ = &
+            !    matMul ( U_RTZ_to_ABb(i,j,:,:), &
+            !        (/ eAlpha(i,j), eBeta(i,j), eb(i,j) /) )
 
 
             eR(i,j) = ELab_RTZ(1)

@@ -264,7 +264,7 @@ contains
         omgRFc = omgRF * (1.0 + zi * nuOmg)
 
         sig1 = zieps0 * omgRFc * omgP2 / (omgRFc**2 - omgC**2)
-        sig2 = - eps0 * omgC   * omgP2 / (omgRFc**2 - omgC**2)
+        sig2 = eps0 * omgC   * omgP2 / (omgC**2 - omgRFc**2)
         sig3 = zieps0 * omgp2 / omgRFc
 
         sigmaCold_stix(1,1) = sig1 

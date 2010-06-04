@@ -124,24 +124,26 @@ pro plot_solution, oneD = oneD, $
 
 		; Field solution
 
-		iPlot, x, eAlpha, view_grid=[1,3], /stretch_to_fit, over = 2
+		range = max(abs([eAlpha,eBeta,eB]))
+		range = [-range,range]
+		iPlot, x, eAlpha, view_grid=[1,3], /stretch_to_fit, over = 2, yrange=range
 		iPlot, x, imaginary(eAlpha), over = 2
 
-		iPlot, x, eBeta, /view_next, /stretch_to_fit, over = 2
+		iPlot, x, eBeta, /view_next, /stretch_to_fit, over = 2, yrange=range
 		iPlot, x, imaginary(eBeta), over = 2
 
-		iPlot, x, eB, /view_next, /stretch_to_fit, over = 2
+		iPlot, x, eB, /view_next, /stretch_to_fit, over = 2, yrange=range
 		iPlot, x, imaginary(eB), over = 2
 
 		; Rotated Field solution
 
-		iPlot, x, eR, view_grid=[1,3], /stretch_to_fit
+		iPlot, x, eR, view_grid=[1,3], /stretch_to_fit, yrange=range
 		iPlot, x, imaginary(eR), over = 1
 
-		iPlot, x, eTh, /view_next, /stretch_to_fit
+		iPlot, x, eTh, /view_next, /stretch_to_fit, yrange=range
 		iPlot, x, imaginary(eTh), over = 1
 
-		iPlot, x, eZ, /view_next, /stretch_to_fit
+		iPlot, x, eZ, /view_next, /stretch_to_fit, yrange=range
 		iPlot, x, imaginary(eZ), over = 1
 
 
