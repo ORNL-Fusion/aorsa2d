@@ -13,7 +13,8 @@ contains
         use zfunction_mod
         use aorsa2din_mod, &
         only: upshift, nzfun, damping, lmax, &
-            nPhi, delta0
+            nPhi, delta0, toroidalBroadening, &
+            kPrlEffLimit
         use bessel_mod
 
         ! Calculate the hot Maxwellian sigma at a single
@@ -27,42 +28,50 @@ contains
         !include "gptl.inc"
 
         real, intent(in) :: sinTh, bPol, bMod, gradPrlB
-        complex :: sigmaHot_maxwellian(3,3)
+        complex(kind=dbl) :: sigmaHot_maxwellian(3,3)
         integer, intent(in) :: specNo
         real, intent(in) :: k_cutOff, nuOmg
         real, intent(in) :: kVec(:), capr
 
-        integer :: l, labs, i, j
-        real :: kPerp, kPrl, xm, kt, omgc, omgp2, kPrlTmp
+        real(kind=dbl), intent(in) :: omgc, omgp2, omgrf
+        real(kind=dbl), intent(in) :: kt, k0
+
+        integer :: labs, i, j
+        integer(kind=long) :: l
+        real :: kPerp, kPrl, xm, kPrlTmp
         real :: kPrlEff, fgam, y0, y
         real(kind=dbl) :: sgn_kPrl
         real :: descrim
         real :: nu_coll
-        real :: vTh, omgrf
+        real :: vTh
         real(kind=dbl) :: alpha_smithe(-lmax:lmax), gamma_smithe(-lmax:lmax)
         real(kind=dbl) :: gamma_brambilla(-lmax:lmax)
         real :: rhol
-        real :: kAlp, kBet, k0, rgamma
+        real :: kAlp, kBet, rgamma
         real(kind=dbl) :: kr, step
-        complex :: omgrfc
+        complex(kind=dbl) :: omgrfc
         complex(kind=dbl), allocatable :: Z(:), ZPrime(:), zetaZPrime(:)
-        complex :: sig0, sig1, sig2, sig3, sig4, sig5
-        complex :: sig0l, sig1l, sig2l, sig3l, sig4l, sig5l
+        complex(kind=dbl) :: sig0, sig1, sig2, sig3, sig4, sig5
+        complex(kind=dbl), dimension(-lmax:lmax) :: &
+            sig0l, sig1l, sig2l, sig3l, sig4l, sig5l
         integer, parameter :: lmaxdim = 99
         complex(kind=dbl), allocatable, dimension(:) :: &
           expBesselI, expBesselIPrime, expBesselIOverGam
         complex(kind=dbl) :: zetal(-lmax:lmax)
-        complex :: zieps0, P, PPrime 
+        complex :: zieps0 
+        complex(kind=dbl) :: P, PPrime 
         complex(kind=dbl) ::gamma_
         real :: dR, Lpar
         integer :: stat
         real :: sinPh
         real :: cosPsi, sinPsi
 
+        zetal = 0
+
         zieps0 = zi * eps0
         vTh = sqrt(2. * kt / xm)
         rhol = vTh / omgc
-        omgrfc = omgrf * (1. + zi * nuOmg)
+        omgrfc = omgrf * (1d0 + zi * nuOmg)
 
         ! k in Stix frame
         ! ---------------
@@ -73,10 +82,10 @@ contains
 
         kPerp = sqrt(kAlp**2 + kBet**2)
 
-        if (kPrl  == 0.0) kPrl  = 1.0e-08
-        if (kPerp == 0.0) kPerp = 1.0e-08
+        if (kPrl  <= 1d-2) kPrl  = 1d-2
+        if (kPerp == 0.0) kPerp = 1.0e-03
 
-        !sgn_kPrl    = sign ( 1.0, kPrl )
+        sgn_kPrl    = sign ( 1.0, kPrl )
 
 
         ! Calculate Z function argument
@@ -114,10 +123,10 @@ contains
             endif
 
 
-            ! Create and effective kPrl that includes toroial broadening
+            ! Create and effective kPrl that includes toroidal broadening
             ! ----------------------------------------------------------
 
-            if(gamma_brambilla(l)>0)  then
+            if(gamma_brambilla(l)>0 .and. toroidalBroadening)  then
 
                 kPrlEff = kPrl * ( sqrt ( 1 + 4 * gamma_brambilla(l) ) - 1 ) &
                                 / ( 2 * gamma_brambilla(l))
@@ -127,8 +136,7 @@ contains
 
             endif
 
-            ! NOTE: kPrlEff hardwired to kPrl
-            kPrlEff = kPrl         
+            if (kPrlEff  <= kPrlEffLimit) kPrlEff  = kPrlEffLimit
 
             zetal(l) = (omgrfc - l * omgc) / ( abs( kPrlEff ) * vTh) 
 
@@ -158,17 +166,11 @@ contains
         allocate ( Z(-lMax:lMax), ZPrime(-lMax:lMax), zetaZPrime(-lMax:lMax) )
 
         call z_approx_dlg ( zetal, Z, ZPrime )
+        !call z_approx(sgn_kprl, zetal, gamma_brambilla*0, z, zPrime, zetaZPrime)
 
 
         ! Calculate sigmas according to Swanson
         ! -------------------------------------
-
-        sig0 = 0.0
-        sig1 = 0.0
-        sig2 = 0.0
-        sig3 = 0.0
-        sig4 = 0.0
-        sig5 = 0.0
 
         do l = -lmax, lmax
 
@@ -177,22 +179,22 @@ contains
             P = omgp2 / (abs(kPrlEff) * vTh) * Z(l)
             PPrime = omgp2 / (abs(kPrlEff) * vTh) * ZPrime(l)
 
-            sig0l = - zieps0 * rhol**2 * (expBesselI(labs) - expBesselIPrime(labs)) * P 
-            sig1l = - zieps0 * l**2 * expBesselIOverGam(labs) * P
-            sig2l = - eps0 * l * (expBesselI(labs) - expBesselIPrime(labs)) * P
-            sig3l =   zieps0 * expBesselI(labs) * zetal(l) * PPrime
-            sig4l =   0.5 * zieps0 * rhol * l * expBesselIOverGam(labs) * PPrime
-            sig5l =   0.5 * eps0 * rhol * (expBesselI(labs) - expBesselIPrime(labs)) * PPrime
-
-            sig0 = sig0 + sig0l
-            sig1 = sig1 + sig1l
-            sig2 = sig2 + sig2l
-            sig3 = sig3 + sig3l
-            sig4 = sig4 + sig4l
-            sig5 = sig5 + sig5l
+            sig0l(l) = - zieps0 * rhol**2 * (expBesselI(labs) - expBesselIPrime(labs)) * P 
+            sig1l(l) = - zieps0 * l**2 * expBesselIOverGam(labs) * P
+            sig2l(l) = - eps0 * l * (expBesselI(labs) - expBesselIPrime(labs)) * P
+            sig3l(l) =   zieps0 * expBesselI(labs) * zetal(l) * PPrime
+            sig4l(l) =   0.5d0 * zieps0 * rhol * l * expBesselIOverGam(labs) * PPrime
+            sig5l(l) =   0.5d0 * eps0 * rhol * (expBesselI(labs) - expBesselIPrime(labs)) * PPrime
 
         enddo
-           
+
+        sig0    = sum ( sig0l )
+        sig1    = sum ( sig1l )
+        sig2    = sum ( sig2l )
+        sig3    = sum ( sig3l )
+        sig4    = sum ( sig4l )
+        sig5    = sum ( sig5l )
+
         deallocate ( expBesselI, expBesselIPrime, expBesselIOverGam )
 
 
@@ -212,7 +214,7 @@ contains
             step = damping * kr**16 / (1. + kr**16)
             sig3 = sig3 * (1.0 + step)
 
-        end if
+        endif
 
         
         ! Swanson's sigma tensor in the 
@@ -252,8 +254,8 @@ contains
 
         implicit none
 
-        real, intent(in) :: omgc, omgp2
-        real, intent(in) :: omgrf, nuOmg
+        real(kind=dbl), intent(in) :: omgc, omgp2, omgrf
+        real, intent(in) :: nuOmg
 
         complex :: omgrfc
         complex :: sig1, sig2, sig3

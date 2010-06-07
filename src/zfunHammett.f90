@@ -13,7 +13,7 @@ complex function Zfun(zeta)
   
   real(kind=dbl) :: x, y
   logical :: flag
-  real*8, parameter :: sqrt_pi = 1.772453850905516
+  real(kind=dbl), parameter :: sqrt_pi = 1.772453850905516
   
   call wofz(real(zeta,kind=dbl), real(aimag(zeta),kind=dbl), x, y, flag)
   Zfun = sqrt_pi*cmplx(-y,x)
@@ -34,6 +34,10 @@ complex function Zfunr(z_real)
   real*8, parameter :: sqrt_pi = 1.772453850905516
   
   call wofz(real(z_real,kind=dbl), 0d0, x, y, flag)
+  if(flag)then 
+    write(*,*) 'CRAP: wofz failed'
+    stop
+  endif
   Zfunr = sqrt_pi*cmplx(-y,x)
   
   return

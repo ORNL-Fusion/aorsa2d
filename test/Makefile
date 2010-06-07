@@ -9,7 +9,7 @@ F90 = gfortran
 MOD_LOC = -J${MOD_DIR}
 WARN = 
 BOUNDS = -fbounds-check
-DEBUG = -g -fbacktrace -fsignaling-nans -ffpe-trap=zero,invalid
+DEBUG = -g -fbacktrace -fsignaling-nans -ffpe-trap=zero,invalid#,underflow,overflow
 DOUBLE = -fdefault-real-8
 F90FLAGS = ${MOD_LOC} ${BOUNDS} ${DEBUG} ${WARN}
 
@@ -38,10 +38,6 @@ ${OBJ_DIR}/%: ${SRC_TST}/cerf_wrapper.c
 	gcc -c $< -o $@ 
 
 
-# Double
-
-include ../Makefile.double
-
 # Dependencies
 
 ${EXE_DIR}/test_expBesselI: \
@@ -64,6 +60,11 @@ ${EXE_DIR}/test_cerf: \
 
 
 include ../Makefile.deps
+
+# Double
+
+include ../Makefile.double
+
 
 clean:
 	rm ${OBJ_DIR}/*.o ${MOD_DIR}/*.mod ${EXE_DIR}/* *.nc

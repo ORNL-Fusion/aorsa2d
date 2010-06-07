@@ -30,11 +30,6 @@ subroutine rotate_E_to_lab ()
                 matMul ( transpose ( U_RTZ_to_ABb(i,j,:,:) ), &
                     (/ eAlpha(i,j), eBeta(i,j), eb(i,j) /) )
 
-            !ELab_RTZ = &
-            !    matMul ( U_RTZ_to_ABb(i,j,:,:), &
-            !        (/ eAlpha(i,j), eBeta(i,j), eb(i,j) /) )
-
-
             eR(i,j) = ELab_RTZ(1)
             eTh(i,j) = ELab_RTZ(2)
             eZ(i,j) = ELab_RTZ(3)

@@ -22,6 +22,8 @@ implicit none
     logical :: useCircular = .false.
     logical :: useCircularProfiles = .false.
     logical :: noPoloidalField = .false.
+    logical :: toroidalBroadening = .true.
+    real :: kPrlEffLimit = 0.0
     integer :: nSpec = 2
     real :: r0 = 1.0
     real :: a = 1.0
@@ -455,7 +457,9 @@ implicit none
      &    metalLeft, metalRight, metalTop, metalBot, useSoloviev, a, psiExp, &
      &    noPoloidalField, rhoScale, rhoWidth, rhoPower, useCircular, &
      &    bPol_frac, useCircularProfiles, lsWeightFac, xkx_cutOff, xky_cutOff, &
-     &    chebyshevX, chebyshevY, magma, rhoAnt, antSigRho
+     &    chebyshevX, chebyshevY, magma, rhoAnt, antSigRho, toroidalBroadening,&
+     &    kPrlEffLimit
+
                 
 contains
 

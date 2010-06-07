@@ -4,10 +4,10 @@ use constants
 
 implicit none
 
-real :: omgrf, k0
+real(kind=dbl) :: omgrf, k0
 real, allocatable, dimension(:) :: mSpec, qSpec, tSpec, dSpec
 integer, allocatable, dimension(:) :: zSpec, amuSpec
-real, allocatable, dimension(:,:,:) :: &
+real(kind=dbl), allocatable, dimension(:,:,:) :: &
     omgc, omgp2, densitySpec, ktSpec
 real, allocatable, dimension(:) :: &
     tLim, dLim, dAlpha, dBeta, tAlpha, tBeta

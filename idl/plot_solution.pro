@@ -177,7 +177,7 @@ pro plot_solution, oneD = oneD, $
 
 		contour_field, ealpha, x, y, nLevs, scale1, id = fieldPlot, view = 1
 		contour_field, ebeta, x, y, nLevs, scale2, id = fieldPlot, view = 2
-		contour_field, eb, x, y, nLevs, scale3_, id = fieldPlot, view = 3
+		contour_field, eb, x, y, nLevs, scale3_*0.2, id = fieldPlot, view = 3
 
 		fieldPlot = 5
 		iContour, id = fieldPlot, view_grid = [3,1], $
@@ -187,7 +187,7 @@ pro plot_solution, oneD = oneD, $
 				id = fieldPlot, view = 1, /noLines
 		contour_field, abs(ebeta), x, y, nLevs, scale2, $
 				id = fieldPlot, view = 2, /noLines
-		contour_field, abs(eb), x, y, nLevs, scale3_, $
+		contour_field, abs(eb), x, y, nLevs, scale3_*0.4, $
 				id = fieldPlot, view = 3, /noLines
 
 		scale1 = max ( abs ( er ) )

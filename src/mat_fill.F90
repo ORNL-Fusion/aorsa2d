@@ -5,16 +5,16 @@ use constants
 implicit none
 
 complex :: bFn
-complex :: &
+complex(kind=dbl) :: &
     sigAlpAlp, sigAlpBet, sigAlpPrl, &
     sigBetAlp, sigBetBet, sigBetPrl, &
     sigPrlAlp, sigPrlBet, sigPrlPrl
-complex :: &
+complex(kind=dbl) :: &
     sigAlpAlpTmp, sigAlpBetTmp, sigAlpPrlTmp, &
     sigBetAlpTmp, sigBetBetTmp, sigBetPrlTmp, &
     sigPrlAlpTmp, sigPrlBetTmp, sigPrlPrlTmp
 
-complex :: sigma_tmp(3,3)
+complex(kind=dbl) :: sigma_tmp(3,3)
 
 complex :: &
     kAlpAlp, kAlpBet, kAlpPrl, &

@@ -129,23 +129,27 @@ contains
         ! method ... NOT the Smithe approach. i.e., gamma_ is 
         ! gamma_brambilla
 
+        use constants
         use hammett, zfun_hammett => zfun
+        !use zFunOriginal
 
         implicit none
 
-        complex, intent(in) :: zeta(:)
-        complex, intent(out) :: Z(:), ZPrime(:)
+        complex(kind=dbl), intent(in) :: zeta(:)
+        complex(kind=dbl), intent(out) :: Z(:), ZPrime(:)
 
-        complex, allocatable :: zFunct(:)
+        !complex, allocatable :: zFunct(:)
         integer :: nL, i
 
         nL = size ( zeta )
 
         do i=1,nL 
-          Z(i) = zfun_hammett ( zeta(i) )
+            Z(i) = zfun_hammett ( zeta(i) )
+            !call zfun ( zeta(i), Z(i) )
         enddo
 
-        ZPrime      = -2 * ( 1.0 + zeta * Z )
+        !ZPrime      = -2d0 * ( 1d0 + zeta * Z )
+        ZPrime      = -2d0 - 2d0 * zeta * Z 
 
    end subroutine z_approx_dlg
 
