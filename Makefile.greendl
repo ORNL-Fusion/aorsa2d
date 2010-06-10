@@ -1,0 +1,6 @@
+NETCDF_DIR = /home/dg6/code/netcdf/netcdf_gnu64
+NETCDF = -I ${NETCDF_DIR}/include -L ${NETCDF_DIR}/lib -lnetcdf 
+PAPI_INC =  
+PAPI = 
+
+

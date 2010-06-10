@@ -35,7 +35,7 @@ GPTL = #-I ${GPTL_DIR}/include -L ${GPTL_DIR} -lgptl
 
 # set the MODE to "serial" or "parallel"
 
-MODE = "parallel"
+MODE = "serial"
 
 # set solve precision to "single" or "double" 
 
@@ -51,6 +51,9 @@ COORDSYS = "cylProper"
 
 ZFUN = "zFunHammett"
 
+# use papi
+
+USEPAPI = "false"
 
 # pre-processor directives
 # ------------------------
@@ -69,6 +72,10 @@ endif
 
 ifeq (${ZFUN},"zFunHammett")
 	CPP_DIRECTIVES := -DzFunHammett ${CPP_DIRECTIVES}
+endif
+
+ifeq (${USEPAPI},"true")
+	CPP_DIRECTIVES := -Dusepapi ${CPP_DIRECTIVES}
 endif
 
 
@@ -96,6 +103,10 @@ endif
 
 ifeq (${HOME},/ccs/home/dg6)
 	include Makefile.jaguarpf
+endif
+
+ifeq (${HOSTNAME},greendl.local)
+	include Makefile.greendl
 endif
 
 # the order of linking libs is important

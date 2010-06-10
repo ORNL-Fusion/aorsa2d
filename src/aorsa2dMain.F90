@@ -19,12 +19,16 @@ program aorsa2dMain
 
     implicit none
 
+#ifdef usepapi
     include "f90papi.h"
+#endif
     !include "gptl.inc"
 
     !   Timer variables
 
     type ( timer ) :: tFill, tSolve, tTotal
+
+#ifdef usepapi
 
     !   PAPI variables
 
@@ -35,6 +39,8 @@ program aorsa2dMain
     real :: papi_rtime_fill, papi_rtime_solve
     real :: papi_ptime_fill, papi_ptime_solve
     integer(kind=long) :: papi_flpins
+
+#endif
 
     !! GPTL vars
 
@@ -162,19 +168,24 @@ program aorsa2dMain
 
     call start_timer ( tFill )
 
+#ifdef usepapi
     call PAPIF_flops ( papi_rTime, papi_pTime, papi_flpins, papi_mflops, papi_irc )
     papi_rTime_zero = papi_rTime
     papi_pTime_zero = papi_pTime
+#endif
 
     call aMat_fill ()
 
+#ifdef usepapi
     call PAPIF_flops ( papi_rTime, papi_pTime, papi_flpins, papi_mflops, papi_irc )
     papi_rTime_fill = papi_rTime - papi_rTime_zero
     papi_pTime_fill = papi_pTime - papi_pTime_zero
+#endif
 
     if (iAm==0) &
     write(*,*) 'Time to fill aMat: ', end_timer ( tFill )
 
+#ifdef usepapi
     !   sum total mflops from all procs
 
     papi_mflops_global  = papi_mflops
@@ -195,6 +206,8 @@ program aorsa2dMain
 
     endif
 
+#endif
+
     !if (iAm==0) &
     !call write_amat ( 'amat.nc' )
 
@@ -211,9 +224,11 @@ program aorsa2dMain
 
     call start_timer ( tSolve )
 
+#ifdef usepapi
     call PAPIF_flops ( papi_rTime, papi_pTime, papi_flpins, papi_mflops, papi_irc )
     papi_rTime_zero = papi_rTime
     papi_pTime_zero = papi_pTime
+#endif
 
 #ifdef par
     call solve_lsq_parallel ()
@@ -221,13 +236,16 @@ program aorsa2dMain
     call solve_lsq ()
 #endif
 
+#ifdef usepapi
     call PAPIF_flops ( papi_rTime, papi_pTime, papi_flpins, papi_mflops, papi_irc )
     papi_rTime_solve = papi_rTime - papi_rTime_zero
     papi_pTime_solve = papi_pTime - papi_pTime_zero
+#endif
 
     if (iAm==0) &
     write(*,*) 'Time to solve: ', end_timer ( tSolve )
 
+#ifdef usepapi
     !   sum total mflops from all procs
 
     papi_mflops_global  = papi_mflops
@@ -247,7 +265,7 @@ program aorsa2dMain
         write(*,'(a30,i1)') 'status: ', papi_irc
 
     endif
-
+#endif
 
     call extract_coeffs ()    
 

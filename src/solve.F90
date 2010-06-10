@@ -25,8 +25,6 @@ contains
 
         implicit none
 
-        include "f90papi.h"
-
         integer :: info, nRow, nCol
         integer, allocatable, dimension(:) :: ipiv
 
