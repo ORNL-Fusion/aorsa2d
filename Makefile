@@ -51,9 +51,9 @@ COORDSYS = "cylProper"
 
 ZFUN = "zFunHammett"
 
-# use papi
+# use papi, set to "true" or "false"
 
-USEPAPI = "false"
+USEPAPI = "true"
 
 # pre-processor directives
 # ------------------------

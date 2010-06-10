@@ -11,25 +11,42 @@ real :: antSigX, antSigY
     complex(kind=dbl), allocatable :: brhs(:)
 #endif
 complex, allocatable :: brhs_global(:)
-complex, allocatable, dimension(:,:) :: &
-    xjx, xjy, xjz
 
 contains
 
-    subroutine init_brhs ()
+    subroutine alloc_total_brhs ( nPtsR_tot, nPtsZ_tot )
+
+        use parallel
+
+        implicit none
+
+        integer, intent(in) :: nPtsR_tot, nPtsZ_tot
+
+        allocate ( brhs_global(nPtsR_tot*nPtsZ_tot*3) )
+#ifdef par
+        allocate ( brhs(nRowLocal) )
+#else
+        allocate ( brhs(nPtsR_tot*nPtsZ_tot*3) )
+#endif
+        brhs        = 0
+        brhs_global = 0
+
+    end subroutine alloc_brhs
+
+
+    subroutine init_brhs ( g )
 
         use aorsa2din_mod, &
-        only: rAnt, zAnt, nPtsX, nPtsY, npRow, npCol, &
+        only: rAnt, zAnt, npRow, npCol, &
             antSigX, antSigY, &
             metalLeft, metalRight, metalTop, metalBot, &
             useEqdsk, r0, rhoAnt, antSigRho
         use grid
-        use profiles
         use parallel
-        use bField, &
-        only: mask, rho
 
         implicit none
+
+        type(gridBlock), intent(in) :: g
 
         integer :: i, j, iRow, iCol
 
@@ -38,80 +55,72 @@ contains
         integer :: pr_sp, pc_sp, l_sp, m_sp, x_sp, y_sp
         integer :: localRow, localCol, ii, jj
 
-        allocate ( brhs_global(nPtsX*nPtsY*3) )
-#ifdef par
-        allocate ( brhs(nRowLocal) )
-#else
-        allocate ( brhs(nPtsX*nPtsY*3) )
-#endif
-        brhs        = 0
-        brhs_global = 0
 
         allocate ( &
-            xjx(nPtsX,nPtsY), &
-            xjy(nPtsX,nPtsY), &
-            xjz(nPtsX,nPtsY) )
+            g%jR(g%nR,g%nZ), &
+            g%jT(g%nR,g%nZ), &
+            g%jZ(g%nR,g%nZ) )
 
         !   note curden is in Amps per meter of toroidal length (2.*pi*rt).
 
-        do i = 1, nPtsX
-            do j = 1, nPtsY
+        do i = 1, g%nR
+            do j = 1, g%nZ
 
-                xjx(i,j) = 0.0
+                g%jR(i,j) = 0.0
+                g%jT(i,j) = 0.0
                 if(useEqdsk) then
-                    if(capR(i)>r0) &
-                    xjy(i,j) = exp ( &
-                    -( (rho(i,j)-rhoAnt)**2/antSigRho**2 + (y(j)-zAnt)**2/antSigY**2 ) &
+                    if(g%R(i)>r0) &
+                    g%jZ(i,j) = exp ( &
+                    -( (g%rho(i,j)-rhoAnt)**2/antSigRho**2 + (g%Z(j)-zAnt)**2/antSigY**2 ) &
                           )
                 else
-                    xjy(i,j) = exp ( &
-                    -( (capR(i)-rAnt)**2/antSigX**2 + (y(j)-zAnt)**2/antSigY**2 ) &
+                    g%jZ(i,j) = exp ( &
+                    -( (g%R(i)-rAnt)**2/antSigX**2 + (g%Z(j)-zAnt)**2/antSigY**2 ) &
                           )
                 endif
-                xjz(i,j) = 0.0
 
                 !   boundary conditions
                 !   -------------------
 
-                if(nPtsX/=1) then
-                if ( i==1 .or. i==nPtsX ) then
-                    xjx(i,j)    = 0
-                    xjy(i,j)    = 0
-                    xjz(i,j)    = 0
+                if(g%nR/=1) then
+                if ( i==1 .or. i==g%nR ) then
+                    g%jR(i,j)    = 0
+                    g%jT(i,j)    = 0
+                    g%jZ(i,j)    = 0
                 endif
                 endif
 
-                if(nPtsY/=1) then
-                if ( j==1 .or. j==nPtsY ) then
-                    xjx(i,j)    = 0
-                    xjy(i,j)    = 0
-                    xjz(i,j)    = 0
+                if(g%nZ/=1) then
+                if ( j==1 .or. j==g%nZ ) then
+                    g%jR(i,j)    = 0
+                    g%jT(i,j)    = 0
+                    g%jZ(i,j)    = 0
                 endif
                 endif
 
 
                 !if ( capR(i) < metalLeft .or. capR(i) > metalRight &
                 !        .or. y(j) > metalTop .or. y(j) < metalBot ) then 
-                !    xjx(i,j)    = 0
-                !    xjy(i,j)    = 0
-                !    xjz(i,j)    = 0
+                !    jR(i,j)    = 0
+                !    jT(i,j)    = 0
+                !    jZ(i,j)    = 0
                 !endif
 
 
            enddo
         enddo
 
-        !xjy = 0
-        !xjy(nPtsX/2,nPtsY/2)    = 1
+        !jT = 0
+        !jT(nPtsX/2,nPtsY/2)    = 1
 
-        xjx = -zi / omgrf / eps0 * xjx
-        xjy = -zi / omgrf / eps0 * xjy
-        xjz = -zi / omgrf / eps0 * xjz
+        g%jR = -zi / omgrf / eps0 * g%jR
+        g%jT = -zi / omgrf / eps0 * g%jT
+        g%jZ = -zi / omgrf / eps0 * g%jZ
 
-        do i = 1, nPtsX
-            do j = 1, nPtsY
+        do i = 1, g%nR
+            do j = 1, g%nZ
 
-                iRow = (j-1) * 3 + (i-1) * nPtsY * 3 + 1
+                iRow = (j-1) * 3 + (i-1) * g%nZ * 3 + 1
 
                 do ii = 0, 2
 
@@ -141,15 +150,15 @@ contains
 
                     if (myRow==pr_sp .and. myCol==pc_sp) then
 
-                        if (ii==0) brhs(localRow)    = xjx(i,j)
-                        if (ii==1) brhs(localRow)    = xjy(i,j)
-                        if (ii==2) brhs(localRow)    = xjz(i,j)
+                        if (ii==0) brhs(localRow)    = g%jR(i,j)
+                        if (ii==1) brhs(localRow)    = g%jT(i,j)
+                        if (ii==2) brhs(localRow)    = g%jZ(i,j)
 
                     endif
 #else
-                    if (ii==0) brhs(iRow+0)    = xjx(i,j)
-                    if (ii==1) brhs(iRow+1)    = xjy(i,j)
-                    if (ii==2) brhs(iRow+2)    = xjz(i,j)
+                    if (ii==0) brhs(iRow+0)    = g%jR(i,j)
+                    if (ii==1) brhs(iRow+1)    = g%jT(i,j)
+                    if (ii==2) brhs(iRow+2)    = g%jZ(i,j)
 #endif
                 enddo
 

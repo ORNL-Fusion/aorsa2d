@@ -53,6 +53,8 @@ program aorsa2dMain
 
     !call start_timer ( tTotal )
 
+    integer :: i
+
 
 !   read namelist input data
 !   ------------------------
@@ -80,7 +82,22 @@ program aorsa2dMain
     if (iAm==0) &
     write(*,*) 'Creating spatial grid'
 
-    call init_grid ()
+    allocate ( allGrids ( nGrid ) )
+    nRAll(1) = nPtsX
+    nZAll(1) = nPtsY
+    rMinAll(1) = rwleft
+    rMaxAll(1) = rwright
+    zMinAll(1) = yBot
+    zMaxAll(1) = yTop
+
+    do i=1,nGrid 
+
+        allGrids(i) = init_GridBlock ( &
+            nRAll(i), nZAll(i), rMinAll(i), rMaxAll(i), zMinAll(i), zMaxAll(i) )
+
+    enddo
+
+    !call init_grid ()
 
 
 !   setup magnetic field 
@@ -89,35 +106,41 @@ program aorsa2dMain
     if (iAm==0) &
     write(*,*) 'Reading eqdsk'
 
-    if (useEqdsk) then
-        call read_geqdsk ( eqdsk, plot = .false. )
-        call init_interp ()
-        call bFieldEqdsk ()
-    elseif (useSoloviev) then
-        call soloviev ()
-    elseif (useCircular) then
-        call bFieldCircular ()
-    else
-        call bFieldAnalytical ()
-    endif
+    do i=1,nGrid
 
+        if (useEqdsk) then
+            call read_geqdsk ( eqdsk, plot = .false. )
+            call init_interp ()
+            call bFieldEqdsk ( allGrids(i) )
+        elseif (useSoloviev) then
+            call soloviev ( allGrids(i) )
+        elseif (useCircular) then
+            call bFieldCircular ( allGrids(i) )
+        else
+            call bFieldAnalytical ( allGrids(i) )
+        endif
+
+    enddo
 
 !   setup profiles
 !   --------------
 
     if (iAm==0) &
     write(*,*) 'Profile setup'
-    
-    call init_profiles ()
+   
+    do i=1,nGrid
 
-    if (useFluxProfiles) then
-        call flux_profiles ()
-    elseif (useCircularProfiles) then
-        call circular_profiles ()
-    else
-        call flat_profiles ()
-    endif
+        call init_profiles ( allGrids(i) )
 
+        if (useFluxProfiles) then
+            call flux_profiles ( allGrids(i) )
+        elseif (useCircularProfiles) then
+            call circular_profiles ( allGrids(i) )
+        else
+            call flat_profiles ( allGrids(i) )
+        endif
+
+    enddo
 
 !   calculate rotation matrix U
 !   ---------------------------
@@ -125,23 +148,27 @@ program aorsa2dMain
     if (iAm==0) &
     write(*,*) 'Building rotation matrix U'
 
-    call init_rotation ()
-    call deriv_rotation ()
+    do i=1,nGrid
+
+        call init_rotation ( allGrids(i) )
+        call deriv_rotation ( allGrids(i) )
+
+    enddo
 
 
-!   Calculate kx and ky values 
-!   --------------------------
-
-    if (iAM==0) &
-    write(*,*) 'Creating k grid'
-
-    call init_k ()
-
-
-!   Precompute basis functions xx(n,i), yy(m,j)
-!   -------------------------------------------
-
-    call init_basis_functions () 
+!!   Calculate kx and ky values 
+!!   --------------------------
+!
+!    if (iAM==0) &
+!    write(*,*) 'Creating k grid'
+!
+!    call init_k ()
+!
+!
+!!   Precompute basis functions xx(n,i), yy(m,j)
+!!   -------------------------------------------
+!
+!    call init_basis_functions () 
 
 
 !   Antenna current
@@ -163,6 +190,29 @@ program aorsa2dMain
     call write_runData ( 'runData.nc' )
 
 
+!   Allocate the matrix
+!   -------------------
+
+#ifdef par
+
+    if (iAm == 0) &
+    write(*,100), &
+        nPtsX*nPtsY*3*nModesX*nModesY*3*2*8.0 / 1024.0**2, &
+        nRowLocal*nColLocal*2*8.0 / 1024.0**2
+    100 format (' Filling aMat [global size: ',f8.1,' MB, local size: ',f8.1' MB]')
+
+    allocate ( aMat(nRowLocal,nColLocal) )
+#else 
+    write(*,100), &
+        nPtsX*nPtsY*3*nModesX*nModesY*3*2*8.0 / 1024.0**2
+    100 format (' Filling aMat [global size: ',f8.1,' MB]')
+
+    allocate ( aMat(nPtsX*nPtsY*3,nModesX*nModesY*3) )
+
+#endif
+
+    aMat = 0
+
 !   Fill matrix 
 !   -----------
 
@@ -174,7 +224,11 @@ program aorsa2dMain
     papi_pTime_zero = papi_pTime
 #endif
 
-    call aMat_fill ()
+    do i=1,nGrid
+
+        call aMat_fill ( allGrids(i) )
+
+    enddo
 
 #ifdef usepapi
     call PAPIF_flops ( papi_rTime, papi_pTime, papi_flpins, papi_mflops, papi_irc )

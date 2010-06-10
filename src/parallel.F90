@@ -12,17 +12,19 @@ contains
 
 #ifdef par
 
-    subroutine init_procGrid ()
+    subroutine init_procGrid ( nPtsR_tot, nPtsZ_tot, nModesR_tot, nModesZ_tot )
 
         use aorsa2din_mod, &
-        only: npRow, npCol, nPtsX, nPtsY, nModesX, nModesY
+        only: npRow, npCol
 
         implicit none
 
+        integer, intent(in) :: nPtsR_tot, nPtsZ_tot, nModesR_tot, nModesZ_tot
+
         integer, external :: numRoC
 
-        nRow    = nPtsX*nPtsY*3
-        nCol    = nModesX*nModesY*3
+        nRow    = nPtsR_tot*nPtsZ_tot*3
+        nCol    = nModesR_tot*nModesZ_tot*3
 
         ! block sizes
 
@@ -98,7 +100,7 @@ contains
     subroutine init_parallel_aMat ()
 
         use aorsa2din_mod, &
-        only: npRow, npCol, nPtsX, nPtsY, nModesX, nModesY
+        only: npRow, npCol
 
         implicit none
 

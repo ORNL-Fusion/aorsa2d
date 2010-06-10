@@ -187,28 +187,27 @@ contains
 
     end subroutine read_geqdsk
 
-    function is_inside_bbbs ( )
+    function is_inside_bbbs ( g )
 
-        use aorsa2din_mod, &
-        only: nPtsX, nPtsY
-        use grid, &
-        only: capR, y
+        use grid
 
         implicit none
+
+        type(gridBlock), intent(in) :: g
 
         logical, allocatable :: is_inside_bbbs(:,:)
         integer :: q1, q2, q3, q4
         integer :: i, j
 
-        allocate ( is_inside_bbbs (nPtsX,nPtsY) )
+        allocate ( is_inside_bbbs (g%nR,g%nZ) )
 
-        do i=1,nPtsX
-            do j=1,nPtsY
+        do i=1,g%nR
+            do j=1,g%nZ
 
-                q1  = count ( capR(i) - rbbbs > 0 .and. y(j) - zbbbs > 0 )
-                q2  = count ( capR(i) - rbbbs > 0 .and. y(j) - zbbbs .le. 0 )
-                q3  = count ( capR(i) - rbbbs .le. 0 .and. y(j) - zbbbs > 0 )
-                q4  = count ( capR(i) - rbbbs .le. 0 .and. y(j) - zbbbs .le. 0 )
+                q1  = count ( g%R(i) - rbbbs > 0 .and. g%z(j) - zbbbs > 0 )
+                q2  = count ( g%R(i) - rbbbs > 0 .and. g%z(j) - zbbbs .le. 0 )
+                q3  = count ( g%R(i) - rbbbs .le. 0 .and. g%z(j) - zbbbs > 0 )
+                q4  = count ( g%R(i) - rbbbs .le. 0 .and. g%z(j) - zbbbs .le. 0 )
 
                 if ( q1 > 0 .and. q2 > 0 .and. q3 > 0 .and. q4 > 0 ) then
 

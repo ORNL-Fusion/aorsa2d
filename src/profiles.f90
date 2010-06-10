@@ -15,15 +15,18 @@ real, allocatable :: nuOmg2D(:,:)
 
 contains
 
-    subroutine init_profiles ()
+    subroutine init_profiles ( g )
 
         use aorsa2din_mod, &
         only: freqcy, nSpec, zSpecIn, amuSpecIn, &
             tSpecIn, dSpecIn, tLimIn, dLimIn, &
             dAlphaIn, dBetaIn, tAlphaIn, tBetaIn, &
-            nPtsX, nPtsY, xNuOmg
+            xNuOmg
+        use grid
 
         implicit none
+
+        type(gridBlock), intent(inout) :: g
 
         omgrf = 2.0 * pi * freqcy
         k0 = omgrf / clight
@@ -51,21 +54,24 @@ contains
         mSpec(1)    = xme  
         qSpec       = zSpec * q 
  
-        allocate ( nuOmg2D(nPtsX,nPtsY) )
+        allocate ( g%nuOmg(g%nR,g%nZ) )
 
-        nuOmg2D = xNuOmg
+        g%nuOmg = xNuOmg
 
 
     end subroutine init_profiles
 
 
-    subroutine flat_profiles ()
+    subroutine flat_profiles ( g )
 
         use aorsa2din_mod, &
-        only: nPtsX, nPtsY, nSpec
+        only: nSpec
         use bField
+        use grid
 
         implicit none
+
+        type(gridBlock), intent(inout) :: g
 
         integer :: i, j, s
 
@@ -73,113 +79,117 @@ contains
         ! --------------
        
         allocate ( &
-            densitySpec ( nPtsX, nPtsY, nSpec ), & 
-            ktSpec ( nPtsX, nPtsY, nSpec ) )
+            g%densitySpec ( g%nR, g%nZ, nSpec ), & 
+            g%ktSpec ( g%nR, g%nZ, nSpec ) )
        
         ! ions
         ! ---- 
 
         do s=2,nSpec
         
-            ktSpec(:,:,s)       = tSpec(s) * q 
-            densitySpec(:,:,s)  = dSpec(s) 
+            g%ktSpec(:,:,s)       = tSpec(s) * q 
+            g%densitySpec(:,:,s)  = dSpec(s) 
         
         enddo
 
         ! electrons
         ! ---------
 
-        ktSpec(:,:,1) = tSpec(1) * q
+        g%ktSpec(:,:,1) = tSpec(1) * q
 
-        do i=1,nPtsX
-            do j=1,nPtsY
+        do i=1,g%nR
+            do j=1,g%nZ
 
-                densitySpec(i,j,1)  = sum ( densitySpec(i,j,2:nSpec)*zSpec(2:nSpec) )
+                g%densitySpec(i,j,1)  = sum ( g%densitySpec(i,j,2:nSpec)*zSpec(2:nSpec) )
 
             enddo
         enddo
 
-        call omega_freqs ()
+        call omega_freqs ( g )
 
 
     end subroutine
 
 
-    subroutine circular_profiles ()
+    subroutine circular_profiles ( g )
 
         use aorsa2din_mod, &
-        only: nPtsX, nPtsY, nSpec, xNuOmgOutside, a, r0
+        only: nSpec, xNuOmgOutside, a, r0
         use bField
         use parallel
-        use grid, &
-        only: capR, y
+        use grid
 
         implicit none
+
+        type(gridBlock), intent(inout) :: g
 
         integer :: s, i, j
         real, allocatable :: distance(:,:)
 
         allocate ( &
-            densitySpec ( nPtsX, nPtsY, nSpec ), & 
-            ktSpec ( nPtsX, nPtsY, nSpec ), &
-            distance(nPtsX,nPtsY) )
+            g%densitySpec ( g%nR, g%nZ, nSpec ), & 
+            g%ktSpec ( g%nR, g%nZ, nSpec ), &
+            distance(g%nR,g%nZ) )
      
-        do i=1,nPtsX
-            do j=1,nPtsY
+        do i=1,g%nR
+            do j=1,g%nZ
 
-                distance(i,j)   = sqrt( (capR(i)-r0)**2 + (y(j)-0.0)**2  ) / a
+                distance(i,j)   = sqrt( (g%R(i)-r0)**2 + (g%Z(j)-0.0)**2  ) / a
 
             enddo
         enddo
 
         do s=1,nSpec 
                 
-            ktSpec(:,:,s) = ( exp ( - ( distance )**tBeta(s) / ( 2 * tAlpha(s)**2 ) ) &
+            g%ktSpec(:,:,s) = ( exp ( - ( distance )**tBeta(s) / ( 2 * tAlpha(s)**2 ) ) &
                 * (tSpec(s)-tLim(s)) + tLim(s) ) * q
         enddo
 
         do s=2,nSpec 
-            densitySpec(:,:,s)  = &
+            g%densitySpec(:,:,s)  = &
                 dLim(s) + ( dSpec(s)-dLim(s) ) &
                 * exp ( - ( distance )**dBeta(s) / ( 2 * dAlpha(s)**2 ) )
         enddo
 
-        do i=1,nPtsX
-            do j=1,nPtsY
+        do i=1,g%nR
+            do j=1,g%nZ
 
-                densitySpec(i,j,1)  = sum ( densitySpec(i,j,2:nSpec)*zSpec(2:nSpec) )
+                g%densitySpec(i,j,1)  = sum ( g%densitySpec(i,j,2:nSpec)*zSpec(2:nSpec) )
 
             enddo
         enddo
 
-        call omega_freqs ()
+        call omega_freqs ( g )
 
         where ( distance/a>=0.99)
-            nuOmg2D = xNuOmgOutside
+            g%nuOmg = xNuOmgOutside
         endwhere
 
     end subroutine circular_profiles
 
     
-    subroutine flux_profiles ()
+    subroutine flux_profiles ( g )
 
         use aorsa2din_mod, &
-        only: nPtsX, nPtsY, nSpec, xNuOmgOutside
+        only: nSpec, xNuOmgOutside
         use bField
         use parallel
+        use grid
 
         implicit none
+
+        type(gridBlock), intent(inout) :: g
 
         integer :: s, i, j, sWidthX, sWidthY, nS
         real, allocatable :: smoothingTmp(:,:), smoothingDen(:,:)
 
         allocate ( &
-            densitySpec ( nPtsX, nPtsY, nSpec ), & 
-            ktSpec ( nPtsX, nPtsY, nSpec ) )
+            g%densitySpec ( g%nR, g%nZ, nSpec ), & 
+            g%ktSpec ( g%nR, g%nZ, nSpec ) )
      
         ! Catch bad rho values
 
-        if ( any ( rho > 1 ) .or. any ( rho < 0 ) ) then 
+        if ( any ( g%rho > 1 ) .or. any ( g%rho < 0 ) ) then 
 
             write(*,*) 'profiles.f90: ERROR - bad rho values'
             stop
@@ -192,8 +202,8 @@ contains
         ! ----------------------------------
 
         do s=1,nSpec 
-            ktSpec(:,:,s) = ( &
-                tLim(s) + ( tSpec(s)-tLim(s) ) * (1d0 - rho**tBeta(s))**tAlpha(s) ) * q 
+            g%ktSpec(:,:,s) = ( &
+                tLim(s) + ( tSpec(s)-tLim(s) ) * (1d0 - g%rho**tBeta(s))**tAlpha(s) ) * q 
         enddo
 
 
@@ -202,28 +212,28 @@ contains
         ! -------------------------------------------
 
         do s=2,nSpec 
-            densitySpec(:,:,s)  = &
-                dLim(s) + ( dSpec(s)-dLim(s) ) * (1d0 - rho**dBeta(s))**dAlpha(s)
+            g%densitySpec(:,:,s)  = &
+                dLim(s) + ( dSpec(s)-dLim(s) ) * (1d0 - g%rho**dBeta(s))**dAlpha(s)
         enddo
 
         !   Enforce limits just in case. I would hope
         !   this is not nessecary but I have not double checked
 
-        do i=1,nPtsX
-            do j=1,nPtsY
+        do i=1,g%nR
+            do j=1,g%nZ
                 do s=2,nSpec
             
-                    if (ktSpec(i,j,s)<tLim(s)*q) &
-                        ktSpec(i,j,s) = tLim(s)*q
+                    if (g%ktSpec(i,j,s)<tLim(s)*q) &
+                        g%ktSpec(i,j,s) = tLim(s)*q
 
-                    if (ktSpec(i,j,s)>tSpec(s)*q) &
-                        ktSpec(i,j,s) = tSpec(s)*q
+                    if (g%ktSpec(i,j,s)>tSpec(s)*q) &
+                        g%ktSpec(i,j,s) = tSpec(s)*q
 
-                    if (densitySpec(i,j,s)<dLim(s)) &
-                        densitySpec(i,j,s) = dLim(s)
+                    if (g%densitySpec(i,j,s)<dLim(s)) &
+                        g%densitySpec(i,j,s) = dLim(s)
 
-                    if (densitySpec(i,j,s)>dSpec(s)) &
-                        densitySpec(i,j,s) = dSpec(s)
+                    if (g%densitySpec(i,j,s)>dSpec(s)) &
+                        g%densitySpec(i,j,s) = dSpec(s)
 
                 enddo
             enddo
@@ -232,10 +242,10 @@ contains
         ! electrons density for quasi neutrality
         ! --------------------------------------
 
-        do i=1,nPtsX
-            do j=1,nPtsY
+        do i=1,g%nR
+            do j=1,g%nZ
 
-                densitySpec(i,j,1)  = sum ( densitySpec(i,j,2:nSpec)*zSpec(2:nSpec) )
+                g%densitySpec(i,j,1)  = sum ( g%densitySpec(i,j,2:nSpec)*zSpec(2:nSpec) )
 
             enddo
         enddo
@@ -244,20 +254,20 @@ contains
         ! smooth densities
         ! ----------------
 
-        sWidthX = nPtsX/20 
-        sWidthY = nPtsY/20
-        allocate ( smoothingTmp(1-sWidthX:nPtsX+sWidthX,1-sWidthY:nPtsY+sWidthY) )
-        allocate ( smoothingDen(1-sWidthX:nPtsX+sWidthX,1-sWidthY:nPtsY+sWidthY) )
+        sWidthX = g%nR/20 
+        sWidthY = g%nZ/20
+        allocate ( smoothingTmp(1-sWidthX:g%nR+sWidthX,1-sWidthY:g%nZ+sWidthY) )
+        allocate ( smoothingDen(1-sWidthX:g%nR+sWidthX,1-sWidthY:g%nZ+sWidthY) )
 
         do s=1,nSpec
-            smoothingTmp = minVal(ktSpec(:,:,s))
-            smoothingTmp(1:nPtsX,1:nPtsY) = ktSpec(:,:,s)
-            smoothingDen = minVal(densitySpec(:,:,s))
-            smoothingDen(1:nPtsX,1:nPtsY) = densitySpec(:,:,s)
+            smoothingTmp = minVal(g%ktSpec(:,:,s))
+            smoothingTmp(1:g%nR,1:g%nZ) = g%ktSpec(:,:,s)
+            smoothingDen = minVal(g%densitySpec(:,:,s))
+            smoothingDen(1:g%nR,1:g%nZ) = g%densitySpec(:,:,s)
 
             do nS = 1, 5
-                do i=1,nPtsX
-                    do j=1,nPtsY
+                do i=1,g%nR
+                    do j=1,g%nZ
 
                         smoothingTmp(i,j)  = &
                             sum ( smoothingTmp(i-sWidthX:i+sWidthX,j-sWidthY:j+sWidthY) ) &
@@ -269,33 +279,36 @@ contains
                     enddo
                 enddo
             enddo
-            densitySpec(:,:,s) = smoothingDen(1:nPtsX,1:nPtsY)
-            ktSpec(:,:,s) = smoothingTmp(1:nPtsX,1:nPtsY)
+            g%densitySpec(:,:,s) = smoothingDen(1:g%nR,1:g%nZ)
+            g%ktSpec(:,:,s) = smoothingTmp(1:g%nR,1:g%nZ)
         enddo
 
         deallocate ( smoothingTmp, smoothingDen )
 
-        call omega_freqs ()
+        call omega_freqs ( g )
 
 
         ! create a 2D map of collisional damping parameter
         ! for application outside the last closed flux surface
         ! ----------------------------------------------------
 
-        where ( rho>=0.99)
-            nuOmg2D = xNuOmgOutside
+        where ( g%rho>=0.99)
+            g%nuOmg = xNuOmgOutside
         endwhere
 
     end subroutine flux_profiles
 
     
-    subroutine omega_freqs ()
+    subroutine omega_freqs ( g )
 
         use aorsa2din_mod, &
-        only: nPtsX, nPtsY, nSpec
+        only: nSpec
         use bField
+        use grid
 
         implicit none
+
+        type(gridBlock), intent(inout) :: g
 
         integer :: i, j
 
@@ -303,14 +316,14 @@ contains
         !   ----------------------------------------
        
         allocate ( &
-            omgc ( nPtsX, nPtsY, nSpec ), &
-            omgp2 ( nPtsX, nPtsY, nSpec ) )
+            g%omgc ( g%nR, g%nZ, nSpec ), &
+            g%omgp2 ( g%nR, g%nZ, nSpec ) )
         
-        do i=1,nPtsX
-            do j=1,nPtsY
+        do i=1,g%nR
+            do j=1,g%nZ
         
-                omgc(i,j,:) = qSpec * bMod(i,j) / mSpec
-                omgp2(i,j,:)    = densitySpec(i,j,:) * qSpec**2 / ( eps0 * mSpec )
+                g%omgc(i,j,:) = qSpec * g%bMag(i,j) / mSpec
+                g%omgp2(i,j,:)    = g%densitySpec(i,j,:) * qSpec**2 / ( eps0 * mSpec )
         
             enddo
         enddo

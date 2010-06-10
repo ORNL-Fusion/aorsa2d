@@ -49,7 +49,7 @@ pro contour_field, field, x, y, nLevs, scale, $
 
 end
 
-pro plot_solution, oneD = oneD, $
+pro plot_solution, oneD = oneD, full = full, $
 		scale1 = scale1, scale2 = scale2, scale3_ = scale3_
 
 	cdfId = ncdf_open ( 'runData.nc', /noWrite ) 
@@ -166,7 +166,7 @@ pro plot_solution, oneD = oneD, $
 		if(not keyword_set(scale2)) then $
 		scale2 = max ( abs ( [ebeta] ) )
 		if(not keyword_set(scale3_)) then $
-		scale3_ = max ( abs(abs ( [eb[*]] )) ) 
+		scale3_ = max ( abs(abs ( [eb[*]] )) ) * 0.2
 		print, 'Scale1: ', scale1
 		print, 'Scale2: ', scale2
 		print, 'Scale3: ', scale3_
@@ -175,9 +175,12 @@ pro plot_solution, oneD = oneD, $
 		iContour, id = fieldPlot, view_grid = [3,1], $
 				/zoom_on_resize
 
-		contour_field, ealpha, x, y, nLevs, scale1, id = fieldPlot, view = 1
-		contour_field, ebeta, x, y, nLevs, scale2, id = fieldPlot, view = 2
-		contour_field, eb, x, y, nLevs, scale3_*0.2, id = fieldPlot, view = 3
+		contour_field, ealpha, x, y, nLevs, scale1, $
+				id = fieldPlot, view = 1, /noLines
+		contour_field, ebeta, x, y, nLevs, scale2, $
+				id = fieldPlot, view = 2, /noLines
+		contour_field, (real_part(eb)<scale3_)>(-scale3_), x, y, nLevs, scale3_, $
+				id = fieldPlot, view = 3, /noLines
 
 		fieldPlot = 5
 		iContour, id = fieldPlot, view_grid = [3,1], $
@@ -187,7 +190,7 @@ pro plot_solution, oneD = oneD, $
 				id = fieldPlot, view = 1, /noLines
 		contour_field, abs(ebeta), x, y, nLevs, scale2, $
 				id = fieldPlot, view = 2, /noLines
-		contour_field, abs(eb), x, y, nLevs, scale3_*0.4, $
+		contour_field, abs(eb), x, y, nLevs, scale3_, $
 				id = fieldPlot, view = 3, /noLines
 
 		scale1 = max ( abs ( er ) )
@@ -216,9 +219,9 @@ pro plot_solution, oneD = oneD, $
 		specPID = 3
 		iContour, id = specPID, view_grid = [3,1], dimensions = [1200,300]
 
-		contour_field, abs(ealphak),	kx, ky, nLevs, scale1, id = specPID, view = 1;, /log
-		contour_field, abs(ebetak),		kx, ky, nLevs, scale2, id = specPID, view = 2;, /log
-		contour_field, abs(ebk),		kx, ky, nLevs, scale3_, id = specPID, view = 3;, /log
+		contour_field, abs(ealphak),	kx, ky, nLevs, scale1, id = specPID, view = 1, /noLines
+		contour_field, abs(ebetak),		kx, ky, nLevs, scale2, id = specPID, view = 2, /noLines
+		contour_field, abs(ebk),		kx, ky, nLevs, scale3_, id = specPID, view = 3, /noLines
 
 		;; Reconstruct the fields using only a specific set of
 		;; basis vectors
@@ -272,14 +275,16 @@ pro plot_solution, oneD = oneD, $
 				print, i, nX
     		for j = 0, nY-1 do begin
     	   		for n = 0, nN-1 do begin
-    	        	for m = 0, nM-1 do begin
+    	        	;for m = 0, nM-1 do begin
 
-    	                  cexpkxky = xx(n, i) * yy(m, j)
-    	                  ealpha2_(i,j) = ealpha2_(i,j) + ealphak(n,m) * cexpkxky
-    	                  ebeta2_(i,j) = ebeta2_(i,j) + ebetak(n,m) * cexpkxky
-    	                  eb2_(i,j) = eb2_(i,j) + ebk(n,m) * cexpkxky
+    	                  ;cexpkxky = xx(n, i) * yy(m, j)
+    	                  ;ealpha2_(i,j) += ealphak(n,m) * cexpkxky
+    	                  ;ebeta2_(i,j) += ebetak(n,m) * cexpkxky
+    	                  ;eb2_(i,j) += ebk(n,m) * cexpkxky
+						  
+						  eb2_(i,j) += matrix_multiply ( ebk[n,*] , yy[*,j] ) * xx[n,i]
 
-    	        	endfor
+    	        	;endfor
     	   	 	endfor
     		endfor
   		endfor

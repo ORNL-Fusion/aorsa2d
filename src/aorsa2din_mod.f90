@@ -42,6 +42,15 @@ implicit none
     real :: rhoAnt = 0.97
     real :: antSigRho = 0.1
 
+    integer, parameter :: nGridMax = 10
+    integer :: nGrid = 1
+    integer, dimension(nGridMax) :: nRAll = 16
+    integer, dimension(nGridMax) :: nZAll = 16
+    real, dimension(nGridMax) :: rMinAll = 1.0
+    real, dimension(nGridMax) :: rMaxAll = 2.0
+    real, dimension(nGridMax) :: zMinAll = -1.0
+    real, dimension(nGridMax) :: zMaxAll =  1.0
+
 !     --------------------------------------------------------
 !     Declarations and defaults for aorsa2d.in input variables
 !     --------------------------------------------------------
@@ -458,7 +467,7 @@ implicit none
      &    noPoloidalField, rhoScale, rhoWidth, rhoPower, useCircular, &
      &    bPol_frac, useCircularProfiles, lsWeightFac, xkx_cutOff, xky_cutOff, &
      &    chebyshevX, chebyshevY, magma, rhoAnt, antSigRho, toroidalBroadening,&
-     &    kPrlEffLimit
+     &    kPrlEffLimit, nGrid
 
                 
 contains
