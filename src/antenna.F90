@@ -31,7 +31,7 @@ contains
         brhs        = 0
         brhs_global = 0
 
-    end subroutine alloc_brhs
+    end subroutine alloc_total_brhs
 
 
     subroutine init_brhs ( g )
@@ -43,10 +43,12 @@ contains
             useEqdsk, r0, rhoAnt, antSigRho
         use grid
         use parallel
+        use profiles, &
+        only: omgrf
 
         implicit none
 
-        type(gridBlock), intent(in) :: g
+        type(gridBlock), intent(inout) :: g
 
         integer :: i, j, iRow, iCol
 

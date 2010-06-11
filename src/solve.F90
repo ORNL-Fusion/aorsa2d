@@ -4,20 +4,12 @@ use constants
 
 implicit none
 
-complex, allocatable, dimension(:,:) :: &
-    ealphak, ebetak, eBk
-complex, allocatable, dimension(:,:) :: &
-   ealpha,  ebeta, eB 
-complex, allocatable, dimension(:,:) :: &
-   eR,  eTh, eZ 
-
-
 contains
 
     subroutine solve_lsq ()
 
         use aorsa2din_mod, &
-        only: nPtsX, nPtsY, nModesX, nModesY, square, magma
+        only: square, magma
         use mat_fill, &
         only: aMat!, aMat_
         use antenna, &
@@ -47,8 +39,8 @@ contains
         integer :: magma_solve, magStat
         integer :: dA_dim
 
-        nRow    = nPtsX * nPtsY * 3
-        nCol    = nModesX * nModesY * 3
+        nRow    = size ( aMat, 2 ) !nPtsX * nPtsY * 3
+        nCol    = size ( aMat, 1 ) !nModesX * nModesY * 3
 
         if(square) then
 
@@ -137,8 +129,7 @@ contains
     subroutine solve_lsq_parallel ()
 
         use aorsa2din_mod, &
-        only: nPtsX, nPtsY, nModesX, nModesY, &
-            npRow, npCol, square
+        only: npRow, npCol, square
         use mat_fill, &
         only: aMat
         use antenna, &
@@ -275,7 +266,7 @@ contains
     subroutine gather_coeffs ()
 
         use aorsa2din_mod, &
-        only: nPtsX, nPtsY, nModesX, nModesY, npRow, npCol
+        only: npRow, npCol
         use antenna, &
         only: brhs, brhs_global
         use parallel
@@ -311,16 +302,15 @@ contains
 
 #endif
 
-    subroutine extract_coeffs ()
+    subroutine extract_coeffs ( g )
 
-        use grid, &
-        only: nMin, nMax, mMin, mMax
-        use aorsa2din_mod, &
-        only: nPtsX, nPtsY, nModesX, nModesY
+        use grid
         use antenna, &
         only: brhs_global
  
         implicit none
+
+        type(gridBlock), intent(inout) :: g
 
         integer :: m, n, iCol
 
@@ -329,18 +319,19 @@ contains
         !   -------------------------------------------
 
         allocate ( &
-            ealphak(nMin:nMax,mMin:mMax), &
-            ebetak(nMin:nMax,mMin:mMax), &
-            eBk(nMin:nMax,mMin:mMax) )
+            g%ealphak(g%nMin:g%nMax,g%mMin:g%mMax), &
+            g%ebetak(g%nMin:g%nMax,g%mMin:g%mMax), &
+            g%eBk(g%nMin:g%nMax,g%mMin:g%mMax) )
 
-        do n=nMin,nMax
-            do m=mMin,mMax
+        do n=g%nMin,g%nMax
+            do m=g%mMin,g%mMax
 
-                iCol = (m-mMin) * 3 + (n-nMin) * nModesY * 3 + 1
+                iCol = (m-g%mMin) * 3 + (n-g%nMin) * g%nModesZ * 3 + 1
+                iCol = iCol + ( g%StartCol-1 )
        
-                ealphak(n,m)    = brhs_global(iCol+0)
-                ebetak(n,m)     = brhs_global(iCol+1)
-                eBk(n,m)        = brhs_global(iCol+2)
+                g%ealphak(n,m)    = brhs_global(iCol+0)
+                g%ebetak(n,m)     = brhs_global(iCol+1)
+                g%eBk(n,m)        = brhs_global(iCol+2)
 
             enddo
         enddo

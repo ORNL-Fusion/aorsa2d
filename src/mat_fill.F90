@@ -36,12 +36,43 @@ complex, allocatable, dimension(:) :: &
 
 contains
 
+    subroutine alloc_total_aMat ( nPtsR_tot, nPtsZ_tot, nModesR_tot, nModesZ_tot )
+
+        use parallel
+
+        implicit none
+
+        integer, intent(in) :: nPtsR_tot, nPtsZ_tot, nModesR_tot, nModesZ_tot
+
+#ifdef par
+
+        if (iAm == 0) &
+        write(*,100), &
+            nPtsR_tot*nPtsZ_tot*3*nModesR_tot*nModesZ_tot*3*2*8.0 / 1024.0**2, &
+            nRowLocal*nColLocal*2*8.0 / 1024.0**2
+        100 format (' Filling aMat [global size: ',f8.1,' MB, local size: ',f8.1' MB]')
+
+        allocate ( aMat(nRowLocal,nColLocal) )
+#else 
+        write(*,100), &
+            nPtsR_tot*nPtsZ_tot*3*nModesR_tot*nModesZ_tot*3*2*8.0 / 1024.0**2
+        100 format (' Filling aMat [global size: ',f8.1,' MB]')
+
+        allocate ( aMat(nPtsR_tot*nPtsZ_tot*3,nModesR_tot*nModesZ_tot*3) )
+
+#endif
+
+        aMat = 0
+
+    end subroutine alloc_total_aMat
+
+
     subroutine amat_fill ( g )
 
         use aorsa2din_mod, &
-        only: nModesX, nModesY, &
+        only: &
             delta0, nSpec, &
-            iSigma, nPtsX, nPtsY, npRow, npCol, &
+            iSigma, npRow, npCol, &
             metalLeft, metalRight, &
             metalTop, metalBot, nPhi, square, lsWeightFac, &
             useEqdsk
@@ -57,6 +88,7 @@ contains
 
         type(gridBlock), intent(in) :: g
 
+        type(dBfnArg) :: d
         integer :: iRow, iCol, i, j, n, m, p, s, ii, jj
         integer :: localRow, localCol
         complex :: metal
@@ -119,19 +151,19 @@ contains
         ! Set the metal regions
         ! ---------------------
 
-        allocate (isMetal(nPtsX,nPtsY))
+        allocate (isMetal(g%nR,g%nZ))
         isMetal = .false.
 
         if(useEqdsk)then
-        where(rho>=0.99)
+        where(g%rho>=0.99)
                 isMetal = .true.
         endwhere
         endif
 
-        do i=1,nPtsX
-            do j=1,nPtsY
-                if ( capR(i) < metalLeft .or. capR(i) > metalRight &
-                        .or. y(j) > metalTop .or. y(j) < metalBot ) &
+        do i=1,g%nR
+            do j=1,g%nZ
+                if ( g%R(i) < metalLeft .or. g%R(i) > metalRight &
+                        .or. g%Z(j) > metalTop .or. g%Z(j) < metalBot ) &
                     isMetal(i,j) = .true.
             enddo
         enddo
@@ -143,7 +175,7 @@ contains
         ! ----------
 
         i_loop: &
-        do i=1,nPtsX
+        do i=1,g%nR
 
 #ifndef par
             !   progress indicator
@@ -151,19 +183,21 @@ contains
             do p=1,7 
                 write(*,'(a)',advance='no') char(8)
             enddo
-            write(*,'(1x,f5.1,a)',advance='no') real(i)/nPtsX*100, '%'
+            write(*,'(1x,f5.1,a)',advance='no') real(i)/g%nR*100, '%'
 #endif
             j_loop: &
-            do j=1,nPtsY
+            do j=1,g%nZ
 
-                iRow = (i-1) * 3 * nPtsY + (j-1) * 3 + 1
+                iRow = (i-1) * 3 * g%nZ + (j-1) * 3 + 1
+                iRow = iRow + ( g%startRow-1 )
 
                 n_loop: &
-                do n=nMin,nMax
+                do n=g%nMin,g%nMax
                     m_loop: &
-                    do m=mMin,mMax
+                    do m=g%mMin,g%mMax
 
-                        iCol = (n-nMin) * 3 * nModesY + (m-mMin) * 3 + 1
+                        iCol = (n-g%nMin) * 3 * g%nModesZ + (m-g%mMin) * 3 + 1
+                        iCol = iCol + ( g%startCol-1 )
 #ifdef par
                         pr_sp_thisPt   = mod ( rowStartProc + (iRow-1+(/0,1,2/))/rowBlockSize, npRow )
                         pc_sp_thisPt   = mod ( colStartProc + (iCol-1+(/0,1,2/))/colBlockSize, npCol )
@@ -183,9 +217,7 @@ contains
 
                             bFn = g%xx(n, i) * g%yy(m, j)
 
-        if(  (i/=1 .and. i/=g%nR .and. j/=1 .and. j/=g%nZ) &
-            .or. (g%nZ==1 .and. i/=1 .and. i/=g%nR) &
-            .or. (g%nR==1 .and. j/=1 .and. j/=g%nZ) ) then
+        if(g%label(i,j)==0)then
 
 
                             !   interior plasma region:
@@ -234,7 +266,7 @@ contains
                                         g%ktSpec(i,j,s), g%omgc(i,j,s), g%omgp2(i,j,s), &
                                         kVec_stix, g%R(i), &
                                         omgrf, k0, &
-                                        k_cutoff, s, &
+                                        g%k_cutoff, s, &
                                         g%sinTh(i,j), g%bPol(i,j), g%bMag(i,j), g%gradPrlB(i,j), &
                                         g%nuOmg(i,j) )
 
@@ -316,10 +348,10 @@ contains
 
                             d%n = n
                             d%m = m
-                            d%xNorm = g%xNorm(i)
-                            d%yNorm = g%yNorm(j)
-                            d%normFacX = g%normFacX
-                            d%normFacY = g%normFacY
+                            d%xNorm = g%rNorm(i)
+                            d%yNorm = g%zNorm(j)
+                            d%normFacX = g%normFacR
+                            d%normFacY = g%normFacZ
 
                             Urr = g%Urr(i,j)
                             Urt = g%Urt(i,j)
@@ -536,28 +568,31 @@ contains
                                         localRow    = iRow+ii
                                         localCol    = iCol+jj
 #endif
-                                        if (ii==0 .and. jj==0) aMat(localRow,localCol) = dxx * bFn  
-                                        if (ii==0 .and. jj==1) aMat(localRow,localCol) = dxy * bFn   
-                                        if (ii==0 .and. jj==2) aMat(localRow,localCol) = dxz * bFn   
-                                                                                                        
-                                        if (ii==1 .and. jj==0) aMat(localRow,localCol) = dyx * bFn   
-                                        if (ii==1 .and. jj==1) aMat(localRow,localCol) = dyy * bFn   
-                                        if (ii==1 .and. jj==2) aMat(localRow,localCol) = dyz * bFn   
-                                                                                                        
-                                        if (ii==2 .and. jj==0) aMat(localRow,localCol) = dzx * bFn   
-                                        if (ii==2 .and. jj==1) aMat(localRow,localCol) = dzy * bFn   
-                                        if (ii==2 .and. jj==2) aMat(localRow,localCol) = dzz * bFn   
+                                    
+                                        ! Interior points
+                                        ! ---------------
+
+                                        if(g%label(i,j)==0) then 
+
+                                            if (ii==0 .and. jj==0) aMat(localRow,localCol) = dxx * bFn  
+                                            if (ii==0 .and. jj==1) aMat(localRow,localCol) = dxy * bFn   
+                                            if (ii==0 .and. jj==2) aMat(localRow,localCol) = dxz * bFn   
+                                                                                                            
+                                            if (ii==1 .and. jj==0) aMat(localRow,localCol) = dyx * bFn   
+                                            if (ii==1 .and. jj==1) aMat(localRow,localCol) = dyy * bFn   
+                                            if (ii==1 .and. jj==2) aMat(localRow,localCol) = dyz * bFn   
+                                                                                                            
+                                            if (ii==2 .and. jj==0) aMat(localRow,localCol) = dzx * bFn   
+                                            if (ii==2 .and. jj==1) aMat(localRow,localCol) = dzy * bFn   
+                                            if (ii==2 .and. jj==2) aMat(localRow,localCol) = dzz * bFn   
+
+                                        endif
 
 
-                                        ! Boundary Conditions
-                                        ! The seperate X and Y sections are
-                                        ! there to catch the scenario where the
-                                        ! 2D code is run as 1D and there is only
-                                        ! a single Y or X grid pt. 
-                                        ! --------------------------------------
+                                        ! Outer boundary points
+                                        ! ---------------------
 
-                                        if (nPtsX/=1) then
-                                        if ( i==1 .or. i==nPtsX ) then 
+                                        if (g%label(i,j)==2) then
 
                                             if (ii==0 .and. jj==0) aMat(localRow,localCol) = bFn * lsWeightFac 
                                             if (ii==0 .and. jj==1) aMat(localRow,localCol) = 0  
@@ -572,24 +607,44 @@ contains
                                             if (ii==2 .and. jj==2) aMat(localRow,localCol) = bFn * lsWeightFac 
 
                                         endif
-                                        endif
 
-                                        if (nPtsY/=1) then
-                                        if ( j==1 .or. j==nPtsY ) then 
 
-                                            if (ii==0 .and. jj==0) aMat(localRow,localCol) = bFn * lsWeightFac 
+                                        ! Mesh-Mesh boundary for bFn 
+                                        ! --------------------------
+
+                                        if (g%label(i,j)==1) then
+
+                                            if (ii==0 .and. jj==0) aMat(localRow,localCol) = bFn 
                                             if (ii==0 .and. jj==1) aMat(localRow,localCol) = 0  
                                             if (ii==0 .and. jj==2) aMat(localRow,localCol) = 0  
                                    
                                             if (ii==1 .and. jj==0) aMat(localRow,localCol) = 0  
-                                            if (ii==1 .and. jj==1) aMat(localRow,localCol) = bFn * lsWeightFac  
+                                            if (ii==1 .and. jj==1) aMat(localRow,localCol) = bFn  
                                             if (ii==1 .and. jj==2) aMat(localRow,localCol) = 0   
                                    
                                             if (ii==2 .and. jj==0) aMat(localRow,localCol) = 0   
                                             if (ii==2 .and. jj==1) aMat(localRow,localCol) = 0   
-                                            if (ii==2 .and. jj==2) aMat(localRow,localCol) = bFn * lsWeightFac 
+                                            if (ii==2 .and. jj==2) aMat(localRow,localCol) = bFn 
 
                                         endif
+
+                                        ! Mesh-Mesh boundary for deriv of bFn 
+                                        ! -----------------------------------
+
+                                        if (g%label(i,j)==3) then
+
+                                            if (ii==0 .and. jj==0) aMat(localRow,localCol) = bFn 
+                                            if (ii==0 .and. jj==1) aMat(localRow,localCol) = 0  
+                                            if (ii==0 .and. jj==2) aMat(localRow,localCol) = 0  
+                                   
+                                            if (ii==1 .and. jj==0) aMat(localRow,localCol) = 0  
+                                            if (ii==1 .and. jj==1) aMat(localRow,localCol) = bFn  
+                                            if (ii==1 .and. jj==2) aMat(localRow,localCol) = 0   
+                                   
+                                            if (ii==2 .and. jj==0) aMat(localRow,localCol) = 0   
+                                            if (ii==2 .and. jj==1) aMat(localRow,localCol) = 0   
+                                            if (ii==2 .and. jj==2) aMat(localRow,localCol) = bFn 
+
                                         endif
 
 

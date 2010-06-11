@@ -46,10 +46,13 @@ implicit none
     integer :: nGrid = 1
     integer, dimension(nGridMax) :: nRAll = 16
     integer, dimension(nGridMax) :: nZAll = 16
+    integer, dimension(nGridMax) :: nModesRAll = 16
+    integer, dimension(nGridMax) :: nModesZAll = 16
     real, dimension(nGridMax) :: rMinAll = 1.0
     real, dimension(nGridMax) :: rMaxAll = 2.0
     real, dimension(nGridMax) :: zMinAll = -1.0
     real, dimension(nGridMax) :: zMaxAll =  1.0
+
 
 !     --------------------------------------------------------
 !     Declarations and defaults for aorsa2d.in input variables
@@ -394,10 +397,6 @@ implicit none
       integer :: ndisti5 = 0
       integer :: ndisti6 = 0      
 
-      integer :: nPtsX  = 64
-      integer :: nPtsY  = 128
-      integer :: nModesX = 32            !-----nmodesx=number of modes used in the x direction
-      integer :: nModesY = 64            !-----nmodesy=number of modes used in the y direction
       integer :: izfunc 
       integer :: nnodecx                  !-----nnodecx = number of radial mesh points used for wdot calculation
       integer :: nnodecy                  !-----nnodecy = number of vertical mesh points used for wdot calculation
@@ -407,7 +406,7 @@ implicit none
       real phase, zmin, zmax, phi0, amplt(20) 
       !common / stpcom / xlt, wd, nstrap, phase, zmin, zmax, phi0, amplt
                    
-      namelist/aorsa2din/nmodesx, nmodesy, nPtsX, nPtsY, nwdot, lmax, ibessel, &
+      namelist/aorsa2din/ nwdot, lmax, ibessel, &
      &    ti01, xnuead, xnu1ad, xnu2ad, rant, te0, zAnt,  &
      &    antSigX, antSigY, &
      &    ti02, ti03, ti2lim, ti3lim, nuper, nupar, &
@@ -467,7 +466,8 @@ implicit none
      &    noPoloidalField, rhoScale, rhoWidth, rhoPower, useCircular, &
      &    bPol_frac, useCircularProfiles, lsWeightFac, xkx_cutOff, xky_cutOff, &
      &    chebyshevX, chebyshevY, magma, rhoAnt, antSigRho, toroidalBroadening,&
-     &    kPrlEffLimit, nGrid
+     &    kPrlEffLimit, nGrid, &
+     &    nRAll, nZAll, nModesRAll, nModesZAll, rMinALl, rMaxAll, zMinAll, zMaxAll
 
                 
 contains

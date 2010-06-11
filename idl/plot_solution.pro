@@ -52,7 +52,7 @@ end
 pro plot_solution, oneD = oneD, full = full, $
 		scale1 = scale1, scale2 = scale2, scale3_ = scale3_
 
-	cdfId = ncdf_open ( 'runData.nc', /noWrite ) 
+	cdfId = ncdf_open ( 'runData001.nc', /noWrite ) 
 		nCdf_varGet, cdfId, 'capR', x 
 		nCdf_varGet, cdfId, 'y', y 
 		nCdf_varGet, cdfId, 'xjy_re', jy_re 
@@ -80,7 +80,7 @@ pro plot_solution, oneD = oneD, full = full, $
 	nN	= n_elements ( xx[*,0] )
 	nM	= n_elements ( yy[*,0] )
 
-	cdfId = ncdf_open ( 'solution.nc', /noWrite ) 
+	cdfId = ncdf_open ( 'solution001.nc', /noWrite ) 
 
 		nCdf_varGet, cdfId, 'ealpha_re', ealpha_re 
 		nCdf_varGet, cdfId, 'ebeta_re', ebeta_re 

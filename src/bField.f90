@@ -116,7 +116,6 @@ contains
         g%bT_unit = g%bT_unit / g%bMag 
         g%bZ_unit = g%bZ_unit / g%bMag
 
-        allocate ( g%mask(g%nR,g%nZ) )
         g%mask = .true.
 
     end subroutine bFieldAnalytical

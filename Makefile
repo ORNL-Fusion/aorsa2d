@@ -35,7 +35,7 @@ GPTL = #-I ${GPTL_DIR}/include -L ${GPTL_DIR} -lgptl
 
 # set the MODE to "serial" or "parallel"
 
-MODE = "serial"
+MODE = "parallel"
 
 # set solve precision to "single" or "double" 
 

@@ -13,27 +13,57 @@ implicit none
 
 type :: gridBlock
 
-    integer :: nR, nZ
+    ! Matrix offset
+    ! -------------
+
+    integer :: startRow, startCol
+
+    ! Grid itself
+    ! -----------
+    integer :: nR, nZ, nModesR, nModesZ
     real, allocatable, dimension(:) :: rNorm, zNorm, R, z, kPhi
     real :: rMin, rMax, zMin, zMax, rRange, zRange
     real :: normFacR, normFacZ
+    integer, allocatable :: label(:,:)
+
+    ! Basis functions
+    ! ---------------
+
     integer :: nMin, nMax, mMin, mMax
     real :: k_cutOff
     complex, allocatable, dimension(:,:) :: xx, yy    
+
+    ! B field, temp, density, frequencies
+    ! -----------------------------------
     real, allocatable, dimension(:,:) :: bR_unit, bT_unit, bZ_unit, bMag, rho
     logical, allocatable, dimension(:,:) :: mask
     real, allocatable :: nuOmg(:,:)
     real(kind=dbl), allocatable, dimension(:,:,:) :: densitySpec, ktSpec
     real(kind=dbl), allocatable, dimension(:,:,:) :: omgc, omgp2
 
+    ! Toroidal broadening variables
+    ! -----------------------------
     real, allocatable, dimension(:,:,:,:) :: U_RTZ_to_ABb
     real, allocatable :: sinTh(:,:)
     real, allocatable, dimension(:,:) :: gradPrlB
     real, allocatable, dimension(:,:) :: bPol
 
+    ! Currents
+    ! --------
     complex, allocatable, dimension(:,:) :: &
         jR, jT, jZ
 
+    ! E field solution
+    ! ----------------
+    complex, allocatable, dimension(:,:) :: &
+        ealphak, ebetak, eBk
+    complex, allocatable, dimension(:,:) :: &
+       ealpha,  ebeta, eB 
+    complex, allocatable, dimension(:,:) :: &
+       eR,  eTh, eZ 
+
+    ! Rotation matrix and derivatives
+    ! -------------------------------
     real, allocatable, dimension(:,:) :: &
         Urr, Urt, Urz, Utr, Utt, Utz, Uzr, Uzt, Uzz
 
@@ -95,7 +125,7 @@ type(gridBlock), allocatable :: allGrids(:)
 
 contains
 
-    function init_gridBlock ( nR, nZ, rMin, rMax, zMin, zMax ) result ( grid )
+    function init_gridBlock ( nR, nZ, nModesR, nModesZ, rMin, rMax, zMin, zMax ) result ( grid )
 
         use aorsa2din_mod, &
         only : nPhi, xkPerp_cutOff
@@ -105,7 +135,7 @@ contains
 
         type(gridBlock) :: grid
 
-        integer, intent(in) :: nR, nZ
+        integer, intent(in) :: nR, nZ, nModesR, nModesZ
         real, intent(in) :: rMin, rMax, zMin, zMax
 
         integer :: i, j, n, m
@@ -127,6 +157,8 @@ contains
             grid%zMax = zMax
             grid%nR = nR
             grid%nZ = nZ
+            grid%nModesR = nModesR
+            grid%nModesZ = nModesZ
 
             
             ! Create the grid block grids
@@ -449,6 +481,76 @@ contains
 !        enddo
 !
 !    end subroutine init_basis_functions 
+
+
+    ! Label each grid point within a block accoring to
+    ! interior, outer boundary or inner boundary
+    ! ------------------------------------------------
+
+    subroutine labelPts ( g )
+
+        use aorsa2din_mod, &
+        only: rMinAll, rMaxAll, zMinAll, zMaxAll
+
+        implicit none
+
+        type(gridBlock), intent(inout) :: g
+
+        integer :: i, j
+
+
+        allocate ( g%label(g%nR,g%nZ) )
+
+        ! Boundary conditions
+        ! -------------------
+        ! 0 - interior
+        ! 1 - mesh-mesh bFn
+        ! 2 - exterior
+        ! 3 - mesh-mesh dBfn
+
+
+        ! interior points
+        g%label = 0
+
+        do i=1,g%nR
+            do j=1,g%nZ
+
+                if(i==1 .and. g%nR>1) then
+                    if(count(g%rMin==rMaxAll)>0) then
+                        g%label(i,j) = 1 ! inner boundary left
+                    else
+                        g%label(i,j) = 2 ! outer boundary
+                    endif
+                endif
+
+                if(i==g%nR .and. g%nR>1) then
+                     if(count(g%rMax==rMinAll)>0) then
+                        g%label(i,j) = 3 ! inner boundary right
+                    else
+                        g%label(i,j) = 2 ! outer boundary
+                    endif
+                endif
+
+                if(j==1 .and. g%nZ>1) then
+                     if(count(g%zMin==zMaxAll)>0) then
+                        g%label(i,j) = 1 ! inner boundary bot
+                    else
+                        g%label(i,j) = 2 ! outer boundary
+                    endif
+                endif
+
+                if(j==g%nZ .and. g%nZ>1) then
+                     if(count(g%zMax==zMinAll)>0) then
+                        g%label(i,j) = 3 ! inner boundary top
+                    else
+                        g%label(i,j) = 2 ! outer boundary
+                    endif
+                endif
+
+            enddo
+        enddo
+
+    end subroutine labelPts
 
 
     ! Basis function and their derivative routines

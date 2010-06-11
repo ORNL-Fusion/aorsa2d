@@ -53,7 +53,9 @@ program aorsa2dMain
 
     !call start_timer ( tTotal )
 
-    integer :: i
+    integer :: i, nPtsR_tot, nPtsZ_tot
+    integer :: nModesR_tot, nModesZ_tot
+    character(len=3) :: fNumber
 
 
 !   read namelist input data
@@ -71,8 +73,14 @@ program aorsa2dMain
     if (iAm==0) &
     write(*,*) 'Initialising the parallel environment'
 
+    nPtsR_tot = sum ( nRAll(1:nGrid) )
+    nPtsZ_tot = sum ( nZAll(1:nGrid) )
+
+    nModesR_tot = sum ( nModesRAll(1:nGrid) )
+    nModesZ_tot = sum ( nModesZAll(1:nGrid) )
+
 #ifdef par
-    call init_procGrid ()
+    call init_procGrid ( nPtsR_tot, nPtsZ_tot, nModesR_tot, nModesZ_tot )
 #endif
 
 
@@ -83,21 +91,16 @@ program aorsa2dMain
     write(*,*) 'Creating spatial grid'
 
     allocate ( allGrids ( nGrid ) )
-    nRAll(1) = nPtsX
-    nZAll(1) = nPtsY
-    rMinAll(1) = rwleft
-    rMaxAll(1) = rwright
-    zMinAll(1) = yBot
-    zMaxAll(1) = yTop
 
     do i=1,nGrid 
 
         allGrids(i) = init_GridBlock ( &
-            nRAll(i), nZAll(i), rMinAll(i), rMaxAll(i), zMinAll(i), zMaxAll(i) )
+            nRAll(i), nZAll(i), &
+            nModesRAll(i), nModesZAll(i), &
+            rMinAll(i), rMaxAll(i), &
+            zMinAll(i), zMaxAll(i) )
 
     enddo
-
-    !call init_grid ()
 
 
 !   setup magnetic field 
@@ -122,6 +125,7 @@ program aorsa2dMain
 
     enddo
 
+
 !   setup profiles
 !   --------------
 
@@ -142,6 +146,7 @@ program aorsa2dMain
 
     enddo
 
+
 !   calculate rotation matrix U
 !   ---------------------------
 
@@ -156,20 +161,6 @@ program aorsa2dMain
     enddo
 
 
-!!   Calculate kx and ky values 
-!!   --------------------------
-!
-!    if (iAM==0) &
-!    write(*,*) 'Creating k grid'
-!
-!    call init_k ()
-!
-!
-!!   Precompute basis functions xx(n,i), yy(m,j)
-!!   -------------------------------------------
-!
-!    call init_basis_functions () 
-
 
 !   Antenna current
 !   ---------------
@@ -177,7 +168,10 @@ program aorsa2dMain
     if (iAm==0) &
     write(*,*) 'Building antenna current (brhs)'
 
-    call init_brhs ()
+    call alloc_total_brhs ( nPtsR_tot, nPtsZ_tot )
+    do i=1,nGrid
+        call init_brhs ( allGrids(i) )
+    enddo
 
 
 !   Write the run input data to disk
@@ -186,32 +180,45 @@ program aorsa2dMain
     if (iAm==0) &
     write(*,*) 'Writing run input data to file'
 
-    if (iAm==0) &
-    call write_runData ( 'runData.nc' )
+    if (iAm==0) then
+
+        do i=1,nGrid
+            write(fNumber,'(i3.3)') i
+            call write_runData ( allGrids(i), 'runData'//fNumber//'.nc' )
+        enddo
+
+    endif
 
 
 !   Allocate the matrix
 !   -------------------
 
-#ifdef par
+    call alloc_total_aMat ( nPtsR_tot, nPtsZ_tot, nModesR_tot, nModesZ_tot )
 
-    if (iAm == 0) &
-    write(*,100), &
-        nPtsX*nPtsY*3*nModesX*nModesY*3*2*8.0 / 1024.0**2, &
-        nRowLocal*nColLocal*2*8.0 / 1024.0**2
-    100 format (' Filling aMat [global size: ',f8.1,' MB, local size: ',f8.1' MB]')
 
-    allocate ( aMat(nRowLocal,nColLocal) )
-#else 
-    write(*,100), &
-        nPtsX*nPtsY*3*nModesX*nModesY*3*2*8.0 / 1024.0**2
-    100 format (' Filling aMat [global size: ',f8.1,' MB]')
+!   Calculate aMat index for first pt in each grid block
+!   ----------------------------------------------------
 
-    allocate ( aMat(nPtsX*nPtsY*3,nModesX*nModesY*3) )
+    do i=1,nGrid
 
-#endif
+        if(i==1)then
+            allGrids(i)%startRow = 1 
+            allGrids(i)%startCol = 1
+        else
+            allGrids(i)%startRow = sum ( allGrids(1:i-1)%nR * allGrids(1:i-1)%nZ * 3 ) + 1
+            allGrids(i)%startCol = sum ( allGrids(1:i-1)%nModesR * allGrids(1:i-1)%nModesZ * 3 ) + 1
+        endif
 
-    aMat = 0
+    enddo
+
+
+!   Label each grid blocks boundary points
+!   --------------------------------------
+
+    do i=1,nGrid
+        call labelPts ( allGrids(i) )
+    enddo
+
 
 !   Fill matrix 
 !   -----------
@@ -321,7 +328,9 @@ program aorsa2dMain
     endif
 #endif
 
-    call extract_coeffs ()    
+    do i=1,nGrid
+        call extract_coeffs ( allGrids(i) )    
+    enddo
 
 
 !   Inverse Fourier transform the k coefficents
@@ -330,10 +339,10 @@ program aorsa2dMain
 
     if (iAm==0) &
     write(*,*) 'Constructin E solution from basis set (alpha,beta,b)'
-    
-    call sftInv2d ( ealphak, f = ealpha )
-    call sftInv2d ( ebetak, f = ebeta )
-    call sftInv2d ( eBk, f = eB )
+   
+    do i=1,nGrid 
+        call sftInv2d ( allGrids(i) )
+    enddo
 
 
 !   Rotation E solution to Lab frame 
@@ -341,8 +350,10 @@ program aorsa2dMain
 
     if (iAm==0) &
     write(*,*) 'Rotating E solution to lab frame (R,Th,z)'
- 
-    call rotate_E_to_lab ()
+
+    do i=1,nGrid 
+        call rotate_E_to_lab ( allGrids(i) )
+    enddo
 
 
 !   Write data to file
@@ -351,8 +362,14 @@ program aorsa2dMain
     if (iAm==0) &
     write(*,*) 'Writing solution to file'
 
-    if ( iAm == 0 ) &
-    call write_solution ( 'solution.nc' )
+    if ( iAm == 0 ) then
+
+        do i=1,nGrid
+            write(fNumber,'(i3.3)') i
+            call write_solution ( allGrids(i), 'solution'//fNumber//'.nc' )
+        enddo
+
+    endif
 
 #ifdef par
     call release_grid ()

@@ -4,55 +4,67 @@ implicit none
 
 contains
 
-    subroutine sftinv2d( a, f )
+    subroutine sftinv2d( g )
 
         use aorsa2din_mod, &
-        only: nPtsX, nPtsY, chebyshevX, chebyshevY
-        use grid, &
-        only: nMin, nMax, mMin, mMax, &
-            xGrid_basis, yGrid_basis, &
-            xBasis, yBasis
+        only: chebyshevX, chebyshevY
+        use grid
  
         implicit none
+
+        type(gridBlock), intent(inout) :: g
         
-        complex, intent(in) :: a(:,:)
-        complex, intent(inout), optional, allocatable :: &
-            f(:,:)
+        !complex, intent(in) :: a(:,:)
+        !complex, intent(inout), optional, allocatable :: &
+        !    f(:,:)
 
         complex :: bFn
         integer :: i, j, n, m
         integer :: nS, nF, mS, mF
 
-        if (.not. allocated ( f ) ) allocate ( f(nPtsX,nPtsY) )
+        if (.not. allocated ( g%eAlpha ) ) allocate ( g%eAlpha(g%nR,g%nZ) )
+        if (.not. allocated ( g%eBeta ) ) allocate ( g%eBeta(g%nR,g%nZ) )
+        if (.not. allocated ( g%eB ) ) allocate ( g%eB(g%nR,g%nZ) )
 
-        f = 0
+        !f = 0
+        g%eAlpha = 0
+        g%eBeta = 0
+        g%eB = 0
 
         if(chebyshevX)then
-            nS = nMin
-            nF = nMax*2/3
+            nS = g%nMin
+            nF = g%nMax*2/3
         else
-            nS = nMin*2/3
-            nF = nMax*2/3
+            nS = g%nMin*2/3
+            nF = g%nMax*2/3
         endif
 
         if(chebyshevY)then
-            mS = mMin
-            mF = mMax*2/3
+            mS = g%mMin
+            mF = g%mMax*2/3
         else
-            mS = mMin*2/3
-            mF = mMax*2/3
+            mS = g%mMin*2/3
+            mF = g%mMax*2/3
         endif
 
 
-        do i = 1, nPtsX
-            do j = 1, nPtsY
+        ! NOTE: There may be an indexing error here after changing to the g
+        ! type routine. If so it means the g%eAlphak etc have retained their
+        ! neg through pos indexing that was not retained in the previous
+        ! approach.
+
+        do i = 1, g%nR
+            do j = 1, g%nZ
         
                 do n = nS, nF
                     do m = mS, mF
 
-                      bFn = xBasis(n,xGrid_basis(i)) * yBasis(m,yGrid_basis(j))
+                      bFn = xBasis(n,g%rNorm(i)) * yBasis(m,g%zNorm(j))
 
-                      f(i,j) = f(i,j) + a(n-nMin+1,m-mMin+1) * bFn
+                      !f(i,j) = f(i,j) + a(n-nMin+1,m-mMin+1) * bFn
+                      g%eAlpha(i,j) = g%eAlpha(i,j) + g%eAlphak(n,m) * bFn
+                      g%eBeta(i,j) = g%eBeta(i,j) + g%eBetak(n,m) * bFn
+                      g%eB(i,j) = g%eB(i,j) + g%eBk(n,m) * bFn
 
                     enddo
                 enddo
