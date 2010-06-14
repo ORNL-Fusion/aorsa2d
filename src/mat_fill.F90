@@ -67,6 +67,59 @@ contains
     end subroutine alloc_total_aMat
 
 
+    subroutine amat_boundaries ( gAll, nR_tot, nZ_tot )
+
+        use grid
+
+        implicit none
+
+        type(gridBlock), intent(in) :: gAll(:)
+        integer, intent(in) :: nR_tot, nZ_tot
+
+        type(gridBlock) :: b
+        integer :: i, j, n, m, ii, iRow, iCol 
+        complex(kind=dbl) :: aMatBlock(3,3)
+
+
+        do ii=1,nR_tot*nZ_tot
+
+            if(bndryBlockID(3,ii)/=0)then
+
+                b = gAll(bndryBlockID(3,ii))
+                i = bndryBlockID(1,ii)
+                j = bndryBlockID(2,ii)
+
+                do n=b%nMin,b%nMax
+                    do m=b%mMin,b%mMax
+
+                        bFn = b%xx(n, i) * b%yy(m, j)
+                        dRBfn = b%dxx(n,i) * b%yy(m,j)
+                        dZBfn = b%xx(n,i) * b%dyy(m,j)
+
+                        aMatBlock = 0
+                        aMatBlock(1,1) = bFn
+                        aMatBlock(2,2) = bFn
+                        aMatBlock(3,3) = bFn
+
+                        iRow = (i-1) * 3 * b%nZ + (j-1) * 3 + 1
+                        iRow = iRow + ( b%startRow-1 )
+
+                        iCol = (n-b%nMin) * 3 * b%nModesZ + (m-b%mMin) * 3 + 1
+                        iCol = iCol + ( b%startCol-1 )
+
+                        aMatBlock(iRow:iRow+3,iCol:iCol+3) = aMatBlock
+
+                    enddo
+                enddo
+
+            endif
+
+        enddo
+
+    end subroutine amat_boundaries
+
+
+
     subroutine amat_fill ( g )
 
         use aorsa2din_mod, &
@@ -609,8 +662,8 @@ contains
                                         endif
 
 
-                                        ! Mesh-Mesh boundary for bFn 
-                                        ! --------------------------
+                                        ! Mesh-Mesh boundary for R bFn 
+                                        ! ----------------------------
 
                                         if (g%label(i,j)==1) then
 
@@ -628,8 +681,8 @@ contains
 
                                         endif
 
-                                        ! Mesh-Mesh boundary for deriv of bFn 
-                                        ! -----------------------------------
+                                        ! Mesh-Mesh boundary for R deriv of bFn 
+                                        ! -------------------------------------
 
                                         if (g%label(i,j)==3) then
 

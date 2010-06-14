@@ -215,9 +215,7 @@ program aorsa2dMain
 !   Label each grid blocks boundary points
 !   --------------------------------------
 
-    do i=1,nGrid
-        call labelPts ( allGrids(i) )
-    enddo
+    call labelPts ( allGrids, nPtsR_tot, nPtsZ_tot )
 
 
 !   Fill matrix 

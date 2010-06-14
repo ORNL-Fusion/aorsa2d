@@ -25,13 +25,14 @@ type :: gridBlock
     real :: rMin, rMax, zMin, zMax, rRange, zRange
     real :: normFacR, normFacZ
     integer, allocatable :: label(:,:)
+    integer, allocatable :: neighbr_startRow(:,:),neighbr_startCol(:,:)
 
     ! Basis functions
     ! ---------------
 
     integer :: nMin, nMax, mMin, mMax
     real :: k_cutOff
-    complex, allocatable, dimension(:,:) :: xx, yy    
+    complex, allocatable, dimension(:,:) :: xx, yy, dxx, dyy
 
     ! B field, temp, density, frequencies
     ! -----------------------------------
@@ -111,6 +112,8 @@ endtype dBfnArg
 
 type(gridBlock), allocatable :: allGrids(:)
 
+integer, allocatable :: bndryBlockID(:,:), bndryType(:)
+
 !!   init_grid
 !real, allocatable, dimension(:) :: capR, kPhi
 !real, allocatable, dimension(:) :: y, xGrid_basis, yGrid_basis
@@ -134,6 +137,7 @@ contains
         implicit none
 
         type(gridBlock) :: grid
+        type(dBfnArg) :: d
 
         integer, intent(in) :: nR, nZ, nModesR, nModesZ
         real, intent(in) :: rMin, rMax, zMin, zMax
@@ -285,17 +289,42 @@ contains
 
             allocate ( &
                 grid%xx(grid%nMin:grid%nMax,nR), &
-                grid%yy(grid%mMin:grid%mMax,nZ) )
+                grid%yy(grid%mMin:grid%mMax,nZ), &
+                grid%dxx(grid%nMin:grid%nMax,nR), &
+                grid%dyy(grid%mMin:grid%mMax,nZ) )
+
 
             do i = 1, nR
                 do n = grid%nMin, grid%nMax 
+
                     grid%xx(n,i) = xBasis(n,grid%rNorm(i))
+
+                    d%n = n
+                    d%m  = 0
+                    d%xNorm = grid%rNorm(i)
+                    d%yNorm = 0
+                    d%normFacX = grid%normFacR
+                    d%normFacY = grid%normFacZ
+
+                    grid%dxx(n,i) = drBfn_bfn(d) 
+
                 enddo
             enddo
 
             do j = 1, nZ
                 do m = grid%mMin, grid%mMax 
+
                     grid%yy(m,j) = yBasis(m,grid%zNorm(j))
+
+                    d%n = 0
+                    d%m  = m
+                    d%xNorm = 0
+                    d%yNorm = grid%zNorm(j)
+                    d%normFacX = grid%normFacR
+                    d%normFacY = grid%normFacZ
+
+                    grid%dyy(n,i) = dzBfn_bfn(d) 
+
                 enddo
             enddo
 
@@ -487,70 +516,138 @@ contains
     ! interior, outer boundary or inner boundary
     ! ------------------------------------------------
 
-    subroutine labelPts ( g )
+    subroutine labelPts ( gAll, nR_tot, nZ_tot )
 
         use aorsa2din_mod, &
-        only: rMinAll, rMaxAll, zMinAll, zMaxAll
+        only: rMinAll, rMaxAll, zMinAll, zMaxAll, nGrid
 
         implicit none
 
-        type(gridBlock), intent(inout) :: g
+        type(gridBlock), intent(inout) :: gAll(:)
+        integer, intent(in) :: nR_tot, nZ_tot
 
-        integer :: i, j
+        integer :: i, j, b, ii, offSet
 
-
-        allocate ( g%label(g%nR,g%nZ) )
 
         ! Boundary conditions
         ! -------------------
-        ! 0 - interior
-        ! 1 - mesh-mesh bFn
-        ! 2 - exterior
-        ! 3 - mesh-mesh dBfn
+        ! 0  interior
+        ! 1  exterior
+        ! 2  mesh-mesh R bFn (left)
+        ! 3  mesh-mesh R dRBfn (right)
+        ! 4  mesh-mesh z Bfn (bot)
+        ! 5  mesh-mesh z dZBfn (top)
+        ! -2  mesh-mesh R -bFn (right)
+        ! -3  mesh-mesh R -dRBfn (left)
+        ! -4  mesh-mesh z -Bfn (bot)
+        ! -5  mesh-mesh z -dZBfn (top)
 
 
-        ! interior points
-        g%label = 0
+        allocate ( bndryBlockID(3,nR_tot*nZ_tot), &
+                    bndryType(nR_tot*nZ_tot) )
 
-        do i=1,g%nR
-            do j=1,g%nZ
+        offSet = 0
 
-                if(i==1 .and. g%nR>1) then
-                    if(count(g%rMin==rMaxAll)>0) then
-                        g%label(i,j) = 1 ! inner boundary left
-                    else
-                        g%label(i,j) = 2 ! outer boundary
+        do b=1,nGrid
+
+            allocate ( gAll(b)%label(gAll(b)%nR,gAll(b)%nZ), &
+                gAll(b)%neighbr_startRow(gAll(b)%nR,gAll(b)%nZ), & 
+                gAll(b)%neighbr_startCol(gAll(b)%nR,gAll(b)%nZ) )
+
+            ! Interior points
+            ! ---------------
+
+            gAll(b)%label = 0
+            gAll(b)%neighbr_startRow = 0
+            gAll(b)%neighbr_startCol = 0
+
+            do i=1,gAll(b)%nR
+                do j=1,gAll(b)%nZ
+
+
+                    ! Left block boundary
+                    ! -------------------
+
+                    if(i==1 .and. gAll(b)%nR>1) then
+
+                        if(count(gAll(b)%rMin==rMaxAll)>0) then
+
+                            gAll(b)%label(i,j) = 2 ! mesh-mesh boundary bFn (left)
+
+                            ! find the neighbour block
+                            do ii=1,nGrid                         
+
+                                if(gAll(b)%rMin==gAll(ii)%rMax)then                  
+                                    bndryBlockID(:,offSet+(i-1)*gAll(b)%nZ+j) = (/i,j,ii/)
+                                    bndryType(offSet+(i-1)*gAll(b)%nZ+j) = -2 ! (right)
+                                endif
+
+                            enddo
+                        else
+                            gAll(b)%label(i,j) = 1 ! outer boundary
+                        endif
+
                     endif
-                endif
 
-                if(i==g%nR .and. g%nR>1) then
-                     if(count(g%rMax==rMinAll)>0) then
-                        g%label(i,j) = 3 ! inner boundary right
-                    else
-                        g%label(i,j) = 2 ! outer boundary
+
+                    ! Right block boundary
+                    ! --------------------
+
+                    if(i==gAll(b)%nR .and. gAll(b)%nR>1) then
+
+                         if(count(gAll(b)%rMax==rMinAll)>0) then
+
+                            gAll(b)%label(i,j) = 3 ! mesh-mesh boundary dRbFn (right) 
+
+                            ! find the neighbour block
+                            do ii=1,nGrid                         
+
+                                if(gAll(b)%rMax==gAll(ii)%rMin)then                  
+                                    bndryBlockID(:,offSet+(i-1)*gAll(b)%nZ+j) = (/i,j,ii/)
+                                    bndryType(offSet+(i-1)*gAll(b)%nZ+j) = -3 ! (left)
+                                endif
+
+                            enddo
+                        else
+                            gAll(b)%label(i,j) = 1 ! outer boundary
+                        endif
+
                     endif
-                endif
 
-                if(j==1 .and. g%nZ>1) then
-                     if(count(g%zMin==zMaxAll)>0) then
-                        g%label(i,j) = 1 ! inner boundary bot
-                    else
-                        g%label(i,j) = 2 ! outer boundary
+
+                    ! Bottom block boundary
+                    ! ---------------------
+
+                    if(j==1 .and. gAll(b)%nZ>1) then
+                         if(count(gAll(b)%zMin==zMaxAll)>0) then
+                            gAll(b)%label(i,j) = 4 ! inner boundary bot
+                        else
+                            gAll(b)%label(i,j) = 1 ! outer boundary
+                        endif
                     endif
-                endif
 
-                if(j==g%nZ .and. g%nZ>1) then
-                     if(count(g%zMax==zMinAll)>0) then
-                        g%label(i,j) = 3 ! inner boundary top
-                    else
-                        g%label(i,j) = 2 ! outer boundary
+
+                    ! Top block boundary
+                    ! ------------------
+
+                    if(j==gAll(b)%nZ .and. gAll(b)%nZ>1) then
+                         if(count(gAll(b)%zMax==zMinAll)>0) then
+                            gAll(b)%label(i,j) = 5 ! inner boundary top
+                        else
+                            gAll(b)%label(i,j) = 1 ! outer boundary
+                        endif
                     endif
-                endif
 
+
+                enddo
             enddo
+
+            offSet = offSet + gAll(b)%nR * gAll(b)%nZ
+
         enddo
 
     end subroutine labelPts
+
 
 
     ! Basis function and their derivative routines
