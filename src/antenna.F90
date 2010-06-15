@@ -115,14 +115,15 @@ contains
         !jT = 0
         !jT(nPtsX/2,nPtsY/2)    = 1
 
-        g%jR = -zi / omgrf / eps0 * g%jR
-        g%jT = -zi / omgrf / eps0 * g%jT
-        g%jZ = -zi / omgrf / eps0 * g%jZ
+        !g%jR = -zi / omgrf / eps0 * g%jR
+        !g%jT = -zi / omgrf / eps0 * g%jT
+        !g%jZ = -zi / omgrf / eps0 * g%jZ
 
         do i = 1, g%nR
             do j = 1, g%nZ
 
                 iRow = (j-1) * 3 + (i-1) * g%nZ * 3 + 1
+                iRow = iRow + ( g%startRow-1 )
 
                 do ii = 0, 2
 
@@ -136,19 +137,19 @@ contains
                     !   process grid. All other columns possess an empty
                     !   local portion of brhs
 
-                    iCol    = 1 
-                    jj      = 0
+                    !iCol    = 1 
+                    !jj      = 0
                     l_sp    = ( iRow-1+ii ) / ( npRow * rowBlockSize )
-                    m_sp    = ( iCol-1+jj ) / ( npCol * colBlockSize )
+                    !m_sp    = ( iCol-1+jj ) / ( npCol * colBlockSize )
 
                     pr_sp   = mod ( rowStartProc + (iRow-1+ii)/rowBlockSize, npRow )
-                    pc_sp   = mod ( colStartProc + (iCol-1+jj)/colBlockSize, npCol )
+                    !pc_sp   = mod ( colStartProc + (iCol-1+jj)/colBlockSize, npCol )
 
                     x_sp    = mod ( iRow-1+ii, rowBlockSize ) + 1
-                    y_sp    = mod ( iCol-1+jj, colBlockSize ) + 1
+                    !y_sp    = mod ( iCol-1+jj, colBlockSize ) + 1
 
                     localRow    = l_sp*rowBlockSize+x_sp
-                    localCol    = m_sp*colBlockSize+y_sp
+                    !localCol    = m_sp*colBlockSize+y_sp
 
                     if (myRow==pr_sp .and. myCol==pc_sp) then
 

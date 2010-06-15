@@ -1,6 +1,10 @@
 pro plot_rundata
 
-	cdfId = ncdf_open ( 'runData.nc', /noWrite ) 
+	fileList = file_search ( 'runData*.nc' )
+
+	for jj=0,n_elements(fileList)-1 do begin
+
+	cdfId = ncdf_open ( fileList[jj], /noWrite ) 
 		nCdf_varGet, cdfId, 'capR', x 
 		nCdf_varGet, cdfId, 'y', y 
 		nCdf_varGet, cdfId, 'xjy_re', jy_re 
@@ -104,6 +108,7 @@ pro plot_rundata
 				/view_next
 
 	endif
-stop
 
+	endfor
+stop
 end

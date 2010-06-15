@@ -52,7 +52,16 @@ end
 pro plot_solution, oneD = oneD, full = full, $
 		scale1 = scale1, scale2 = scale2, scale3_ = scale3_
 
-	cdfId = ncdf_open ( 'runData001.nc', /noWrite ) 
+	fileList = file_search ( 'solution*.nc' )
+	fileListData = file_search ( 'runData*.nc' )
+
+	xAll = 0.0
+	nAll = 0
+	eAlphaAll = complex (0,0)
+
+	for i=0,n_elements(fileList)-1 do begin
+
+	cdfId = ncdf_open ( fileListData[i], /noWrite ) 
 		nCdf_varGet, cdfId, 'capR', x 
 		nCdf_varGet, cdfId, 'y', y 
 		nCdf_varGet, cdfId, 'xjy_re', jy_re 
@@ -68,8 +77,6 @@ pro plot_solution, oneD = oneD, full = full, $
 		nCdf_varGet, cdfId, 'xx_im', xx_im
 		nCdf_varGet, cdfId, 'yy_re', yy_re 
 		nCdf_varGet, cdfId, 'yy_im', yy_im
-		;nCdf_varGet, cdfId, 'kxsav',  kx
-		;nCdf_varGet, cdfId, 'kysav', ky 
 	ncdf_close, cdfId
 
 	xx	= complex ( xx_re, xx_im )
@@ -80,7 +87,9 @@ pro plot_solution, oneD = oneD, full = full, $
 	nN	= n_elements ( xx[*,0] )
 	nM	= n_elements ( yy[*,0] )
 
-	cdfId = ncdf_open ( 'solution001.nc', /noWrite ) 
+
+
+	cdfId = ncdf_open ( fileList[i], /noWrite ) 
 
 		nCdf_varGet, cdfId, 'ealpha_re', ealpha_re 
 		nCdf_varGet, cdfId, 'ebeta_re', ebeta_re 
@@ -126,14 +135,14 @@ pro plot_solution, oneD = oneD, full = full, $
 
 		range = max(abs([eAlpha,eBeta,eB]))
 		range = [-range,range]
-		iPlot, x, eAlpha, view_grid=[1,3], /stretch_to_fit, over = 2, yrange=range
-		iPlot, x, imaginary(eAlpha), over = 2
+		iPlot, x, eAlpha, view_grid=[1,3], /stretch_to_fit, yrange=range
+		iPlot, x, imaginary(eAlpha), over = 1
 
-		iPlot, x, eBeta, /view_next, /stretch_to_fit, over = 2, yrange=range
-		iPlot, x, imaginary(eBeta), over = 2
+		iPlot, x, eBeta, /view_next, /stretch_to_fit, yrange=range
+		iPlot, x, imaginary(eBeta), over = 1
 
-		iPlot, x, eB, /view_next, /stretch_to_fit, over = 2, yrange=range
-		iPlot, x, imaginary(eB), over = 2
+		iPlot, x, eB, /view_next, /stretch_to_fit, yrange=range
+		iPlot, x, imaginary(eB), over = 1
 
 		; Rotated Field solution
 
@@ -153,6 +162,9 @@ pro plot_solution, oneD = oneD, full = full, $
 		iPlot, abs(eBetak)^2, /view_next, /stretch_to_fit, over = 1, /yLog
 		iPlot, abs(eBk)^2, /view_next, /stretch_to_fit, over = 1, /yLog
 
+		print, 'eAlpha: ', eAlpha[0],eAlpha[nX-1]
+		print, 'eBet: ', eBeta[0],eBeta[nX-1]
+		print, 'eB: ', eB[0],eB[nX-1]
 
 	endif else begin
 
@@ -301,6 +313,16 @@ pro plot_solution, oneD = oneD, full = full, $
 		endif
 
 	endelse
-stop
 
+	xAll = [xAll, x]
+	eAlphaAll = [ eAlphaAll, eAlpha]
+	nAll = [ nAll, n_elements(x) ]
+
+	endfor
+
+	xAll = xAll[1:*]
+	eAlphaAll = eAlphaAll[1:*]
+	nAll = nAll[1:*]
+
+stop
 end

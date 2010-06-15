@@ -33,7 +33,7 @@ contains
 
         if(chebyshevX)then
             nS = g%nMin
-            nF = g%nMax*2/3
+            nF = g%nMax!*2/3
         else
             nS = g%nMin*2/3
             nF = g%nMax*2/3
@@ -41,7 +41,7 @@ contains
 
         if(chebyshevY)then
             mS = g%mMin
-            mF = g%mMax*2/3
+            mF = g%mMax!*2/3
         else
             mS = g%mMin*2/3
             mF = g%mMax*2/3

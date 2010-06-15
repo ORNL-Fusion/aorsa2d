@@ -15,18 +15,15 @@ real, allocatable :: nuOmg2D(:,:)
 
 contains
 
-    subroutine init_profiles ( g )
+    subroutine init_profiles ( )
 
         use aorsa2din_mod, &
         only: freqcy, nSpec, zSpecIn, amuSpecIn, &
             tSpecIn, dSpecIn, tLimIn, dLimIn, &
-            dAlphaIn, dBetaIn, tAlphaIn, tBetaIn, &
-            xNuOmg
+            dAlphaIn, dBetaIn, tAlphaIn, tBetaIn
         use grid
 
         implicit none
-
-        type(gridBlock), intent(inout) :: g
 
         omgrf = 2.0 * pi * freqcy
         k0 = omgrf / clight
@@ -54,10 +51,6 @@ contains
         mSpec(1)    = xme  
         qSpec       = zSpec * q 
  
-        allocate ( g%nuOmg(g%nR,g%nZ) )
-
-        g%nuOmg = xNuOmg
-
 
     end subroutine init_profiles
 
@@ -65,7 +58,7 @@ contains
     subroutine flat_profiles ( g )
 
         use aorsa2din_mod, &
-        only: nSpec
+        only: nSpec, xNuOmg
         use bField
         use grid
 
@@ -77,10 +70,11 @@ contains
 
         ! create profile
         ! --------------
-       
+      
         allocate ( &
             g%densitySpec ( g%nR, g%nZ, nSpec ), & 
-            g%ktSpec ( g%nR, g%nZ, nSpec ) )
+            g%ktSpec ( g%nR, g%nZ, nSpec ), &
+            g%nuOmg(g%nR,g%nZ) )
        
         ! ions
         ! ---- 
@@ -105,6 +99,8 @@ contains
             enddo
         enddo
 
+        g%nuOmg = xNuOmg
+
         call omega_freqs ( g )
 
 
@@ -114,7 +110,7 @@ contains
     subroutine circular_profiles ( g )
 
         use aorsa2din_mod, &
-        only: nSpec, xNuOmgOutside, a, r0
+        only: nSpec, xNuOmgOutside, a, r0, xNuOmg
         use bField
         use parallel
         use grid
@@ -129,7 +125,8 @@ contains
         allocate ( &
             g%densitySpec ( g%nR, g%nZ, nSpec ), & 
             g%ktSpec ( g%nR, g%nZ, nSpec ), &
-            distance(g%nR,g%nZ) )
+            distance(g%nR,g%nZ), &
+            g%nuOmg(g%nR,g%nZ) )
      
         do i=1,g%nR
             do j=1,g%nZ
@@ -161,6 +158,7 @@ contains
 
         call omega_freqs ( g )
 
+        g%nuOmg = xNuOmg
         where ( distance/a>=0.99)
             g%nuOmg = xNuOmgOutside
         endwhere
@@ -171,7 +169,7 @@ contains
     subroutine flux_profiles ( g )
 
         use aorsa2din_mod, &
-        only: nSpec, xNuOmgOutside
+        only: nSpec, xNuOmgOutside, xNuOmg
         use bField
         use parallel
         use grid
@@ -185,8 +183,9 @@ contains
 
         allocate ( &
             g%densitySpec ( g%nR, g%nZ, nSpec ), & 
-            g%ktSpec ( g%nR, g%nZ, nSpec ) )
-     
+            g%ktSpec ( g%nR, g%nZ, nSpec ), &
+            g%nuOmg(g%nR,g%nZ) )
+
         ! Catch bad rho values
 
         if ( any ( g%rho > 1 ) .or. any ( g%rho < 0 ) ) then 
@@ -291,7 +290,8 @@ contains
         ! create a 2D map of collisional damping parameter
         ! for application outside the last closed flux surface
         ! ----------------------------------------------------
-
+        
+        g%nuOmg = xNuOmg
         where ( g%rho>=0.99)
             g%nuOmg = xNuOmgOutside
         endwhere

@@ -53,7 +53,7 @@ program aorsa2dMain
 
     !call start_timer ( tTotal )
 
-    integer :: i, nPtsR_tot, nPtsZ_tot
+    integer :: i, nR_tot, nZ_tot
     integer :: nModesR_tot, nModesZ_tot
     character(len=3) :: fNumber
 
@@ -73,14 +73,20 @@ program aorsa2dMain
     if (iAm==0) &
     write(*,*) 'Initialising the parallel environment'
 
-    nPtsR_tot = sum ( nRAll(1:nGrid) )
-    nPtsZ_tot = sum ( nZAll(1:nGrid) )
+    nR_tot = sum ( nRAll(1:nGrid) )
+    nZ_tot = sum ( nZAll(1:nGrid) )
 
     nModesR_tot = sum ( nModesRAll(1:nGrid) )
     nModesZ_tot = sum ( nModesZAll(1:nGrid) )
 
+    if(all(nRAll(1:nGrid)==1)) nR_tot = 1
+    if(all(nZAll(1:nGrid)==1)) nZ_tot = 1
+
+    if(all(nModesRAll(1:nGrid)==1)) nModesR_tot = 1
+    if(all(nModesZAll(1:nGrid)==1)) nModesZ_tot = 1
+
 #ifdef par
-    call init_procGrid ( nPtsR_tot, nPtsZ_tot, nModesR_tot, nModesZ_tot )
+    call init_procGrid ( nR_tot, nZ_tot, nModesR_tot, nModesZ_tot )
 #endif
 
 
@@ -99,6 +105,8 @@ program aorsa2dMain
             nModesRAll(i), nModesZAll(i), &
             rMinAll(i), rMaxAll(i), &
             zMinAll(i), zMaxAll(i) )
+
+        allGrids(i)%gridNumber = i
 
     enddo
 
@@ -132,9 +140,10 @@ program aorsa2dMain
     if (iAm==0) &
     write(*,*) 'Profile setup'
    
+    call init_profiles ()
+
     do i=1,nGrid
 
-        call init_profiles ( allGrids(i) )
 
         if (useFluxProfiles) then
             call flux_profiles ( allGrids(i) )
@@ -161,6 +170,21 @@ program aorsa2dMain
     enddo
 
 
+!   Calculate aMat index for first pt in each grid block
+!   ----------------------------------------------------
+
+    do i=1,nGrid
+
+        if(i==1)then
+            allGrids(i)%startRow = 1 
+            allGrids(i)%startCol = 1
+        else
+            allGrids(i)%startRow = sum ( allGrids(1:i-1)%nR * allGrids(1:i-1)%nZ * 3 ) + 1
+            allGrids(i)%startCol = sum ( allGrids(1:i-1)%nModesR * allGrids(1:i-1)%nModesZ * 3 ) + 1
+        endif
+
+    enddo
+
 
 !   Antenna current
 !   ---------------
@@ -168,7 +192,7 @@ program aorsa2dMain
     if (iAm==0) &
     write(*,*) 'Building antenna current (brhs)'
 
-    call alloc_total_brhs ( nPtsR_tot, nPtsZ_tot )
+    call alloc_total_brhs ( nR_tot, nZ_tot )
     do i=1,nGrid
         call init_brhs ( allGrids(i) )
     enddo
@@ -193,29 +217,14 @@ program aorsa2dMain
 !   Allocate the matrix
 !   -------------------
 
-    call alloc_total_aMat ( nPtsR_tot, nPtsZ_tot, nModesR_tot, nModesZ_tot )
+    call alloc_total_aMat ( nR_tot, nZ_tot, nModesR_tot, nModesZ_tot )
 
-
-!   Calculate aMat index for first pt in each grid block
-!   ----------------------------------------------------
-
-    do i=1,nGrid
-
-        if(i==1)then
-            allGrids(i)%startRow = 1 
-            allGrids(i)%startCol = 1
-        else
-            allGrids(i)%startRow = sum ( allGrids(1:i-1)%nR * allGrids(1:i-1)%nZ * 3 ) + 1
-            allGrids(i)%startCol = sum ( allGrids(1:i-1)%nModesR * allGrids(1:i-1)%nModesZ * 3 ) + 1
-        endif
-
-    enddo
 
 
 !   Label each grid blocks boundary points
 !   --------------------------------------
 
-    call labelPts ( allGrids, nPtsR_tot, nPtsZ_tot )
+    call labelPts ( allGrids, nR_tot, nZ_tot )
 
 
 !   Fill matrix 
@@ -234,6 +243,18 @@ program aorsa2dMain
         call aMat_fill ( allGrids(i) )
 
     enddo
+
+    call amat_boundaries ( allGrids, nR_tot, nZ_tot )
+
+    !where(abs(aMat)/=0)
+    !        aMat = 11
+    !endwhere
+    !write(*,*) shape(amat)
+    !write(*,'(3x,30(1x,i2.2))') (/ (i,i=1,30) /)
+    !write(*,*) '   --------------------------------------------------'
+    !do i=1,30
+    !write(*,'(i2.2,x,30(1x,i2.2),4x,i2.2)') i,int(abs(aMat(i,:))),int(abs(brhs(i)))
+    !enddo
 
 #ifdef usepapi
     call PAPIF_flops ( papi_rTime, papi_pTime, papi_flpins, papi_mflops, papi_irc )

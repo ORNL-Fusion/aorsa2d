@@ -13,6 +13,11 @@ implicit none
 
 type :: gridBlock
 
+    ! Grid number
+    ! -----------
+
+    integer :: gridNumber
+
     ! Matrix offset
     ! -------------
 
@@ -112,7 +117,7 @@ endtype dBfnArg
 
 type(gridBlock), allocatable :: allGrids(:)
 
-integer, allocatable :: bndryBlockID(:,:), bndryType(:)
+integer(kind=long), allocatable :: bndryBlockID(:,:), bndryType(:)
 
 !!   init_grid
 !real, allocatable, dimension(:) :: capR, kPhi
@@ -323,7 +328,7 @@ contains
                     d%normFacX = grid%normFacR
                     d%normFacY = grid%normFacZ
 
-                    grid%dyy(n,i) = dzBfn_bfn(d) 
+                    grid%dyy(m,j) = dzBfn_bfn(d) 
 
                 enddo
             enddo
@@ -526,7 +531,7 @@ contains
         type(gridBlock), intent(inout) :: gAll(:)
         integer, intent(in) :: nR_tot, nZ_tot
 
-        integer :: i, j, b, ii, offSet
+        integer :: iMe, jMe, me, nbr, offSet
 
 
         ! Boundary conditions
@@ -543,48 +548,46 @@ contains
         ! -5  mesh-mesh z -dZBfn (top)
 
 
-        allocate ( bndryBlockID(3,nR_tot*nZ_tot), &
+        allocate ( bndryBlockID(4,nR_tot*nZ_tot), &
                     bndryType(nR_tot*nZ_tot) )
 
+        bndryBlockID = 0
+        bndryType = 0
         offSet = 0
 
-        do b=1,nGrid
+        do me=1,nGrid
 
-            allocate ( gAll(b)%label(gAll(b)%nR,gAll(b)%nZ), &
-                gAll(b)%neighbr_startRow(gAll(b)%nR,gAll(b)%nZ), & 
-                gAll(b)%neighbr_startCol(gAll(b)%nR,gAll(b)%nZ) )
+            allocate ( gAll(me)%label(gAll(me)%nR,gAll(me)%nZ) )
 
             ! Interior points
             ! ---------------
 
-            gAll(b)%label = 0
-            gAll(b)%neighbr_startRow = 0
-            gAll(b)%neighbr_startCol = 0
+            gAll(me)%label = 0
 
-            do i=1,gAll(b)%nR
-                do j=1,gAll(b)%nZ
+            do iMe=1,gAll(me)%nR
+                do jMe=1,gAll(me)%nZ
 
 
                     ! Left block boundary
                     ! -------------------
 
-                    if(i==1 .and. gAll(b)%nR>1) then
+                    if(iMe==1 .and. gAll(me)%nR>1) then
 
-                        if(count(gAll(b)%rMin==rMaxAll)>0) then
+                        if(count(gAll(me)%rMin==rMaxAll)>0) then
 
-                            gAll(b)%label(i,j) = 2 ! mesh-mesh boundary bFn (left)
+                            gAll(me)%label(iMe,jMe) = 3 ! right part of mesh-mesh boundary dbFn
 
                             ! find the neighbour block
-                            do ii=1,nGrid                         
+                            do nbr=1,nGrid                         
 
-                                if(gAll(b)%rMin==gAll(ii)%rMax)then                  
-                                    bndryBlockID(:,offSet+(i-1)*gAll(b)%nZ+j) = (/i,j,ii/)
-                                    bndryType(offSet+(i-1)*gAll(b)%nZ+j) = -2 ! (right)
+                                if(gAll(me)%rMin==gAll(nbr)%rMax)then                  
+                                    bndryBlockID(:,offSet+(iMe-1)*gAll(me)%nZ+jMe) = (/iMe,jMe,nbr,me/)
+                                    bndryType(offSet+(iMe-1)*gAll(me)%nZ+jMe) = -3 ! (right)
                                 endif
 
                             enddo
                         else
-                            gAll(b)%label(i,j) = 1 ! outer boundary
+                            gAll(me)%label(iMe,jMe) = 1 ! outer boundary
                         endif
 
                     endif
@@ -593,23 +596,23 @@ contains
                     ! Right block boundary
                     ! --------------------
 
-                    if(i==gAll(b)%nR .and. gAll(b)%nR>1) then
+                    if(iMe==gAll(me)%nR .and. gAll(me)%nR>1) then
 
-                         if(count(gAll(b)%rMax==rMinAll)>0) then
+                         if(count(gAll(me)%rMax==rMinAll)>0) then
 
-                            gAll(b)%label(i,j) = 3 ! mesh-mesh boundary dRbFn (right) 
+                            gAll(me)%label(iMe,jMe) = 2 ! left part of mesh-mesh boundary bFn 
 
                             ! find the neighbour block
-                            do ii=1,nGrid                         
+                            do nbr=1,nGrid                         
 
-                                if(gAll(b)%rMax==gAll(ii)%rMin)then                  
-                                    bndryBlockID(:,offSet+(i-1)*gAll(b)%nZ+j) = (/i,j,ii/)
-                                    bndryType(offSet+(i-1)*gAll(b)%nZ+j) = -3 ! (left)
+                                if(gAll(me)%rMax==gAll(nbr)%rMin)then                  
+                                    bndryBlockID(:,offSet+(iMe-1)*gAll(me)%nZ+jMe) = (/iMe,jMe,nbr,me/)
+                                    bndryType(offSet+(iMe-1)*gAll(me)%nZ+jMe) = -2 ! (left)
                                 endif
 
                             enddo
                         else
-                            gAll(b)%label(i,j) = 1 ! outer boundary
+                            gAll(me)%label(iMe,jMe) = 1 ! outer boundary
                         endif
 
                     endif
@@ -618,11 +621,11 @@ contains
                     ! Bottom block boundary
                     ! ---------------------
 
-                    if(j==1 .and. gAll(b)%nZ>1) then
-                         if(count(gAll(b)%zMin==zMaxAll)>0) then
-                            gAll(b)%label(i,j) = 4 ! inner boundary bot
+                    if(jMe==1 .and. gAll(me)%nZ>1) then
+                         if(count(gAll(me)%zMin==zMaxAll)>0) then
+                            gAll(me)%label(iMe,jMe) = 4 ! inner boundary bot
                         else
-                            gAll(b)%label(i,j) = 1 ! outer boundary
+                            gAll(me)%label(iMe,jMe) = 1 ! outer boundary
                         endif
                     endif
 
@@ -630,11 +633,11 @@ contains
                     ! Top block boundary
                     ! ------------------
 
-                    if(j==gAll(b)%nZ .and. gAll(b)%nZ>1) then
-                         if(count(gAll(b)%zMax==zMinAll)>0) then
-                            gAll(b)%label(i,j) = 5 ! inner boundary top
+                    if(jMe==gAll(me)%nZ .and. gAll(me)%nZ>1) then
+                         if(count(gAll(me)%zMax==zMinAll)>0) then
+                            gAll(me)%label(iMe,jMe) = 5 ! inner boundary top
                         else
-                            gAll(b)%label(i,j) = 1 ! outer boundary
+                            gAll(me)%label(iMe,jMe) = 1 ! outer boundary
                         endif
                     endif
 
@@ -642,7 +645,7 @@ contains
                 enddo
             enddo
 
-            offSet = offSet + gAll(b)%nR * gAll(b)%nZ
+            offSet = offSet + gAll(me)%nR * gAll(me)%nZ
 
         enddo
 
