@@ -37,7 +37,7 @@ type :: gridBlock
 
     integer :: nMin, nMax, mMin, mMax
     real :: k_cutOff
-    complex, allocatable, dimension(:,:) :: xx, yy, dxx, dyy
+    complex, allocatable, dimension(:,:) :: xx, yy, drBfn_bfn, dzBfn_bfn
 
     ! B field, temp, density, frequencies
     ! -----------------------------------
@@ -295,8 +295,8 @@ contains
             allocate ( &
                 grid%xx(grid%nMin:grid%nMax,nR), &
                 grid%yy(grid%mMin:grid%mMax,nZ), &
-                grid%dxx(grid%nMin:grid%nMax,nR), &
-                grid%dyy(grid%mMin:grid%mMax,nZ) )
+                grid%drBfn_bfn(grid%nMin:grid%nMax,nR), &
+                grid%dzBfn_bfn(grid%mMin:grid%mMax,nZ) )
 
 
             do i = 1, nR
@@ -311,7 +311,7 @@ contains
                     d%normFacX = grid%normFacR
                     d%normFacY = grid%normFacZ
 
-                    grid%dxx(n,i) = drBfn_bfn(d) 
+                    grid%dRBfn_bfn(n,i) = drBfn_bfn(d)
 
                 enddo
             enddo
@@ -328,193 +328,13 @@ contains
                     d%normFacX = grid%normFacR
                     d%normFacY = grid%normFacZ
 
-                    grid%dyy(m,j) = dzBfn_bfn(d) 
+                    grid%dZBfn_bfn(m,j) = dzBfn_bfn(d)
 
                 enddo
             enddo
 
 
     end function init_gridBlock
-
-
-!    subroutine init_grid ()
-!
-!        use aorsa2din_mod, &
-!        only: rwLeft, rwRight, yTop, yBot, &
-!                nPhi, nModesX, nModesY, nPtsX, nPtsY
-!
-!        implicit none
-!
-!        integer :: i, j
-!
-!        ! define x mesh: capr(i)
-!        ! ----------------------
-!        
-!            allocate ( &
-!                capR ( nPtsX ), &
-!                kPhi ( nPtsX ), &
-!                xGrid_basis(nPtsX) )
-!
-!            xRange  = rwRight - rwLeft     
-!            if(nPtsX>1) then 
-!
-!                do i = 1, nPtsX
-!     
-!                    if(chebyshevX) then
-!                        ! Gauss-Lobatto grid [-1,1] (Chebyshev basis)
-!                        xGrid_basis(i)  = -cos(pi*(i-1)/(nPtsX-1))
-!                    else
-!                        ! Uniform grid [0,2pi] (Fourier basis)
-!                        xGrid_basis(i)  = (i-1) * 2 * pi / ( nPtsX - 1 )
-!                    endif
-!       
-!                enddo
-!            else
-!
-!                capR(1) = rwLeft
-!                xGrid_basis(1) = 0
-!                
-!            endif
-!
-!            if(nPtsX>1) &
-!            capR = (xGrid_basis-xGrid_basis(1)) &
-!                / (xGrid_basis(nPtsX)-xGrid_basis(1)) * xRange + rwLeft
-!
-!            kPhi = nPhi / capR
-!
-!            if(chebyshevX)then
-!                normFacX = 2 / xRange
-!            else
-!                normFacX = 2 * pi / xRange
-!            endif
-!
-!       
-!        ! define y mesh: y(j)
-!        ! -------------------
-!        
-!            allocate ( y ( nPtsY ), &
-!                yGrid_basis(nPtsY) )
-!       
-!            yRange  = yTop - yBot
-!            if(nPtsY>1) then 
-!
-!                do j = 1, nPtsY
-!
-!                    if(chebyshevY) then
-!                        ! Gauss-Lobatto grid [-1,1] (Chebyshev basis)
-!                        yGrid_basis(j)  = -cos(pi*(j-1)/(nPtsY-1))
-!                    else
-!                        ! Uniform grid [0,2pi] (Fourier basis)
-!                        yGrid_basis(j)  = (j-1) * 2 * pi / ( nPtsY - 1 )
-!                    endif
-!
-!                enddo
-!            else
-!                y(1)    = 0
-!                yGrid_basis(1) = 0
-!            endif
-!
-!            if(nPtsY>1) &
-!            y = (yGrid_basis-yGrid_basis(1)) &
-!                / (yGrid_basis(nPtsY)-yGrid_basis(1)) * yRange + yBot
-!
-!            if(chebyshevY) then
-!                normFacY = 2 / yRange
-!            else 
-!                normFacY = 2 * pi / yRange
-!            endif
-!
-!    end subroutine init_grid
-!
-!
-!    subroutine init_k ()
-!
-!        use aorsa2din_mod, &
-!        only: nModesX, nModesY, nPtsX, nPtsY, &
-!            xkperp_cutOff, xkx_cutOff, xky_cutOff
-!        use constants
-!        use parallel
-!
-!        implicit none
-!
-!        integer :: n, m
-!
-!        if(chebyshevX) then
-!
-!            nMin    = 0
-!            nMax    = nModesX-1
-!
-!        else
-!
-!            nMin = -nModesX/2
-!            nMax =  nModesX/2
-!
-!            ! Catch for even number of modes
-!            ! for producing a square matrix
-!            ! ------------------------------
-!
-!            if (mod(nModesX,2)==0) nMin = nMin+1
-!
-!        endif
-!
-!
-!        if(chebyshevY) then
-!
-!            mMin    = 0
-!            mMax    = nModesY-1
-!
-!        else
-!
-!            mMin = -nModesY/2
-!            mMax =  nModesY/2
-!            if (mod(nModesY,2)==0) mMin = mMin+1
-!
-!        endif
-!
-!
-!        if (iAm==0) then
-!            write(*,*) '    n: ', nMin, nMax
-!            write(*,*) '    m: ', mMin, mMax
-!        endif
-!
-!        k_cutOff = xkPerp_cutOff * sqrt(&
-!           (nMax * normFacX)**2+(mMax*normFacY)**2)
-!
-!        !kx_cutOff   = maxVal ( abs(kxSav) ) * xkx_cutOff
-!        !ky_cutOff   = maxVal ( abs(kySav) ) * xky_cutOff
-!
-!
-!    end subroutine init_k
-!
-!
-!    subroutine init_basis_functions ()
-!
-!        use aorsa2din_mod, &
-!        only: nModesX, nModesY, nPtsX, nPtsY, &
-!                rwLeft, yBot
-!        use constants
-!
-!        implicit none
-!
-!        integer :: i, j, n, m
-!
-!        allocate ( &
-!            xx(nMin:nMax,nPtsX), &
-!            yy(mMin:mMax,nPtsY) )
-!
-!        do i = 1, nPtsX
-!            do n = nMin, nMax 
-!                xx(n,i) = xBasis(n,xGrid_basis(i))
-!            enddo
-!        enddo
-!
-!        do j = 1, nPtsY
-!            do m = mMin, mMax 
-!                yy(m,j) = yBasis(m,yGrid_basis(j))
-!            enddo
-!        enddo
-!
-!    end subroutine init_basis_functions 
 
 
     ! Label each grid point within a block accoring to
@@ -691,6 +511,8 @@ contains
 
     function drBfn_bfn( d )
 
+        ! REMEMBER: this gives drBfn/Bfn 
+
         implicit none
 
         type(dBfnArg), intent(in) :: d
@@ -711,6 +533,8 @@ contains
 
     function dzBfn_bfn( d )
 
+        ! REMEMBER: this gives dzBfn/Bfn 
+
         implicit none
 
         type(dBfnArg), intent(in) :: d
@@ -730,6 +554,8 @@ contains
 
 
     function drrBfn_bfn( d )
+
+        ! REMEMBER: this gives drrBfn/Bfn 
 
         implicit none
 
@@ -754,6 +580,8 @@ contains
 
     function dzzBfn_bfn( d )
 
+        ! REMEMBER: this gives dzzBfn/Bfn 
+
         implicit none
 
         type(dBfnArg), intent(in) :: d
@@ -776,6 +604,8 @@ contains
 
 
     function drzBfn_bfn( d )
+
+        ! REMEMBER: this gives drzBfn/Bfn 
 
         implicit none
 

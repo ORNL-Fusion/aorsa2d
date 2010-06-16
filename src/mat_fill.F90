@@ -105,7 +105,6 @@ contains
                         aMatBlock = 0
 
                         if(bndryType(ii)==-2) then
-                            write(*,*) 'Bndry -2 for block ', bndryBlockID(3,ii)
 
                             ! create bcnd @ first point
                             i = 1
@@ -118,12 +117,12 @@ contains
                             aMatBlock(3,3) = -bFn
 
                         elseif(bndryType(ii)==-3) then
-                            write(*,*) 'Bndry -3 for block ', bndryBlockID(3,ii)
 
                             ! create bcnd @ last point
                             i = me%nR
                             j = 1
-                            dRBfn = me%dxx(n,i) * me%yy(m,j)
+                            bFn = me%xx(n,i) * me%yy(m,j)
+                            dRBfn = me%drBfn_bfn(n,i) * bFn
 
                             aMatBlock(1,1) = -dRbFn
                             aMatBlock(2,2) = -dRbFn
@@ -136,7 +135,6 @@ contains
                         i = bndryBlockID(1,ii)
                         j = bndryBlockID(2,ii)
 
-                        write(*,*) 'nbr bID = ', bndryBlockID(4,ii)
                         nbr = gAll(bndryBlockID(4,ii))
 
                         iRow = (i-1) * 3 * nbr%nZ + (j-1) * 3 + 1
@@ -309,8 +307,8 @@ contains
                             sigPrlPrl = 0.0
 
                             bFn = g%xx(n, i) * g%yy(m, j)
-                            dRbFn = g%dxx(n, i) * g%yy(m, j)
-                            dZbFn = g%xx(n, i) * g%dyy(m, j)
+                            dRbFn = g%drBfn_bfn(n, i) * bFn
+                            dZbFn = g%dzBfn_bfn(m, j) * bFn
 
         if(g%label(i,j)==0)then
 
