@@ -84,6 +84,7 @@ contains
         type(gridBlock) :: me, nbr
         integer :: i, j, n, m, ii, iRow, iCol 
         complex(kind=dbl) :: aMatBlock(3,3)
+        real :: r, kt
 
 
         do ii=1,nR_tot*nZ_tot
@@ -94,19 +95,15 @@ contains
                 write(*,*) 'BndryBlockID: ', bndryBlockID(:,ii)
 
                 me = gAll(bndryBlockID(3,ii))
-                !i = bndryBlockID(1,ii)
-                !j = bndryBlockID(2,ii)
 
                 do n=me%nMin,me%nMax
                     do m=me%mMin,me%mMax
-
-                        !dZBfn = me%xx(n,i) * me%dyy(m,j)
 
                         aMatBlock = 0
 
                         if(bndryType(ii)==-2) then
 
-                            ! create bcnd @ first point
+                            ! create E=E @ left point
                             i = 1
                             j = 1
 
@@ -118,11 +115,13 @@ contains
 
                         elseif(bndryType(ii)==-3) then
 
-                            ! create bcnd @ last point
+                            ! create dEdR=dEdR @ right point
                             i = me%nR
                             j = 1
+
                             bFn = me%xx(n,i) * me%yy(m,j)
                             dRBfn = me%drBfn_bfn(n,i) * bFn
+                            dZBfn = me%dzBfn_bfn(m,j) * bFn
 
                             aMatBlock(1,1) = -dRbFn
                             aMatBlock(2,2) = -dRbFn
@@ -130,7 +129,7 @@ contains
 
                         endif
 
-                        ! but couple with the first point of neighbour block
+                        ! but couple with the neighbour block
 
                         i = bndryBlockID(1,ii)
                         j = bndryBlockID(2,ii)
@@ -306,10 +305,15 @@ contains
                             sigPrlBet = 0.0
                             sigPrlPrl = 0.0
 
+                            z   = g%z(j)
+                            r   = g%R(i)
+                            kt  = g%kPhi(i)
+
                             bFn = g%xx(n, i) * g%yy(m, j)
                             dRbFn = g%drBfn_bfn(n, i) * bFn
                             dZbFn = g%dzBfn_bfn(m, j) * bFn
 
+        interior: &
         if(g%label(i,j)==0)then
 
 
@@ -434,10 +438,6 @@ contains
                             kPrlAlp =       zi / (eps0 * omgrf) * sigPrlAlp
                             kPrlBet =       zi / (eps0 * omgrf) * sigPrlBet
                             kPrlPrl = 1.0 + zi / (eps0 * omgrf) * sigPrlPrl
-
-                            z   = g%z(j)
-                            r   = g%R(i)
-                            kt  = g%kPhi(i)
 
                             d%n = n
                             d%m = m
@@ -631,7 +631,7 @@ contains
                             dzy = mat_z_bet / k0**2
                             dzz = mat_z_prl / k0**2
 
-           endif
+           endif interior
 
                             ii_loop: &
                             do ii=0,2
@@ -727,15 +727,15 @@ contains
                                         if (g%label(i,j)==3) then
 
                                             if (ii==0 .and. jj==0) aMat(localRow,localCol) = dRbFn 
-                                            if (ii==0 .and. jj==1) aMat(localRow,localCol) = 0  
-                                            if (ii==0 .and. jj==2) aMat(localRow,localCol) = 0  
-                                   
-                                            if (ii==1 .and. jj==0) aMat(localRow,localCol) = 0  
-                                            if (ii==1 .and. jj==1) aMat(localRow,localCol) = dRbFn  
-                                            if (ii==1 .and. jj==2) aMat(localRow,localCol) = 0   
-                                   
-                                            if (ii==2 .and. jj==0) aMat(localRow,localCol) = 0   
-                                            if (ii==2 .and. jj==1) aMat(localRow,localCol) = 0   
+                                            if (ii==0 .and. jj==1) aMat(localRow,localCol) = 0 
+                                            if (ii==0 .and. jj==2) aMat(localRow,localCol) = 0 
+                                                                                             
+                                            if (ii==1 .and. jj==0) aMat(localRow,localCol) = 0 
+                                            if (ii==1 .and. jj==1) aMat(localRow,localCol) = dRbFn 
+                                            if (ii==1 .and. jj==2) aMat(localRow,localCol) = 0 
+                                                                                             
+                                            if (ii==2 .and. jj==0) aMat(localRow,localCol) = 0 
+                                            if (ii==2 .and. jj==1) aMat(localRow,localCol) = 0 
                                             if (ii==2 .and. jj==2) aMat(localRow,localCol) = dRbFn 
 
                                         endif
