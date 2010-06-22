@@ -4,7 +4,7 @@ use constants
 
 implicit none
 
-complex :: bFn, dRBFn, dZBFn
+complex :: bFn, dRBFn, dZBFn, d2RbFn, d2ZbFn, bFnHere
 complex(kind=dbl) :: &
     sigAlpAlp, sigAlpBet, sigAlpPrl, &
     sigBetAlp, sigBetBet, sigBetPrl, &
@@ -75,6 +75,8 @@ contains
 
         use grid
         use antenna
+        use aorsa2din_mod, &
+        only: overlap
 
         implicit none
 
@@ -85,6 +87,7 @@ contains
         integer :: i, j, n, m, ii, iRow, iCol 
         complex(kind=dbl) :: aMatBlock(3,3)
         real :: r, kt
+        complex :: bFn_i0, bFn_i1, bFn_i2, bFn_i3, bFn_i4, bFn_i5
 
 
         do ii=1,nR_tot*nZ_tot
@@ -101,10 +104,13 @@ contains
 
                         aMatBlock = 0
 
-                        if(bndryType(ii)==-2) then
+                        if(bndryType(ii)==-999) then
 
-                            ! create E=E @ left point
-                            i = 1
+                            ! create E=E @ overlap point
+                            ! (Mawells are set on the rhs so the E=E is
+                            ! set on the lhs)
+
+                            i = me%nR-overlap
                             j = 1
 
                             bFn = me%xx(n, i) * me%yy(m, j)
@@ -112,20 +118,39 @@ contains
                             aMatBlock(1,1) = -bFn
                             aMatBlock(2,2) = -bFn
                             aMatBlock(3,3) = -bFn
+                            !aMatBlock = 99
 
-                        elseif(bndryType(ii)==-3) then
+                        elseif(bndryType(ii)==-1) then
 
-                            ! create dEdR=dEdR @ right point
-                            i = me%nR
+                            ! create dEdR=dEdR @ overlap point 
+                            ! (odd are +ve on rhs so this is a lhs condition)
+
+                            i = 1+overlap 
                             j = 1
 
-                            bFn = me%xx(n,i) * me%yy(m,j)
-                            dRBfn = me%drBfn_bfn(n,i) * bFn
-                            dZBfn = me%dzBfn_bfn(m,j) * bFn
+                            bFn = me%xx(n, i) * me%yy(m, j)
+                            dRbFn = me%dRbFn_bFn(n,i) * bFn
 
-                            aMatBlock(1,1) = -dRbFn
-                            aMatBlock(2,2) = -dRbFn
-                            aMatBlock(3,3) = -dRbFn
+                            aMatBlock(1,1) = -(dRbFn)
+                            aMatBlock(2,2) = -(dRbFn)
+                            aMatBlock(3,3) = -(dRbFn)
+                            !aMatBlock = 11
+
+                        elseif(bndryType(ii)==-2) then
+
+                            ! create d2EdR2=d2EdR2 @ overlap point 
+                            ! (-ve even are on the rhs)
+
+                            i = me%nR-overlap
+                            j = 1
+
+                            bFn = me%xx(n, i) * me%yy(m, j)
+                            d2RbFn = me%d2RbFn_bFn(n,i) * bFn
+
+                            aMatBlock(1,1) = -(d2RbFn)
+                            aMatBlock(2,2) = -(d2RbFn)
+                            aMatBlock(3,3) = -(d2RbFn)
+                            !aMatBlock = 22
 
                         endif
 
@@ -165,7 +190,7 @@ contains
             iSigma, npRow, npCol, &
             metalLeft, metalRight, &
             metalTop, metalBot, nPhi, square, lsWeightFac, &
-            useEqdsk
+            useEqdsk, overlap
         use grid
         use sigma_mod
         use rotation
@@ -193,6 +218,8 @@ contains
             mat_r_alp, mat_r_bet, mat_r_prl, &
             mat_th_alp, mat_th_bet, mat_th_prl, &
             mat_z_alp, mat_z_bet, mat_z_prl
+
+        complex :: bFn_i0, bFn_i1, bFn_i2, bFn_i3, bFn_i4, bFn_i5 
 
         integer :: nr, nz
 
@@ -310,8 +337,8 @@ contains
                             kt  = g%kPhi(i)
 
                             bFn = g%xx(n, i) * g%yy(m, j)
-                            dRbFn = g%drBfn_bfn(n, i) * bFn
-                            dZbFn = g%dzBfn_bfn(m, j) * bFn
+                            !dRbFn = g%drBfn_bfn(n, i) * bFn
+                            !dZbFn = g%dzBfn_bfn(m, j) * bFn
 
         interior: &
         if(g%label(i,j)==0)then
@@ -670,11 +697,11 @@ contains
                                             if (ii==0 .and. jj==0) aMat(localRow,localCol) = dxx * bFn  
                                             if (ii==0 .and. jj==1) aMat(localRow,localCol) = dxy * bFn   
                                             if (ii==0 .and. jj==2) aMat(localRow,localCol) = dxz * bFn   
-                                                                                                         
+                                                                                                     
                                             if (ii==1 .and. jj==0) aMat(localRow,localCol) = dyx * bFn   
                                             if (ii==1 .and. jj==1) aMat(localRow,localCol) = dyy * bFn   
                                             if (ii==1 .and. jj==2) aMat(localRow,localCol) = dyz * bFn   
-                                                                                                         
+                                                                                                     
                                             if (ii==2 .and. jj==0) aMat(localRow,localCol) = dzx * bFn   
                                             if (ii==2 .and. jj==1) aMat(localRow,localCol) = dzy * bFn   
                                             if (ii==2 .and. jj==2) aMat(localRow,localCol) = dzz * bFn   
@@ -685,7 +712,7 @@ contains
                                         ! Outer boundary points
                                         ! ---------------------
 
-                                        if (g%label(i,j)==1) then
+                                        if (g%label(i,j)==888) then
                                             
                                             if (ii==0 .and. jj==0) aMat(localRow,localCol) = bFn * lsWeightFac 
                                             if (ii==0 .and. jj==1) aMat(localRow,localCol) = 0
@@ -701,12 +728,8 @@ contains
 
                                         endif
 
-
-                                        ! Mesh-Mesh boundary for R bFn 
-                                        ! ----------------------------
-
-                                        if (g%label(i,j)==2) then
-                                           
+                                        if (g%label(i,j)==999) then
+                                        
                                             if (ii==0 .and. jj==0) aMat(localRow,localCol) = bFn 
                                             if (ii==0 .and. jj==1) aMat(localRow,localCol) = 0  
                                             if (ii==0 .and. jj==2) aMat(localRow,localCol) = 0  
@@ -721,22 +744,53 @@ contains
 
                                         endif
 
+
+                                        ! Mesh-Mesh boundary for R bFn 
+                                        ! ----------------------------
+
+                                        if (g%label(i,j)==1) then
+                                         
+                                            ! odd are lhs
+
+                                            bFnHere = g%xx(n, g%nR-overlap) * g%yy(m, 1)
+                                            dRbFn = g%dRbFn_bFn(n,g%nR-overlap) * bFnHere
+
+                                            if (ii==0 .and. jj==0) aMat(localRow,localCol) = dRbFn 
+                                            if (ii==0 .and. jj==1) aMat(localRow,localCol) = 0  
+                                            if (ii==0 .and. jj==2) aMat(localRow,localCol) = 0  
+                                   
+                                            if (ii==1 .and. jj==0) aMat(localRow,localCol) = 0  
+                                            if (ii==1 .and. jj==1) aMat(localRow,localCol) = dRbFn  
+                                            if (ii==1 .and. jj==2) aMat(localRow,localCol) = 0   
+                                   
+                                            if (ii==2 .and. jj==0) aMat(localRow,localCol) = 0   
+                                            if (ii==2 .and. jj==1) aMat(localRow,localCol) = 0   
+                                            if (ii==2 .and. jj==2) aMat(localRow,localCol) = dRbFn 
+
+                                        endif
+
                                         ! Mesh-Mesh boundary for R deriv of bFn 
                                         ! -------------------------------------
 
-                                        if (g%label(i,j)==3) then
+                                        if (g%label(i,j)==2) then 
 
-                                            if (ii==0 .and. jj==0) aMat(localRow,localCol) = dRbFn 
+                                            ! even are rhs
+
+                                            bFnHere = g%xx(n, 1+overlap) * g%yy(m, 1)
+                                            d2RbFn = g%d2RbFn_bFn(n,1+overlap) * bFnHere
+
+
+                                            if (ii==0 .and. jj==0) aMat(localRow,localCol) = d2RbFn
                                             if (ii==0 .and. jj==1) aMat(localRow,localCol) = 0 
                                             if (ii==0 .and. jj==2) aMat(localRow,localCol) = 0 
                                                                                              
                                             if (ii==1 .and. jj==0) aMat(localRow,localCol) = 0 
-                                            if (ii==1 .and. jj==1) aMat(localRow,localCol) = dRbFn 
+                                            if (ii==1 .and. jj==1) aMat(localRow,localCol) = d2RbFn
                                             if (ii==1 .and. jj==2) aMat(localRow,localCol) = 0 
                                                                                              
                                             if (ii==2 .and. jj==0) aMat(localRow,localCol) = 0 
                                             if (ii==2 .and. jj==1) aMat(localRow,localCol) = 0 
-                                            if (ii==2 .and. jj==2) aMat(localRow,localCol) = dRbFn 
+                                            if (ii==2 .and. jj==2) aMat(localRow,localCol) = d2RbFn
 
                                         endif
 

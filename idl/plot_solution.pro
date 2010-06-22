@@ -162,9 +162,25 @@ pro plot_solution, oneD = oneD, full = full, $
 		iPlot, abs(eBetak)^2, /view_next, /stretch_to_fit, over = 1, /yLog
 		iPlot, abs(eBk)^2, /view_next, /stretch_to_fit, over = 1, /yLog
 
-		print, 'eAlpha: ', eAlpha[0],eAlpha[nX-1]
-		print, 'eBet: ', eBeta[0],eBeta[nX-1]
-		print, 'eB: ', eB[0],eB[nX-1]
+		print, ''
+		print, 'eAlpha: '
+		print, '------- '
+		print, 'E - ', eAlpha[1],eAlpha[nX-2]
+		print, 'dEdR - ',$
+				-1*eAlpha[0]+1*eAlpha[2], $
+				-1*eAlpha[nX-3]+1*eAlpha[nX-1]
+		print, 'd2EdR2 - ', $
+				1*eAlpha[0]-2*eAlpha[1]+1*eAlpha[2], $
+				1*eAlpha[nX-3]-2*eAlpha[nX-2]+1*eAlpha[nX-1]
+
+		print, ''
+		print, 'eBet: '
+		print, '-----'
+		print, eBeta[1],eBeta[nX-2]
+
+		print, ''
+		print, 'eB: ', eB[1],eB[nX-2]
+		print, '---'
 
 	endif else begin
 

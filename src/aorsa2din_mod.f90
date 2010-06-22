@@ -41,6 +41,7 @@ implicit none
     logical :: magma = .false.
     real :: rhoAnt = 0.97
     real :: antSigRho = 0.1
+    integer :: overlap = 1
 
     integer, parameter :: nGridMax = 10
     integer :: nGrid = 1
@@ -467,7 +468,8 @@ implicit none
      &    bPol_frac, useCircularProfiles, lsWeightFac, xkx_cutOff, xky_cutOff, &
      &    chebyshevX, chebyshevY, magma, rhoAnt, antSigRho, toroidalBroadening,&
      &    kPrlEffLimit, nGrid, &
-     &    nRAll, nZAll, nModesRAll, nModesZAll, rMinALl, rMaxAll, zMinAll, zMaxAll
+     &    nRAll, nZAll, nModesRAll, nModesZAll, rMinALl, rMaxAll, zMinAll, zMaxAll, &
+     &    overlap
 
                 
 contains

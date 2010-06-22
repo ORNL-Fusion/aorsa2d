@@ -250,10 +250,14 @@ program aorsa2dMain
     !        aMat = 11
     !endwhere
     !write(*,*) shape(amat)
-    !write(*,'(3x,30(1x,i2.2))') (/ (i,i=1,30) /)
+    !write(*,'(3x,36(1x,i2.2))') (/ (i,i=1,36) /)
     !write(*,*) '   --------------------------------------------------'
-    !do i=1,30
-    !write(*,'(i2.2,x,30(1x,i2.2),4x,i2.2)') i,int(abs(aMat(i,:))),int(abs(brhs(i)))
+    !do i=1,36
+    !write(*,'(i2.2,x,36(1x,i2.2),4x,i2.2)') i,int(abs(aMat(i,:))),int(abs(brhs(i)))
+    !enddo
+
+    !do i=1,nGrid
+    !    write(*,*) allGrids(i)%label
     !enddo
 
 #ifdef usepapi

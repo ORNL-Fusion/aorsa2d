@@ -28,6 +28,7 @@ type :: gridBlock
     integer :: nR, nZ, nModesR, nModesZ
     real, allocatable, dimension(:) :: rNorm, zNorm, R, z, kPhi
     real :: rMin, rMax, zMin, zMax, rRange, zRange
+    real :: rMinIn, rMaxIn, zMinIn, zMaxIn
     real :: normFacR, normFacZ
     integer, allocatable :: label(:,:)
     integer, allocatable :: neighbr_startRow(:,:),neighbr_startCol(:,:)
@@ -37,7 +38,10 @@ type :: gridBlock
 
     integer :: nMin, nMax, mMin, mMax
     real :: k_cutOff
-    complex, allocatable, dimension(:,:) :: xx, yy, drBfn_bfn, dzBfn_bfn
+    complex, allocatable, dimension(:,:) :: xx, yy
+    complex, allocatable, dimension(:,:) :: &
+        drBfn_bfn, dzBfn_bfn, &
+        d2rBfn_bfn, d2zBfn_bfn
 
     ! B field, temp, density, frequencies
     ! -----------------------------------
@@ -106,6 +110,9 @@ type :: gridBlock
 end type gridBlock
 
 
+! Define bFn derivative argument
+! ------------------------------
+
 type :: dBfnArg
 
     integer :: n, m
@@ -119,24 +126,13 @@ type(gridBlock), allocatable :: allGrids(:)
 
 integer(kind=long), allocatable :: bndryBlockID(:,:), bndryType(:)
 
-!!   init_grid
-!real, allocatable, dimension(:) :: capR, kPhi
-!real, allocatable, dimension(:) :: y, xGrid_basis, yGrid_basis
-!real :: xRange, yRange, normFacX, normFacY
-!
-!!   init_k
-!real :: k_cutOff!, kx_cutOff, ky_cutOff
-!integer :: nMin, nMax, mMin, mMax
-!
-!!   init_basis_functions
-!complex, allocatable, dimension(:,:) :: xx, yy
 
 contains
 
     function init_gridBlock ( nR, nZ, nModesR, nModesZ, rMin, rMax, zMin, zMax ) result ( grid )
 
         use aorsa2din_mod, &
-        only : nPhi, xkPerp_cutOff
+        only : nPhi, xkPerp_cutOff, overlap
         use parallel
 
         implicit none
@@ -158,20 +154,20 @@ contains
             ! Populate grid block parameters
             ! ------------------------------
 
-            grid%rRange  = rMax - rMin    
-
-            grid%rMin = rMin
-            grid%rMax = rMax
-            grid%zMin = zMin
-            grid%zMax = zMax
             grid%nR = nR
             grid%nZ = nZ
             grid%nModesR = nModesR
             grid%nModesZ = nModesZ
 
+            grid%rMinIn = rMin
+            grid%rMaxIn = rMax
+            grid%zMinIn = zMin
+            grid%zMaxIn = zMax
+
             
-            ! Create the grid block grids
-            ! ---------------------------
+            ! Create the normalised block grids
+            ! for the basis functions.
+            ! ---------------------------------
 
             if(nR>1) then 
 
@@ -188,15 +184,30 @@ contains
                 enddo
             else
 
-                grid%R(1) = rMin
                 grid%rNorm(1) = 0
                 
             endif
 
-            if(nR>1) &
-            grid%R = (grid%rNorm-grid%rNorm(1)) &
-                / (grid%rNorm(nR)-grid%rNorm(1)) * grid%rRange + rMin
 
+            ! Create the real space block grids
+            ! taking into account the grid 
+            ! block overlap.
+            ! ---------------------------------
+
+            grid%rRange  = (rMax - rMin) * &
+                (grid%rNorm(nR)-grid%rNorm(1)) / (grid%rNorm(nR-overlap)-grid%rNorm(1+overlap))   
+
+            grid%rMin = rMin - abs(grid%rNorm(1+overlap)-grid%rNorm(1)) / (grid%rNorm(nR)-grid%rNorm(1)) * grid%rRange
+            grid%rMax = rMax + abs(grid%rNorm(1+overlap)-grid%rNorm(1)) / (grid%rNorm(nR)-grid%rNorm(1)) * grid%rRange
+            grid%zMin = zMin
+            grid%zMax = zMax
+
+            if(nR>1)then
+                grid%R = (grid%rNorm-grid%rNorm(1)) &
+                    / (grid%rNorm(nR)-grid%rNorm(1)) * grid%rRange + grid%rMin
+            else
+                grid%R(1) = grid%rMin
+            endif
 
             if(chebyshevX)then
                 grid%normFacR = 2 / grid%rRange
@@ -296,7 +307,9 @@ contains
                 grid%xx(grid%nMin:grid%nMax,nR), &
                 grid%yy(grid%mMin:grid%mMax,nZ), &
                 grid%drBfn_bfn(grid%nMin:grid%nMax,nR), &
-                grid%dzBfn_bfn(grid%mMin:grid%mMax,nZ) )
+                grid%dzBfn_bfn(grid%mMin:grid%mMax,nZ), &
+                grid%d2rBfn_bfn(grid%nMin:grid%nMax,nR), &
+                grid%d2zBfn_bfn(grid%mMin:grid%mMax,nZ) )
 
 
             do i = 1, nR
@@ -311,7 +324,8 @@ contains
                     d%normFacX = grid%normFacR
                     d%normFacY = grid%normFacZ
 
-                    grid%dRBfn_bfn(n,i) = drBfn_bfn(d)
+                    grid%dRbfn_bfn(n,i) = drBfn_bfn(d)
+                    if(i>1 .and. i<nR) grid%d2Rbfn_bfn(n,i) = drrBfn_bfn(d)
 
                 enddo
             enddo
@@ -329,6 +343,7 @@ contains
                     d%normFacY = grid%normFacZ
 
                     grid%dZBfn_bfn(m,j) = dzBfn_bfn(d)
+                    if(j>1 .and. j<nZ) grid%d2Zbfn_bfn(m,j) = dzzBfn_bfn(d)
 
                 enddo
             enddo
@@ -344,29 +359,24 @@ contains
     subroutine labelPts ( gAll, nR_tot, nZ_tot )
 
         use aorsa2din_mod, &
-        only: rMinAll, rMaxAll, zMinAll, zMaxAll, nGrid
+        only: rMinAll, rMaxAll, zMinAll, zMaxAll, nGrid, overlap
 
         implicit none
 
         type(gridBlock), intent(inout) :: gAll(:)
         integer, intent(in) :: nR_tot, nZ_tot
 
-        integer :: iMe, jMe, me, nbr, offSet
+        integer :: iMe, jMe, me, nbr, offSet, label
 
 
         ! Boundary conditions
         ! -------------------
-        ! 0  interior
-        ! 1  exterior
-        ! 2  mesh-mesh R bFn (left)
-        ! 3  mesh-mesh R dRBfn (right)
-        ! 4  mesh-mesh z Bfn (bot)
-        ! 5  mesh-mesh z dZBfn (top)
-        ! -2  mesh-mesh R -bFn (right)
-        ! -3  mesh-mesh R -dRBfn (left)
-        ! -4  mesh-mesh z -Bfn (bot)
-        ! -5  mesh-mesh z -dZBfn (top)
-
+        ! 0   interior, Maxwell
+        ! 888 exterior, E = 0
+        ! 999(-999) E - E = 0
+        ! 1(-1)   dEdR - dEdR = 0
+        ! 2(-2)   d2EdR2 - d2EdR2 = 0
+        ! 3(-3)   d3EdR3 - d3EdR3 = 0
 
         allocate ( bndryBlockID(4,nR_tot*nZ_tot), &
                     bndryType(nR_tot*nZ_tot) )
@@ -388,61 +398,95 @@ contains
                 do jMe=1,gAll(me)%nZ
 
 
-                    ! Left block boundary
+                    ! Left side of block
+                    ! ------------------
+
+                    i_am_an_overlapped_pt_left: &
+                    if(iMe<=(1+overlap) .and. gAll(me)%nR>1) then
+
+                        at_mesh_mesh_bndry_rhs: &
+                        if(count(gAll(me)%rMinIn==rMaxAll(1:nGrid))>0) then
+
+                            label = abs((iMe-1)-overlap)*2-1 ! odd R derivative terms (1,3,5...)
+
+                            ! special case for E=E 
+                            ! (only left boundary, right one will be left zero for Maxwell)
+
+                            if(abs((iMe-1)-overlap)*2==0) label = 999 
+
+                            gAll(me)%label(iMe,jMe) = label
+                            !write(*,*) 'left side label: ', label
+
+                            ! find the neighbour block
+                            do nbr=1,nGrid                         
+
+                                if(gAll(me)%rMinIn==rMaxAll(nbr))then                  
+
+                                    bndryBlockID(:,offSet+(iMe-1)*gAll(me)%nZ+jMe) = (/iMe,jMe,nbr,me/)
+                                    bndryType(offSet+(iMe-1)*gAll(me)%nZ+jMe) = -label 
+
+                                    write(*,*) label, bndryType(offSet+(iMe-1)*gAll(me)%nZ+jMe), &
+                                    bndryBlockID(:,offSet+(iMe-1)*gAll(me)%nZ+jMe)
+ 
+                                endif
+
+                            enddo
+
+                        else ! at domain boundary
+
+                            if(iMe==1) gAll(me)%label(iMe,jMe) = 888 ! outer boundary
+
+                        endif at_mesh_mesh_bndry_rhs
+
+                    endif i_am_an_overlapped_pt_left
+
+
+                    ! Right side of block
                     ! -------------------
 
-                    if(iMe==1 .and. gAll(me)%nR>1) then
+                    i_am_an_overlapped_pt_right: &
+                    if(iMe>=gAll(me)%nR-overlap .and. gAll(me)%nR>1) then
 
-                        if(count(gAll(me)%rMin==rMaxAll)>0) then
+                        at_mesh_mesh_bndry_lhs: &
+                        if(count(gAll(me)%rMaxIn==rMinAll(1:nGrid))>0) then
 
-                            gAll(me)%label(iMe,jMe) = 3 ! right part of mesh-mesh boundary dbFn
+                            label = abs((gAll(me)%nR-iMe)-overlap)*2 ! even R derivative terms (2,4,6...)
 
-                            ! find the neighbour block
-                            do nbr=1,nGrid                         
+                            ! if label equals 0 then Maxwells will be used (see
+                            ! left block for E=E condition)
 
-                                if(gAll(me)%rMin==gAll(nbr)%rMax)then                  
-                                    bndryBlockID(:,offSet+(iMe-1)*gAll(me)%nZ+jMe) = (/iMe,jMe,nbr,me/)
-                                    bndryType(offSet+(iMe-1)*gAll(me)%nZ+jMe) = -3 ! (right)
-                                endif
-
-                            enddo
-                        else
-                            gAll(me)%label(iMe,jMe) = 1 ! outer boundary
-                        endif
-
-                    endif
-
-
-                    ! Right block boundary
-                    ! --------------------
-
-                    if(iMe==gAll(me)%nR .and. gAll(me)%nR>1) then
-
-                         if(count(gAll(me)%rMax==rMinAll)>0) then
-
-                            gAll(me)%label(iMe,jMe) = 2 ! left part of mesh-mesh boundary bFn 
+                            gAll(me)%label(iMe,jMe) = label ! left part of mesh-mesh boundary bFn 
+                            !write(*,*) 'right side label: ', label
 
                             ! find the neighbour block
                             do nbr=1,nGrid                         
 
-                                if(gAll(me)%rMax==gAll(nbr)%rMin)then                  
+                                if(gAll(me)%rMaxIn==rMinAll(nbr))then                  
+
                                     bndryBlockID(:,offSet+(iMe-1)*gAll(me)%nZ+jMe) = (/iMe,jMe,nbr,me/)
-                                    bndryType(offSet+(iMe-1)*gAll(me)%nZ+jMe) = -2 ! (left)
+                                    bndryType(offSet+(iMe-1)*gAll(me)%nZ+jMe) = -label ! (left)
+
+                                    write(*,*) label, bndryType(offSet+(iMe-1)*gAll(me)%nZ+jMe), &
+                                    bndryBlockID(:,offSet+(iMe-1)*gAll(me)%nZ+jMe)
+
                                 endif
 
                             enddo
-                        else
-                            gAll(me)%label(iMe,jMe) = 1 ! outer boundary
-                        endif
 
-                    endif
+                        else ! at domain boundary
+
+                            if(iMe==gAll(me)%nR) gAll(me)%label(iMe,jMe) = 888 ! outer boundary
+
+                        endif at_mesh_mesh_bndry_lhs
+
+                    endif i_am_an_overlapped_pt_right
 
 
                     ! Bottom block boundary
                     ! ---------------------
 
                     if(jMe==1 .and. gAll(me)%nZ>1) then
-                         if(count(gAll(me)%zMin==zMaxAll)>0) then
+                         if(count(gAll(me)%zMinIn==zMaxAll)>0) then
                             gAll(me)%label(iMe,jMe) = 4 ! inner boundary bot
                         else
                             gAll(me)%label(iMe,jMe) = 1 ! outer boundary
@@ -454,7 +498,7 @@ contains
                     ! ------------------
 
                     if(jMe==gAll(me)%nZ .and. gAll(me)%nZ>1) then
-                         if(count(gAll(me)%zMax==zMinAll)>0) then
+                         if(count(gAll(me)%zMaxIn==zMinAll)>0) then
                             gAll(me)%label(iMe,jMe) = 5 ! inner boundary top
                         else
                             gAll(me)%label(iMe,jMe) = 1 ! outer boundary
