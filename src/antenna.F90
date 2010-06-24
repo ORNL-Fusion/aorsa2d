@@ -115,9 +115,9 @@ contains
         !jT = 0
         !jT(nPtsX/2,nPtsY/2)    = 1
 
-        !g%jR = -zi / omgrf / eps0 * g%jR
-        !g%jT = -zi / omgrf / eps0 * g%jT
-        !g%jZ = -zi / omgrf / eps0 * g%jZ
+        g%jR = -zi / omgrf / eps0 * g%jR
+        g%jT = -zi / omgrf / eps0 * g%jT
+        g%jZ = -zi / omgrf / eps0 * g%jZ
 
         do i = 1, g%nR
             do j = 1, g%nZ

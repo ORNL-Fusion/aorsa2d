@@ -59,9 +59,9 @@ pro plot_solution, oneD = oneD, full = full, $
 	nAll = 0
 	eAlphaAll = complex (0,0)
 
-	for i=0,n_elements(fileList)-1 do begin
+	for ii=0,n_elements(fileList)-1 do begin
 
-	cdfId = ncdf_open ( fileListData[i], /noWrite ) 
+	cdfId = ncdf_open ( fileListData[ii], /noWrite ) 
 		nCdf_varGet, cdfId, 'capR', x 
 		nCdf_varGet, cdfId, 'y', y 
 		nCdf_varGet, cdfId, 'xjy_re', jy_re 
@@ -77,10 +77,24 @@ pro plot_solution, oneD = oneD, full = full, $
 		nCdf_varGet, cdfId, 'xx_im', xx_im
 		nCdf_varGet, cdfId, 'yy_re', yy_re 
 		nCdf_varGet, cdfId, 'yy_im', yy_im
+		nCdf_varGet, cdfId, 'drBfn_re', dRbFn_bFn_re
+		nCdf_varGet, cdfId, 'drBfn_im', dRbFn_bFn_im
+		nCdf_varGet, cdfId, 'dzBfn_re', dzbFn_bFn_re
+		nCdf_varGet, cdfId, 'dzBfn_im', dzbFn_bFn_im
+		nCdf_varGet, cdfId, 'd2rBfn_re', d2RbFn_bFn_re
+		nCdf_varGet, cdfId, 'd2rBfn_im', d2RbFn_bFn_im
+		nCdf_varGet, cdfId, 'd2zBfn_re', d2zbFn_bFn_re
+		nCdf_varGet, cdfId, 'd2zBfn_im', d2zbFn_bFn_im
 	ncdf_close, cdfId
 
 	xx	= complex ( xx_re, xx_im )
 	yy	= complex ( yy_re, yy_im )
+
+	dRbFn_bFn	= complex ( dRbFn_bFn_re, dRbFn_bFn_im )
+	dZbFn_bFn	= complex ( dZbFn_bFn_re, dZbFn_bFn_im )
+
+	d2RbFn_bFn	= complex ( d2RbFn_bFn_re, d2RbFn_bFn_im )
+	d2ZbFn_bFn	= complex ( d2ZbFn_bFn_re, d2ZbFn_bFn_im )
 
 	nX	= n_elements ( xx[0,*] )
 	nY	= n_elements ( yy[0,*] )
@@ -89,7 +103,7 @@ pro plot_solution, oneD = oneD, full = full, $
 
 
 
-	cdfId = ncdf_open ( fileList[i], /noWrite ) 
+	cdfId = ncdf_open ( fileList[ii], /noWrite ) 
 
 		nCdf_varGet, cdfId, 'ealpha_re', ealpha_re 
 		nCdf_varGet, cdfId, 'ebeta_re', ebeta_re 
@@ -129,8 +143,11 @@ pro plot_solution, oneD = oneD, full = full, $
 	; 1D catch
 	; --------
 
+	@load_colors
+
 	if (keyword_set(oneD) ) then begin
 
+		
 		; Field solution
 
 		range = max(abs([eAlpha,eBeta,eB]))
@@ -162,16 +179,54 @@ pro plot_solution, oneD = oneD, full = full, $
 		iPlot, abs(eBetak)^2, /view_next, /stretch_to_fit, over = 1, /yLog
 		iPlot, abs(eBk)^2, /view_next, /stretch_to_fit, over = 1, /yLog
 
+
+		if keyword_set(full) then begin
+
+			dRealpha	= complexArr ( nX, nY )
+			d2Realpha	= complexArr ( nX, nY )
+
+			dRealpha[*,*]	= 0 
+			d2Realpha[*,*]	= 0 
+
+    		for i = 0, nX-1 do begin
+    			for j = 0, nY-1 do begin
+    		   		for n = 0, nN-1 do begin
+    		        	for m = 0, nM-1 do begin
+
+    		                  cexpkxky = dRbFn_bFn(n,i) * xx(n, i) * yy(m, j)
+    		                  dRealpha(i,j) += ealphak(n,m) * cexpkxky
+
+	  		                  cexpkxky = d2RbFn_bFn(n,i) * xx(n, i) * yy(m, j)
+    		                  d2Realpha(i,j) += ealphak(n,m) * cexpkxky
+							  
+							  ;eb2_(i,j) += matrix_multiply ( ebk[n,*] , yy[*,j] ) * xx[n,i]
+
+    		        	endfor
+    		   	 	endfor
+    			endfor
+  			endfor
+		endif
+
+
 		print, ''
 		print, 'eAlpha: '
 		print, '------- '
 		print, 'E - ', eAlpha[1],eAlpha[nX-2]
-		print, 'dEdR - ',$
-				-1*eAlpha[0]+1*eAlpha[2], $
-				-1*eAlpha[nX-3]+1*eAlpha[nX-1]
-		print, 'd2EdR2 - ', $
-				1*eAlpha[0]-2*eAlpha[1]+1*eAlpha[2], $
-				1*eAlpha[nX-3]-2*eAlpha[nX-2]+1*eAlpha[nX-1]
+
+		h1 = x[1]-x[0]
+		h2 = x[2]-x[1]
+		alpha = h2/h1
+		dEdR_L = (-1*alpha^2*eAlpha[0]+1*eAlpha[1]*(alpha^2-1)+eAlpha[2])/(h1*(alpha+1)*alpha)
+		d2EdR2_L = 2*(alpha*eAlpha[0]-eAlpha[1]*(1+alpha)+eAlpha[2])/(alpha*(alpha+1)*h1^2)
+
+		h1 = x[nX-2]-x[nX-3]
+		h2 = x[nX-1]-x[nX-2]
+		alpha = h2/h1
+		dEdR_R = (-1*alpha^2*eAlpha[nX-3]+1*eAlpha[nX-2]*(alpha^2-1)+eAlpha[nX-1])/(h1*(alpha+1)*alpha)
+		d2EdR2_R = 2*(alpha*eAlpha[nX-3]-eAlpha[nX-2]*(1+alpha)+eAlpha[nX-1])/(alpha*(alpha+1)*h1^2)
+
+		print, 'dEdR - ', dEdR_L, dEdR_R, dReAlpha[1], dReAlpha[nX-2]
+		print, 'd2EdR2 - ', d2EdR2_L, d2EdR2_R, d2ReAlpha[1], d2ReAlpha[nX-2]
 
 		print, ''
 		print, 'eBet: '
@@ -181,6 +236,8 @@ pro plot_solution, oneD = oneD, full = full, $
 		print, ''
 		print, 'eB: ', eB[1],eB[nX-2]
 		print, '---'
+
+
 
 	endif else begin
 
@@ -303,20 +360,20 @@ pro plot_solution, oneD = oneD, full = full, $
 				print, i, nX
     		for j = 0, nY-1 do begin
     	   		for n = 0, nN-1 do begin
-    	        	;for m = 0, nM-1 do begin
+    	        	for m = 0, nM-1 do begin
 
-    	                  ;cexpkxky = xx(n, i) * yy(m, j)
-    	                  ;ealpha2_(i,j) += ealphak(n,m) * cexpkxky
+    	                  cexpkxky = dRbFn_bFn(n,i) * xx(n, i) * yy(m, j)
+    	                  ealpha2_(i,j) += ealphak(n,m) * cexpkxky
     	                  ;ebeta2_(i,j) += ebetak(n,m) * cexpkxky
     	                  ;eb2_(i,j) += ebk(n,m) * cexpkxky
 						  
-						  eb2_(i,j) += matrix_multiply ( ebk[n,*] , yy[*,j] ) * xx[n,i]
+						  ;eb2_(i,j) += matrix_multiply ( ebk[n,*] , yy[*,j] ) * xx[n,i]
 
-    	        	;endfor
+    	        	endfor
     	   	 	endfor
     		endfor
   		endfor
-
+stop
  		scale = max ( abs ( [ealpha2_[*],ebeta2_[*],eb2_[*]] ) )
 		scalePrl = max ( abs(abs ( [eb2_[*]] )) ) 
 
@@ -330,15 +387,23 @@ pro plot_solution, oneD = oneD, full = full, $
 
 	endelse
 
-	xAll = [xAll, x]
-	eAlphaAll = [ eAlphaAll, eAlpha]
-	nAll = [ nAll, n_elements(x) ]
+	overlap = 1
+
+	xAll = [xAll, x[overlap:nX-1-overlap]]
+	eAlphaAll = [ eAlphaAll, eAlpha[overlap:nX-1-overlap]]
+	nAll = [ nAll, n_elements(x[overlap:nX-1-overlap]) ]
 
 	endfor
 
 	xAll = xAll[1:*]
 	eAlphaAll = eAlphaAll[1:*]
 	nAll = nAll[1:*]
+
+	restore, '../smithe_1/soln.sav' 
+	iPlot, xorig, ealphaorig, thick=2, color = blue
+	iplot, xall,eAlphaAll, color=red, /over, sym_index=4
+
+
 
 stop
 end

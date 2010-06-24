@@ -250,10 +250,11 @@ program aorsa2dMain
     !        aMat = 11
     !endwhere
     !write(*,*) shape(amat)
-    !write(*,'(3x,36(1x,i2.2))') (/ (i,i=1,36) /)
+    
+    !write(*,'(3x,48(1x,i3.2))') (/ (i,i=1,48) /)
     !write(*,*) '   --------------------------------------------------'
-    !do i=1,36
-    !write(*,'(i2.2,x,36(1x,i2.2),4x,i2.2)') i,int(abs(aMat(i,:))),int(abs(brhs(i)))
+    !do i=1,48
+    !write(*,'(i2.2,x,48(1x,i3.2),4x,i2.2)') i,int((aMat(i,:))),int((brhs(i)))
     !enddo
 
     !do i=1,nGrid
