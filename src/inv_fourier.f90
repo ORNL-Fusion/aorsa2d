@@ -33,18 +33,18 @@ contains
 
         if(chebyshevX)then
             nS = g%nMin
-            nF = g%nMax!*2/3
+            nF = g%nMax!2.0/3.0
         else
-            nS = g%nMin*2/3
-            nF = g%nMax*2/3
+            nS = g%nMin*2.0/3.0
+            nF = g%nMax*2.0/3.0
         endif
 
         if(chebyshevY)then
             mS = g%mMin
-            mF = g%mMax!*2/3
+            mF = g%mMax!2.0/3.0
         else
-            mS = g%mMin*2/3
-            mF = g%mMax*2/3
+            mS = g%mMin*2.0/3.0
+            mF = g%mMax*2.0/3.0
         endif
 
 

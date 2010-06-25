@@ -41,7 +41,9 @@ type :: gridBlock
     complex, allocatable, dimension(:,:) :: xx, yy
     complex, allocatable, dimension(:,:) :: &
         drBfn_bfn, dzBfn_bfn, &
-        d2rBfn_bfn, d2zBfn_bfn
+        d2rBfn_bfn, d2zBfn_bfn, &
+        d3rBfn_bfn, d3zBfn_bfn, &
+        d4rBfn_bfn, d4zBfn_bfn
 
     ! B field, temp, density, frequencies
     ! -----------------------------------
@@ -309,6 +311,8 @@ contains
                 grid%drBfn_bfn(grid%nMin:grid%nMax,nR), &
                 grid%dzBfn_bfn(grid%mMin:grid%mMax,nZ), &
                 grid%d2rBfn_bfn(grid%nMin:grid%nMax,nR), &
+                grid%d3rBfn_bfn(grid%nMin:grid%nMax,nR), &
+                grid%d4rBfn_bfn(grid%nMin:grid%nMax,nR), &
                 grid%d2zBfn_bfn(grid%mMin:grid%mMax,nZ) )
 
 
@@ -325,7 +329,9 @@ contains
                     d%normFacY = grid%normFacZ
 
                     grid%dRbfn_bfn(n,i) = drBfn_bfn(d)
-                    if(i>1 .and. i<nR) grid%d2Rbfn_bfn(n,i) = drrBfn_bfn(d)
+                    if(i>overlap .and. i<nR-overlap+1) grid%d2Rbfn_bfn(n,i) = drrBfn_bfn(d)
+                    if(i>overlap .and. i<nR-overlap+1) grid%d3Rbfn_bfn(n,i) = drrrBfn_bfn(d)
+                    if(i>overlap .and. i<nR-overlap+1) grid%d4Rbfn_bfn(n,i) = drrrrBfn_bfn(d)
 
                 enddo
             enddo
@@ -646,7 +652,6 @@ contains
     end function dzzBfn_bfn
 
 
-
     function drzBfn_bfn( d )
 
         ! REMEMBER: this gives drzBfn/Bfn 
@@ -673,5 +678,61 @@ contains
         drzBfn_bfn = drBfn_bfn * dzBfn_bfn * ( d%normFacX * d%normFacY )
 
     end function drzBfn_bfn
+
+
+    function drrrBfn_bfn( d )
+
+        ! REMEMBER: this gives drrrBfn/Bfn 
+
+        implicit none
+
+        type(dBfnArg), intent(in) :: d
+
+        complex :: drrrBfn_bfn
+
+        if(chebyshevX) then
+
+            drrrBfn_bfn = d%n/(-1+d%xNorm**2)**2 * &
+                ( (-1+d%n) * d%n * chebU(-3+d%n,d%xNorm) &
+                    + (5-2*d%n)*d%n*d%xNorm*chebU(-2+d%n,d%xNorm) &
+                    + (-1+d%n)*(-1+(-2+d%n)*d%xNorm**2)*chebU(-1+d%n,d%xNorm)) / &
+                    cos(d%n*aCos(d%xNorm))
+        else
+            !!!NOT YET CODED!!!
+            drrrBfn_bfn = - d%n**2
+        endif
+
+        drrrBfn_bfn = drrrBfn_bfn * d%normFacX**3
+
+    end function drrrBfn_bfn
+
+
+    function drrrrBfn_bfn( d )
+
+        ! REMEMBER: this gives drrrrBfn/Bfn 
+
+        implicit none
+
+        type(dBfnArg), intent(in) :: d
+
+        complex :: drrrrBfn_bfn
+
+        if(chebyshevX) then
+
+            drrrrBfn_bfn = d%n/(-1+d%xNorm**2)**3 * &
+           (d%n*(4-d%n**2+3*(-3+d%n)**2*d%xNorm**2)*chebU(-4+d%n,d%xNorm) &
+            +(-3+d%n)*d%xNorm*(3*d%n*(d%n-2*(-3+d%n)*d%xNorm**2)*chebU(-3+d%n,d%xNorm) & 
+            +(-1+d%n)*(-3+(-2+d%n)*d%xNorm**2)*chebU(-1+d%n,d%xNorm))) / &
+            cos(d%n*aCos(d%xNorm))
+        else
+            !!!NOT YET CODED!!!
+            drrrrBfn_bfn = - d%n**2
+        endif
+
+        drrrrBfn_bfn = drrrrBfn_bfn * d%normFacX**4
+
+    end function drrrrBfn_bfn
+
+
 
 end module grid

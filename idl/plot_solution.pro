@@ -58,6 +58,11 @@ pro plot_solution, oneD = oneD, full = full, $
 	xAll = 0.0
 	nAll = 0
 	eAlphaAll = complex (0,0)
+	eAlphaAll_ = complex (0,0)
+	dReAlphaAll_ = complex (0,0)
+	d2ReAlphaAll_ = complex (0,0)
+	d3ReAlphaAll_ = complex (0,0)
+	d4ReAlphaAll_ = complex (0,0)
 
 	for ii=0,n_elements(fileList)-1 do begin
 
@@ -85,6 +90,10 @@ pro plot_solution, oneD = oneD, full = full, $
 		nCdf_varGet, cdfId, 'd2rBfn_im', d2RbFn_bFn_im
 		nCdf_varGet, cdfId, 'd2zBfn_re', d2zbFn_bFn_re
 		nCdf_varGet, cdfId, 'd2zBfn_im', d2zbFn_bFn_im
+		nCdf_varGet, cdfId, 'd3rBfn_re', d3rbFn_bFn_re
+		nCdf_varGet, cdfId, 'd3rBfn_im', d3rbFn_bFn_im
+		nCdf_varGet, cdfId, 'd4rBfn_re', d4rbFn_bFn_re
+		nCdf_varGet, cdfId, 'd4rBfn_im', d4rbFn_bFn_im
 	ncdf_close, cdfId
 
 	xx	= complex ( xx_re, xx_im )
@@ -96,12 +105,13 @@ pro plot_solution, oneD = oneD, full = full, $
 	d2RbFn_bFn	= complex ( d2RbFn_bFn_re, d2RbFn_bFn_im )
 	d2ZbFn_bFn	= complex ( d2ZbFn_bFn_re, d2ZbFn_bFn_im )
 
+	d3RbFn_bFn	= complex ( d3RbFn_bFn_re, d3RbFn_bFn_im )
+	d4RbFn_bFn	= complex ( d4RbFn_bFn_re, d4RbFn_bFn_im )
+
 	nX	= n_elements ( xx[0,*] )
 	nY	= n_elements ( yy[0,*] )
 	nN	= n_elements ( xx[*,0] )
 	nM	= n_elements ( yy[*,0] )
-
-
 
 	cdfId = ncdf_open ( fileList[ii], /noWrite ) 
 
@@ -182,31 +192,45 @@ pro plot_solution, oneD = oneD, full = full, $
 
 		if keyword_set(full) then begin
 
+			ealpha_	= complexArr ( nX, nY )
 			dRealpha	= complexArr ( nX, nY )
 			d2Realpha	= complexArr ( nX, nY )
+			d3Realpha	= complexArr ( nX, nY )
+			d4Realpha	= complexArr ( nX, nY )
 
+			ealpha_[*,*]	= 0 
 			dRealpha[*,*]	= 0 
 			d2Realpha[*,*]	= 0 
+			d3Realpha[*,*]	= 0 
+			d4Realpha[*,*]	= 0 
 
     		for i = 0, nX-1 do begin
     			for j = 0, nY-1 do begin
     		   		for n = 0, nN-1 do begin
     		        	for m = 0, nM-1 do begin
 
-    		                  cexpkxky = dRbFn_bFn(n,i) * xx(n, i) * yy(m, j)
-    		                  dRealpha(i,j) += ealphak(n,m) * cexpkxky
+					          bfn = xx(n, i) * yy(m, j)
+    		                  ealpha_(i,j) += ealphak(n,m) * bfn 
 
-	  		                  cexpkxky = d2RbFn_bFn(n,i) * xx(n, i) * yy(m, j)
-    		                  d2Realpha(i,j) += ealphak(n,m) * cexpkxky
-							  
-							  ;eb2_(i,j) += matrix_multiply ( ebk[n,*] , yy[*,j] ) * xx[n,i]
+    		                  dRbFn = dRbFn_bFn(n,i) * xx(n, i) * yy(m, j)
+    		                  dRealpha(i,j) += ealphak(n,m) * dRbFn 
 
+	  		                  d2RbFn = d2RbFn_bFn(n,i) * xx(n, i) * yy(m, j)
+    		                  d2Realpha(i,j) += ealphak(n,m) * d2RbFn
+
+		  	                  d3RbFn = d3RbFn_bFn(n,i) * xx(n, i) * yy(m, j)
+    		                  d3Realpha(i,j) += ealphak(n,m) * d3RbFn
+
+			                  d4RbFn = d4RbFn_bFn(n,i) * xx(n, i) * yy(m, j)
+    		                  d4Realpha(i,j) += ealphak(n,m) * d4RbFn
+						  
     		        	endfor
     		   	 	endfor
     			endfor
   			endfor
 		endif
 
+		overlap = 2
 
 		print, ''
 		print, 'eAlpha: '
@@ -227,6 +251,9 @@ pro plot_solution, oneD = oneD, full = full, $
 
 		print, 'dEdR - ', dEdR_L, dEdR_R, dReAlpha[1], dReAlpha[nX-2]
 		print, 'd2EdR2 - ', d2EdR2_L, d2EdR2_R, d2ReAlpha[1], d2ReAlpha[nX-2]
+
+		print, 'd3EdR - ', dReAlpha[overlap], dReAlpha[nX-1-overlap]
+		print, 'd4EdR - ', d2ReAlpha[overlap], d2ReAlpha[nX-1-overlap]
 
 		print, ''
 		print, 'eBet: '
@@ -387,17 +414,26 @@ stop
 
 	endelse
 
-	overlap = 1
 
 	xAll = [xAll, x[overlap:nX-1-overlap]]
 	eAlphaAll = [ eAlphaAll, eAlpha[overlap:nX-1-overlap]]
 	nAll = [ nAll, n_elements(x[overlap:nX-1-overlap]) ]
+	eAlphaAll_ = [ eAlphaAll_, eAlpha_[overlap:nX-1-overlap]]
+	dReAlphaAll_ = [ dReAlphaAll_, dReAlpha[overlap:nX-1-overlap]]
+	d2ReAlphaAll_ = [ d2ReAlphaAll_, d2ReAlpha[overlap:nX-1-overlap]]
+	d3ReAlphaAll_ = [ d3ReAlphaAll_, d3ReAlpha[overlap:nX-1-overlap]]
+	d4ReAlphaAll_ = [ d4ReAlphaAll_, d2ReAlpha[overlap:nX-1-overlap]]
 
 	endfor
 
 	xAll = xAll[1:*]
 	eAlphaAll = eAlphaAll[1:*]
 	nAll = nAll[1:*]
+	eAlphaAll_ = eAlphaAll_[1:*]
+	dReAlphaAll_ = dReAlphaAll_[1:*]
+	d2ReAlphaAll_ = d2ReAlphaAll_[1:*]
+	d3ReAlphaAll_ = d3ReAlphaAll_[1:*]
+	d4ReAlphaAll_ = d4ReAlphaAll_[1:*]
 
 	restore, '../smithe_1/soln.sav' 
 	iPlot, xorig, ealphaorig, thick=2, color = blue
