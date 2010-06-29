@@ -436,8 +436,18 @@ stop
 	d4ReAlphaAll_ = d4ReAlphaAll_[1:*]
 
 	restore, '../smithe_1/soln.sav' 
-	iPlot, xorig, ealphaorig, thick=2, color = blue
-	iplot, xall,eAlphaAll, color=red, /over, sym_index=4
+	iPlot, xorig, ealphaorig, thick=2
+	for i=0,n_elements(fileList)-1 do begin
+
+		if i mod 3 eq 0 then color = red
+		if i mod 3 eq 1 then color = blue
+		if i mod 3 eq 2 then color = green
+		if i gt 0 then startII = total(nAll[0:i-1]) else startII=0
+		stopII = startII+nAll[i]-1
+		print, i, startII, stopII
+		iplot, xall[startII:stopII],eAlphaAll[startII:stopII], $
+				color=color, /over, sym_index=4
+	endfor
 
 
 
