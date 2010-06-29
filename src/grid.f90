@@ -536,6 +536,7 @@ contains
 
         if(chebyshevX) then
             xBasis = chebT ( n, xNorm )
+            !xBasis = chebU ( n, xNorm )
         else
             xBasis = exp ( zi * n * xNorm )
         endif
@@ -552,6 +553,7 @@ contains
 
         if(chebyshevY) then
             yBasis = chebT ( m, yNorm )
+            !yBasis = chebU ( m, yNorm )
         else
             yBasis = exp ( zi * m * yNorm )
         endif
@@ -570,8 +572,13 @@ contains
         complex :: drBfn_bfn
 
         if(chebyshevX) then
+            ! chebT
             drBfn_bfn = d%n * chebU(-1+d%n,d%xNorm) &
                 / chebT(d%n,d%xNorm)
+            !! chebU
+            !drBfn_bfn = ( (-1-d%n) * chebU(-1+d%n,d%xNorm) &
+            !    + d%n * d%xNorm * chebU(d%n,d%xNorm) ) &
+            !    / ( (-1+d%xNorm**2)*chebU(d%n,d%xNorm) )
         else
             drBfn_bfn = zi * d%n
         endif
@@ -592,8 +599,13 @@ contains
         complex :: dzBfn_bfn
         
         if(chebyshevY) then
+            ! chebT
             dzBfn_bfn = d%m * chebU(-1+d%m,d%yNorm) &
                 / chebT(d%m,d%yNorm)
+            !! chebU
+            !dzBfn_bfn = ( (-1-d%m) * chebU(-1+d%m,d%yNorm) &
+            !    + d%m * d%yNorm * chebU(d%m,d%yNorm) ) &
+            !    / ( (-1+d%yNorm**2)*chebU(d%m,d%yNorm) )
         else
             dzBfn_bfn = zi * d%m
         endif
@@ -614,11 +626,16 @@ contains
         complex :: drrBfn_bfn
 
         if(chebyshevX) then
-
+            ! chebT
             drrBfn_bfn = d%n * &
                 ( -d%n * chebU(-2+d%n,d%xNorm) &
                     + (-1+d%n)*d%xNorm * chebU(-1+d%n,d%xNorm )) &
                 / ((-1+d%xNorm**2)*chebT(d%n,d%xNorm))
+            !! chebU
+            !drrBfn_bfn = (d%n*(1+d%n)*chebU(-2+d%n,d%xNorm) &
+            !    +(3+d%n-2*d%n**2)*d%xNorm*chebU(-1+d%n,d%xNorm) &
+            !    +d%n*(-1+(-1+d%n)*d%xNorm**2)*chebU(d%n,d%xNorm)) &
+            !    / ( (-1+d%xNorm**2)**2*chebU(d%n,d%xNorm) )
         else
             drrBfn_bfn = - d%n**2
         endif
@@ -639,10 +656,16 @@ contains
         complex :: dzzBfn_bfn
 
         if(chebyshevY) then 
+            ! chebT
             dzzBfn_bfn = d%m * &
                 ( -d%m*chebU(-2+d%m,d%yNorm) &
                     + (-1+d%m)*d%yNorm*chebU(-1+d%m,d%yNorm)) &
                 / ( (-1+d%yNorm**2)*chebT(d%m,d%yNorm))
+            !! chebU
+            !dzzBfn_bfn = (d%m*(1+d%m)*chebU(-2+d%m,d%yNorm) &
+            !    +(3+d%m-2*d%m**2)*d%yNorm*chebU(-1+d%m,d%yNorm) &
+            !    +d%m*(-1+(-1+d%m)*d%yNorm**2)*chebU(d%m,d%yNorm)) &
+            !    / ( (-1+d%yNorm**2)**2*chebU(d%m,d%yNorm) )
         else
             dzzBfn_bfn = - d%m**2
         endif
@@ -662,15 +685,25 @@ contains
         complex :: drzBfn_bfn, drBfn_bfn, dzBfn_bfn
 
         if(chebyshevX) then
+            ! chebT
             drBfn_bfn = d%n * chebU(-1+d%n,d%xNorm) &
                 / chebT(d%n,d%xNorm)
+            !! chebU
+            !drBfn_bfn = ( (-1-d%m) * chebU(-1+d%m,d%yNorm) &
+            !    + d%m * d%yNorm * chebU(d%m,d%yNorm) ) &
+            !    / ( (-1+d%yNorm**2)*chebU(d%m,d%yNorm) )
         else
             drBfn_bfn = zi * d%n
         endif
 
         if(chebyshevY) then
+            ! chebT
             dzBfn_bfn = d%m * chebU(-1+d%m,d%yNorm) &
                 / chebT(d%m,d%yNorm)
+            !! chebU
+            !drBfn_bfn = ( (-1-d%m) * chebU(-1+d%m,d%yNorm) &
+            !    + d%m * d%yNorm * chebU(d%m,d%yNorm) ) &
+            !    / ( (-1+d%yNorm**2)*chebU(d%m,d%yNorm) )
         else
             dzBfn_bfn = zi * d%m
         endif

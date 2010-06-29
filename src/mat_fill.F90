@@ -90,7 +90,8 @@ contains
         real :: r, kt
         complex :: bFn_iL, bFn_iR, bFn_i0, bFn_i1, bFn_i2, bFn_i3, bFn_i4, bFn_i5
 
-        real :: h1, h2, alpha
+        real :: h1, h2, alpha, coeffL, coeffR
+        integer :: iiL, iiR, iiArr(1)
 
         do ii=1,nR_tot*nZ_tot
 
@@ -126,120 +127,199 @@ contains
 
                         elseif(bndryType(ii)==-1) then
 
-                            ! create dEdR=dEdR @ overlap point 
-                            ! (odd are +ve on rhs so this is a lhs condition)
+                            ! Dirichlet 
+                            ! ---------
 
-                            i = me%nR-overlap 
-                            j = 1
+                            nbr = gAll(bndryBlockID(4,ii))
+                            i = bndryBlockID(1,ii)
+                            j = bndryBlockID(2,ii)
 
-                            bFn = me%xx(n, i) * me%yy(m, j)
-                            dRbFn = me%dRbFn_bFn(n,i) * bFn
+                            ! determine left index for linear interpolation
+                            iiArr = maxLoc ( me%R-nbr%R(i), (me%R-nbr%R(i))<0)
+                            iiL = iiArr(1)
+                            iiR = iiL + 1
 
-                            !bFn_iL =me%xx(n, i-1) * me%yy(m, j)
-                            !bFn_i0 =me%xx(n, i) * me%yy(m, j)
-                            !bFn_iR =me%xx(n, i+1) * me%yy(m, j)
+                            ! linear interpolation coeffs
+                            coeffL = 1 - nbr%R(i) / ( -me%R(iiL)+me%R(iiR) ) &
+                                + me%R(iiL) / ( -me%R(iiL)+me%R(iiR) )
+                            coeffR = nbr%R(i) / ( -me%R(iiL)+me%R(iiR) ) &
+                                - me%R(iiL) / ( -me%R(iiL)+me%R(iiR) )
 
-                            !h1 = me%R(i)-me%R(i-1)
-                            !h2 = me%R(i+1)-me%R(i)
-                            !alpha = h2 / h1
+                            bFn_iL =me%xx(n, iiL) * me%yy(m, j)
+                            bFn_iR =me%xx(n, iiR) * me%yy(m, j)
 
-                            !dRbFn = (-alpha**2*bFn_iL+bFn_i0*(alpha**2-1)+bFn_iR) / (h1*(alpha+1)*alpha)
+                            aMatBlock(1,1) = -(coeffL*bFn_iL + coeffR*bFn_iR)
+                            aMatBlock(2,2) = -(coeffL*bFn_iL + coeffR*bFn_iR)
+                            aMatBlock(3,3) = -(coeffL*bFn_iL + coeffR*bFn_iR)
 
-                            !if(n>5) dRbFn = dRbFn*0e4
 
-                            aMatBlock(1,1) = -(dRbFn)
-                            aMatBlock(2,2) = -(dRbFn)
-                            aMatBlock(3,3) = -(dRbFn)
+                            ! Neumann 
+                            ! -------
+
+                            !! create dEdR=dEdR @ overlap point 
+                            !! (odd are +ve on rhs so this is a lhs condition)
+
+                            !i = me%nR-overlap 
+                            !j = 1
+
+                            !bFn = me%xx(n, i) * me%yy(m, j)
+                            !dRbFn = me%dRbFn_bFn(n,i) * bFn
+
+                            !!bFn_iL =me%xx(n, i-1) * me%yy(m, j)
+                            !!bFn_i0 =me%xx(n, i) * me%yy(m, j)
+                            !!bFn_iR =me%xx(n, i+1) * me%yy(m, j)
+
+                            !!h1 = me%R(i)-me%R(i-1)
+                            !!h2 = me%R(i+1)-me%R(i)
+                            !!alpha = h2 / h1
+
+                            !!dRbFn = (-alpha**2*bFn_iL+bFn_i0*(alpha**2-1)+bFn_iR) / (h1*(alpha+1)*alpha)
+
+                            !!if(n>5) dRbFn = dRbFn*0e4
+
+                            !aMatBlock(1,1) = -(dRbFn)
+                            !aMatBlock(2,2) = -(dRbFn)
+                            !aMatBlock(3,3) = -(dRbFn)
 
                             !aMatBlock = -11
 
                         elseif(bndryType(ii)==-2) then
 
-                            ! create d2EdR2=d2EdR2 @ overlap point 
-                            ! (-ve even are on the rhs)
+                            ! Dirichlet 
+                            ! ---------
 
-                            i = 1+overlap
-                            j = 1
+                            nbr = gAll(bndryBlockID(4,ii))
+                            i = bndryBlockID(1,ii)
+                            j = bndryBlockID(2,ii)
 
-                            bFn = me%xx(n, i) * me%yy(m, j)
-                            d2RbFn = me%d2RbFn_bFn(n,i) * bFn
+                            ! determine left index for linear interpolation
+                            iiArr = maxLoc ( me%R-nbr%R(i), (me%R-nbr%R(i))<0)
+                            iiL = iiArr(1)
+                            iiR = iiL + 1
 
-                            !bFn_iL =me%xx(n, i-1) * me%yy(m, j)
-                            !bFn_i0 =me%xx(n, i) * me%yy(m, j)
-                            !bFn_iR =me%xx(n, i+1) * me%yy(m, j)
+                            ! linear interpolation coeffs
+                            coeffL = 1 - nbr%R(i) / ( -me%R(iiL)+me%R(iiR) ) &
+                                + me%R(iiL) / ( -me%R(iiL)+me%R(iiR) )
+                            coeffR = nbr%R(i) / ( -me%R(iiL)+me%R(iiR) ) &
+                                - me%R(iiL) / ( -me%R(iiL)+me%R(iiR) )
 
-                            !h1 = me%R(i)-me%R(i-1)
-                            !h2 = me%R(i+1)-me%R(i)
-                            !alpha = h2 / h1
+                            bFn_iL =me%xx(n, iiL) * me%yy(m, j)
+                            bFn_iR =me%xx(n, iiR) * me%yy(m, j)
 
-                            !d2RbFn = (2*(alpha*bFn_iL-bFn_i0*(1+alpha)+bFn_iR)/(alpha*(alpha+1)*h1**2))
+                            aMatBlock(1,1) = -(coeffL*bFn_iL + coeffR*bFn_iR)
+                            aMatBlock(2,2) = -(coeffL*bFn_iL + coeffR*bFn_iR)
+                            aMatBlock(3,3) = -(coeffL*bFn_iL + coeffR*bFn_iR)
 
-                            !if(n>5) d2RbFn = d2RbFn*0e4
 
-                            aMatBlock(1,1) = -(d2RbFn)
-                            aMatBlock(2,2) = -(d2RbFn)
-                            aMatBlock(3,3) = -(d2RbFn)
+                            !! create d2EdR2=d2EdR2 @ overlap point 
+                            !! (-ve even are on the rhs)
+
+                            !i = 1+overlap
+                            !j = 1
+
+                            !bFn = me%xx(n, i) * me%yy(m, j)
+                            !d2RbFn = me%d2RbFn_bFn(n,i) * bFn
+
+                            !!bFn_iL =me%xx(n, i-1) * me%yy(m, j)
+                            !!bFn_i0 =me%xx(n, i) * me%yy(m, j)
+                            !!bFn_iR =me%xx(n, i+1) * me%yy(m, j)
+
+                            !!h1 = me%R(i)-me%R(i-1)
+                            !!h2 = me%R(i+1)-me%R(i)
+                            !!alpha = h2 / h1
+
+                            !!d2RbFn = (2*(alpha*bFn_iL-bFn_i0*(1+alpha)+bFn_iR)/(alpha*(alpha+1)*h1**2))
+
+                            !!if(n>5) d2RbFn = d2RbFn*0e4
+
+                            !aMatBlock(1,1) = -(d2RbFn)
+                            !aMatBlock(2,2) = -(d2RbFn)
+                            !aMatBlock(3,3) = -(d2RbFn)
 
                             !aMatBlock = -22
 
                         elseif(bndryType(ii)==-3) then
 
-                            ! create dEdR=dEdR @ overlap point 
-                            ! (odd are +ve on rhs so this is a lhs condition)
+                            ! Dirichlet 
+                            ! ---------
 
-                            i = me%nR-overlap 
-                            j = 1
+                            nbr = gAll(bndryBlockID(4,ii))
+                            i = bndryBlockID(1,ii)
+                            j = bndryBlockID(2,ii)
 
-                            bFn = me%xx(n, i) * me%yy(m, j)
-                            d3RbFn = me%d3RbFn_bFn(n,i) * bFn
+                            ! determine left index for linear interpolation
+                            iiArr = maxLoc ( me%R-nbr%R(i), (me%R-nbr%R(i))<0)
+                            iiL = iiArr(1)
+                            iiR = iiL + 1
 
-                            !bFn_iL =me%xx(n, i-1) * me%yy(m, j)
-                            !bFn_i0 =me%xx(n, i) * me%yy(m, j)
-                            !bFn_iR =me%xx(n, i+1) * me%yy(m, j)
+                            ! linear interpolation coeffs
+                            coeffL = 1 - nbr%R(i) / ( -me%R(iiL)+me%R(iiR) ) &
+                                + me%R(iiL) / ( -me%R(iiL)+me%R(iiR) )
+                            coeffR = nbr%R(i) / ( -me%R(iiL)+me%R(iiR) ) &
+                                - me%R(iiL) / ( -me%R(iiL)+me%R(iiR) )
 
-                            !h1 = me%R(i)-me%R(i-1)
-                            !h2 = me%R(i+1)-me%R(i)
-                            !alpha = h2 / h1
+                            bFn_iL =me%xx(n, iiL) * me%yy(m, j)
+                            bFn_iR =me%xx(n, iiR) * me%yy(m, j)
 
-                            !dRbFn = (-alpha**2*bFn_iL+bFn_i0*(alpha**2-1)+bFn_iR) / (h1*(alpha+1)*alpha)
+                            aMatBlock(1,1) = -(coeffL*bFn_iL + coeffR*bFn_iR)
+                            aMatBlock(2,2) = -(coeffL*bFn_iL + coeffR*bFn_iR)
+                            aMatBlock(3,3) = -(coeffL*bFn_iL + coeffR*bFn_iR)
 
-                            !if(n>5) dRbFn = dRbFn*0e4
 
-                            aMatBlock(1,1) = -(d3RbFn)
-                            aMatBlock(2,2) = -(d3RbFn)
-                            aMatBlock(3,3) = -(d3RbFn)
+                            !! create dEdR=dEdR @ overlap point 
+                            !! (odd are +ve on rhs so this is a lhs condition)
 
-                            !aMatBlock = -11
+                            !i = me%nR-overlap 
+                            !j = 1
+
+                            !bFn = me%xx(n, i) * me%yy(m, j)
+                            !d3RbFn = me%d3RbFn_bFn(n,i) * bFn
+
+                            !aMatBlock(1,1) = -(d3RbFn)
+                            !aMatBlock(2,2) = -(d3RbFn)
+                            !aMatBlock(3,3) = -(d3RbFn)
 
                         elseif(bndryType(ii)==-4) then
 
-                            ! create d2EdR2=d2EdR2 @ overlap point 
-                            ! (-ve even are on the rhs)
+                            ! Dirichlet 
+                            ! ---------
 
-                            i = 1+overlap
-                            j = 1
+                            nbr = gAll(bndryBlockID(4,ii))
+                            i = bndryBlockID(1,ii)
+                            j = bndryBlockID(2,ii)
 
-                            bFn = me%xx(n, i) * me%yy(m, j)
-                            d4RbFn = me%d4RbFn_bFn(n,i) * bFn
+                            ! determine left index for linear interpolation
+                            iiArr = maxLoc ( me%R-nbr%R(i), (me%R-nbr%R(i))<0)
+                            iiL = iiArr(1)
+                            iiR = iiL + 1
 
-                            !bFn_iL =me%xx(n, i-1) * me%yy(m, j)
-                            !bFn_i0 =me%xx(n, i) * me%yy(m, j)
-                            !bFn_iR =me%xx(n, i+1) * me%yy(m, j)
+                            ! linear interpolation coeffs
+                            coeffL = 1 - nbr%R(i) / ( -me%R(iiL)+me%R(iiR) ) &
+                                + me%R(iiL) / ( -me%R(iiL)+me%R(iiR) )
+                            coeffR = nbr%R(i) / ( -me%R(iiL)+me%R(iiR) ) &
+                                - me%R(iiL) / ( -me%R(iiL)+me%R(iiR) )
 
-                            !h1 = me%R(i)-me%R(i-1)
-                            !h2 = me%R(i+1)-me%R(i)
-                            !alpha = h2 / h1
+                            bFn_iL =me%xx(n, iiL) * me%yy(m, j)
+                            bFn_iR =me%xx(n, iiR) * me%yy(m, j)
 
-                            !d2RbFn = (2*(alpha*bFn_iL-bFn_i0*(1+alpha)+bFn_iR)/(alpha*(alpha+1)*h1**2))
+                            aMatBlock(1,1) = -(coeffL*bFn_iL + coeffR*bFn_iR)
+                            aMatBlock(2,2) = -(coeffL*bFn_iL + coeffR*bFn_iR)
+                            aMatBlock(3,3) = -(coeffL*bFn_iL + coeffR*bFn_iR)
 
-                            !if(n>5) d2RbFn = d2RbFn*0e4
 
-                            aMatBlock(1,1) = -(d4RbFn)
-                            aMatBlock(2,2) = -(d4RbFn)
-                            aMatBlock(3,3) = -(d4RbFn)
+                            !! create d2EdR2=d2EdR2 @ overlap point 
+                            !! (-ve even are on the rhs)
 
-                            !aMatBlock = -22
- 
+                            !i = 1+overlap
+                            !j = 1
+
+                            !bFn = me%xx(n, i) * me%yy(m, j)
+                            !d4RbFn = me%d4RbFn_bFn(n,i) * bFn
+
+                            !aMatBlock(1,1) = -(d4RbFn)
+                            !aMatBlock(2,2) = -(d4RbFn)
+                            !aMatBlock(3,3) = -(d4RbFn)
+
                         endif
 
                         ! but couple with the neighbour block
@@ -865,17 +945,17 @@ contains
 
                                             !if(n>5) dRbFn = dRbFn*0e4
                                             
-                                            if (ii==0 .and. jj==0) aMat(localRow,localCol) = dRbFn 
+                                            if (ii==0 .and. jj==0) aMat(localRow,localCol) = bFn 
                                             if (ii==0 .and. jj==1) aMat(localRow,localCol) = 0  
                                             if (ii==0 .and. jj==2) aMat(localRow,localCol) = 0  
                                    
                                             if (ii==1 .and. jj==0) aMat(localRow,localCol) = 0  
-                                            if (ii==1 .and. jj==1) aMat(localRow,localCol) = dRbFn  
+                                            if (ii==1 .and. jj==1) aMat(localRow,localCol) = bFn  
                                             if (ii==1 .and. jj==2) aMat(localRow,localCol) = 0   
                                    
                                             if (ii==2 .and. jj==0) aMat(localRow,localCol) = 0   
                                             if (ii==2 .and. jj==1) aMat(localRow,localCol) = 0   
-                                            if (ii==2 .and. jj==2) aMat(localRow,localCol) = dRbFn 
+                                            if (ii==2 .and. jj==2) aMat(localRow,localCol) = bFn 
 
                                         endif
 
@@ -904,17 +984,17 @@ contains
 
                                             !if(n>5) d2RbFn = d2RbFn*0e4
                                             
-                                            if (ii==0 .and. jj==0) aMat(localRow,localCol) = d2RbFn
+                                            if (ii==0 .and. jj==0) aMat(localRow,localCol) = bFn
                                             if (ii==0 .and. jj==1) aMat(localRow,localCol) = 0 
                                             if (ii==0 .and. jj==2) aMat(localRow,localCol) = 0 
                                                                                            
                                             if (ii==1 .and. jj==0) aMat(localRow,localCol) = 0 
-                                            if (ii==1 .and. jj==1) aMat(localRow,localCol) = d2RbFn
+                                            if (ii==1 .and. jj==1) aMat(localRow,localCol) = bFn
                                             if (ii==1 .and. jj==2) aMat(localRow,localCol) = 0 
                                                                                           
                                             if (ii==2 .and. jj==0) aMat(localRow,localCol) = 0 
                                             if (ii==2 .and. jj==1) aMat(localRow,localCol) = 0 
-                                            if (ii==2 .and. jj==2) aMat(localRow,localCol) = d2RbFn
+                                            if (ii==2 .and. jj==2) aMat(localRow,localCol) = bFn
 
                                         endif
 
@@ -940,17 +1020,17 @@ contains
 
                                             !if(n>5) dRbFn = dRbFn*0e4
                                             
-                                            if (ii==0 .and. jj==0) aMat(localRow,localCol) = d3RbFn 
+                                            if (ii==0 .and. jj==0) aMat(localRow,localCol) = bFn 
                                             if (ii==0 .and. jj==1) aMat(localRow,localCol) = 0  
                                             if (ii==0 .and. jj==2) aMat(localRow,localCol) = 0  
                                    
                                             if (ii==1 .and. jj==0) aMat(localRow,localCol) = 0  
-                                            if (ii==1 .and. jj==1) aMat(localRow,localCol) = d3RbFn  
+                                            if (ii==1 .and. jj==1) aMat(localRow,localCol) = bFn  
                                             if (ii==1 .and. jj==2) aMat(localRow,localCol) = 0   
                                    
                                             if (ii==2 .and. jj==0) aMat(localRow,localCol) = 0   
                                             if (ii==2 .and. jj==1) aMat(localRow,localCol) = 0   
-                                            if (ii==2 .and. jj==2) aMat(localRow,localCol) = d3RbFn 
+                                            if (ii==2 .and. jj==2) aMat(localRow,localCol) = bFn 
 
                                         endif
 
@@ -976,17 +1056,17 @@ contains
 
                                             !if(n>5) d2RbFn = d2RbFn*0e4
                                             
-                                            if (ii==0 .and. jj==0) aMat(localRow,localCol) = d4RbFn
+                                            if (ii==0 .and. jj==0) aMat(localRow,localCol) = bFn
                                             if (ii==0 .and. jj==1) aMat(localRow,localCol) = 0
                                             if (ii==0 .and. jj==2) aMat(localRow,localCol) = 0
                                                                                            
                                             if (ii==1 .and. jj==0) aMat(localRow,localCol) = 0
-                                            if (ii==1 .and. jj==1) aMat(localRow,localCol) = d4RbFn
+                                            if (ii==1 .and. jj==1) aMat(localRow,localCol) = bFn
                                             if (ii==1 .and. jj==2) aMat(localRow,localCol) = 0
                                                                                           
                                             if (ii==2 .and. jj==0) aMat(localRow,localCol) = 0
                                             if (ii==2 .and. jj==1) aMat(localRow,localCol) = 0
-                                            if (ii==2 .and. jj==2) aMat(localRow,localCol) = d4RbFn
+                                            if (ii==2 .and. jj==2) aMat(localRow,localCol) = bFn
 
                                         endif
 
