@@ -421,7 +421,6 @@ contains
                             if(abs((iMe-1)-overlap)*2==0) label = 999 
 
                             gAll(me)%label(iMe,jMe) = label
-                            !write(*,*) 'left side label: ', label
 
                             ! find the neighbour block
                             do nbr=1,nGrid                         
@@ -431,9 +430,6 @@ contains
                                     bndryBlockID(:,offSet+(iMe-1)*gAll(me)%nZ+jMe) = (/iMe,jMe,nbr,me/)
                                     bndryType(offSet+(iMe-1)*gAll(me)%nZ+jMe) = -label 
 
-                                    write(*,*) label, bndryType(offSet+(iMe-1)*gAll(me)%nZ+jMe), &
-                                    bndryBlockID(:,offSet+(iMe-1)*gAll(me)%nZ+jMe)
- 
                                 endif
 
                             enddo
@@ -462,7 +458,6 @@ contains
                             ! left block for E=E condition)
 
                             gAll(me)%label(iMe,jMe) = label ! left part of mesh-mesh boundary bFn 
-                            !write(*,*) 'right side label: ', label
 
                             ! find the neighbour block
                             do nbr=1,nGrid                         
@@ -471,9 +466,6 @@ contains
 
                                     bndryBlockID(:,offSet+(iMe-1)*gAll(me)%nZ+jMe) = (/iMe,jMe,nbr,me/)
                                     bndryType(offSet+(iMe-1)*gAll(me)%nZ+jMe) = -label ! (left)
-
-                                    write(*,*) label, bndryType(offSet+(iMe-1)*gAll(me)%nZ+jMe), &
-                                    bndryBlockID(:,offSet+(iMe-1)*gAll(me)%nZ+jMe)
 
                                 endif
 

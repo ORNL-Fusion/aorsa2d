@@ -78,6 +78,7 @@ contains
         use antenna
         use aorsa2din_mod, &
         only: overlap
+        use spline_dlg
 
         implicit none
 
@@ -151,6 +152,8 @@ contains
                             aMatBlock(1,1) = -(coeffL*bFn_iL + coeffR*bFn_iR)
                             aMatBlock(2,2) = -(coeffL*bFn_iL + coeffR*bFn_iR)
                             aMatBlock(3,3) = -(coeffL*bFn_iL + coeffR*bFn_iR)
+
+                            ! natural cubic spline interpolation
 
                         endif
 

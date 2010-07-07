@@ -112,9 +112,9 @@ do i=1,nPts
 
     sigma_tmp = sigmaHot_maxwellian&
         ( real(mSpec(s)), &
-        real(ktSpec), omgc(i), omgp2, &
+        ktSpec, omgc(i), omgp2, &
         kVec, r(i), &
-        omgrf, real(k0), &
+        omgrf, k0, &
         k_cutoff, s, &
         0.0, 0.0, b(i), 0.0, &
         xnuOmg )

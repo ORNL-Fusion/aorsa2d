@@ -23,7 +23,8 @@ CPP_DIRECTIVES = -DcylXYZ -DzFunHammett
 all: ${EXE_DIR}/test_expBesselI \
 		${EXE_DIR}/test_sigma \
 		${EXE_DIR}/test_chebyshev \
-		${EXE_DIR}/test_cerf
+		${EXE_DIR}/test_cerf \
+		${EXE_DIR}/test_spline
 
 ${EXE_DIR}/%: ${SRC_TST}/%.f90 
 	${F90} ${F90FLAGS} $< -o $@ ${OBJ_DIR}/*.o ${NETCDF}
@@ -58,6 +59,9 @@ ${EXE_DIR}/test_cerf: \
 		${OBJ_DIR}/zfunHammett.o \
 		${OBJ_DIR}/cerf_wrapper.o
 
+${EXE_DIR}/test_spline: \
+		${OBJ_DIR}/spline_dlg.o \
+		${OBJ_DIR}/check_mod.o
 
 include ../Makefile.deps
 

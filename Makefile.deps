@@ -75,7 +75,8 @@ ${OBJ_DIR}/mat_fill.o: \
 		${OBJ_DIR}/parallel.o \
 		${OBJ_DIR}/eqdsk_dlg.o \
 		${OBJ_DIR}/chebyshev_mod.o \
-		${OBJ_DIR}/antenna.o
+		${OBJ_DIR}/antenna.o \
+		${OBJ_DIR}/spline_dlg.o
 
 ${OBJ_DIR}/antenna.o: \
 		${OBJ_DIR}/grid.o \
