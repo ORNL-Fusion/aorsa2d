@@ -117,11 +117,14 @@ program aorsa2dMain
     if (iAm==0) &
     write(*,*) 'Reading eqdsk'
 
+    if(useEqdsk)then
+        call read_geqdsk ( eqdsk, plot = .false. )
+        call init_interp ()
+    endif
+
     do i=1,nGrid
 
         if (useEqdsk) then
-            call read_geqdsk ( eqdsk, plot = .false. )
-            call init_interp ()
             call bFieldEqdsk ( allGrids(i) )
         elseif (useSoloviev) then
             call soloviev ( allGrids(i) )

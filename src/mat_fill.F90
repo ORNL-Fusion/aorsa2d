@@ -64,6 +64,7 @@ contains
         100 format (' Filling aMat [global size: ',f8.1,' MB]')
 
         allocate ( aMat(nR_tot*nZ_tot*3,nModesR_tot*nModesZ_tot*3) )
+        write(*,*) '    ',nR_tot*nZ_tot*3,nModesR_tot*nModesZ_tot*3  
 
 #endif
 
@@ -89,10 +90,14 @@ contains
         integer :: i, j, n, m, ii, iRow, iCol 
         complex(kind=dbl) :: aMatBlock(3,3)
         real :: r, kt
-        complex :: bFn_iL, bFn_iR, bFn_i0, bFn_i1, bFn_i2, bFn_i3, bFn_i4, bFn_i5
+        complex :: bFn_iL, bFn_iR, bFn_iRR
+        complex :: bFn_i0, bFn_i1, bFn_i2, bFn_i3, bFn_i4, bFn_i5
+        complex :: bFn_R, bFn_Z, bFn_0
+        real :: rNorm, zNorm
 
-        real :: h1, h2, alpha, coeffL, coeffR
-        integer :: iiL, iiR, iiArr(1)
+
+        real :: h1, h2, alpha, coeffL, coeffR, splines(3,4)
+        integer :: iiL, iiR, iiRR, iiArr(1)
 
         do ii=1,nR_tot*nZ_tot
 
@@ -135,12 +140,14 @@ contains
                             i = bndryBlockID(1,ii)
                             j = bndryBlockID(2,ii)
 
+                            ! linear interpolation
+                            ! --------------------
+
                             ! determine left index for linear interpolation
                             iiArr = maxLoc ( me%R-nbr%R(i), (me%R-nbr%R(i))<0)
                             iiL = iiArr(1)
                             iiR = iiL + 1
 
-                            ! linear interpolation coeffs
                             coeffL = 1 - nbr%R(i) / ( -me%R(iiL)+me%R(iiR) ) &
                                 + me%R(iiL) / ( -me%R(iiL)+me%R(iiR) )
                             coeffR = nbr%R(i) / ( -me%R(iiL)+me%R(iiR) ) &
@@ -153,8 +160,60 @@ contains
                             aMatBlock(2,2) = -(coeffL*bFn_iL + coeffR*bFn_iR)
                             aMatBlock(3,3) = -(coeffL*bFn_iL + coeffR*bFn_iR)
 
-                            ! natural cubic spline interpolation
+                            !!write(*,*) n, aMatBlock(1,1)
+                            !! clamped cubic spline interpolation
+                            !! ----------------------------------
 
+                            !! need 3 pts 
+                            !iiRR = iiR + 1
+                            !bFn_iRR =me%xx(n, iiRR) * me%yy(m, j)
+                            !splines = spline ( me%R(iiL:iiRR), &
+                            !    realPart((/ bFn_iL, bFn_iR, bFn_iRR /)), &
+                            !    realPart(me%dRbfn_bFn(n,iiL)*bFn_iL), &
+                            !    realPart(me%dRbFn_bFn(n,iiRR)*bFn_iRR) )
+
+                            !aMatBlock(1,1) = -( &
+                            !    splines(1,1) &
+                            !    + splines(1,2) * ( nbr%R(i) - me%R(iiL) ) &
+                            !    + splines(1,3) * ( nbr%R(i) - me%R(iiL) )**2 &
+                            !    + splines(1,4) * ( nbr%R(i) - me%R(iiL) )**3 )
+
+                            !aMatBlock(2,2) = aMatBlock(1,1)
+                            !aMatBlock(3,3) = aMatBlock(1,1)
+                            !!write(*,*) n, aMatBlock(1,1)
+
+
+                            !! direct fn evaluation
+                            !! --------------------
+
+                            !if(chebyshevX)then
+                            !    rNorm = (nbr%R(i)-me%rMin)/me%rRange*2-1
+                            !    if(nbr%nR==1) rNorm = nbR%rNorm(1)
+                            !    bFn_R = xBasis(n,rNorm)
+                            !else
+                            !    rNorm = (nbr%R(i)-me%rMin)/me%rRange*2*pi
+                            !    if(nbr%nR==1) rNorm = nbR%rNorm(1)
+                            !    bFn_R = xBasis(n,rNorm)
+                            !endif
+
+                            !if(chebyshevY)then
+                            !    zNorm = (nbr%z(j)-me%zMin)/me%zRange*2-1
+                            !    if(nbr%nZ==1) zNorm = nbr%zNorm(1)
+                            !    bFn_Z = yBasis(m,zNorm)
+                            !else
+                            !    zNorm = (nbr%z(j)-me%zMin)/me%zRange*2*pi
+                            !    if(nbr%nZ==1) zNorm = nbr%zNorm(1)
+                            !    bFn_Z = yBasis(m,zNorm)
+                            !endif
+
+                            !bFn_0 = bFn_R * bFn_Z 
+
+                            !aMatBlock(1,1) = -(bFn_0)
+                            !aMatBlock(2,2) = -(bFn_0)
+                            !aMatBlock(3,3) = -(bFn_0)
+
+                            !write(*,*) n, aMatBlock(1,1)
+                            !write(*,*)
                         endif
 
                         ! but couple with the neighbour block
@@ -740,17 +799,17 @@ contains
                                             bFnHere = g%xx(n, iOL) * g%yy(m, jOL)
                                             !if(n>5) bFnHere = bFnHere*0e4 
 
-                                            if (ii==0 .and. jj==0) aMat(localRow,localCol) = bFnHere
+                                            if (ii==0 .and. jj==0) aMat(localRow,localCol) = bFn!Here
                                             if (ii==0 .and. jj==1) aMat(localRow,localCol) = 0  
                                             if (ii==0 .and. jj==2) aMat(localRow,localCol) = 0  
                                    
                                             if (ii==1 .and. jj==0) aMat(localRow,localCol) = 0  
-                                            if (ii==1 .and. jj==1) aMat(localRow,localCol) = bFnHere
+                                            if (ii==1 .and. jj==1) aMat(localRow,localCol) = bFn!Here
                                             if (ii==1 .and. jj==2) aMat(localRow,localCol) = 0   
                                    
                                             if (ii==2 .and. jj==0) aMat(localRow,localCol) = 0   
                                             if (ii==2 .and. jj==1) aMat(localRow,localCol) = 0   
-                                            if (ii==2 .and. jj==2) aMat(localRow,localCol) = bFnHere
+                                            if (ii==2 .and. jj==2) aMat(localRow,localCol) = bFn!Here
 
                                         endif
 

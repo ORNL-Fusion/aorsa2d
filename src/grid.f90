@@ -380,9 +380,9 @@ contains
         ! 0   interior, Maxwell
         ! 888 exterior, E = 0
         ! 999(-999) E - E = 0
-        ! 1(-1)   dEdR - dEdR = 0
-        ! 2(-2)   d2EdR2 - d2EdR2 = 0
-        ! 3(-3)   d3EdR3 - d3EdR3 = 0
+        ! 1(-1)   E - E = 0 @ first overlap pt (some interpolation method)
+        ! 2(-2)   E - E = 0     "         " 
+        ! 3(-3)   E - E = 0     "         "
 
         allocate ( bndryBlockID(4,nR_tot*nZ_tot), &
                     bndryType(nR_tot*nZ_tot) )
@@ -487,7 +487,7 @@ contains
                          if(count(gAll(me)%zMinIn==zMaxAll)>0) then
                             gAll(me)%label(iMe,jMe) = 4 ! inner boundary bot
                         else
-                            gAll(me)%label(iMe,jMe) = 1 ! outer boundary
+                            gAll(me)%label(iMe,jMe) = 888 ! outer boundary
                         endif
                     endif
 
@@ -499,7 +499,7 @@ contains
                          if(count(gAll(me)%zMaxIn==zMinAll)>0) then
                             gAll(me)%label(iMe,jMe) = 5 ! inner boundary top
                         else
-                            gAll(me)%label(iMe,jMe) = 1 ! outer boundary
+                            gAll(me)%label(iMe,jMe) = 888 ! outer boundary
                         endif
                     endif
 

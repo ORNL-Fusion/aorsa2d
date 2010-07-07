@@ -4,6 +4,11 @@ contains
 
 
 ! See Burden and Faires pg 133.
+!
+! NOTE: allocate the "spline" variable prior to 
+!   function call. Does not work otherwise. Not
+!   sure as to the cause, perhaps compiler bug?
+
 
 function spline ( x, a, fp0, fpn )
 
