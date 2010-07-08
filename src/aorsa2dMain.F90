@@ -53,7 +53,7 @@ program aorsa2dMain
 
     !call start_timer ( tTotal )
 
-    integer :: i, nR_tot, nZ_tot
+    integer :: i, nPts_tot
     integer :: nModesR_tot, nModesZ_tot
     character(len=3) :: fNumber
 
@@ -73,20 +73,10 @@ program aorsa2dMain
     if (iAm==0) &
     write(*,*) 'Initialising the parallel environment'
 
-    nR_tot = sum ( nRAll(1:nGrid) )
-    nZ_tot = sum ( nZAll(1:nGrid) )
-
-    nModesR_tot = sum ( nModesRAll(1:nGrid) )
-    nModesZ_tot = sum ( nModesZAll(1:nGrid) )
-
-    if(all(nRAll(1:nGrid)==1)) nR_tot = 1
-    if(all(nZAll(1:nGrid)==1)) nZ_tot = 1
-
-    if(all(nModesRAll(1:nGrid)==1)) nModesR_tot = 1
-    if(all(nModesZAll(1:nGrid)==1)) nModesZ_tot = 1
+    nPts_tot = sum ( nRAll(1:nGrid)*nZAll(1:nGrid) )
 
 #ifdef par
-    call init_procGrid ( nR_tot, nZ_tot, nModesR_tot, nModesZ_tot )
+    call init_procGrid ( nPts_tot )
 #endif
 
 
@@ -102,7 +92,6 @@ program aorsa2dMain
 
         allGrids(i) = init_GridBlock ( &
             nRAll(i), nZAll(i), &
-            nModesRAll(i), nModesZAll(i), &
             rMinAll(i), rMaxAll(i), &
             zMinAll(i), zMaxAll(i) )
 
@@ -195,7 +184,7 @@ program aorsa2dMain
     if (iAm==0) &
     write(*,*) 'Building antenna current (brhs)'
 
-    call alloc_total_brhs ( nR_tot, nZ_tot )
+    call alloc_total_brhs ( nPts_tot )
     do i=1,nGrid
         call init_brhs ( allGrids(i) )
     enddo
@@ -220,14 +209,14 @@ program aorsa2dMain
 !   Allocate the matrix
 !   -------------------
 
-    call alloc_total_aMat ( nR_tot, nZ_tot, nModesR_tot, nModesZ_tot )
+    call alloc_total_aMat ( nPts_tot )
 
 
 
 !   Label each grid blocks boundary points
 !   --------------------------------------
 
-    call labelPts ( allGrids, nR_tot, nZ_tot )
+    call labelPts ( allGrids, nPts_tot )
 
 
 !   Fill matrix 
@@ -247,7 +236,7 @@ program aorsa2dMain
 
     enddo
 
-    call amat_boundaries ( allGrids, nR_tot, nZ_tot )
+    call amat_boundaries ( allGrids, nPts_tot )
 
     !where(abs(aMat)/=0)
     !        aMat = 11

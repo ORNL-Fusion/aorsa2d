@@ -37,34 +37,32 @@ complex, allocatable, dimension(:) :: &
 
 contains
 
-    subroutine alloc_total_aMat ( nR_tot, nZ_tot, nModesR_tot, nModesZ_tot )
+    subroutine alloc_total_aMat ( nPts_tot )
 
         use parallel
 
         implicit none
 
-        integer, intent(in) :: nR_tot, nZ_tot, nModesR_tot, nModesZ_tot
+        integer, intent(in) :: nPts_tot
 
-        write(*,*) '    nR_tot: ', nR_tot
-        write(*,*) '    nZ_tot: ', nz_tot
-
+        write(*,*) '    nPts_tot: ', nPts_tot
 
 #ifdef par
 
         if (iAm == 0) &
         write(*,100), &
-            nR_tot*nZ_tot*3*nModesR_tot*nModesZ_tot*3*2*8.0 / 1024.0**2, &
+            nPts_tot*3*nPts_tot*3*2*8.0 / 1024.0**2, &
             nRowLocal*nColLocal*2*8.0 / 1024.0**2
         100 format (' Filling aMat [global size: ',f8.1,' MB, local size: ',f8.1' MB]')
 
         allocate ( aMat(nRowLocal,nColLocal) )
 #else 
         write(*,100), &
-            nR_tot*nZ_tot*3*nModesR_tot*nModesZ_tot*3*2*8.0 / 1024.0**2
+            nPts_tot*3*nPts_tot*3*2*8.0 / 1024.0**2
         100 format (' Filling aMat [global size: ',f8.1,' MB]')
 
-        allocate ( aMat(nR_tot*nZ_tot*3,nModesR_tot*nModesZ_tot*3) )
-        write(*,*) '    ',nR_tot*nZ_tot*3,nModesR_tot*nModesZ_tot*3  
+        allocate ( aMat(nPts_tot*3,nPts_tot*3) )
+        write(*,*) '    ',nPts_tot*3,nPts_tot*3  
 
 #endif
 
@@ -73,7 +71,7 @@ contains
     end subroutine alloc_total_aMat
 
 
-    subroutine amat_boundaries ( gAll, nR_tot, nZ_tot )
+    subroutine amat_boundaries ( gAll, nPts_tot )
 
         use grid
         use antenna
@@ -84,7 +82,7 @@ contains
         implicit none
 
         type(gridBlock), intent(in) :: gAll(:)
-        integer, intent(in) :: nR_tot, nZ_tot
+        integer, intent(in) :: nPts_tot
 
         type(gridBlock) :: me, nbr
         integer :: i, j, n, m, ii, iRow, iCol 
@@ -99,7 +97,7 @@ contains
         real :: h1, h2, alpha, coeffL, coeffR, splines(3,4)
         integer :: iiL, iiR, iiRR, iiArr(1)
 
-        do ii=1,nR_tot*nZ_tot
+        do ii=1,nPts_tot
 
             if(bndryBlockID(3,ii)/=0)then
 
@@ -116,14 +114,11 @@ contains
                         if(bndryType(ii)==-999) then
 
                             ! create E=E @ overlap point
-                            ! (Mawells are set on the rhs so the E=E is
-                            ! set on the lhs)
 
                             i = me%nR-overlap
-                            j = 1
+                            j = bndryBlockID(2,ii)
 
                             bFn = me%xx(n, i) * me%yy(m, j)
-                            !if(n>5) bFn = bFn*0e4
 
                             aMatBlock(1,1) = -bFn
                             aMatBlock(2,2) = -bFn
@@ -212,8 +207,16 @@ contains
                             !aMatBlock(2,2) = -(bFn_0)
                             !aMatBlock(3,3) = -(bFn_0)
 
-                            !write(*,*) n, aMatBlock(1,1)
-                            !write(*,*)
+                            !!write(*,*) n, aMatBlock(1,1)
+                            !!write(*,*)
+
+                            !! Match single (or subset) basis functions
+                            !! ----------------------------------------
+
+                            !i = me%nR-overlap
+                            !j = 
+
+
                         endif
 
                         ! but couple with the neighbour block
@@ -334,11 +337,11 @@ contains
         allocate (isMetal(g%nR,g%nZ))
         isMetal = .false.
 
-        if(useEqdsk)then
-        where(g%rho>=0.99)
-                isMetal = .true.
-        endwhere
-        endif
+        !if(useEqdsk)then
+        !where(g%rho>=0.99)
+        !        isMetal = .true.
+        !endwhere
+        !endif
 
         do i=1,g%nR
             do j=1,g%nZ

@@ -12,19 +12,19 @@ contains
 
 #ifdef par
 
-    subroutine init_procGrid ( nPtsR_tot, nPtsZ_tot, nModesR_tot, nModesZ_tot )
+    subroutine init_procGrid ( nPts_tot )
 
         use aorsa2din_mod, &
         only: npRow, npCol
 
         implicit none
 
-        integer, intent(in) :: nPtsR_tot, nPtsZ_tot, nModesR_tot, nModesZ_tot
+        integer, intent(in) :: nPts_tot
 
         integer, external :: numRoC
 
-        nRow    = nPtsR_tot*nPtsZ_tot*3
-        nCol    = nModesR_tot*nModesZ_tot*3
+        nRow    = nPts_tot*3
+        nCol    = nPts_tot*3
 
         ! block sizes
 

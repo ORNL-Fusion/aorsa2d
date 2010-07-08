@@ -131,7 +131,7 @@ integer(kind=long), allocatable :: bndryBlockID(:,:), bndryType(:)
 
 contains
 
-    function init_gridBlock ( nR, nZ, nModesR, nModesZ, rMin, rMax, zMin, zMax ) result ( grid )
+    function init_gridBlock ( nR, nZ, rMin, rMax, zMin, zMax ) result ( grid )
 
         use aorsa2din_mod, &
         only : nPhi, xkPerp_cutOff, overlap
@@ -142,7 +142,7 @@ contains
         type(gridBlock) :: grid
         type(dBfnArg) :: d
 
-        integer, intent(in) :: nR, nZ, nModesR, nModesZ
+        integer, intent(in) :: nR, nZ
         real, intent(in) :: rMin, rMax, zMin, zMax
 
         integer :: i, j, n, m
@@ -158,8 +158,8 @@ contains
 
             grid%nR = nR
             grid%nZ = nZ
-            grid%nModesR = nModesR
-            grid%nModesZ = nModesZ
+            grid%nModesR = nR
+            grid%nModesZ = nZ
 
             grid%rMinIn = rMin
             grid%rMaxIn = rMax
@@ -362,7 +362,7 @@ contains
     ! interior, outer boundary or inner boundary
     ! ------------------------------------------------
 
-    subroutine labelPts ( gAll, nR_tot, nZ_tot )
+    subroutine labelPts ( gAll, nPts_tot )
 
         use aorsa2din_mod, &
         only: rMinAll, rMaxAll, zMinAll, zMaxAll, nGrid, overlap
@@ -370,7 +370,7 @@ contains
         implicit none
 
         type(gridBlock), intent(inout) :: gAll(:)
-        integer, intent(in) :: nR_tot, nZ_tot
+        integer, intent(in) :: nPts_tot
 
         integer :: iMe, jMe, me, nbr, offSet, label
 
@@ -384,8 +384,8 @@ contains
         ! 2(-2)   E - E = 0     "         " 
         ! 3(-3)   E - E = 0     "         "
 
-        allocate ( bndryBlockID(4,nR_tot*nZ_tot), &
-                    bndryType(nR_tot*nZ_tot) )
+        allocate ( bndryBlockID(4,nPts_tot), &
+                    bndryType(nPts_tot) )
 
         bndryBlockID = 0
         bndryType = 0

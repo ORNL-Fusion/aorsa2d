@@ -14,19 +14,19 @@ complex, allocatable :: brhs_global(:)
 
 contains
 
-    subroutine alloc_total_brhs ( nPtsR_tot, nPtsZ_tot )
+    subroutine alloc_total_brhs ( nPts_tot )
 
         use parallel
 
         implicit none
 
-        integer, intent(in) :: nPtsR_tot, nPtsZ_tot
+        integer, intent(in) :: nPts_tot
 
-        allocate ( brhs_global(nPtsR_tot*nPtsZ_tot*3) )
+        allocate ( brhs_global(nPts_tot*3) )
 #ifdef par
         allocate ( brhs(nRowLocal) )
 #else
-        allocate ( brhs(nPtsR_tot*nPtsZ_tot*3) )
+        allocate ( brhs(nPts_tot*3) )
 #endif
         brhs        = 0
         brhs_global = 0

@@ -47,8 +47,6 @@ implicit none
     integer :: nGrid = 1
     integer, dimension(nGridMax) :: nRAll = 16
     integer, dimension(nGridMax) :: nZAll = 16
-    integer, dimension(nGridMax) :: nModesRAll = 16
-    integer, dimension(nGridMax) :: nModesZAll = 16
     real, dimension(nGridMax) :: rMinAll = 1.0
     real, dimension(nGridMax) :: rMaxAll = 2.0
     real, dimension(nGridMax) :: zMinAll = -1.0
@@ -468,7 +466,7 @@ implicit none
      &    bPol_frac, useCircularProfiles, lsWeightFac, xkx_cutOff, xky_cutOff, &
      &    chebyshevX, chebyshevY, magma, rhoAnt, antSigRho, toroidalBroadening,&
      &    kPrlEffLimit, nGrid, &
-     &    nRAll, nZAll, nModesRAll, nModesZAll, rMinALl, rMaxAll, zMinAll, zMaxAll, &
+     &    nRAll, nZAll, rMinALl, rMaxAll, zMinAll, zMaxAll, &
      &    overlap
 
                 
