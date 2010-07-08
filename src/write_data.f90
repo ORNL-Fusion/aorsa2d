@@ -28,9 +28,7 @@ contains
             dens_id, temp_id, omgc_id, omgp2_id
         integer :: &
             xx_re_id, yy_re_id, xx_im_id, yy_im_id, &
-            drBfn_re_id, dzBfn_re_id, drbFn_im_id, dzbFn_im_id, &
-            d2rBfn_re_id, d2zBfn_re_id, d2rbFn_im_id, d2zbFn_im_id, &
-            d3rBfn_re_id, d3rBfn_im_id, d4rbFn_re_id, d4rbFn_im_id
+            drBfn_re_id, dzBfn_re_id, drbFn_im_id, dzbFn_im_id
 
         integer :: drUrrid, drUrtid, drUrzid
         integer :: drUtrid, drUttid, drUtzid
@@ -93,24 +91,6 @@ contains
         call check ( nf90_def_var ( nc_id, "dzBfn_im", NF90_REAL, &
             (/nModesY_id,nY_id/), dzBfn_im_id ) ) 
 
-        call check ( nf90_def_var ( nc_id, "d2rBfn_re", NF90_REAL, &
-            (/nModesX_id,nX_id/), d2rBfn_re_id ) ) 
-        call check ( nf90_def_var ( nc_id, "d2zBfn_re", NF90_REAL, &
-            (/nModesY_id,nY_id/), d2zBfn_re_id ) ) 
-        call check ( nf90_def_var ( nc_id, "d2rBfn_im", NF90_REAL, &
-            (/nModesX_id,nX_id/), d2rBfn_im_id ) ) 
-        call check ( nf90_def_var ( nc_id, "d2zBfn_im", NF90_REAL, &
-            (/nModesY_id,nY_id/), d2zBfn_im_id ) ) 
-
-        call check ( nf90_def_var ( nc_id, "d3rBfn_re", NF90_REAL, &
-            (/nModesX_id,nX_id/), d3rBfn_re_id ) ) 
-        call check ( nf90_def_var ( nc_id, "d3rBfn_im", NF90_REAL, &
-            (/nModesX_id,nX_id/), d3rBfn_im_id ) ) 
-        call check ( nf90_def_var ( nc_id, "d4rBfn_re", NF90_REAL, &
-            (/nModesX_id,nX_id/), d4rBfn_re_id ) ) 
-        call check ( nf90_def_var ( nc_id, "d4rBfn_im", NF90_REAL, &
-            (/nModesX_id,nX_id/), d4rBfn_im_id ) ) 
- 
         nc_stat = nf90_def_var ( nc_id, "densitySpec", NF90_REAL, (/nX_id,nY_id,nSpec_id/), dens_id ) 
         nc_stat = nf90_def_var ( nc_id, "tempSpec", NF90_REAL, (/nX_id,nY_id,nSpec_id/), temp_id ) 
         nc_stat = nf90_def_var ( nc_id, "omgc", NF90_REAL, (/nX_id,nY_id,nSpec_id/), omgc_id ) 
@@ -179,16 +159,6 @@ contains
         call check ( nf90_put_var ( nc_id, dzBfn_re_id, real ( g%dZbFn_bFn ) ) )
         call check ( nf90_put_var ( nc_id, drBfn_im_id, aimag ( g%dRbFn_bFn ) ) )
         call check ( nf90_put_var ( nc_id, dzBfn_im_id, aimag ( g%dZbFn_bFn ) ) )
-
-        call check ( nf90_put_var ( nc_id, d2rBfn_re_id, real ( g%d2RbFn_bFn ) ) )
-        call check ( nf90_put_var ( nc_id, d2zBfn_re_id, real ( g%d2ZbFn_bFn ) ) )
-        call check ( nf90_put_var ( nc_id, d2rBfn_im_id, aimag ( g%d2RbFn_bFn ) ) )
-        call check ( nf90_put_var ( nc_id, d2zBfn_im_id, aimag ( g%d2ZbFn_bFn ) ) )
-
-        call check ( nf90_put_var ( nc_id, d3rBfn_re_id, real ( g%d3RbFn_bFn ) ) )
-        call check ( nf90_put_var ( nc_id, d3rBfn_im_id, aimag ( g%d3RbFn_bFn ) ) )
-        call check ( nf90_put_var ( nc_id, d4rBfn_re_id, real ( g%d4RbFn_bFn ) ) )
-        call check ( nf90_put_var ( nc_id, d4rBfn_im_id, aimag ( g%d4RbFn_bFn ) ) )
 
         call check ( nf90_put_var ( nc_id, drUrrid, g%drUrr ) )
         call check ( nf90_put_var ( nc_id, drUrtid, g%drUrt ) )

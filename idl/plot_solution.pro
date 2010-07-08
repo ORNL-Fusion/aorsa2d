@@ -63,6 +63,7 @@ pro plot_solution, oneD = oneD, full = full, $
 	yAll = 0.0
 	nAll = 0
 	eAlphaAll = complex (0,0)
+	eBAll = complex (0,0)
 
 	for ii=0,n_elements(fileList)-1 do begin
 
@@ -86,14 +87,6 @@ pro plot_solution, oneD = oneD, full = full, $
 			nCdf_varGet, cdfId, 'drBfn_im', dRbFn_bFn_im
 			nCdf_varGet, cdfId, 'dzBfn_re', dzbFn_bFn_re
 			nCdf_varGet, cdfId, 'dzBfn_im', dzbFn_bFn_im
-			nCdf_varGet, cdfId, 'd2rBfn_re', d2RbFn_bFn_re
-			nCdf_varGet, cdfId, 'd2rBfn_im', d2RbFn_bFn_im
-			nCdf_varGet, cdfId, 'd2zBfn_re', d2zbFn_bFn_re
-			nCdf_varGet, cdfId, 'd2zBfn_im', d2zbFn_bFn_im
-			nCdf_varGet, cdfId, 'd3rBfn_re', d3rbFn_bFn_re
-			nCdf_varGet, cdfId, 'd3rBfn_im', d3rbFn_bFn_im
-			nCdf_varGet, cdfId, 'd4rBfn_re', d4rbFn_bFn_re
-			nCdf_varGet, cdfId, 'd4rBfn_im', d4rbFn_bFn_im
 		ncdf_close, cdfId
 
 		xx	= complex ( xx_re, xx_im )
@@ -102,19 +95,17 @@ pro plot_solution, oneD = oneD, full = full, $
 		dRbFn_bFn	= complex ( dRbFn_bFn_re, dRbFn_bFn_im )
 		dZbFn_bFn	= complex ( dZbFn_bFn_re, dZbFn_bFn_im )
 
-		d2RbFn_bFn	= complex ( d2RbFn_bFn_re, d2RbFn_bFn_im )
-		d2ZbFn_bFn	= complex ( d2ZbFn_bFn_re, d2ZbFn_bFn_im )
-
-		d3RbFn_bFn	= complex ( d3RbFn_bFn_re, d3RbFn_bFn_im )
-		d4RbFn_bFn	= complex ( d4RbFn_bFn_re, d4RbFn_bFn_im )
-
 		nX	= n_elements ( xx[0,*] )
 		nY	= n_elements ( yy[0,*] )
 		nN	= n_elements ( xx[*,0] )
 		nM	= n_elements ( yy[*,0] )
 
 		x2D	= rebin ( x, nX, nY )
-		y2D = transpose(rebin ( y, nY, nX ))
+		if nY gt 1 then begin
+			y2D = transpose(rebin ( y, nY, nX ))
+		endif else begin
+			y2D = fltArr(1)+y
+		endelse
 
 		cdfId = ncdf_open ( fileList[ii], /noWrite ) 
 
@@ -185,15 +176,6 @@ pro plot_solution, oneD = oneD, full = full, $
     			                  dRbFn = dRbFn_bFn(n,i) * xx(n, i) * yy(m, j)
     			                  dRealpha(i,j) += ealphak(n,m) * dRbFn 
 
-		  		                  d2RbFn = d2RbFn_bFn(n,i) * xx(n, i) * yy(m, j)
-    			                  d2Realpha(i,j) += ealphak(n,m) * d2RbFn
-
-			  	                  d3RbFn = d3RbFn_bFn(n,i) * xx(n, i) * yy(m, j)
-    			                  d3Realpha(i,j) += ealphak(n,m) * d3RbFn
-
-				                  d4RbFn = d4RbFn_bFn(n,i) * xx(n, i) * yy(m, j)
-    			                  d4Realpha(i,j) += ealphak(n,m) * d4RbFn
-							  
     			        	endfor
     			   	 	endfor
     				endfor
@@ -211,19 +193,13 @@ pro plot_solution, oneD = oneD, full = full, $
 			h2 = x[2]-x[1]
 			alpha = h2/h1
 			dEdR_L = (-1*alpha^2*eAlpha[0]+1*eAlpha[1]*(alpha^2-1)+eAlpha[2])/(h1*(alpha+1)*alpha)
-			d2EdR2_L = 2*(alpha*eAlpha[0]-eAlpha[1]*(1+alpha)+eAlpha[2])/(alpha*(alpha+1)*h1^2)
 
 			h1 = x[nX-2]-x[nX-3]
 			h2 = x[nX-1]-x[nX-2]
 			alpha = h2/h1
 			dEdR_R = (-1*alpha^2*eAlpha[nX-3]+1*eAlpha[nX-2]*(alpha^2-1)+eAlpha[nX-1])/(h1*(alpha+1)*alpha)
-			d2EdR2_R = 2*(alpha*eAlpha[nX-3]-eAlpha[nX-2]*(1+alpha)+eAlpha[nX-1])/(alpha*(alpha+1)*h1^2)
 
 			print, 'dEdR - ', dEdR_L, dEdR_R, dReAlpha[1], dReAlpha[nX-2]
-			print, 'd2EdR2 - ', d2EdR2_L, d2EdR2_R, d2ReAlpha[1], d2ReAlpha[nX-2]
-
-			print, 'd3EdR - ', dReAlpha[overlap], dReAlpha[nX-1-overlap]
-			print, 'd4EdR - ', d2ReAlpha[overlap], d2ReAlpha[nX-1-overlap]
 
 			print, ''
 			print, 'eBet: '
@@ -321,14 +297,17 @@ pro plot_solution, oneD = oneD, full = full, $
 		xAll = [xAll, x2D[*]]
 		yAll = [yAll, y2D[*]]
 		eAlphaAll = [ eAlphaAll, eAlpha[*]]
+		eBAll = [ eBAll, eB[*]]
 		nAll = [ nAll, n_elements(x2D[*]) ]
 
 		if (size(eAlphaAll_,/dim))[0] eq 0 then begin
 			x2D_	= x2D
 			eAlphaAll_ = eAlpha
+			eBAll_ = eB
 		endif else begin
 			x2D_	= [ x2D_, x2D ]
 			eAlphaAll_ = [ eAlphaAll_, eAlpha ]
+			eBAll_ = [ eBAll_, eB ]
 		endelse
 
 	endfor
@@ -336,13 +315,14 @@ pro plot_solution, oneD = oneD, full = full, $
 	xAll = xAll[1:*]
 	yAll = yAll[1:*]
 	eAlphaAll = eAlphaAll[1:*]
+	eBAll = eBAll[1:*]
 	nAll = nAll[1:*]
 
 
 	; Plot all grid solutions
 	; -----------------------
 
-	if keyword_set(one) then begin
+	if keyword_set(oneD) then begin
 
 		restore, '../smithe_1/soln.sav' 
 		iPlot, xorig, ealphaorig, thick=2
@@ -368,11 +348,16 @@ pro plot_solution, oneD = oneD, full = full, $
 		if(not keyword_set(scale1)) then $
 		scale1 = max ( abs ( [ealpha] ) )
 		print, 'Scale1: ', scale1
+		if(not keyword_set(scale3)) then $
+		scale3 = max ( abs ( [eB] ) )
+		print, 'Scale3: ', scale3
+
 
 		nLevs = 20
 		levels	= (fIndGen(nLevs)+1)/(nLevs-1) * scale1 * 0.5
 		colors	= 256-(bytScl ( levels, top = 253 )+1)
 
+		window, 0
 		device, decomposed = 0
 		!p.background = 255
 		loadct, 3
@@ -383,6 +368,23 @@ pro plot_solution, oneD = oneD, full = full, $
 			color = 0, /fill
 		loadct, 1
 		contour, -ealphaAll, xAll, yAll, $
+			irreg = 1, $
+			levels = levels, $
+			c_colors = colors, $
+			/over, color = 0, /fill
+
+		levels	= (fIndGen(nLevs)+1)/(nLevs-1) * scale3 * 0.5
+		colors	= 256-(bytScl ( levels, top = 253 )+1)
+
+		window, 1
+		loadct, 3
+		contour, eBAll, xAll, yAll, $
+			irreg = 1, $
+			levels = levels, $
+			c_colors = colors, $
+			color = 0, /fill
+		loadct, 1
+		contour, -eBAll, xAll, yAll, $
 			irreg = 1, $
 			levels = levels, $
 			c_colors = colors, $
