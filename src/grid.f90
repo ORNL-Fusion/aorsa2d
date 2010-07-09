@@ -134,7 +134,8 @@ contains
     function init_gridBlock ( nR, nZ, rMin, rMax, zMin, zMax ) result ( grid )
 
         use aorsa2din_mod, &
-        only : nPhi, xkPerp_cutOff, overlap
+        only : nPhi, xkPerp_cutOff, overlap, &
+        rMinAll, rMaxAll, zMinAll, zMaxAll, nGrid
         use parallel
 
         implicit none
@@ -179,8 +180,10 @@ contains
                         ! Gauss-Lobatto grid [-1,1] (Chebyshev basis)
                         grid%rNorm(i)  = -cos(pi*(i-1)/(nR-1))
                     else
-                        ! Uniform grid [0,2pi] (Fourier basis)
-                        grid%rNorm(i)  = (i-1) * 2 * pi / ( nR - 1 )
+                        !! Uniform grid [0,2pi] (Exp basis)
+                        !grid%rNorm(i)  = (i-1) * 2 * pi / ( nR - 1 )
+                        ! Uniform grid [0,pi] (Cos basis)
+                        grid%rNorm(i)  = (i-1) * pi / ( nR - 1 )
                     endif
        
                 enddo
@@ -204,6 +207,16 @@ contains
             grid%zMin = zMin
             grid%zMax = zMax
 
+            ! Trap for non-overlapping end-points
+            ! However, this will not work for non-square domains
+            ! in 2D so will need fixing.
+            ! -----------------------------------
+
+            if(rMin==minVal(rMinAll(1:nGrid))) grid%rMin = rMin
+            if(rMax==maxVal(rMaxAll(1:nGrid))) grid%rMax = rMax
+            grid%rRange  = (grid%rMax - grid%rMin) 
+
+
             if(nR>1)then
                 grid%R = (grid%rNorm-grid%rNorm(1)) &
                     / (grid%rNorm(nR)-grid%rNorm(1)) * grid%rRange + grid%rMin
@@ -214,10 +227,13 @@ contains
             if(chebyshevX)then
                 grid%normFacR = 2 / grid%rRange
             else
-                grid%normFacR = 2 * pi / grid%rRange
+                !!Exp
+                !grid%normFacR = 2 * pi / grid%rRange
+                !Cos
+                grid%normFacR = pi / grid%rRange
             endif
 
-       
+      
             grid%zRange  = zMax - zMin
             if(nZ>1) then 
 
@@ -227,8 +243,10 @@ contains
                         ! Gauss-Lobatto grid [-1,1] (Chebyshev basis)
                         grid%zNorm(j)  = -cos(pi*(j-1)/(nZ-1))
                     else
-                        ! Uniform grid [0,2pi] (Fourier basis)
-                        grid%zNorm(j)  = (j-1) * 2 * pi / ( nZ - 1 )
+                        !! Uniform grid [0,2pi] (Exp basis)
+                        !grid%zNorm(j)  = (j-1) * 2 * pi / ( nZ - 1 )
+                        ! Uniform grid [0,pi] (Cos basis)
+                        grid%zNorm(j)  = (j-1) * pi / ( nZ - 1 )
                     endif
 
                 enddo
@@ -244,7 +262,10 @@ contains
             if(chebyshevY) then
                 grid%normFacZ = 2 / grid%zRange
             else 
-                grid%normFacZ = 2 * pi / grid%zRange
+                !!Exp
+                !grid%normFacZ = 2 * pi / grid%zRange
+                !Cos
+                grid%normFacZ = pi / grid%zRange
             endif
 
 
@@ -264,14 +285,19 @@ contains
 
             else
 
-                grid%nMin = -nR/2
-                grid%nMax =  nR/2
+                !!Exp
+                !grid%nMin = -nR/2
+                !grid%nMax =  nR/2
 
-                ! Catch for even number of modes
-                ! for producing a square matrix
-                ! ------------------------------
+                !! Catch for even number of modes
+                !! for producing a square matrix
+                !! ------------------------------
 
-                if (mod(nR,2)==0) grid%nMin = grid%nMin+1
+                !if (mod(nR,2)==0) grid%nMin = grid%nMin+1
+
+                !Cos
+                grid%nMin    = 0
+                grid%nMax    = nR-1
 
             endif
 
@@ -283,9 +309,14 @@ contains
 
             else
 
-                grid%mMin = -nZ/2
-                grid%mMax =  nZ/2
-                if (mod(nZ,2)==0) grid%mMin = grid%mMin+1
+                !Exp
+                !grid%mMin = -nZ/2
+                !grid%mMax =  nZ/2
+                !if (mod(nZ,2)==0) grid%mMin = grid%mMin+1
+
+                !Cos
+                grid%mMin    = 0
+                grid%mMax    = nZ-1
 
             endif
 
@@ -522,7 +553,10 @@ contains
             xBasis = chebT ( n, xNorm )
             !xBasis = chebU ( n, xNorm )
         else
-            xBasis = exp ( zi * n * xNorm )
+            !!Exp
+            !xBasis = exp ( zi * n * xNorm )
+            !Cos
+            xBasis = cos ( n * xNorm )
         endif
 
     end function xBasis
@@ -539,7 +573,10 @@ contains
             yBasis = chebT ( m, yNorm )
             !yBasis = chebU ( m, yNorm )
         else
+            !Exp 
             yBasis = exp ( zi * m * yNorm )
+            !Cos
+            yBasis = cos ( m * yNorm )
         endif
 
     end function yBasis
@@ -564,7 +601,10 @@ contains
             !    + d%n * d%xNorm * chebU(d%n,d%xNorm) ) &
             !    / ( (-1+d%xNorm**2)*chebU(d%n,d%xNorm) )
         else
-            drBfn_bfn = zi * d%n
+            !!Exp
+            !drBfn_bfn = zi * d%n
+            !Cos
+            drBfn_bfn = -d%n * tan ( d%n * d%xNorm )
         endif
 
         drBfn_bfn = drBfn_bfn * d%normFacX
@@ -591,7 +631,10 @@ contains
             !    + d%m * d%yNorm * chebU(d%m,d%yNorm) ) &
             !    / ( (-1+d%yNorm**2)*chebU(d%m,d%yNorm) )
         else
+            !Exp
             dzBfn_bfn = zi * d%m
+            !Cos
+            dzBfn_bfn = -d%m * tan ( d%m * d%yNorm )
         endif
 
         dzBfn_bfn = dzBfn_bfn * d%normFacY
@@ -621,7 +664,10 @@ contains
             !    +d%n*(-1+(-1+d%n)*d%xNorm**2)*chebU(d%n,d%xNorm)) &
             !    / ( (-1+d%xNorm**2)**2*chebU(d%n,d%xNorm) )
         else
-            drrBfn_bfn = - d%n**2
+            !!Exp 
+            !drrBfn_bfn = -d%n**2
+            !Cos
+            drrBfn_bfn = -d%n**2
         endif
 
         drrBfn_bfn = drrBfn_bfn * d%normFacX**2
@@ -651,7 +697,10 @@ contains
             !    +d%m*(-1+(-1+d%m)*d%yNorm**2)*chebU(d%m,d%yNorm)) &
             !    / ( (-1+d%yNorm**2)**2*chebU(d%m,d%yNorm) )
         else
-            dzzBfn_bfn = - d%m**2
+            !!Exp
+            !dzzBfn_bfn = -d%m**2
+            !Cos
+            dzzBfn_bfn = -d%m**2
         endif
 
         dzzBfn_bfn = dzzBfn_bfn * d%normFacY**2
@@ -677,7 +726,10 @@ contains
             !    + d%m * d%yNorm * chebU(d%m,d%yNorm) ) &
             !    / ( (-1+d%yNorm**2)*chebU(d%m,d%yNorm) )
         else
-            drBfn_bfn = zi * d%n
+            !!Exp
+            !drBfn_bfn = zi * d%n
+            !Cos
+            drBfn_bfn = -d%n * tan( d%n*d%xNorm )
         endif
 
         if(chebyshevY) then
@@ -689,7 +741,10 @@ contains
             !    + d%m * d%yNorm * chebU(d%m,d%yNorm) ) &
             !    / ( (-1+d%yNorm**2)*chebU(d%m,d%yNorm) )
         else
-            dzBfn_bfn = zi * d%m
+            !!Exp
+            !dzBfn_bfn = zi * d%m
+            !Cos
+            dzBfn_bfn = -d%m * tan( d%m*d%yNorm )
         endif
 
         drzBfn_bfn = drBfn_bfn * dzBfn_bfn * ( d%normFacX * d%normFacY )

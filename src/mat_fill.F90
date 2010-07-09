@@ -128,32 +128,32 @@ contains
 
                         elseif(bndryType(ii)<=-1 .and. bndryType(ii)>=-20) then
 
-                            !! Dirichlet 
-                            !! ---------
+                            ! Dirichlet 
+                            ! ---------
 
-                            !nbr = gAll(bndryBlockID(4,ii))
-                            !i = bndryBlockID(1,ii)
-                            !j = bndryBlockID(2,ii)
+                            nbr = gAll(bndryBlockID(4,ii))
+                            i = bndryBlockID(1,ii)
+                            j = bndryBlockID(2,ii)
 
-                            !! linear interpolation
-                            !! --------------------
+                            ! linear interpolation
+                            ! --------------------
 
-                            !! determine left index for linear interpolation
-                            !iiArr = maxLoc ( me%R-nbr%R(i), (me%R-nbr%R(i))<0)
-                            !iiL = iiArr(1)
-                            !iiR = iiL + 1
+                            ! determine left index for linear interpolation
+                            iiArr = maxLoc ( me%R-nbr%R(i), (me%R-nbr%R(i))<0)
+                            iiL = iiArr(1)
+                            iiR = iiL + 1
 
-                            !coeffL = 1 - nbr%R(i) / ( -me%R(iiL)+me%R(iiR) ) &
-                            !    + me%R(iiL) / ( -me%R(iiL)+me%R(iiR) )
-                            !coeffR = nbr%R(i) / ( -me%R(iiL)+me%R(iiR) ) &
-                            !    - me%R(iiL) / ( -me%R(iiL)+me%R(iiR) )
+                            coeffL = 1 - nbr%R(i) / ( -me%R(iiL)+me%R(iiR) ) &
+                                + me%R(iiL) / ( -me%R(iiL)+me%R(iiR) )
+                            coeffR = nbr%R(i) / ( -me%R(iiL)+me%R(iiR) ) &
+                                - me%R(iiL) / ( -me%R(iiL)+me%R(iiR) )
 
-                            !bFn_iL =me%xx(n, iiL) * me%yy(m, j)
-                            !bFn_iR =me%xx(n, iiR) * me%yy(m, j)
+                            bFn_iL =me%xx(n, iiL) * me%yy(m, j)
+                            bFn_iR =me%xx(n, iiR) * me%yy(m, j)
 
-                            !aMatBlock(1,1) = -(coeffL*bFn_iL + coeffR*bFn_iR)
-                            !aMatBlock(2,2) = -(coeffL*bFn_iL + coeffR*bFn_iR)
-                            !aMatBlock(3,3) = -(coeffL*bFn_iL + coeffR*bFn_iR)
+                            aMatBlock(1,1) = -(coeffL*bFn_iL + coeffR*bFn_iR)
+                            aMatBlock(2,2) = -(coeffL*bFn_iL + coeffR*bFn_iR)
+                            aMatBlock(3,3) = -(coeffL*bFn_iL + coeffR*bFn_iR)
 
                             !!write(*,*) n, aMatBlock(1,1)
                             !! clamped cubic spline interpolation
@@ -210,26 +210,26 @@ contains
                             !!write(*,*) n, aMatBlock(1,1)
                             !!write(*,*)
 
-                            ! Match single (or subset) basis functions
-                            ! ----------------------------------------
+                            !! Match single (or subset) basis functions
+                            !! ----------------------------------------
 
-                            if(mod(abs(bndryType(ii)),2)==1) then 
-                                i = me%nR-overlap
-                            else
-                                i = 1+overlap
-                            endif
-                            j = bndryBlockID(2,ii)
+                            !if(mod(abs(bndryType(ii)),2)==1) then 
+                            !    i = me%nR-overlap
+                            !else
+                            !    i = 1+overlap
+                            !endif
+                            !j = bndryBlockID(2,ii)
 
-                            if(n<=me%nR/(abs(bndryType(ii))+1))then
-                            !if(n==abs(bndryType(ii))+1)then
-                                bFn = me%xx(n, i) * me%yy(m, j)
-                            else
-                                bFn = 0
-                            endif
+                            !if(n<=me%nR/(abs(bndryType(ii))+1))then
+                            !!if(n==abs(bndryType(ii))+1)then
+                            !    bFn = me%xx(n, i) * me%yy(m, j)
+                            !else
+                            !    bFn = 0
+                            !endif
 
-                            aMatBlock(1,1) = -(bFn)
-                            aMatBlock(2,2) = -(bFn)
-                            aMatBlock(3,3) = -(bFn)
+                            !aMatBlock(1,1) = -(bFn)
+                            !aMatBlock(2,2) = -(bFn)
+                            !aMatBlock(3,3) = -(bFn)
 
                         endif
 
@@ -835,32 +835,32 @@ contains
 
                                         if (g%label(i,j)>=1 .and. g%label(i,j)<=20) then
 
-                                            if(mod(g%label(i,j),2)==1) then 
-                                                iOL = 1+overlap
-                                            else
-                                                iOL = g%nR-overlap
-                                            endif
+                                            !if(mod(g%label(i,j),2)==1) then 
+                                            !    iOL = 1+overlap
+                                            !else
+                                            !    iOL = g%nR-overlap
+                                            !endif
  
-                                            jOL = j
+                                            !jOL = j
                                       
-                                            if(n<=g%nR/(g%label(i,j)+1))then 
-                                            !if(n==(g%label(i,j)+1))then 
-                                                bFnHere = g%xx(n, iOL) * g%yy(m, jOL)
-                                            else
-                                                bFnHere = 0
-                                            endif
+                                            !if(n<=g%nR/(g%label(i,j)+1))then 
+                                            !!if(n==(g%label(i,j)+1))then 
+                                            !    bFnHere = g%xx(n, iOL) * g%yy(m, jOL)
+                                            !else
+                                            !    bFnHere = 0
+                                            !endif
                                          
-                                            if (ii==0 .and. jj==0) aMat(localRow,localCol) = bFnHere 
+                                            if (ii==0 .and. jj==0) aMat(localRow,localCol) = bFn!Here 
                                             if (ii==0 .and. jj==1) aMat(localRow,localCol) = 0  
                                             if (ii==0 .and. jj==2) aMat(localRow,localCol) = 0  
                                    
                                             if (ii==1 .and. jj==0) aMat(localRow,localCol) = 0  
-                                            if (ii==1 .and. jj==1) aMat(localRow,localCol) = bFnHere  
+                                            if (ii==1 .and. jj==1) aMat(localRow,localCol) = bFn!Here  
                                             if (ii==1 .and. jj==2) aMat(localRow,localCol) = 0   
                                    
                                             if (ii==2 .and. jj==0) aMat(localRow,localCol) = 0   
                                             if (ii==2 .and. jj==1) aMat(localRow,localCol) = 0   
-                                            if (ii==2 .and. jj==2) aMat(localRow,localCol) = bFnHere 
+                                            if (ii==2 .and. jj==2) aMat(localRow,localCol) = bFn!Here 
 
                                         endif
 

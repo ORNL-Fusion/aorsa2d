@@ -50,7 +50,8 @@ pro contour_field, field, x, y, nLevs, scale, $
 end
 
 pro plot_solution, oneD = oneD, full = full, $
-		scale1 = scale1, scale2 = scale2, scale3_ = scale3_
+		scale1 = scale1, scale2 = scale2, scale3_ = scale3_, $
+		sav = sav
 
 
 	; Load data from all grids
@@ -63,6 +64,7 @@ pro plot_solution, oneD = oneD, full = full, $
 	yAll = 0.0
 	nAll = 0
 	eAlphaAll = complex (0,0)
+	eBetaAll = complex (0,0)
 	eBAll = complex (0,0)
 
 	for ii=0,n_elements(fileList)-1 do begin
@@ -297,16 +299,19 @@ pro plot_solution, oneD = oneD, full = full, $
 		xAll = [xAll, x2D[*]]
 		yAll = [yAll, y2D[*]]
 		eAlphaAll = [ eAlphaAll, eAlpha[*]]
+		eBetaAll = [ eBetaAll, eBeta[*]]
 		eBAll = [ eBAll, eB[*]]
 		nAll = [ nAll, n_elements(x2D[*]) ]
 
 		if (size(eAlphaAll_,/dim))[0] eq 0 then begin
 			x2D_	= x2D
 			eAlphaAll_ = eAlpha
+			eBetaAll_ = eBeta
 			eBAll_ = eB
 		endif else begin
 			x2D_	= [ x2D_, x2D ]
 			eAlphaAll_ = [ eAlphaAll_, eAlpha ]
+			eBetaAll_ = [ eBetaAll_, eBeta ]
 			eBAll_ = [ eBAll_, eB ]
 		endelse
 
@@ -315,6 +320,7 @@ pro plot_solution, oneD = oneD, full = full, $
 	xAll = xAll[1:*]
 	yAll = yAll[1:*]
 	eAlphaAll = eAlphaAll[1:*]
+	eBetaAll = eBetaAll[1:*]
 	eBAll = eBAll[1:*]
 	nAll = nAll[1:*]
 
@@ -325,7 +331,11 @@ pro plot_solution, oneD = oneD, full = full, $
 	if keyword_set(oneD) then begin
 
 		restore, '../smithe_1/soln.sav' 
-		iPlot, xorig, ealphaorig, thick=2
+		iPlot, xorig, ealphaorig, thick=2, view_grid=[3,1], /stretch_to_fit, $
+				dimensions = [1500,500]
+		iPlot, xorig, eBetaorig, thick=2, /view_next, /stretch_to_fit
+		iPlot, xorig, eBorig, thick=2, /view_next, /stretch_to_fit
+
 		for i=0,n_elements(fileList)-1 do begin
 
 			if i mod 3 eq 0 then color = red
@@ -335,7 +345,11 @@ pro plot_solution, oneD = oneD, full = full, $
 			stopII = startII+nAll[i]-1
 			print, i, startII, stopII
 			iplot, xall[startII:stopII],eAlphaAll[startII:stopII], $
-					color=color, /over, sym_index=4
+					color=color, /over, sym_index=4, view_number=1
+			iplot, xall[startII:stopII],eBetaAll[startII:stopII], $
+					color=color, /over, sym_index=4, view_number=2
+			iplot, xall[startII:stopII],eBAll[startII:stopII], $
+					color=color, /over, sym_index=4, view_number=3
 		endfor
 
 	endif else begin
@@ -393,5 +407,15 @@ pro plot_solution, oneD = oneD, full = full, $
 
 	endelse
 
+	if keyword_set(sav) then begin
+
+		xorig = x
+		eAlphaOrig = eAlpha
+		eBetaOrig = eBeta
+		eBOrig = eB
+
+		save, xorig, eAlphaOrig, eBetaOrig, eBOrig, $
+				file = 'soln.sav'
+	endif
 stop
 end
