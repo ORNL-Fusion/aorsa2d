@@ -142,7 +142,7 @@ program aorsa2dMain
         elseif (useCircularProfiles) then
             call circular_profiles ( allGrids(i) )
         else
-            call flat_profiles ( allGrids(i) )
+            call flat_profiles ( allGrids(i), parabolic = parabolic )
         endif
 
     enddo
@@ -232,7 +232,8 @@ program aorsa2dMain
 
     do i=1,nGrid
 
-        call aMat_fill ( allGrids(i) )
+        write(fNumber,'(i3.3)') i
+        call aMat_fill ( allGrids(i), fNumber )
 
     enddo
 

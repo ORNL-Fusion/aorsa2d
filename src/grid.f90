@@ -3,7 +3,7 @@ module grid
 use constants
 use chebyshev_mod
 use aorsa2din_mod, &
-only: chebyshevX, chebyshevY
+only: chebyshevX, chebyshevY, cosX, cosY
 
 implicit none
 
@@ -176,20 +176,21 @@ contains
 
                 do i = 1, nR
      
-                    if(chebyshevX) then
+                    if(chebyshevX)then
                         ! Gauss-Lobatto grid [-1,1] (Chebyshev basis)
                         grid%rNorm(i)  = -cos(pi*(i-1)/(nR-1))
-                    else
-                        !! Uniform grid [0,2pi] (Exp basis)
-                        !grid%rNorm(i)  = (i-1) * 2 * pi / ( nR - 1 )
+                    elseif(cosX)then
                         ! Uniform grid [0,pi] (Cos basis)
                         grid%rNorm(i)  = (i-1) * pi / ( nR - 1 )
+                    else
+                        ! Uniform grid [0,2pi] (Exp basis)
+                        grid%rNorm(i)  = (i-1) * 2 * pi / ( nR - 1 )
                     endif
        
                 enddo
             else
 
-                grid%rNorm(1) = 0
+                grid%rNorm(1) = (rMax-rMin)/2+rMin
                 
             endif
 
@@ -226,11 +227,12 @@ contains
 
             if(chebyshevX)then
                 grid%normFacR = 2 / grid%rRange
-            else
-                !!Exp
-                !grid%normFacR = 2 * pi / grid%rRange
+            elseif(cosX)then
                 !Cos
                 grid%normFacR = pi / grid%rRange
+            else
+                !Exp
+                grid%normFacR = 2 * pi / grid%rRange
             endif
 
       
@@ -242,16 +244,17 @@ contains
                     if(chebyshevY) then
                         ! Gauss-Lobatto grid [-1,1] (Chebyshev basis)
                         grid%zNorm(j)  = -cos(pi*(j-1)/(nZ-1))
-                    else
-                        !! Uniform grid [0,2pi] (Exp basis)
-                        !grid%zNorm(j)  = (j-1) * 2 * pi / ( nZ - 1 )
+                    elseif(cosY)then
                         ! Uniform grid [0,pi] (Cos basis)
                         grid%zNorm(j)  = (j-1) * pi / ( nZ - 1 )
+                    else
+                        ! Uniform grid [0,2pi] (Exp basis)
+                        grid%zNorm(j)  = (j-1) * 2 * pi / ( nZ - 1 )
                     endif
 
                 enddo
             else
-                grid%z(1)    = 0
+                grid%z(1)    = (zMax-zMin)/2.0+zMin
                 grid%zNorm(1) = 0
             endif
 
@@ -259,13 +262,14 @@ contains
             grid%z = (grid%zNorm-grid%zNorm(1)) &
                 / (grid%zNorm(nZ)-grid%zNorm(1)) * grid%zRange + zMin
 
-            if(chebyshevY) then
+            if(chebyshevY)then
                 grid%normFacZ = 2 / grid%zRange
-            else 
-                !!Exp
-                !grid%normFacZ = 2 * pi / grid%zRange
+            elseif(cosY)then
                 !Cos
                 grid%normFacZ = pi / grid%zRange
+            else 
+                !Exp
+                grid%normFacZ = 2 * pi / grid%zRange
             endif
 
 
@@ -278,26 +282,26 @@ contains
             ! Set the grid block n,m ranges
             ! -----------------------------
 
-            if(chebyshevX) then
+            if(chebyshevX)then
+
+                grid%nMin    = 0
+                grid%nMax    = nR-1
+
+            elseif(cosX)then
 
                 grid%nMin    = 0
                 grid%nMax    = nR-1
 
             else
 
-                !!Exp
-                !grid%nMin = -nR/2
-                !grid%nMax =  nR/2
+                grid%nMin = -nR/2
+                grid%nMax =  nR/2
 
-                !! Catch for even number of modes
-                !! for producing a square matrix
-                !! ------------------------------
+                ! Catch for even number of modes
+                ! for producing a square matrix
+                ! ------------------------------
 
-                !if (mod(nR,2)==0) grid%nMin = grid%nMin+1
-
-                !Cos
-                grid%nMin    = 0
-                grid%nMax    = nR-1
+                if (mod(nR,2)==0) grid%nMin = grid%nMin+1
 
             endif
 
@@ -307,16 +311,16 @@ contains
                 grid%mMin    = 0
                 grid%mMax    = nZ-1
 
-            else
-
-                !Exp
-                !grid%mMin = -nZ/2
-                !grid%mMax =  nZ/2
-                !if (mod(nZ,2)==0) grid%mMin = grid%mMin+1
-
-                !Cos
+            elseif(cosY)then
+                
                 grid%mMin    = 0
                 grid%mMax    = nZ-1
+
+            else
+
+                grid%mMin = -nZ/2
+                grid%mMax =  nZ/2
+                if (mod(nZ,2)==0) grid%mMin = grid%mMin+1
 
             endif
 
@@ -539,7 +543,7 @@ contains
 
 
     ! Basis function and their derivative routines
-    ! for Fourier & Chebyshev
+    ! for Exp, Chebyshev, Cos
     ! --------------------------------------------
 
     function xBasis (n,xNorm)
@@ -552,11 +556,10 @@ contains
         if(chebyshevX) then
             xBasis = chebT ( n, xNorm )
             !xBasis = chebU ( n, xNorm )
-        else
-            !!Exp
-            !xBasis = exp ( zi * n * xNorm )
-            !Cos
+        elseif(cosX) then
             xBasis = cos ( n * xNorm )
+        else
+            xBasis = exp ( zi * n * xNorm )
         endif
 
     end function xBasis
@@ -569,14 +572,13 @@ contains
         real, intent(in) :: yNorm
         complex :: yBasis
 
-        if(chebyshevY) then
+        if (chebyshevY) then
             yBasis = chebT ( m, yNorm )
             !yBasis = chebU ( m, yNorm )
-        else
-            !Exp 
-            yBasis = exp ( zi * m * yNorm )
-            !Cos
+        elseif (cosY) then
             yBasis = cos ( m * yNorm )
+        else
+            yBasis = exp ( zi * m * yNorm )
         endif
 
     end function yBasis
@@ -592,7 +594,7 @@ contains
 
         complex :: drBfn_bfn
 
-        if(chebyshevX) then
+        if(chebyshevX)then
             ! chebT
             drBfn_bfn = d%n * chebU(-1+d%n,d%xNorm) &
                 / chebT(d%n,d%xNorm)
@@ -600,11 +602,10 @@ contains
             !drBfn_bfn = ( (-1-d%n) * chebU(-1+d%n,d%xNorm) &
             !    + d%n * d%xNorm * chebU(d%n,d%xNorm) ) &
             !    / ( (-1+d%xNorm**2)*chebU(d%n,d%xNorm) )
-        else
-            !!Exp
-            !drBfn_bfn = zi * d%n
-            !Cos
+        elseif(cosX)then
             drBfn_bfn = -d%n * tan ( d%n * d%xNorm )
+        else
+            drBfn_bfn = zi * d%n
         endif
 
         drBfn_bfn = drBfn_bfn * d%normFacX
@@ -622,7 +623,7 @@ contains
 
         complex :: dzBfn_bfn
         
-        if(chebyshevY) then
+        if(chebyshevY)then
             ! chebT
             dzBfn_bfn = d%m * chebU(-1+d%m,d%yNorm) &
                 / chebT(d%m,d%yNorm)
@@ -630,11 +631,10 @@ contains
             !dzBfn_bfn = ( (-1-d%m) * chebU(-1+d%m,d%yNorm) &
             !    + d%m * d%yNorm * chebU(d%m,d%yNorm) ) &
             !    / ( (-1+d%yNorm**2)*chebU(d%m,d%yNorm) )
-        else
-            !Exp
-            dzBfn_bfn = zi * d%m
-            !Cos
+        elseif(cosY)then
             dzBfn_bfn = -d%m * tan ( d%m * d%yNorm )
+        else
+            dzBfn_bfn = zi * d%m
         endif
 
         dzBfn_bfn = dzBfn_bfn * d%normFacY
@@ -652,7 +652,7 @@ contains
 
         complex :: drrBfn_bfn
 
-        if(chebyshevX) then
+        if(chebyshevX)then
             ! chebT
             drrBfn_bfn = d%n * &
                 ( -d%n * chebU(-2+d%n,d%xNorm) &
@@ -663,10 +663,9 @@ contains
             !    +(3+d%n-2*d%n**2)*d%xNorm*chebU(-1+d%n,d%xNorm) &
             !    +d%n*(-1+(-1+d%n)*d%xNorm**2)*chebU(d%n,d%xNorm)) &
             !    / ( (-1+d%xNorm**2)**2*chebU(d%n,d%xNorm) )
+        elseif(cosX)then
+            drrBfn_bfn = -d%n**2
         else
-            !!Exp 
-            !drrBfn_bfn = -d%n**2
-            !Cos
             drrBfn_bfn = -d%n**2
         endif
 
@@ -696,10 +695,9 @@ contains
             !    +(3+d%m-2*d%m**2)*d%yNorm*chebU(-1+d%m,d%yNorm) &
             !    +d%m*(-1+(-1+d%m)*d%yNorm**2)*chebU(d%m,d%yNorm)) &
             !    / ( (-1+d%yNorm**2)**2*chebU(d%m,d%yNorm) )
+        elseif(cosY)then
+            dzzBfn_bfn = -d%m**2
         else
-            !!Exp
-            !dzzBfn_bfn = -d%m**2
-            !Cos
             dzzBfn_bfn = -d%m**2
         endif
 
@@ -717,7 +715,7 @@ contains
         type(dBfnArg), intent(in) :: d
         complex :: drzBfn_bfn, drBfn_bfn, dzBfn_bfn
 
-        if(chebyshevX) then
+        if(chebyshevX)then
             ! chebT
             drBfn_bfn = d%n * chebU(-1+d%n,d%xNorm) &
                 / chebT(d%n,d%xNorm)
@@ -725,14 +723,13 @@ contains
             !drBfn_bfn = ( (-1-d%m) * chebU(-1+d%m,d%yNorm) &
             !    + d%m * d%yNorm * chebU(d%m,d%yNorm) ) &
             !    / ( (-1+d%yNorm**2)*chebU(d%m,d%yNorm) )
-        else
-            !!Exp
-            !drBfn_bfn = zi * d%n
-            !Cos
+        elseif(cosX)then
             drBfn_bfn = -d%n * tan( d%n*d%xNorm )
+        else
+            drBfn_bfn = zi * d%n
         endif
 
-        if(chebyshevY) then
+        if(chebyshevY)then
             ! chebT
             dzBfn_bfn = d%m * chebU(-1+d%m,d%yNorm) &
                 / chebT(d%m,d%yNorm)
@@ -740,11 +737,10 @@ contains
             !drBfn_bfn = ( (-1-d%m) * chebU(-1+d%m,d%yNorm) &
             !    + d%m * d%yNorm * chebU(d%m,d%yNorm) ) &
             !    / ( (-1+d%yNorm**2)*chebU(d%m,d%yNorm) )
-        else
-            !!Exp
-            !dzBfn_bfn = zi * d%m
-            !Cos
+        elseif(cosY)then
             dzBfn_bfn = -d%m * tan( d%m*d%yNorm )
+        else
+            dzBfn_bfn = zi * d%m
         endif
 
         drzBfn_bfn = drBfn_bfn * dzBfn_bfn * ( d%normFacX * d%normFacY )

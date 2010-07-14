@@ -15,7 +15,6 @@ complex(kind=dbl) :: &
     sigBetAlpTmp, sigBetBetTmp, sigBetPrlTmp, &
     sigPrlAlpTmp, sigPrlBetTmp, sigPrlPrlTmp
 
-complex(kind=dbl) :: sigma_tmp(3,3)
 
 complex :: &
     kAlpAlp, kAlpBet, kAlpPrl, &
@@ -261,7 +260,7 @@ contains
 
 
 
-    subroutine amat_fill ( g )
+    subroutine amat_fill ( g, fNumber )
 
         use aorsa2din_mod, &
         only: &
@@ -277,10 +276,12 @@ contains
         use bField
         use parallel
         use chebyshev_mod
+        use write_data
 
         implicit none
 
         type(gridBlock), intent(in) :: g
+        character(len=*), intent(in) :: fNumber 
 
         type(dBfnArg) :: d
         integer :: iRow, iCol, i, j, n, m, p, s, ii, jj, iOL, jOL
@@ -301,7 +302,11 @@ contains
         complex :: bFn_iL, bFn_iR, bFn_i0, bFn_i1, bFn_i2, bFn_i3, bFn_i4, bFn_i5 
         real :: h1, h2, alpha
 
+        complex(kind=dbl) :: sigma_tmp(3,3), sigma_tmp_neg(3,3)
+        complex, allocatable :: sigma_write(:,:,:,:)
+
         integer :: nr, nz
+        integer :: sigma_nc_id, sigma_re_id, sigma_im_id
 
         real :: &
             Urr, Urt, Urz, &
@@ -367,6 +372,15 @@ contains
 
         if(square) lsWeightFac = 1
 
+
+        ! Initialize grid sigma file
+        ! --------------------------
+
+        call init_sigma_file ( g, 'sigma'//fNumber//'.nc', &
+            sigma_nc_id, sigma_re_id, sigma_im_id )
+
+        allocate ( sigma_write(g%nModesR,g%nModesZ,3,3) )
+        sigma_write = 0
 
         ! Begin loop
         ! ----------
@@ -473,6 +487,24 @@ contains
                                         g%k_cutoff, s, &
                                         g%sinTh(i,j), g%bPol(i,j), g%bMag(i,j), g%gradPrlB(i,j), &
                                         g%nuOmg(i,j) )
+
+                                    sigma_write(n-g%nMin+1,m-g%mMin+1,:,:) = sigma_tmp
+
+                                    !if(cosX)then
+                                    !kVec_stix = matMul( g%U_RTZ_to_ABb(i,j,:,:), (/ -kr, g%kPhi(i), kz /) ) 
+
+                                    !sigma_tmp_neg = sigmaHot_maxwellian&
+                                    !    ( mSpec(s), &
+                                    !    g%ktSpec(i,j,s), g%omgc(i,j,s), g%omgp2(i,j,s), &
+                                    !    kVec_stix, g%R(i), &
+                                    !    omgrf, k0, &
+                                    !    g%k_cutoff, s, &
+                                    !    g%sinTh(i,j), g%bPol(i,j), g%bMag(i,j), g%gradPrlB(i,j), &
+                                    !    g%nuOmg(i,j) )
+
+                                    !    sigma_tmp = ( sigma_tmp + sigma_tmp_neg ) / 2
+
+                                    !endif
 
                                 endif
                               
@@ -875,8 +907,22 @@ contains
                     enddo m_loop
                 enddo n_loop 
 
+
+                ! Write sigma for this pt
+                ! -----------------------
+
+                call write_sigma_pt ( i, j, sigma_write, &
+                    sigma_nc_id, sigma_re_id, sigma_im_id, &
+                    g%nModesR, g%nModesZ )
+
             enddo j_loop
         enddo i_loop 
+
+
+        ! Close sigma file
+        ! ----------------
+
+        call close_sigma_file ( sigma_nc_id )
 
         !if(iAm==0) then
         !write(*,*) 

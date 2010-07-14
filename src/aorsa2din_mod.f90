@@ -21,6 +21,7 @@ implicit none
     logical :: useSoloviev = .false.
     logical :: useCircular = .false.
     logical :: useCircularProfiles = .false.
+    logical :: parabolic = .false.
     logical :: noPoloidalField = .false.
     logical :: toroidalBroadening = .true.
     real :: kPrlEffLimit = 0.0
@@ -38,6 +39,8 @@ implicit none
     real :: lsWeightFac = 1.0 ! Least squares boundary weighting value O(10^3)
     logical :: chebyshevX = .false.
     logical :: chebyshevY = .false.
+    logical :: cosX = .false.
+    logical :: cosY = .true.
     logical :: magma = .false.
     real :: rhoAnt = 0.97
     real :: antSigRho = 0.1
@@ -467,7 +470,7 @@ implicit none
      &    chebyshevX, chebyshevY, magma, rhoAnt, antSigRho, toroidalBroadening,&
      &    kPrlEffLimit, nGrid, &
      &    nRAll, nZAll, rMinALl, rMaxAll, zMinAll, zMaxAll, &
-     &    overlap
+     &    overlap, parabolic, cosX, cosY
 
                 
 contains

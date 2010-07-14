@@ -272,8 +272,8 @@ contains
  
         call check ( nf90_enddef ( nc_id ) )
 
-        call check ( nf90_put_var ( nc_id, e1_re_id, real ( g%ealpha ) ) )
-        call check ( nf90_put_var ( nc_id, e1_im_id, aimag ( g%ealpha ) ) )
+        call check ( nf90_put_var ( nc_id, e1_re_id, realpart ( g%ealpha ) ) )
+        call check ( nf90_put_var ( nc_id, e1_im_id, imagpart ( g%ealpha ) ) )
         call check ( nf90_put_var ( nc_id, e2_re_id, real ( g%ebeta ) ) )
         call check ( nf90_put_var ( nc_id, e2_im_id, aimag ( g%ebeta ) ) )
         call check ( nf90_put_var ( nc_id, e3_re_id, real ( g%eB ) ) )
@@ -297,73 +297,139 @@ contains
 
     end subroutine write_solution 
 
-    subroutine write_amat ( g, fName )
+    !subroutine write_amat ( g, fName )
 
-        use mat_fill 
+    !    !use mat_fill 
+    !    use grid
+    !    
+    !    implicit none
+
+    !    type(gridBlock), intent(in) :: g
+    !    character(len=*), intent(in) :: fName 
+
+    !    integer :: nc_id, nX_id, nY_id, scalar_id
+    !    integer :: nX, nY
+    !    integer :: amat_re_id, amat_im_id
+    !    integer :: nPtsX_id, nPtsY_id, nModesX_id, nModesY_id
+    !    integer :: nModesX_dim_id, nModesY_dim_id, nPtsX_dim_id, nPtsY_dim_id
+    !    integer :: xx_re_id, yy_re_id, xx_im_id, yy_im_id
+
+    !    nX  = g%nModesR * g%nModesZ * 3 !size ( aMat, 1 )
+    !    nY  = g%nR * g%nZ * 3 !size ( aMat, 2 )
+
+    !    call check ( nf90_create ( fName, nf90_clobber, nc_id ) )
+    !    call check ( nf90_def_dim ( nc_id, "nX", nX, nX_id ) )
+    !    call check ( nf90_def_dim ( nc_id, "nY", nY, nY_id ) )
+    !    call check ( nf90_def_dim ( nc_id, "scalar", 1, scalar_id ) )
+    !    call check ( nf90_def_dim ( nc_id, "nModesX", g%nModesR, nModesX_dim_id ) )
+    !    call check ( nf90_def_dim ( nc_id, "nModesY", g%nModesZ, nModesY_dim_id ) )
+    !    call check ( nf90_def_dim ( nc_id, "nPtsX", g%nR, nPtsX_dim_id ) )
+    !    call check ( nf90_def_dim ( nc_id, "nPtsY", g%nZ, nPtsY_dim_id ) )
+
+    !    call check ( nf90_def_var ( nc_id, "amat_re", NF90_REAL, &
+    !        (/nX_id,nY_id/), amat_re_id ) ) 
+    !    call check ( nf90_def_var ( nc_id, "amat_im", NF90_REAL, &
+    !        (/nX_id,nY_id/), amat_im_id ) ) 
+    !    call check ( nf90_def_var ( nc_id, "nPtsX", NF90_INT, &
+    !        scalar_id, nPtsX_id ) ) 
+    !    call check ( nf90_def_var ( nc_id, "nPtsY", NF90_INT, &
+    !        scalar_id, nPtsY_id ) ) 
+    !    call check ( nf90_def_var ( nc_id, "nModesX", NF90_INT, &
+    !        scalar_id, nModesX_id ) ) 
+    !    call check ( nf90_def_var ( nc_id, "nModesY", NF90_INT, &
+    !        scalar_id, nModesY_id ) ) 
+    !    call check ( nf90_def_var ( nc_id, "xx_re", NF90_REAL, &
+    !        (/nModesX_dim_id,nPtsX_dim_id/), xx_re_id ) ) 
+    !    call check ( nf90_def_var ( nc_id, "yy_re", NF90_REAL, &
+    !        (/nModesY_dim_id,nPtsY_dim_id/), yy_re_id ) ) 
+    !    call check ( nf90_def_var ( nc_id, "xx_im", NF90_REAL, &
+    !        (/nModesX_dim_id,nPtsX_dim_id/), xx_im_id ) ) 
+    !    call check ( nf90_def_var ( nc_id, "yy_im", NF90_REAL, &
+    !        (/nModesY_dim_id,nPtsY_dim_id/), yy_im_id ) ) 
+ 
+    !    call check ( nf90_enddef ( nc_id ) )
+
+    !    call check ( nf90_put_var ( nc_id, amat_re_id, real ( aMat ) ) )
+    !    call check ( nf90_put_var ( nc_id, amat_im_id, aimag ( aMat ) ) )
+    !    call check ( nf90_put_var ( nc_id, nPtsX_id, g%nR ) )
+    !    call check ( nf90_put_var ( nc_id, nPtsY_id, g%nZ ) )
+    !    call check ( nf90_put_var ( nc_id, nModesX_id, g%nModesR ) )
+    !    call check ( nf90_put_var ( nc_id, nModesY_id, g%nModesZ ) )
+    !    call check ( nf90_put_var ( nc_id, xx_re_id, real ( g%xx ) ) )
+    !    call check ( nf90_put_var ( nc_id, yy_re_id, real ( g%yy ) ) )
+    !    call check ( nf90_put_var ( nc_id, xx_im_id, aimag ( g%xx ) ) )
+    !    call check ( nf90_put_var ( nc_id, yy_im_id, aimag ( g%yy ) ) )
+
+
+    !    call check ( nf90_close ( nc_id ) )
+
+    !end subroutine write_amat
+
+
+    ! Routines to initialize and incrementally write to the
+    ! sigma file
+    ! -----------------------------------------------------
+
+    subroutine init_sigma_file ( g, fName, nc_id, sigma_re_id, sigma_im_id )
+    
         use grid
         
         implicit none
 
         type(gridBlock), intent(in) :: g
         character(len=*), intent(in) :: fName 
+        integer, intent(out) :: nc_id, sigma_re_id, sigma_im_id
 
-        integer :: nc_id, nX_id, nY_id, scalar_id
-        integer :: nX, nY
-        integer :: amat_re_id, amat_im_id
-        integer :: nPtsX_id, nPtsY_id, nModesX_id, nModesY_id
-        integer :: nModesX_dim_id, nModesY_dim_id, nPtsX_dim_id, nPtsY_dim_id
-        integer :: xx_re_id, yy_re_id, xx_im_id, yy_im_id
+        integer :: nX_id, nY_id, nN_id, nM_id, n3_id
+        integer :: nX, nY, nN, nM, n3
 
-        nX  = g%nModesR * g%nModesZ * 3 !size ( aMat, 1 )
-        nY  = g%nR * g%nZ * 3 !size ( aMat, 2 )
+        nX = g%nR 
+        nY = g%nZ 
+        nN = g%nModesR
+        nM = g%nModesZ
+        n3 = 3
 
         call check ( nf90_create ( fName, nf90_clobber, nc_id ) )
+
         call check ( nf90_def_dim ( nc_id, "nX", nX, nX_id ) )
         call check ( nf90_def_dim ( nc_id, "nY", nY, nY_id ) )
-        call check ( nf90_def_dim ( nc_id, "scalar", 1, scalar_id ) )
-        call check ( nf90_def_dim ( nc_id, "nModesX", g%nModesR, nModesX_dim_id ) )
-        call check ( nf90_def_dim ( nc_id, "nModesY", g%nModesZ, nModesY_dim_id ) )
-        call check ( nf90_def_dim ( nc_id, "nPtsX", g%nR, nPtsX_dim_id ) )
-        call check ( nf90_def_dim ( nc_id, "nPtsY", g%nZ, nPtsY_dim_id ) )
+        call check ( nf90_def_dim ( nc_id, "nN", nN, nN_id ) )
+        call check ( nf90_def_dim ( nc_id, "nM", nM, nM_id ) )
+        call check ( nf90_def_dim ( nc_id, "n3", n3, n3_id ) )
 
-        call check ( nf90_def_var ( nc_id, "amat_re", NF90_REAL, &
-            (/nX_id,nY_id/), amat_re_id ) ) 
-        call check ( nf90_def_var ( nc_id, "amat_im", NF90_REAL, &
-            (/nX_id,nY_id/), amat_im_id ) ) 
-        call check ( nf90_def_var ( nc_id, "nPtsX", NF90_INT, &
-            scalar_id, nPtsX_id ) ) 
-        call check ( nf90_def_var ( nc_id, "nPtsY", NF90_INT, &
-            scalar_id, nPtsY_id ) ) 
-        call check ( nf90_def_var ( nc_id, "nModesX", NF90_INT, &
-            scalar_id, nModesX_id ) ) 
-        call check ( nf90_def_var ( nc_id, "nModesY", NF90_INT, &
-            scalar_id, nModesY_id ) ) 
-        call check ( nf90_def_var ( nc_id, "xx_re", NF90_REAL, &
-            (/nModesX_dim_id,nPtsX_dim_id/), xx_re_id ) ) 
-        call check ( nf90_def_var ( nc_id, "yy_re", NF90_REAL, &
-            (/nModesY_dim_id,nPtsY_dim_id/), yy_re_id ) ) 
-        call check ( nf90_def_var ( nc_id, "xx_im", NF90_REAL, &
-            (/nModesX_dim_id,nPtsX_dim_id/), xx_im_id ) ) 
-        call check ( nf90_def_var ( nc_id, "yy_im", NF90_REAL, &
-            (/nModesY_dim_id,nPtsY_dim_id/), yy_im_id ) ) 
- 
+        call check ( nf90_def_var ( nc_id, "sigma_re", NF90_REAL, &
+            (/nX_id,nY_id,nN_id,nM_id,n3_id,n3_id/), sigma_re_id ) ) 
+        call check ( nf90_def_var ( nc_id, "sigma_im", NF90_REAL, &
+            (/nX_id,nY_id,nN_id,nM_id,n3_id,n3_id/), sigma_im_id ) ) 
+
         call check ( nf90_enddef ( nc_id ) )
 
-        call check ( nf90_put_var ( nc_id, amat_re_id, real ( aMat ) ) )
-        call check ( nf90_put_var ( nc_id, amat_im_id, aimag ( aMat ) ) )
-        call check ( nf90_put_var ( nc_id, nPtsX_id, g%nR ) )
-        call check ( nf90_put_var ( nc_id, nPtsY_id, g%nZ ) )
-        call check ( nf90_put_var ( nc_id, nModesX_id, g%nModesR ) )
-        call check ( nf90_put_var ( nc_id, nModesY_id, g%nModesZ ) )
-        call check ( nf90_put_var ( nc_id, xx_re_id, real ( g%xx ) ) )
-        call check ( nf90_put_var ( nc_id, yy_re_id, real ( g%yy ) ) )
-        call check ( nf90_put_var ( nc_id, xx_im_id, aimag ( g%xx ) ) )
-        call check ( nf90_put_var ( nc_id, yy_im_id, aimag ( g%yy ) ) )
+    end subroutine init_sigma_file
 
+
+    subroutine write_sigma_pt ( i,j,sigma, nc_id, sigma_re_id, sigma_im_id, nN, nM )
+
+        complex, intent(in) :: sigma(:,:,:,:)
+        integer, intent(in) :: i, j, nc_id, sigma_re_id, sigma_im_id
+        integer, intent(in) :: nN, nM
+
+        call check ( nf90_put_var ( nc_id, sigma_re_id, realpart ( sigma ), &
+            start = (/ i, j, 1, 1, 1, 1 /), &
+            count = (/ 1, 1, nN, nM, 3, 3 /) ) )
+        call check ( nf90_put_var ( nc_id, sigma_im_id, imagpart ( sigma ), &
+            start = (/ i, j, 1, 1, 1, 1 /), &
+            count = (/ 1, 1, nN, nM, 3, 3 /) ) )
+
+    end subroutine write_sigma_pt
+
+
+    subroutine close_sigma_file ( nc_id )
+
+        integer, intent(in) :: nc_id
 
         call check ( nf90_close ( nc_id ) )
 
-    end subroutine write_amat
+    end subroutine close_sigma_file
 
 
 end module write_data

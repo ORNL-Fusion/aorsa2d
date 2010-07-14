@@ -76,7 +76,8 @@ ${OBJ_DIR}/mat_fill.o: \
 		${OBJ_DIR}/eqdsk_dlg.o \
 		${OBJ_DIR}/chebyshev_mod.o \
 		${OBJ_DIR}/antenna.o \
-		${OBJ_DIR}/spline_dlg.o
+		${OBJ_DIR}/spline_dlg.o \
+		${OBJ_DIR}/write_data.o
 
 ${OBJ_DIR}/antenna.o: \
 		${OBJ_DIR}/grid.o \
@@ -87,9 +88,10 @@ ${OBJ_DIR}/antenna.o: \
 		${OBJ_DIR}/eqdsk_dlg.o
 
 ${OBJ_DIR}/write_data.o: \
-		${OBJ_DIR}/mat_fill.o \
-		${OBJ_DIR}/solve.o \
-		${OBJ_DIR}/constants.o
+		${OBJ_DIR}/constants.o \
+		${OBJ_DIR}/check_mod.o \
+		${OBJ_DIR}/bField.o \
+		${OBJ_DIR}/rotation.o
 
 ${OBJ_DIR}/inv_fourier.o: \
 		${OBJ_DIR}/aorsa2din_mod.o \
@@ -98,13 +100,11 @@ ${OBJ_DIR}/inv_fourier.o: \
 # Uncomment the 3 lines here for MAGMA 
 ${OBJ_DIR}/solve.o: \
 		${OBJ_DIR}/parallel.o \
-		${OBJ_DIR}/antenna.o #\
+		${OBJ_DIR}/antenna.o \
+		${OBJ_DIR}/mat_fill.o#\
 #		${OBJ_DIR}/get_nb.o \
 #		${OBJ_DIR}/fortran.o \
 #		${OBJ_DIR}/magma_solve.o
-
-${OBJ_DIR}/write_data.o: \
-		${OBJ_DIR}/check_mod.o
 
 ${OBJ_DIR}/rotateEToLab.o: \
 		${OBJ_DIR}/solve.o \

@@ -55,18 +55,20 @@ contains
     end subroutine init_profiles
 
 
-    subroutine flat_profiles ( g )
+    subroutine flat_profiles ( g, parabolic )
 
         use aorsa2din_mod, &
-        only: nSpec, xNuOmg
+        only: nSpec, xNuOmg, r0, a
         use bField
         use grid
 
         implicit none
 
+        logical, intent(in), optional :: parabolic
         type(gridBlock), intent(inout) :: g
 
         integer :: i, j, s
+        real :: scaleFacT, scaleFacD
 
         ! create profile
         ! --------------
@@ -81,8 +83,29 @@ contains
 
         do s=2,nSpec
         
+
+            ! Flat profiles
+            ! -------------
+
             g%ktSpec(:,:,s)       = tSpec(s) * q 
             g%densitySpec(:,:,s)  = dSpec(s) 
+
+
+            ! Parabolic profiles
+            ! ------------------
+
+            if(present(parabolic))then
+                if(parabolic)then
+
+                    do i=1,g%nR
+                        scaleFacT = (tSpec(s)-tLim(s))/a**2
+                        scaleFacD = (dSpec(s)-dLim(s))/a**2
+                        g%ktSpec(i,:,s)       = ( tSpec(s)-scaleFacT*(g%R(i)-r0)**2 ) * q  
+                        g%densitySpec(i,:,s)  = ( dSpec(s)-scaleFacD*(g%R(i)-r0)**2 ) 
+                    enddo
+
+                endif
+            endif
         
         enddo
 
@@ -90,6 +113,16 @@ contains
         ! ---------
 
         g%ktSpec(:,:,1) = tSpec(1) * q
+
+        if(present(parabolic))then
+            if(parabolic)then
+                scaleFacT = (tSpec(1)-tLim(1))/a**2
+                do i=1,g%nR
+                    g%ktSpec(i,:,1) = ( tSpec(1)-scaleFacT*(g%R(i)-r0)**2 ) * q  
+                enddo
+            endif
+        endif
+
 
         do i=1,g%nR
             do j=1,g%nZ
