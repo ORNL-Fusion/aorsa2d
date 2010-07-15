@@ -206,13 +206,15 @@ contains
     subroutine write_solution ( g )
 
         use grid
+        use aorsa2din_mod, &
+        only: nSpec
 
         implicit none
 
         type(gridBlock), intent(in) :: g
         character(len=100) :: fName 
 
-        integer :: nc_id, nX_id, nY_id, nModesX_id, nModesY_id
+        integer :: nc_id, nX_id, nY_id, nModesX_id, nModesY_id, nSpec_id
         integer :: &
             e1_re_id, e1_im_id, &
             e2_re_id, e2_im_id, &
@@ -239,7 +241,7 @@ contains
         call check ( nf90_def_dim ( nc_id, "nY", g%nZ, nY_id ) )
         call check ( nf90_def_dim ( nc_id, "nModesX", g%nModesR, nModesX_id ) )
         call check ( nf90_def_dim ( nc_id, "nModesY", g%nModesZ, nModesY_id ) )
-
+        call check ( nf90_def_dim ( nc_id, "nSpec", nSpec, nSpec_id ) )
 
         call check ( nf90_def_var ( nc_id, "ealpha_re", NF90_REAL, &
             (/nX_id,nY_id/), e1_re_id ) ) 
@@ -281,20 +283,20 @@ contains
             (/nX_id,nY_id/), ez_im_id ) ) 
 
         call check ( nf90_def_var ( nc_id, "jalpha_re", NF90_REAL, &
-            (/nX_id,nY_id/), j1_re_id ) ) 
+            (/nX_id,nY_id,nSpec_id/), j1_re_id ) ) 
         call check ( nf90_def_var ( nc_id, "jalpha_im", NF90_REAL, &
-            (/nX_id,nY_id/), j1_im_id ) ) 
+            (/nX_id,nY_id,nSpec_id/), j1_im_id ) ) 
         call check ( nf90_def_var ( nc_id, "jbeta_re", NF90_REAL, &
-            (/nX_id,nY_id/), j2_re_id ) ) 
+            (/nX_id,nY_id,nSpec_id/), j2_re_id ) ) 
         call check ( nf90_def_var ( nc_id, "jbeta_im", NF90_REAL, &
-            (/nX_id,nY_id/), j2_im_id ) ) 
+            (/nX_id,nY_id,nSpec_id/), j2_im_id ) ) 
         call check ( nf90_def_var ( nc_id, "jB_re", NF90_REAL, &
-            (/nX_id,nY_id/), j3_re_id ) ) 
+            (/nX_id,nY_id,nSpec_id/), j3_re_id ) ) 
         call check ( nf90_def_var ( nc_id, "jB_im", NF90_REAL, &
-            (/nX_id,nY_id/), j3_im_id ) ) 
+            (/nX_id,nY_id,nSpec_id/), j3_im_id ) ) 
  
         call check ( nf90_def_var ( nc_id, "jouleHeating", NF90_REAL, &
-            (/nX_id,nY_id/), jouleHeating_id ) ) 
+            (/nX_id,nY_id,nSpec_id/), jouleHeating_id ) ) 
  
 
         call check ( nf90_enddef ( nc_id ) )
@@ -406,7 +408,8 @@ contains
     ! sigma file
     ! -----------------------------------------------------
 
-    subroutine init_sigma_file ( g, fName, nc_id, sigma_re_id, sigma_im_id )
+    subroutine init_sigma_file &
+        ( g, fName, nc_id, sigma_re_id, sigma_im_id, nSpec )
     
         use grid
         
@@ -414,9 +417,10 @@ contains
 
         type(gridBlock), intent(in) :: g
         character(len=*), intent(in) :: fName 
+        integer, intent(in) :: nSpec
         integer, intent(out) :: nc_id, sigma_re_id, sigma_im_id
 
-        integer :: nX_id, nY_id, nN_id, nM_id, n3_id
+        integer :: nX_id, nY_id, nN_id, nM_id, n3_id, nS_id
         integer :: nX, nY, nN, nM, n3
 
         nX = g%nR 
@@ -432,29 +436,30 @@ contains
         call check ( nf90_def_dim ( nc_id, "nN", nN, nN_id ) )
         call check ( nf90_def_dim ( nc_id, "nM", nM, nM_id ) )
         call check ( nf90_def_dim ( nc_id, "n3", n3, n3_id ) )
+        call check ( nf90_def_dim ( nc_id, "nS", nSpec, nS_id ) )
 
         call check ( nf90_def_var ( nc_id, "sigma_re", NF90_REAL, &
-            (/nX_id,nY_id,nN_id,nM_id,n3_id,n3_id/), sigma_re_id ) ) 
+            (/nX_id,nY_id,nN_id,nM_id,n3_id,n3_id,nS_id/), sigma_re_id ) ) 
         call check ( nf90_def_var ( nc_id, "sigma_im", NF90_REAL, &
-            (/nX_id,nY_id,nN_id,nM_id,n3_id,n3_id/), sigma_im_id ) ) 
+            (/nX_id,nY_id,nN_id,nM_id,n3_id,n3_id,nS_id/), sigma_im_id ) ) 
 
         call check ( nf90_enddef ( nc_id ) )
 
     end subroutine init_sigma_file
 
 
-    subroutine write_sigma_pt ( i,j,sigma, nc_id, sigma_re_id, sigma_im_id, nN, nM )
+    subroutine write_sigma_pt ( i,j,sigma, nc_id, sigma_re_id, sigma_im_id, nN, nM, nSpec )
 
-        complex, intent(in) :: sigma(:,:,:,:)
+        complex, intent(in) :: sigma(:,:,:,:,:)
         integer, intent(in) :: i, j, nc_id, sigma_re_id, sigma_im_id
         integer, intent(in) :: nN, nM
 
         call check ( nf90_put_var ( nc_id, sigma_re_id, realpart ( sigma ), &
-            start = (/ i, j, 1, 1, 1, 1 /), &
-            count = (/ 1, 1, nN, nM, 3, 3 /) ) )
+            start = (/ i, j, 1, 1, 1, 1, 1 /), &
+            count = (/ 1, 1, nN, nM, 3, 3, nSpec /) ) )
         call check ( nf90_put_var ( nc_id, sigma_im_id, imagpart ( sigma ), &
-            start = (/ i, j, 1, 1, 1, 1 /), &
-            count = (/ 1, 1, nN, nM, 3, 3 /) ) )
+            start = (/ i, j, 1, 1, 1, 1, 1 /), &
+            count = (/ 1, 1, nN, nM, 3, 3, nSpec /) ) )
 
     end subroutine write_sigma_pt
 

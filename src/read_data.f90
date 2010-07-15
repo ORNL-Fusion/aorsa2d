@@ -9,14 +9,14 @@ subroutine read_sigma ( fName, sigma )
   
     implicit none
 
-    complex, optional, intent(out) :: sigma(:,:,:,:,:,:)
+    complex, optional, intent(out) :: sigma(:,:,:,:,:,:,:)
 
     character(len=*), intent(in) :: fName
 
-    integer :: nc_id, sigma_re_id, sigma_im_id, sigma_dim_ids(6)
-    integer :: nR, nZ, nN, nM
+    integer :: nc_id, sigma_re_id, sigma_im_id, sigma_dim_ids(7)
+    integer :: nR, nZ, nN, nM, nS, iStat
 
-    real, allocatable, dimension(:,:,:,:,:,:) :: sigma_re, sigma_im
+    real, allocatable, dimension(:,:,:,:,:,:,:) :: sigma_re, sigma_im
 
     write(*,*) '    reading sigma file ', fName
 
@@ -31,10 +31,16 @@ subroutine read_sigma ( fName, sigma )
     call check ( nf90_inquire_dimension ( nc_id, sigma_dim_ids(2), len = nZ ) ) 
     call check ( nf90_inquire_dimension ( nc_id, sigma_dim_ids(3), len = nN ) ) 
     call check ( nf90_inquire_dimension ( nc_id, sigma_dim_ids(4), len = nM ) ) 
+    call check ( nf90_inquire_dimension ( nc_id, sigma_dim_ids(7), len = nS ) ) 
 
     allocate ( &
-        sigma_re ( nR, nZ, nN, nM, 3, 3 ), &
-        sigma_im ( nR, nZ, nN, nM, 3, 3 ) )
+        sigma_re ( nR, nZ, nN, nM, 3, 3, nS ), &
+        sigma_im ( nR, nZ, nN, nM, 3, 3, nS ), stat = iStat )
+
+    if(iStat/=0)then
+            write(*,*) 'ERROR src/read_data.f90 - allocation failed :('
+            stop
+    endif
 
     call check ( nf90_get_var ( nc_id, sigma_re_id, sigma_re ) )
     call check ( nf90_get_var ( nc_id, sigma_im_id, sigma_im ) )

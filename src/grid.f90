@@ -61,8 +61,8 @@ type :: gridBlock
     real, allocatable, dimension(:,:) :: gradPrlB
     real, allocatable, dimension(:,:) :: bPol
 
-    ! Currents
-    ! --------
+    ! Antenna Currents
+    ! ----------------
     complex, allocatable, dimension(:,:) :: &
         jR, jT, jZ
 
@@ -75,14 +75,14 @@ type :: gridBlock
     complex, allocatable, dimension(:,:) :: &
        eR,  eTh, eZ 
 
-    ! Plasma currents
-    ! ---------------
-    complex, allocatable, dimension(:,:) :: &
+    ! Plasma currents per species
+    ! ---------------------------
+    complex, allocatable, dimension(:,:,:) :: &
         jAlpha, jBeta, jB
 
     ! Power absorption
     ! ----------------
-    real, allocatable, dimension(:,:) :: &
+    real, allocatable, dimension(:,:,:) :: &
         jouleHeating
 
     ! Rotation matrix and derivatives

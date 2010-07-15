@@ -302,9 +302,9 @@ contains
         real :: h1, h2, alpha
 
         complex(kind=dbl) :: sigma_tmp(3,3), sigma_tmp_neg(3,3)
-        complex, allocatable :: sigma_write(:,:,:,:)
+        complex, allocatable :: sigma_write(:,:,:,:,:)
 
-        integer :: nr, nz
+        integer :: nr, nz, iStat
         integer :: sigma_nc_id, sigma_re_id, sigma_im_id
 
         real :: &
@@ -376,9 +376,14 @@ contains
         ! --------------------------
 
         call init_sigma_file ( g, 'sigma'//g%fNumber//'.nc', &
-            sigma_nc_id, sigma_re_id, sigma_im_id )
+            sigma_nc_id, sigma_re_id, sigma_im_id, nSpec )
 
-        allocate ( sigma_write(g%nMin:g%nMax,g%mMin:g%mMax,3,3) )
+        allocate ( sigma_write(g%nMin:g%nMax,g%mMin:g%mMax,3,3,nSpec), stat = iStat )
+        if(iStat/=0)then
+                write(*,*) 'ERROR src/mat_fill.f90 - allocation failed :('
+                stop
+        endif
+
         sigma_write = 0
 
         ! Begin loop
@@ -487,7 +492,7 @@ contains
                                         g%sinTh(i,j), g%bPol(i,j), g%bMag(i,j), g%gradPrlB(i,j), &
                                         g%nuOmg(i,j) )
 
-                                    sigma_write(n,m,:,:) = sigma_tmp
+                                    sigma_write(n,m,:,:,s) = sigma_tmp
 
                                     !if(cosX)then
                                     !kVec_stix = matMul( g%U_RTZ_to_ABb(i,j,:,:), (/ -kr, g%kPhi(i), kz /) ) 
@@ -912,7 +917,7 @@ contains
 
                 call write_sigma_pt ( i, j, sigma_write, &
                     sigma_nc_id, sigma_re_id, sigma_im_id, &
-                    g%nModesR, g%nModesZ )
+                    g%nModesR, g%nModesZ, nSpec )
 
             enddo j_loop
         enddo i_loop 
