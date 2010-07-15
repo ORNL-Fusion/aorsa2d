@@ -97,6 +97,8 @@ contains
             if(present(parabolic))then
                 if(parabolic)then
 
+                    !if(r0+a>g%
+
                     do i=1,g%nR
                         scaleFacT = (tSpec(s)-tLim(s))/a**2
                         scaleFacD = (dSpec(s)-dLim(s))/a**2
