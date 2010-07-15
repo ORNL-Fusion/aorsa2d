@@ -260,7 +260,7 @@ contains
 
 
 
-    subroutine amat_fill ( g, fNumber )
+    subroutine amat_fill ( g )
 
         use aorsa2din_mod, &
         only: &
@@ -281,7 +281,6 @@ contains
         implicit none
 
         type(gridBlock), intent(in) :: g
-        character(len=*), intent(in) :: fNumber 
 
         type(dBfnArg) :: d
         integer :: iRow, iCol, i, j, n, m, p, s, ii, jj, iOL, jOL
@@ -376,10 +375,10 @@ contains
         ! Initialize grid sigma file
         ! --------------------------
 
-        call init_sigma_file ( g, 'sigma'//fNumber//'.nc', &
+        call init_sigma_file ( g, 'sigma'//g%fNumber//'.nc', &
             sigma_nc_id, sigma_re_id, sigma_im_id )
 
-        allocate ( sigma_write(g%nModesR,g%nModesZ,3,3) )
+        allocate ( sigma_write(g%nMin:g%nMax,g%mMin:g%mMax,3,3) )
         sigma_write = 0
 
         ! Begin loop
@@ -488,7 +487,7 @@ contains
                                         g%sinTh(i,j), g%bPol(i,j), g%bMag(i,j), g%gradPrlB(i,j), &
                                         g%nuOmg(i,j) )
 
-                                    sigma_write(n-g%nMin+1,m-g%mMin+1,:,:) = sigma_tmp
+                                    sigma_write(n,m,:,:) = sigma_tmp
 
                                     !if(cosX)then
                                     !kVec_stix = matMul( g%U_RTZ_to_ABb(i,j,:,:), (/ -kr, g%kPhi(i), kz /) ) 

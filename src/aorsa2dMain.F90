@@ -16,6 +16,7 @@ program aorsa2dMain
     use parallel
     use timer_mod
     use E_to_lab
+    use power
 
     implicit none
 
@@ -55,7 +56,6 @@ program aorsa2dMain
 
     integer :: i, nPts_tot
     integer :: nModesR_tot, nModesZ_tot
-    character(len=3) :: fNumber
 
 
 !   read namelist input data
@@ -199,8 +199,8 @@ program aorsa2dMain
     if (iAm==0) then
 
         do i=1,nGrid
-            write(fNumber,'(i3.3)') i
-            call write_runData ( allGrids(i), 'runData'//fNumber//'.nc' )
+            write(allGrids(i)%fNumber,'(i3.3)') i
+            call write_runData ( allGrids(i) )
         enddo
 
     endif
@@ -232,8 +232,7 @@ program aorsa2dMain
 
     do i=1,nGrid
 
-        write(fNumber,'(i3.3)') i
-        call aMat_fill ( allGrids(i), fNumber )
+        call aMat_fill ( allGrids(i) )
 
     enddo
 
@@ -373,7 +372,38 @@ program aorsa2dMain
     enddo
 
 
-!   Write data to file
+
+!   Calculate the plasma current
+!   ----------------------------
+
+    if (iAm==0) &
+    write(*,*) 'Calculating plasma current'
+
+    if ( iAm == 0 ) then
+
+        do i=1,nGrid
+            call current ( allGrids(i) )
+        enddo
+
+    endif
+
+
+!   Calculate the Joule Heating 
+!   ---------------------------
+
+    if (iAm==0) &
+    write(*,*) 'Calculating Joule heating' 
+
+    if ( iAm == 0 ) then
+
+        do i=1,nGrid
+            call jDotE ( allGrids(i) )
+        enddo
+
+    endif
+
+
+!   Write soln to file
 !   ------------------
 
     if (iAm==0) &
@@ -382,11 +412,11 @@ program aorsa2dMain
     if ( iAm == 0 ) then
 
         do i=1,nGrid
-            write(fNumber,'(i3.3)') i
-            call write_solution ( allGrids(i), 'solution'//fNumber//'.nc' )
+            call write_solution ( allGrids(i) )
         enddo
 
     endif
+
 
 #ifdef par
     call release_grid ()

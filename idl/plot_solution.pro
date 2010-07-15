@@ -132,6 +132,15 @@ pro plot_solution, oneD = oneD, full = full, $
 			nCdf_varGet, cdfId, 'et_im', et_im 
 			nCdf_varGet, cdfId, 'ez_im', ez_im 
 
+			nCdf_varGet, cdfId, 'jalpha_re', jalpha_re 
+			nCdf_varGet, cdfId, 'jbeta_re', jbeta_re 
+			nCdf_varGet, cdfId, 'jB_re', jB_re 
+			nCdf_varGet, cdfId, 'jalpha_im', jalpha_im 
+			nCdf_varGet, cdfId, 'jbeta_im', jbeta_im 
+			nCdf_varGet, cdfId, 'jB_im', jB_im 
+
+			nCdf_varGet, cdfId, 'jouleHeating', jouleHeating 
+
 			ealpha	= complex ( ealpha_re, ealpha_im )
 			ebeta	= complex ( ebeta_re, ebeta_im )
 			eb	= complex ( eb_re, eb_im )
@@ -143,6 +152,10 @@ pro plot_solution, oneD = oneD, full = full, $
 			eR	= complex ( er_re, er_im )
 			eTh	= complex ( et_re, et_im )
 			eZ	= complex ( ez_re, ez_im )
+
+			jPAlpha = complex ( jAlpha_re, jAlpha_im )
+			jPBeta = complex ( jBeta_re, jBeta_im )
+			jPB = complex ( jB_re, jB_im )
 
 		ncdf_close, cdfId
 

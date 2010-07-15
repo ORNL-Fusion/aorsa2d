@@ -119,6 +119,7 @@ contains
             write(*,*) '    LAPACK status: ', info
         endif 
         
+        deallocate ( aMat )
 
         brhs_global = brhs
 

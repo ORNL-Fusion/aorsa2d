@@ -5,7 +5,7 @@ use check_mod
 
 contains
 
-    subroutine write_runData ( g, fName )
+    subroutine write_runData ( g )
  
         use aorsa2din_mod, &
         only: nSpec
@@ -17,7 +17,7 @@ contains
         implicit none
 
         type(gridBlock), intent(in) :: g
-        character(len=*), intent(in) :: fName 
+        character(len=100) :: fName 
 
         integer :: nc_id, nX_id, nY_id, nc_stat
         integer :: nModesX_id, nModesY_id, nSpec_id
@@ -41,6 +41,8 @@ contains
         integer :: Urrid, Urtid, Urzid, &
             Utrid, Uttid, Utzid, &
             Uzrid, Uztid, Uzzid
+
+        fName = 'runData'//g%fNumber//'.nc'
 
         call check ( nf90_create ( fName, nf90_clobber, nc_id ) )
         call check ( nf90_def_dim ( nc_id, "nPtsX", g%nR, nX_id ) )
@@ -201,14 +203,14 @@ contains
     end subroutine write_runData
 
 
-    subroutine write_solution ( g, fName )
+    subroutine write_solution ( g )
 
         use grid
 
         implicit none
 
         type(gridBlock), intent(in) :: g
-        character(len=*), intent(in) :: fName 
+        character(len=100) :: fName 
 
         integer :: nc_id, nX_id, nY_id, nModesX_id, nModesY_id
         integer :: &
@@ -223,7 +225,15 @@ contains
             er_re_id, er_im_id, &
             et_re_id, et_im_id, &
             ez_re_id, ez_im_id
- 
+        integer :: &
+            j1_re_id, j1_im_id, &
+            j2_re_id, j2_im_id, &
+            j3_re_id, j3_im_id
+
+        integer :: jouleHeating_id
+
+        fName = 'solution'//g%fNumber//'.nc'
+
         call check ( nf90_create ( fName, nf90_clobber, nc_id ) )
         call check ( nf90_def_dim ( nc_id, "nX", g%nR, nX_id ) )
         call check ( nf90_def_dim ( nc_id, "nY", g%nZ, nY_id ) )
@@ -269,7 +279,24 @@ contains
             (/nX_id,nY_id/), ez_re_id ) ) 
         call check ( nf90_def_var ( nc_id, "ez_im", NF90_REAL, &
             (/nX_id,nY_id/), ez_im_id ) ) 
+
+        call check ( nf90_def_var ( nc_id, "jalpha_re", NF90_REAL, &
+            (/nX_id,nY_id/), j1_re_id ) ) 
+        call check ( nf90_def_var ( nc_id, "jalpha_im", NF90_REAL, &
+            (/nX_id,nY_id/), j1_im_id ) ) 
+        call check ( nf90_def_var ( nc_id, "jbeta_re", NF90_REAL, &
+            (/nX_id,nY_id/), j2_re_id ) ) 
+        call check ( nf90_def_var ( nc_id, "jbeta_im", NF90_REAL, &
+            (/nX_id,nY_id/), j2_im_id ) ) 
+        call check ( nf90_def_var ( nc_id, "jB_re", NF90_REAL, &
+            (/nX_id,nY_id/), j3_re_id ) ) 
+        call check ( nf90_def_var ( nc_id, "jB_im", NF90_REAL, &
+            (/nX_id,nY_id/), j3_im_id ) ) 
  
+        call check ( nf90_def_var ( nc_id, "jouleHeating", NF90_REAL, &
+            (/nX_id,nY_id/), jouleHeating_id ) ) 
+ 
+
         call check ( nf90_enddef ( nc_id ) )
 
         call check ( nf90_put_var ( nc_id, e1_re_id, realpart ( g%ealpha ) ) )
@@ -292,6 +319,15 @@ contains
         call check ( nf90_put_var ( nc_id, et_im_id, aimag ( g%eTh ) ) )
         call check ( nf90_put_var ( nc_id, ez_re_id, real ( g%eZ ) ) )
         call check ( nf90_put_var ( nc_id, ez_im_id, aimag ( g%eZ ) ) )
+
+        call check ( nf90_put_var ( nc_id, j1_re_id, realpart ( g%jalpha ) ) )
+        call check ( nf90_put_var ( nc_id, j1_im_id, imagpart ( g%jalpha ) ) )
+        call check ( nf90_put_var ( nc_id, j2_re_id, realpart ( g%jbeta ) ) )
+        call check ( nf90_put_var ( nc_id, j2_im_id, imagpart ( g%jbeta ) ) )
+        call check ( nf90_put_var ( nc_id, j3_re_id, realpart ( g%jB ) ) )
+        call check ( nf90_put_var ( nc_id, j3_im_id, imagpart ( g%jB ) ) )
+
+        call check ( nf90_put_var ( nc_id, jouleHeating_id, g%jouleHeating ) )
 
         call check ( nf90_close ( nc_id ) )
 

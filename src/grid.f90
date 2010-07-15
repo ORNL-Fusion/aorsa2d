@@ -17,6 +17,7 @@ type :: gridBlock
     ! -----------
 
     integer :: gridNumber
+    character(len=3) :: fNumber
 
     ! Matrix offset
     ! -------------
@@ -73,6 +74,16 @@ type :: gridBlock
        ealpha,  ebeta, eB 
     complex, allocatable, dimension(:,:) :: &
        eR,  eTh, eZ 
+
+    ! Plasma currents
+    ! ---------------
+    complex, allocatable, dimension(:,:) :: &
+        jAlpha, jBeta, jB
+
+    ! Power absorption
+    ! ----------------
+    real, allocatable, dimension(:,:) :: &
+        jouleHeating
 
     ! Rotation matrix and derivatives
     ! -------------------------------
