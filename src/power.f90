@@ -15,6 +15,7 @@ subroutine current ( g )
 
     complex, allocatable :: sigma(:,:,:,:,:,:,:)
     complex :: ek_nm(3), jVec(3), thisSigma(3,3)
+    complex :: bFn
 
     integer :: i, j, n, m, iStat, s
 
@@ -42,8 +43,12 @@ subroutine current ( g )
 
         do i=1,g%nR
             do j=1,g%nZ
-                do n=g%nMin,g%nMax
-                    do m=g%mMin,g%mMax
+                do n=g%nS,g%nF
+                    do m=g%mS,g%mF
+
+                        !write(*,*) i,j,n,m,s, sigma(i,j,n,m,:,1,s)
+
+                        bFn     = g%xx(n,i) * g%yy(m,j)
 
                         ek_nm(1) = g%eAlphak(n,m)
                         ek_nm(2) = g%eBetak(n,m)
@@ -51,11 +56,11 @@ subroutine current ( g )
 
                         thisSigma = sigma(i,j,n,m,:,:,s)
 
-                        jVec = matMul ( thisSigma, ek_nm )
+                        jVec = matMul ( thisSigma, ek_nm ) 
 
-                        g%jAlpha(i,j,s) = g%jAlpha(i,j,s) + jVec(1)
-                        g%jBeta(i,j,s) = g%jBeta(i,j,s) + jVec(2)
-                        g%jB(i,j,s) = g%jB(i,j,s) + jVec(3)
+                        g%jAlpha(i,j,s) = g%jAlpha(i,j,s) + jVec(1) * bFn
+                        g%jBeta(i,j,s) = g%jBeta(i,j,s) + jVec(2) * bFn
+                        g%jB(i,j,s) = g%jB(i,j,s) + jVec(3) * bFn
 
                     enddo
                 enddo
@@ -95,7 +100,7 @@ subroutine jDotE ( g )
                 jHere = (/ g%jAlpha(i,j,s), g%jBeta(i,j,s), g%jB(i,j,s) /)
 
                 g%jouleHeating(i,j,s) = &
-                    0.5 * realpart ( dot_product ( conjg ( eHere ), jHere ) )
+                    0.5 * realpart ( dot_product ( jHere, eHere ) )
 
             enddo
         enddo  

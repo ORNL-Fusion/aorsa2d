@@ -448,23 +448,30 @@ contains
     end subroutine init_sigma_file
 
 
-    subroutine write_sigma_pt ( i,j,sigma, nc_id, sigma_re_id, sigma_im_id, nN, nM, nSpec )
+    subroutine write_sigma_pt ( sigma, nc_id, sigma_re_id, sigma_im_id )!, nN, nM, nSpec )
 
-        complex, intent(in) :: sigma(:,:,:,:,:)
-        integer, intent(in) :: i, j, nc_id, sigma_re_id, sigma_im_id
-        integer, intent(in) :: nN, nM
+        implicit none
 
-        call check ( nf90_put_var ( nc_id, sigma_re_id, realpart ( sigma ), &
-            start = (/ i, j, 1, 1, 1, 1, 1 /), &
-            count = (/ 1, 1, nN, nM, 3, 3, nSpec /) ) )
-        call check ( nf90_put_var ( nc_id, sigma_im_id, imagpart ( sigma ), &
-            start = (/ i, j, 1, 1, 1, 1, 1 /), &
-            count = (/ 1, 1, nN, nM, 3, 3, nSpec /) ) )
+        complex, intent(in) :: sigma(:,:,:,:,:,:,:)
+        integer, intent(in) :: nc_id, sigma_re_id, sigma_im_id!,i, j 
+        !integer, intent(in) :: nN, nM, nSpec
+
+        !call check ( nf90_put_var ( nc_id, sigma_re_id, realpart ( sigma ), &
+        !    start = (/ i, j, 1, 1, 1, 1, 1 /), &
+        !    count = (/ 1, 1, nN, nM, 3, 3, nSpec /) ) )
+        !call check ( nf90_put_var ( nc_id, sigma_im_id, imagpart ( sigma ), &
+        !    start = (/ i, j, 1, 1, 1, 1, 1 /), &
+        !    count = (/ 1, 1, nN, nM, 3, 3, nSpec /) ) )
+
+        call check ( nf90_put_var ( nc_id, sigma_re_id, realpart ( sigma ) ) )
+        call check ( nf90_put_var ( nc_id, sigma_im_id, imagpart ( sigma ) ) )
 
     end subroutine write_sigma_pt
 
 
     subroutine close_sigma_file ( nc_id )
+
+        implicit none
 
         integer, intent(in) :: nc_id
 

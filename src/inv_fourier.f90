@@ -32,25 +32,25 @@ contains
         g%eB = 0
 
         if(chebyshevX)then
-            nS = g%nMin
-            nF = g%nMax!2.0/3.0
+            g%nS = g%nMin
+            g%nF = g%nMax!2.0/3.0
         elseif(cosX)then
-            nS = g%nMin
-            nF = g%nMax!2.0/3.0
+            g%nS = g%nMin
+            g%nF = g%nMax!2.0/3.0
         else
-            nS = g%nMin*2.0/3.0
-            nF = g%nMax*2.0/3.0
+            g%nS = g%nMin*2.0/3.0
+            g%nF = g%nMax*2.0/3.0
         endif
 
         if(chebyshevY)then
-            mS = g%mMin
-            mF = g%mMax!2.0/3.0
+            g%mS = g%mMin
+            g%mF = g%mMax!2.0/3.0
         elseif(cosY)then
-            mS = g%mMin
-            mF = g%mMax!2.0/3.0
+            g%mS = g%mMin
+            g%mF = g%mMax!2.0/3.0
         else
-            mS = g%mMin*2.0/3.0
-            mF = g%mMax*2.0/3.0
+            g%mS = g%mMin*2.0/3.0
+            g%mF = g%mMax*2.0/3.0
         endif
 
 
@@ -62,8 +62,8 @@ contains
         do i = 1, g%nR
             do j = 1, g%nZ
         
-                do n = nS, nF
-                    do m = mS, mF
+                do n = g%nS, g%nF
+                    do m = g%mS, g%mF
 
                       bFn = xBasis(n,g%rNorm(i)) * yBasis(m,g%zNorm(j))
 

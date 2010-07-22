@@ -302,7 +302,7 @@ contains
         real :: h1, h2, alpha
 
         complex(kind=dbl) :: sigma_tmp(3,3), sigma_tmp_neg(3,3)
-        complex, allocatable :: sigma_write(:,:,:,:,:)
+        complex, allocatable :: sigma_write(:,:,:,:,:,:,:), sigma_smooth(:,:,:,:)
 
         integer :: nr, nz, iStat
         integer :: sigma_nc_id, sigma_re_id, sigma_im_id
@@ -378,13 +378,120 @@ contains
         call init_sigma_file ( g, 'sigma'//g%fNumber//'.nc', &
             sigma_nc_id, sigma_re_id, sigma_im_id, nSpec )
 
-        allocate ( sigma_write(g%nMin:g%nMax,g%mMin:g%mMax,3,3,nSpec), stat = iStat )
+        allocate ( sigma_smooth(g%nR,g%nZ,3,3) )
+        allocate ( sigma_write(g%nR,g%nZ,g%nMin:g%nMax,g%mMin:g%mMax,3,3,nSpec), stat = iStat )
         if(iStat/=0)then
                 write(*,*) 'ERROR src/mat_fill.f90 - allocation failed :('
                 stop
         endif
 
         sigma_write = 0
+        sigma_smooth = 0
+
+        ! Calculate sigma seperately outside main loop
+        ! --------------------------------------------
+
+        do s=1,nSpec
+
+        write(*,*)
+        write(*,*) 'Calculating sigma for species ', s, ' of', nSpec
+
+            do m=g%mMin,g%mMax
+                do n=g%nMin,g%nMax
+#ifndef par
+                !   progress indicator
+                !   ------------------
+                do p=1,7 
+                    write(*,'(a)',advance='no') char(8)
+                enddo
+                write(*,'(1x,f5.1,a)',advance='no') &
+                    real((m-g%mMin)*g%nR+(n-g%nMin))/(g%nR*g%nZ)*100, '%'
+#endif
+                    do j=1,g%nZ
+                        do i=1,g%nR
+
+                            if(chebyshevX) then
+                                if(n>1) then
+                                    kr = n / sqrt ( sin ( pi * (g%rNorm(i)+1)/2  ) ) * g%normFacR 
+                                else
+                                    kr = n * g%normFacR
+                                endif
+                            else
+                                kr = n * g%normFacR
+                            endif
+
+                            if(chebyshevY) then
+                                if(m>1) then
+                                    kz = m / sqrt ( sin ( pi * (g%zNorm(j)+1)/2 ) ) * g%normFacZ 
+                                else
+                                    kz = m * g%normFacZ
+                                endif
+                            else
+                                kz = m * g%normFacZ
+                            endif
+
+  
+                            hotPlasma:& 
+                            if (iSigma==1 .and. (.not. isMetal(i,j)) ) then        
+
+                                kVec_stix = matMul( g%U_RTZ_to_ABb(i,j,:,:), (/ kr, g%kPhi(i), kz /) ) 
+
+                                sigma_tmp = sigmaHot_maxwellian&
+                                    ( mSpec(s), &
+                                    g%ktSpec(i,j,s), g%omgc(i,j,s), g%omgp2(i,j,s), &
+                                    kVec_stix, g%R(i), &
+                                    omgrf, k0, &
+                                    g%k_cutoff, s, &
+                                    g%sinTh(i,j), g%bPol(i,j), g%bMag(i,j), g%gradPrlB(i,j), &
+                                    g%nuOmg(i,j) )
+
+                            endif hotPlasma
+
+
+                            coldPlasma: &
+                            if (iSigma==0 .and. (.not. isMetal(i,j)) ) then 
+
+                                sigma_tmp = sigmaCold_stix &
+                                    ( g%omgc(i,j,s), g%omgp2(i,j,s), omgrf, &
+                                    g%nuOmg(i,j) )
+
+                            endif coldPlasma
+
+                            sigma_write(i,j,n,m,:,:,s) = sigma_tmp
+
+                        enddo
+                    enddo
+
+                    !! Try smoothing sigma in space
+                    !! ----------------------------
+
+                    !do i=2,g%nR-1
+
+                    !        sigma_smooth(i,1,:,:) = &
+                    !        (sigma_write(i-1,1,n,m,:,:,s) + sigma_write(i+1,1,n,m,:,:,s) ) / 2
+
+                    !enddo
+
+                    !sigma_write(2:g%nR-1,1,n,m,:,:,s) = sigma_smooth(2:g%nR-1,1,:,:)
+
+                enddo
+            enddo
+
+        enddo
+
+
+        ! Write sigma
+        ! -----------
+
+        write(*,*) 'Writing sigma'
+        call write_sigma_pt ( sigma_write, &
+            sigma_nc_id, sigma_re_id, sigma_im_id )
+
+        ! Close sigma file
+        ! ----------------
+
+        call close_sigma_file ( sigma_nc_id )
+
 
         ! Begin loop
         ! ----------
@@ -435,8 +542,6 @@ contains
                             kt  = g%kPhi(i)
 
                             bFn = g%xx(n, i) * g%yy(m, j)
-                            !dRbFn = g%drBfn_bfn(n, i) * bFn
-                            !dZbFn = g%dzBfn_bfn(m, j) * bFn
 
         interior: &
         if(g%label(i,j)==0)then
@@ -475,80 +580,6 @@ contains
                                 kz = m * g%normFacZ
                             endif
 
-                           
-                            species: &
-                            do s=1,nSpec
-
-                                if (iSigma==1 .and. (.not. isMetal(i,j)) ) then ! hot plasma        
-
-                                    kVec_stix = matMul( g%U_RTZ_to_ABb(i,j,:,:), (/ kr, g%kPhi(i), kz /) ) 
-
-                                    sigma_tmp = sigmaHot_maxwellian&
-                                        ( mSpec(s), &
-                                        g%ktSpec(i,j,s), g%omgc(i,j,s), g%omgp2(i,j,s), &
-                                        kVec_stix, g%R(i), &
-                                        omgrf, k0, &
-                                        g%k_cutoff, s, &
-                                        g%sinTh(i,j), g%bPol(i,j), g%bMag(i,j), g%gradPrlB(i,j), &
-                                        g%nuOmg(i,j) )
-
-                                    sigma_write(n,m,:,:,s) = sigma_tmp
-
-                                    !if(cosX)then
-                                    !kVec_stix = matMul( g%U_RTZ_to_ABb(i,j,:,:), (/ -kr, g%kPhi(i), kz /) ) 
-
-                                    !sigma_tmp_neg = sigmaHot_maxwellian&
-                                    !    ( mSpec(s), &
-                                    !    g%ktSpec(i,j,s), g%omgc(i,j,s), g%omgp2(i,j,s), &
-                                    !    kVec_stix, g%R(i), &
-                                    !    omgrf, k0, &
-                                    !    g%k_cutoff, s, &
-                                    !    g%sinTh(i,j), g%bPol(i,j), g%bMag(i,j), g%gradPrlB(i,j), &
-                                    !    g%nuOmg(i,j) )
-
-                                    !    sigma_tmp = ( sigma_tmp + sigma_tmp_neg ) / 2
-
-                                    !endif
-
-                                endif
-                              
-                                if (iSigma==0) & ! cold plasma 
-                                sigma_tmp = sigmaCold_stix &
-                                    ( g%omgc(i,j,s), g%omgp2(i,j,s), omgrf, &
-                                    g%nuOmg(i,j) )
-
-                                sigAlpAlp = sigAlpAlp + sigma_tmp(1,1) 
-                                sigAlpBet = sigAlpBet + sigma_tmp(1,2) 
-                                sigAlpPrl = sigAlpPrl + sigma_tmp(1,3) 
-                                               
-                                sigBetAlp = sigBetAlp + sigma_tmp(2,1) 
-                                sigBetBet = sigBetBet + sigma_tmp(2,2) 
-                                sigBetPrl = sigBetPrl + sigma_tmp(2,3) 
-                                               
-                                sigPrlAlp = sigPrlAlp + sigma_tmp(3,1) 
-                                sigPrlBet = sigPrlBet + sigma_tmp(3,2) 
-                                sigPrlPrl = sigPrlPrl + sigma_tmp(3,3) 
-
-                            enddo species
-
-                            ! Metal
-                            ! -----
-
-                            if (isMetal(i,j)) then 
-
-                                sigAlpAlp = metal 
-                                sigAlpBet = 0
-                                sigAlpPrl = 0 
-                                        
-                                sigBetAlp = 0 
-                                sigBetBet = metal 
-                                sigBetPrl = 0 
-                                        
-                                sigPrlAlp = 0 
-                                sigPrlBet = 0 
-                                sigPrlPrl = metal 
-
-                            endif
 
                             !! Short of k's above the xkPerp_cutOff 
                             !! ------------------------------------
@@ -569,6 +600,40 @@ contains
                             !    sigPrlPrl = metal 
 
                             !endif
+
+                            ! Sum sigma over species
+                            ! ----------------------
+                    
+                            sigAlpAlp = sum ( sigma_write(i,j,n,m,1,1,:) )
+                            sigAlpBet = sum ( sigma_write(i,j,n,m,1,2,:) )
+                            sigAlpPrl = sum ( sigma_write(i,j,n,m,1,3,:) )
+
+                            sigBetAlp = sum ( sigma_write(i,j,n,m,2,1,:) )
+                            sigBetBet = sum ( sigma_write(i,j,n,m,2,2,:) )
+                            sigBetPrl = sum ( sigma_write(i,j,n,m,2,3,:) )
+
+                            sigPrlAlp = sum ( sigma_write(i,j,n,m,3,1,:) )
+                            sigPrlBet = sum ( sigma_write(i,j,n,m,3,2,:) )
+                            sigPrlPrl = sum ( sigma_write(i,j,n,m,3,3,:) )
+ 
+                            ! Metal
+                            ! -----
+
+                            if (isMetal(i,j)) then 
+
+                                sigAlpAlp = metal 
+                                sigAlpBet = 0
+                                sigAlpPrl = 0 
+                                        
+                                sigBetAlp = 0 
+                                sigBetBet = metal 
+                                sigBetPrl = 0 
+                                        
+                                sigPrlAlp = 0 
+                                sigPrlBet = 0 
+                                sigPrlPrl = metal 
+
+                            endif
 
                             kAlpAlp = 1.0 + zi / (eps0 * omgrf) * sigAlpAlp
                             kAlpBet =       zi / (eps0 * omgrf) * sigAlpBet
@@ -911,22 +976,11 @@ contains
                     enddo m_loop
                 enddo n_loop 
 
-
-                ! Write sigma for this pt
-                ! -----------------------
-
-                call write_sigma_pt ( i, j, sigma_write, &
-                    sigma_nc_id, sigma_re_id, sigma_im_id, &
-                    g%nModesR, g%nModesZ, nSpec )
-
             enddo j_loop
         enddo i_loop 
 
 
-        ! Close sigma file
-        ! ----------------
-
-        call close_sigma_file ( sigma_nc_id )
+        deallocate ( sigma_write )
 
         !if(iAm==0) then
         !write(*,*) 

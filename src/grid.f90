@@ -75,6 +75,10 @@ type :: gridBlock
     complex, allocatable, dimension(:,:) :: &
        eR,  eTh, eZ 
 
+    ! Mode integration range
+    ! ----------------------
+    integer :: nS, nF, mS, mF
+
     ! Plasma currents per species
     ! ---------------------------
     complex, allocatable, dimension(:,:,:) :: &
