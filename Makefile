@@ -53,7 +53,7 @@ ZFUN = "zFunHammett"
 
 # use papi, set to "true" or "false"
 
-USEPAPI = "true"
+USEPAPI = "false"
 
 # pre-processor directives
 # ------------------------
@@ -105,7 +105,7 @@ ifeq (${HOME},/ccs/home/dg6)
 	include Makefile.jaguarpf
 endif
 
-ifeq (${HOSTNAME},greendl.local)
+ifeq (${HOME},/Users/dg6)
 	include Makefile.greendl
 endif
 

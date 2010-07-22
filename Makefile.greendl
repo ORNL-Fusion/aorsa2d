@@ -1,6 +1,18 @@
-NETCDF_DIR = /home/dg6/code/netcdf/netcdf_gnu64
-NETCDF = -I ${NETCDF_DIR}/include -L ${NETCDF_DIR}/lib -lnetcdf 
+
+F90 = /opt/local/bin/gfortran-mp-4.4
+BLAS = ${HOME}/code/gotoBLAS/GotoBLAS2/libgoto2.a -pthread
+LAPACK = ${HOME}/code/lapack/lapack-3.2.2/lapack_OSX.a 
+NETCDF_DIR = /opt/local
+NETCDF = -I${NETCDF_DIR}/include -L${NETCDF_DIR}/lib -lnetcdf -lnetcdff
 PAPI_INC =  
 PAPI = 
+CUDA_DIR = 
+CUDA = 
+MAGMA_DIR = 
+MAGMA = 
+GPTL_DIR = 
+GPTL = 
+
+
 
 
