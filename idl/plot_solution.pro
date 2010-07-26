@@ -345,11 +345,12 @@ pro plot_solution, oneD = oneD, full = full, $
 
 		;restore, '../smithe_1/soln.sav' 
 		;restore, '../tftr_ibw/soln.sav' 
-		;restore, '../cmod_ibw_1d/soln.sav'
+		restore, '../cmod_ibw_1d/soln.sav'
 		;restore, '../d3d_ibw_1d/soln.sav'
 		;restore, '../brambilla/soln.sav'
 		;restore, '../jaeger_1/soln.sav'
-		restore, '../jaeger_2/soln.sav'
+		;restore, '../jaeger_2/soln.sav'
+		;restore, '../cynthia/soln.sav'
 
 		iPlot, xorig, ealphaorig, thick=2, view_grid=[3,1], /stretch_to_fit, $
 				dimensions = [1500,500]

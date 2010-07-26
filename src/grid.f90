@@ -150,7 +150,8 @@ contains
 
         use aorsa2din_mod, &
         only : nPhi, xkPerp_cutOff, overlap, &
-        rMinAll, rMaxAll, zMinAll, zMaxAll, nGrid
+        rMinAll, rMaxAll, zMinAll, zMaxAll, nGrid, &
+        nZ_1D
         use parallel
 
         implicit none
@@ -337,6 +338,11 @@ contains
                 grid%mMax =  nZ/2
                 if (mod(nZ,2)==0) grid%mMin = grid%mMin+1
 
+            endif
+
+            if(nZ==1)then 
+                grid%mMin = nZ_1d
+                grid%mMax = nZ_1d
             endif
 
             if (iAm==0) then

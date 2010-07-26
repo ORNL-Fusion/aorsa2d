@@ -36,6 +36,11 @@ subroutine current ( g )
             stop
     endif 
 
+    allocate ( &
+        g%jouleHeating(g%nR,g%nZ,nSpec) )
+
+    g%jouleHeating = 0
+
     call read_sigma ( 'sigma'//g%fNumber//'.nc', sigma = sigma ) 
 
     species: &
@@ -55,12 +60,18 @@ subroutine current ( g )
                         ek_nm(3) = g%eBk(n,m) 
 
                         thisSigma = sigma(i,j,n,m,:,:,s)
-
+ 
                         jVec = matMul ( thisSigma, ek_nm ) 
 
                         g%jAlpha(i,j,s) = g%jAlpha(i,j,s) + jVec(1) * bFn
                         g%jBeta(i,j,s) = g%jBeta(i,j,s) + jVec(2) * bFn
                         g%jB(i,j,s) = g%jB(i,j,s) + jVec(3) * bFn
+
+                        g%jouleHeating(i,j,s) = g%jouleHeating(i,j,s) &
+                            + 0.5 * realpart ( &
+                            +  conjg ( g%eAlphak(n,m) * bFn ) * jVec(1) * bFn &
+                            +  conjg ( g%eBetak(n,m) * bFn ) * jVec(2) * bFn &
+                            +  conjg ( g%eBk(n,m) * bFn ) * jVec(3) * bFn )
 
                     enddo
                 enddo

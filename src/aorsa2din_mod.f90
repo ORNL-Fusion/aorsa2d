@@ -55,6 +55,8 @@ implicit none
     real, dimension(nGridMax) :: zMinAll = -1.0
     real, dimension(nGridMax) :: zMaxAll =  1.0
 
+    integer :: nZ_1D = 0
+
 
 !     --------------------------------------------------------
 !     Declarations and defaults for aorsa2d.in input variables
@@ -470,7 +472,7 @@ implicit none
      &    chebyshevX, chebyshevY, magma, rhoAnt, antSigRho, toroidalBroadening,&
      &    kPrlEffLimit, nGrid, &
      &    nRAll, nZAll, rMinALl, rMaxAll, zMinAll, zMaxAll, &
-     &    overlap, parabolic, cosX, cosY
+     &    overlap, parabolic, cosX, cosY, nZ_1D
 
                 
 contains

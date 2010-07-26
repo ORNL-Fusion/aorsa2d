@@ -84,7 +84,7 @@ endif
 
 BOUNDS = -fbounds-check 
 WARN = #-Wall
-DEBUG = -g -fbacktrace -fsignaling-nans -ffpe-trap=zero,invalid#,overflow#,underflow
+DEBUG = -pg -g -fbacktrace -fsignaling-nans -ffpe-trap=zero,invalid#,overflow#,underflow
 DOUBLE = -fdefault-real-8
 ifeq (${MODE},"parallel")
 	F90 = mpif90

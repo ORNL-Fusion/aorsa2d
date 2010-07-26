@@ -51,6 +51,10 @@ contains
         else
             g%mS = g%mMin*2.0/3.0
             g%mF = g%mMax*2.0/3.0
+            if(g%nZ==1)then
+                g%mS = g%mMin
+                g%mF = g%mMax
+            endif
         endif
 
 
