@@ -388,19 +388,19 @@ program aorsa2dMain
     endif
 
 
-!!   Calculate the Joule Heating 
-!!   ---------------------------
-!
-!    if (iAm==0) &
-!    write(*,*) 'Calculating Joule heating' 
-!
-!    if ( iAm == 0 ) then
-!
-!        do i=1,nGrid
-!            call jDotE ( allGrids(i) )
-!        enddo
-!
-!    endif
+!   Calculate the Joule Heating 
+!   ---------------------------
+
+    if (iAm==0) &
+    write(*,*) 'Calculating Joule heating' 
+
+    if ( iAm == 0 ) then
+
+        do i=1,nGrid
+            call jDotE ( allGrids(i) )
+        enddo
+
+    endif
 
 
 !   Write soln to file

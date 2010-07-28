@@ -28,21 +28,21 @@ pro plot_sigma4d
 		data = reform ( sigma[*,*,n,m,2,2,0], nX, nY )
 
 
-		for s=0,nS-1 do begin
+		;for s=0,nS-1 do begin
 
-		for i=0,nX-1 do begin
-			for j=0,nY-1 do begin
-			 	for n=0,nN-1 do begin
-					for m=0,nM-1 do begin
+		;for i=0,nX-1 do begin
+		;	for j=0,nY-1 do begin
+		;	 	for n=0,nN-1 do begin
+		;			for m=0,nM-1 do begin
 
-						print, i,j,n,m,s,(sigma[i,j,n,m,*,0,s])[*]
+		;				print, i,j,n,m,s,(sigma[i,j,n,m,*,0,s])[*]
 
-					endfor
-				endfor
-			endfor
-		endfor
+		;			endfor
+		;		endfor
+		;	endfor
+		;endfor
 
-		endfor
+		;endfor
 
 
 	endfor

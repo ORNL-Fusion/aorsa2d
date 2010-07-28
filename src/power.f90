@@ -36,10 +36,10 @@ subroutine current ( g )
             stop
     endif 
 
-    allocate ( &
-        g%jouleHeating(g%nR,g%nZ,nSpec) )
+    !allocate ( &
+    !    g%jouleHeating(g%nR,g%nZ,nSpec) )
 
-    g%jouleHeating = 0
+    !g%jouleHeating = 0
 
     call read_sigma ( 'sigma'//g%fNumber//'.nc', sigma = sigma ) 
 
@@ -53,25 +53,42 @@ subroutine current ( g )
 
                         !write(*,*) i,j,n,m,s, sigma(i,j,n,m,:,1,s)
 
-                        bFn     = g%xx(n,i) * g%yy(m,j)
+                        bFn = g%xx(n,i) * g%yy(m,j)
+                        !bFn = xBasis(n,g%rNorm(i)) * yBasis(m,g%zNorm(j))
 
-                        ek_nm(1) = g%eAlphak(n,m)
-                        ek_nm(2) = g%eBetak(n,m)
-                        ek_nm(3) = g%eBk(n,m) 
+                        !ek_nm(1) = g%eAlphak(n,m)
+                        !ek_nm(2) = g%eBetak(n,m)
+                        !ek_nm(3) = g%eBk(n,m) 
 
-                        thisSigma = sigma(i,j,n,m,:,:,s)
+                        !thisSigma = sigma(i,j,n,m,:,:,s)
  
-                        jVec = matMul ( thisSigma, ek_nm ) 
+                        !jVec = matMul ( thisSigma, ek_nm ) 
 
-                        g%jAlpha(i,j,s) = g%jAlpha(i,j,s) + jVec(1) * bFn
-                        g%jBeta(i,j,s) = g%jBeta(i,j,s) + jVec(2) * bFn
-                        g%jB(i,j,s) = g%jB(i,j,s) + jVec(3) * bFn
+                        !g%jAlpha(i,j,s) = g%jAlpha(i,j,s) + jVec(1) * bFn
+                        !g%jBeta(i,j,s) = g%jBeta(i,j,s) + jVec(2) * bFn
+                        !g%jB(i,j,s) = g%jB(i,j,s) + jVec(3) * bFn
 
-                        g%jouleHeating(i,j,s) = g%jouleHeating(i,j,s) &
-                            + 0.5 * realpart ( &
-                            +  conjg ( g%eAlphak(n,m) * bFn ) * jVec(1) * bFn &
-                            +  conjg ( g%eBetak(n,m) * bFn ) * jVec(2) * bFn &
-                            +  conjg ( g%eBk(n,m) * bFn ) * jVec(3) * bFn )
+
+                        g%jAlpha(i,j,s) = g%jAlpha(i,j,s) &
+                            + sigma(i,j,n,m,1,1,s) * g%eAlphak(n,m) * bFn &
+                            + sigma(i,j,n,m,1,2,s) * g%eBetak(n,m) * bFn &
+                            + sigma(i,j,n,m,1,3,s) * g%eBk(n,m) * bFn 
+
+                        g%jBeta(i,j,s) = g%jBeta(i,j,s) &
+                            + sigma(i,j,n,m,2,1,s) * g%eAlphak(n,m) * bFn &
+                            + sigma(i,j,n,m,2,2,s) * g%eBetak(n,m) * bFn &
+                            + sigma(i,j,n,m,2,3,s) * g%eBk(n,m) * bFn 
+
+                        g%jB(i,j,s) = g%jB(i,j,s) &
+                            + sigma(i,j,n,m,3,1,s) * g%eAlphak(n,m) * bFn &
+                            + sigma(i,j,n,m,3,2,s) * g%eBetak(n,m) * bFn &
+                            + sigma(i,j,n,m,3,3,s) * g%eBk(n,m) * bFn 
+
+                        !g%jouleHeating(i,j,s) = g%jouleHeating(i,j,s) &
+                        !    + 0.5 * imagpart ( &
+                        !    +  conjg ( g%eAlphak(n,m) * bFn ) * jVec(1) * bFn &
+                        !    +  conjg ( g%eBetak(n,m) * bFn ) * jVec(2) * bFn &
+                        !    +  conjg ( g%eBk(n,m) * bFn ) * jVec(3) * bFn )
 
                     enddo
                 enddo
@@ -107,11 +124,16 @@ subroutine jDotE ( g )
         do i=1,g%nR
             do j=1,g%nZ
 
-                eHere = (/ g%eAlpha(i,j), g%eBeta(i,j), g%eB(i,j) /)
-                jHere = (/ g%jAlpha(i,j,s), g%jBeta(i,j,s), g%jB(i,j,s) /)
+                !eHere = (/ g%eAlpha(i,j), g%eBeta(i,j), g%eB(i,j) /)
+                !jHere = (/ g%jAlpha(i,j,s), g%jBeta(i,j,s), g%jB(i,j,s) /)
+
+                !g%jouleHeating(i,j,s) = &
+                !    0.5 * realpart ( dot_product ( eHere, jHere ) )
 
                 g%jouleHeating(i,j,s) = &
-                    0.5 * realpart ( dot_product ( jHere, eHere ) )
+                    0.5 * realpart ( conjg(g%eAlpha(i,j)) * g%jAlpha(i,j,s) &
+                                    + conjg(g%eBeta(i,j)) * g%jBeta(i,j,s) &
+                                    + conjg(g%eB(i,j)) * g%jB(i,j,s)  )
 
             enddo
         enddo  

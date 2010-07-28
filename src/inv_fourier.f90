@@ -69,7 +69,8 @@ contains
                 do n = g%nS, g%nF
                     do m = g%mS, g%mF
 
-                      bFn = xBasis(n,g%rNorm(i)) * yBasis(m,g%zNorm(j))
+                      !bFn = xBasis(n,g%rNorm(i)) * yBasis(m,g%zNorm(j))
+                      bFn = g%xx(n,i) * g%yy(m,j)
 
                       !f(i,j) = f(i,j) + a(n-nMin+1,m-mMin+1) * bFn
                       g%eAlpha(i,j) = g%eAlpha(i,j) + g%eAlphak(n,m) * bFn
