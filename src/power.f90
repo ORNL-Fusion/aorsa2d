@@ -36,11 +36,6 @@ subroutine current ( g )
             stop
     endif 
 
-    !allocate ( &
-    !    g%jouleHeating(g%nR,g%nZ,nSpec) )
-
-    !g%jouleHeating = 0
-
     call read_sigma ( 'sigma'//g%fNumber//'.nc', sigma = sigma ) 
 
     species: &
@@ -70,25 +65,19 @@ subroutine current ( g )
 
 
                         g%jAlpha(i,j,s) = g%jAlpha(i,j,s) &
-                            + sigma(i,j,n,m,1,1,s) * g%eAlphak(n,m) * bFn &
-                            + sigma(i,j,n,m,1,2,s) * g%eBetak(n,m) * bFn &
-                            + sigma(i,j,n,m,1,3,s) * g%eBk(n,m) * bFn 
+                            + ( sigma(i,j,n,m,1,1,s) * g%eAlphak(n,m) &
+                            + sigma(i,j,n,m,1,2,s) * g%eBetak(n,m) &
+                            + sigma(i,j,n,m,1,3,s) * g%eBk(n,m) ) * bFn 
 
                         g%jBeta(i,j,s) = g%jBeta(i,j,s) &
-                            + sigma(i,j,n,m,2,1,s) * g%eAlphak(n,m) * bFn &
-                            + sigma(i,j,n,m,2,2,s) * g%eBetak(n,m) * bFn &
-                            + sigma(i,j,n,m,2,3,s) * g%eBk(n,m) * bFn 
+                            + ( sigma(i,j,n,m,2,1,s) * g%eAlphak(n,m) &
+                            + sigma(i,j,n,m,2,2,s) * g%eBetak(n,m) &
+                            + sigma(i,j,n,m,2,3,s) * g%eBk(n,m) ) * bFn 
 
                         g%jB(i,j,s) = g%jB(i,j,s) &
-                            + sigma(i,j,n,m,3,1,s) * g%eAlphak(n,m) * bFn &
-                            + sigma(i,j,n,m,3,2,s) * g%eBetak(n,m) * bFn &
-                            + sigma(i,j,n,m,3,3,s) * g%eBk(n,m) * bFn 
-
-                        !g%jouleHeating(i,j,s) = g%jouleHeating(i,j,s) &
-                        !    + 0.5 * imagpart ( &
-                        !    +  conjg ( g%eAlphak(n,m) * bFn ) * jVec(1) * bFn &
-                        !    +  conjg ( g%eBetak(n,m) * bFn ) * jVec(2) * bFn &
-                        !    +  conjg ( g%eBk(n,m) * bFn ) * jVec(3) * bFn )
+                            + ( sigma(i,j,n,m,3,1,s) * g%eAlphak(n,m) &
+                            + sigma(i,j,n,m,3,2,s) * g%eBetak(n,m) &
+                            + sigma(i,j,n,m,3,3,s) * g%eBk(n,m) ) * bFn 
 
                     enddo
                 enddo

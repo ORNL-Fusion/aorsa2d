@@ -82,7 +82,8 @@ type :: gridBlock
     ! Plasma currents per species
     ! ---------------------------
     complex, allocatable, dimension(:,:,:) :: &
-        jAlpha, jBeta, jB
+        jAlpha, jBeta, jB, &
+        jP_r, jP_t, jP_z
 
     ! Power absorption
     ! ----------------

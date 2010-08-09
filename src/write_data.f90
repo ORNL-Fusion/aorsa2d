@@ -231,6 +231,11 @@ contains
             j1_re_id, j1_im_id, &
             j2_re_id, j2_im_id, &
             j3_re_id, j3_im_id
+        integer :: &
+            jP_r_re_id, jP_r_im_id, &
+            jP_t_re_id, jP_t_im_id, &
+            jP_z_re_id, jP_z_im_id
+
 
         integer :: jouleHeating_id
 
@@ -294,6 +299,19 @@ contains
             (/nX_id,nY_id,nSpec_id/), j3_re_id ) ) 
         call check ( nf90_def_var ( nc_id, "jB_im", NF90_REAL, &
             (/nX_id,nY_id,nSpec_id/), j3_im_id ) ) 
+
+        call check ( nf90_def_var ( nc_id, "jP_r_re", NF90_REAL, &
+            (/nX_id,nY_id,nSpec_id/), jP_r_re_id ) ) 
+        call check ( nf90_def_var ( nc_id, "jP_r_im", NF90_REAL, &
+            (/nX_id,nY_id,nSpec_id/), jP_r_im_id ) ) 
+        call check ( nf90_def_var ( nc_id, "jP_t_re", NF90_REAL, &
+            (/nX_id,nY_id,nSpec_id/), jP_t_re_id ) ) 
+        call check ( nf90_def_var ( nc_id, "jP_t_im", NF90_REAL, &
+            (/nX_id,nY_id,nSpec_id/), jP_t_im_id ) ) 
+        call check ( nf90_def_var ( nc_id, "jP_z_re", NF90_REAL, &
+            (/nX_id,nY_id,nSpec_id/), jP_z_re_id ) ) 
+        call check ( nf90_def_var ( nc_id, "jP_z_im", NF90_REAL, &
+            (/nX_id,nY_id,nSpec_id/), jP_z_im_id ) ) 
  
         call check ( nf90_def_var ( nc_id, "jouleHeating", NF90_REAL, &
             (/nX_id,nY_id,nSpec_id/), jouleHeating_id ) ) 
@@ -328,6 +346,13 @@ contains
         call check ( nf90_put_var ( nc_id, j2_im_id, imagpart ( g%jbeta ) ) )
         call check ( nf90_put_var ( nc_id, j3_re_id, realpart ( g%jB ) ) )
         call check ( nf90_put_var ( nc_id, j3_im_id, imagpart ( g%jB ) ) )
+
+        call check ( nf90_put_var ( nc_id, jP_r_re_id, realpart ( g%jP_r ) ) )
+        call check ( nf90_put_var ( nc_id, jP_r_im_id, imagpart ( g%jP_r ) ) )
+        call check ( nf90_put_var ( nc_id, jP_t_re_id, realpart ( g%jP_t ) ) )
+        call check ( nf90_put_var ( nc_id, jP_t_im_id, imagpart ( g%jP_t ) ) )
+        call check ( nf90_put_var ( nc_id, jP_z_re_id, realpart ( g%jP_z ) ) )
+        call check ( nf90_put_var ( nc_id, jP_z_im_id, imagpart ( g%jP_z ) ) )
 
         call check ( nf90_put_var ( nc_id, jouleHeating_id, g%jouleHeating ) )
 

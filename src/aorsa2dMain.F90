@@ -361,18 +361,6 @@ program aorsa2dMain
     enddo
 
 
-!   Rotation E solution to Lab frame 
-!   --------------------------------
-
-    if (iAm==0) &
-    write(*,*) 'Rotating E solution to lab frame (R,Th,z)'
-
-    do i=1,nGrid 
-        call rotate_E_to_lab ( allGrids(i) )
-    enddo
-
-
-
 !   Calculate the plasma current
 !   ----------------------------
 
@@ -386,6 +374,18 @@ program aorsa2dMain
         enddo
 
     endif
+
+
+!   Rotation to Lab frame 
+!   ---------------------
+
+    if (iAm==0) &
+    write(*,*) 'Rotating E solution to lab frame (R,Th,z)'
+
+    do i=1,nGrid 
+        call rotate_E_to_lab ( allGrids(i) )
+    enddo
+
 
 
 !   Calculate the Joule Heating 

@@ -412,7 +412,8 @@ contains
 
                             if(chebyshevX) then
                                 if(n>1) then
-                                    kr = n / sqrt ( sin ( pi * (g%rNorm(i)+1)/2  ) ) * g%normFacR 
+                                    !kr = n / sqrt ( sin ( pi * (g%rNorm(i)+1)/2  ) ) * g%normFacR 
+                                    kr = n * g%normFacR
                                 else
                                     kr = n * g%normFacR
                                 endif

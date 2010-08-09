@@ -94,6 +94,8 @@ pro plot_solution, oneD = oneD, full = full, $
 		xx	= complex ( xx_re, xx_im )
 		yy	= complex ( yy_re, yy_im )
 
+		jA_z = complex ( jy_re, jy_im )
+
 		dRbFn_bFn	= complex ( dRbFn_bFn_re, dRbFn_bFn_im )
 		dZbFn_bFn	= complex ( dZbFn_bFn_re, dZbFn_bFn_im )
 
@@ -139,6 +141,13 @@ pro plot_solution, oneD = oneD, full = full, $
 			nCdf_varGet, cdfId, 'jbeta_im', jbeta_im 
 			nCdf_varGet, cdfId, 'jB_im', jB_im 
 
+			nCdf_varGet, cdfId, 'jP_r_re', jPr_re 
+			nCdf_varGet, cdfId, 'jP_t_re', jPt_re 
+			nCdf_varGet, cdfId, 'jP_z_re', jPz_re 
+			nCdf_varGet, cdfId, 'jP_r_im', jPr_im 
+			nCdf_varGet, cdfId, 'jP_t_im', jPt_im 
+			nCdf_varGet, cdfId, 'jP_z_im', jPz_im 
+
 			nCdf_varGet, cdfId, 'jouleHeating', jouleHeating 
 
 			ealpha	= complex ( ealpha_re, ealpha_im )
@@ -149,9 +158,13 @@ pro plot_solution, oneD = oneD, full = full, $
 			ebetak	= complex ( ebetak_re, ebetak_im )
 			ebk	= complex ( ebk_re, ebk_im )
 
-			eR	= complex ( er_re, er_im )
-			eTh	= complex ( et_re, et_im )
-			eZ	= complex ( ez_re, ez_im )
+			e_r	= complex ( er_re, er_im )
+			e_t	= complex ( et_re, et_im )
+			e_z	= complex ( ez_re, ez_im )
+
+			jP_r	= complex ( jPr_re, jPr_im )
+			jP_t	= complex ( jPt_re, jPt_im )
+			jP_z	= complex ( jPz_re, jPz_im )
 
 			jPAlpha = complex ( jAlpha_re, jAlpha_im )
 			jPBeta = complex ( jBeta_re, jBeta_im )
@@ -349,13 +362,14 @@ pro plot_solution, oneD = oneD, full = full, $
 		;restore, '../d3d_ibw_1d/soln.sav'
 		;restore, '../brambilla/soln.sav'
 		;restore, '../jaeger_1/soln.sav'
-		restore, '../jaeger_2/soln.sav'
+		;restore, '../jaeger_2/soln.sav'
 		;restore, '../cynthia/soln.sav'
+		restore, '../cMod_naoto_He3/soln.sav' 
 
 		iPlot, xorig, ealphaorig, thick=2, view_grid=[3,1], /stretch_to_fit, $
-				dimensions = [900,300]
-		iPlot, xorig, eBetaorig, thick=2, /view_next, /stretch_to_fit
-		iPlot, xorig, eBorig, thick=2, /view_next, /stretch_to_fit
+				dimensions = [900,300], /zoom_on_resize
+		iPlot, xorig, eBetaorig, thick=2, /view_next, /stretch_to_fit, /zoom_on_resize
+		iPlot, xorig, eBorig, thick=2, /view_next, /stretch_to_fit, /zoom_on_resize
 
 		for i=0,n_elements(fileList)-1 do begin
 
@@ -372,6 +386,28 @@ pro plot_solution, oneD = oneD, full = full, $
 			iplot, xall[startII:stopII],eBAll[startII:stopII], $
 					color=color, /over, sym_index=4, view_number=3
 		endfor
+
+
+		; Check solution against wave equation
+
+		II 	= complex ( 0, 1 )
+		r	= x
+		nPhi= 10.0
+		f	= 30d6
+		w 	= 2 * !pi * f
+		c	= 2.99792458d8
+		e0	= 8.85d-12
+
+		term1_r = -nPhi * ( nPhi * e_r + II * ( e_t + r * deriv ( r, e_t ) ) ) / r^2
+		term2_r = w^2 / c^2 * ( e_r + II / ( w * e0 ) * jP_r )
+
+		term1_t = 1 / r^2 * ( II * nPhi * e_r - e_t + $
+			r * ( -II * nPhi * deriv(r,e_r) + deriv(r,e_t) + r*deriv(r,deriv(r,e_t))))
+		term2_t = w^2 / c^2 * ( e_t + II / ( w * e0 ) * jP_t )
+
+		term1_z = (-nPhi^2 * e_z + r * ( deriv ( r, e_z ) + r * deriv ( r, deriv (r, e_z ) ) ) ) / r^2
+		term2_z = w^2 / c^2 * ( e_z + II / ( w * e0 ) * jP_z )
+
 
 	endif else begin
 
@@ -438,5 +474,6 @@ pro plot_solution, oneD = oneD, full = full, $
 		save, xorig, eAlphaOrig, eBetaOrig, eBOrig, $
 				file = 'soln.sav'
 	endif
-stop
+
+	stop
 end
