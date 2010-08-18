@@ -67,13 +67,19 @@ pro plot_solution, oneD = oneD, full = full, $
 	eBetaAll = complex (0,0)
 	eBAll = complex (0,0)
 
-	for ii=0,n_elements(fileList)-1 do begin
+	for iii=0,n_elements(fileList)-1 do begin
 
-		cdfId = ncdf_open ( fileListData[ii], /noWrite ) 
+		cdfId = ncdf_open ( fileListData[iii], /noWrite ) 
+			nCdf_varGet, cdfId, 'nPhi', nPhi 
+			nCdf_varGet, cdfId, 'freq', freq 
 			nCdf_varGet, cdfId, 'capR', x 
 			nCdf_varGet, cdfId, 'y', y 
-			nCdf_varGet, cdfId, 'xjy_re', jy_re 
-			nCdf_varGet, cdfId, 'xjy_im', jy_im 
+			nCdf_varGet, cdfId, 'jr_re', jr_re 
+			nCdf_varGet, cdfId, 'jr_im', jr_im 
+			nCdf_varGet, cdfId, 'jt_re', jt_re 
+			nCdf_varGet, cdfId, 'jt_im', jt_im 
+			nCdf_varGet, cdfId, 'jz_re', jz_re 
+			nCdf_varGet, cdfId, 'jz_im', jz_im 
 			nCdf_varGet, cdfId, 'bmod', bmod
 			nCdf_varGet, cdfId, 'bxn', bxn
 			nCdf_varGet, cdfId, 'byn', byn
@@ -94,7 +100,9 @@ pro plot_solution, oneD = oneD, full = full, $
 		xx	= complex ( xx_re, xx_im )
 		yy	= complex ( yy_re, yy_im )
 
-		jA_z = complex ( jy_re, jy_im )
+		jA_r = complex ( jr_re, jr_im )
+		jA_t = complex ( jt_re, jt_im )
+		jA_z = complex ( jz_re, jz_im )
 
 		dRbFn_bFn	= complex ( dRbFn_bFn_re, dRbFn_bFn_im )
 		dZbFn_bFn	= complex ( dZbFn_bFn_re, dZbFn_bFn_im )
@@ -111,7 +119,7 @@ pro plot_solution, oneD = oneD, full = full, $
 			y2D = fltArr(1)+y
 		endelse
 
-		cdfId = ncdf_open ( fileList[ii], /noWrite ) 
+		cdfId = ncdf_open ( fileList[iii], /noWrite ) 
 
 			nCdf_varGet, cdfId, 'ealpha_re', ealpha_re 
 			nCdf_varGet, cdfId, 'ebeta_re', ebeta_re 
@@ -358,13 +366,13 @@ pro plot_solution, oneD = oneD, full = full, $
 
 		;restore, '../smithe_1/soln.sav' 
 		;restore, '../tftr_ibw/soln.sav' 
-		;restore, '../cmod_ibw_1d/soln.sav'
+		restore, '../cmod_ibw_1d/soln.sav'
 		;restore, '../d3d_ibw_1d/soln.sav'
 		;restore, '../brambilla/soln.sav'
 		;restore, '../jaeger_1/soln.sav'
 		;restore, '../jaeger_2/soln.sav'
 		;restore, '../cynthia/soln.sav'
-		restore, '../cMod_naoto_He3/soln.sav' 
+		;restore, '../cMod_naoto_He3/soln.sav' 
 
 		iPlot, xorig, ealphaorig, thick=2, view_grid=[3,1], /stretch_to_fit, $
 				dimensions = [900,300], /zoom_on_resize
@@ -390,23 +398,45 @@ pro plot_solution, oneD = oneD, full = full, $
 
 		; Check solution against wave equation
 
-		II 	= complex ( 0, 1 )
+		@constants
+
+		;II 	= complex ( 0, 1 )
 		r	= x
-		nPhi= 10.0
-		f	= 30d6
+		;nPhi= 10.0
+		;f	= 30d6
+		f	= freq
 		w 	= 2 * !pi * f
-		c	= 2.99792458d8
-		e0	= 8.85d-12
+		;c	= 2.99792458d8
+		;e0	= 8.85d-12
+		;u0
 
 		term1_r = -nPhi * ( nPhi * e_r + II * ( e_t + r * deriv ( r, e_t ) ) ) / r^2
 		term2_r = w^2 / c^2 * ( e_r + II / ( w * e0 ) * jP_r )
+		term3_r = -II * w * u0 * jA_r
 
 		term1_t = 1 / r^2 * ( II * nPhi * e_r - e_t + $
 			r * ( -II * nPhi * deriv(r,e_r) + deriv(r,e_t) + r*deriv(r,deriv(r,e_t))))
 		term2_t = w^2 / c^2 * ( e_t + II / ( w * e0 ) * jP_t )
+		term3_t = -II * w * u0 * jA_t
 
 		term1_z = (-nPhi^2 * e_z + r * ( deriv ( r, e_z ) + r * deriv ( r, deriv (r, e_z ) ) ) ) / r^2
 		term2_z = w^2 / c^2 * ( e_z + II / ( w * e0 ) * jP_z )
+		term3_z = -II * w * u0 * jA_z
+
+		p = plot ( term1_r, layout=[1,3,1] )
+		p = plot ( imaginary(term1_r), color='red',/over )
+		p = plot ( -term2_r+term3_r, lineStyle='--', /over )
+		p = plot ( imaginary(-term2_r+term3_r), color='red',lineStyle='--' ,/over )
+
+		p = plot ( term1_t, layout=[1,3,2], /current )
+		p = plot ( imaginary(term1_t), color='red',/over )
+		p = plot ( -term2_t+term3_t, lineStyle='--', /over )
+		p = plot ( imaginary(-term2_t+term3_t), color='red',lineStyle='--' ,/over )
+
+		p = plot ( term1_z, layout=[1,3,3], /current )
+		p = plot ( imaginary(term1_z), color='red',/over )
+		p = plot ( -term2_z+term3_z, lineStyle='--', /over )
+		p = plot ( imaginary(-term2_z+term3_z), color='red',lineStyle='--' ,/over )
 
 
 	endif else begin

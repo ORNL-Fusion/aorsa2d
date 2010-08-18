@@ -11,7 +11,7 @@ module constants
     real(kind=dbl), parameter :: xmh = 1.67262158d-27
     real(kind=dbl), parameter :: eps0 = 8.85d-12
     complex, parameter :: zi = cmplx ( 0.0, 1.0 )
-    real(kind=dbl), parameter :: xmu0 = 1.2566370614d-06
+    real(kind=dbl), parameter :: mu0 = 1.2566370614d-06
     real(kind=dbl), parameter ::  clight = 299792458.0 
 
 

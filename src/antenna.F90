@@ -45,6 +45,7 @@ contains
         use parallel
         use profiles, &
         only: omgrf
+        use constants
 
         implicit none
 
@@ -115,9 +116,9 @@ contains
         !jT = 0
         !jT(nPtsX/2,nPtsY/2)    = 1
 
-        g%jR = -zi / omgrf / eps0 * g%jR 
-        g%jT = -zi / omgrf / eps0 * g%jT
-        g%jZ = -zi / omgrf / eps0 * g%jZ
+        !g%jR = -zi / omgrf / eps0 * g%jR 
+        !g%jT = -zi / omgrf / eps0 * g%jT
+        !g%jZ = -zi / omgrf / eps0 * g%jZ
 
         do i = 1, g%nR
             do j = 1, g%nZ
@@ -153,15 +154,15 @@ contains
 
                     if (myRow==pr_sp .and. myCol==pc_sp) then
 
-                        if (ii==0) brhs(localRow)    = g%jR(i,j)
-                        if (ii==1) brhs(localRow)    = g%jT(i,j)
-                        if (ii==2) brhs(localRow)    = g%jZ(i,j)
+                        if (ii==0) brhs(localRow)    = -zi*omgrf*mu0*g%jR(i,j)
+                        if (ii==1) brhs(localRow)    = -zi*omgrf*mu0*g%jT(i,j)
+                        if (ii==2) brhs(localRow)    = -zi*omgrf*mu0*g%jZ(i,j)
 
                     endif
 #else
-                    if (ii==0) brhs(iRow+0)    = g%jR(i,j)
-                    if (ii==1) brhs(iRow+1)    = g%jT(i,j)
-                    if (ii==2) brhs(iRow+2)    = g%jZ(i,j)
+                    if (ii==0) brhs(iRow+0)    = -zi*omgrf*mu0*g%jR(i,j)
+                    if (ii==1) brhs(iRow+1)    = -zi*omgrf*mu0*g%jT(i,j)
+                    if (ii==2) brhs(iRow+2)    = -zi*omgrf*mu0*g%jZ(i,j)
 #endif
                 enddo
 

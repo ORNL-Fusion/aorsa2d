@@ -8,7 +8,7 @@ contains
     subroutine write_runData ( g )
  
         use aorsa2din_mod, &
-        only: nSpec
+        only: nSpec, nPhi, freqcy
         use bField
         use grid
         use constants
@@ -24,8 +24,10 @@ contains
         integer :: &
             x_id, y_id, &
             bx_id, by_id, bz_id, bmod_id, &
-            jy_re_id, jy_im_id, kx_id, ky_id, &
-            dens_id, temp_id, omgc_id, omgp2_id
+            jr_re_id, jr_im_id, jt_re_id, jt_im_id, &
+            jz_re_id, jz_im_id, kx_id, ky_id, &
+            dens_id, temp_id, omgc_id, omgp2_id, &
+            scalar_id, nPhi_id, freq_id
         integer :: &
             xx_re_id, yy_re_id, xx_im_id, yy_im_id, &
             drBfn_re_id, dzBfn_re_id, drbFn_im_id, dzbFn_im_id
@@ -50,6 +52,13 @@ contains
         call check ( nf90_def_dim ( nc_id, "nModesX", g%nModesR, nModesX_id ) )
         call check ( nf90_def_dim ( nc_id, "nModesY", g%nModesZ, nModesY_id ) )
         call check ( nf90_def_dim ( nc_id, "nSpec", nSpec, nSpec_id ) )
+        call check ( nf90_def_dim ( nc_id, "scalar", 1, scalar_id ) )
+
+        call check ( nf90_def_var ( nc_id, "nPhi", NF90_INT, &
+            scalar_id, nPhi_id ) )
+        call check ( nf90_def_var ( nc_id, "freq", NF90_REAL, &
+            scalar_id, freq_id ) )
+
 
         call check ( nf90_def_var ( nc_id, "capR", NF90_REAL, &
             (/nX_id/), x_id ) ) 
@@ -64,11 +73,20 @@ contains
             (/nX_id,nY_id/), bz_id ) ) 
         call check ( nf90_def_var ( nc_id, "bmod", NF90_REAL, &
             (/nX_id,nY_id/), bmod_id ) ) 
- 
-        call check ( nf90_def_var ( nc_id, "xjy_re", NF90_REAL, &
-            (/nX_id,nY_id/), jy_re_id ) ) 
-        call check ( nf90_def_var ( nc_id, "xjy_im", NF90_REAL, &
-            (/nX_id,nY_id/), jy_im_id ) ) 
+
+        call check ( nf90_def_var ( nc_id, "jr_re", NF90_REAL, &
+            (/nX_id,nY_id/), jr_re_id ) ) 
+        call check ( nf90_def_var ( nc_id, "jr_im", NF90_REAL, &
+            (/nX_id,nY_id/), jr_im_id ) ) 
+        call check ( nf90_def_var ( nc_id, "jt_re", NF90_REAL, &
+            (/nX_id,nY_id/), jt_re_id ) ) 
+        call check ( nf90_def_var ( nc_id, "jt_im", NF90_REAL, &
+            (/nX_id,nY_id/), jt_im_id ) ) 
+        call check ( nf90_def_var ( nc_id, "jz_re", NF90_REAL, &
+            (/nX_id,nY_id/), jz_re_id ) ) 
+        call check ( nf90_def_var ( nc_id, "jz_im", NF90_REAL, &
+            (/nX_id,nY_id/), jz_im_id ) ) 
+
 
         !call check ( nf90_def_var ( nc_id, "kxsav", NF90_REAL, &
         !    (/nModesX_id/), kx_id ) ) 
@@ -135,7 +153,10 @@ contains
         nc_stat = nf90_def_var ( nc_id, "Uzz", NF90_REAL, (/nX_id,nY_id/), Uzzid ) 
 
         call check ( nf90_enddef ( nc_id ) )
-        
+       
+        call check ( nf90_put_var ( nc_id, nPhi_id, nPhi ) )
+        call check ( nf90_put_var ( nc_id, freq_id, freqcy ) )
+
         call check ( nf90_put_var ( nc_id, x_id, g%R ) )
         call check ( nf90_put_var ( nc_id, y_id, g%Z ) )
 
@@ -143,8 +164,14 @@ contains
         call check ( nf90_put_var ( nc_id, by_id, g%bT_unit ) )
         call check ( nf90_put_var ( nc_id, bz_id, g%bZ_unit ) )
         call check ( nf90_put_var ( nc_id, bmod_id, g%bMag ) )
-        call check ( nf90_put_var ( nc_id, jy_re_id, real(g%jZ) ) )
-        call check ( nf90_put_var ( nc_id, jy_im_id, aimag(g%jZ) ) )
+
+        call check ( nf90_put_var ( nc_id, jr_re_id, real(g%jR) ) )
+        call check ( nf90_put_var ( nc_id, jr_im_id, aimag(g%jR) ) )
+        call check ( nf90_put_var ( nc_id, jt_re_id, real(g%jT) ) )
+        call check ( nf90_put_var ( nc_id, jt_im_id, aimag(g%jT) ) )
+        call check ( nf90_put_var ( nc_id, jz_re_id, real(g%jZ) ) )
+        call check ( nf90_put_var ( nc_id, jz_im_id, aimag(g%jZ) ) )
+ 
         !call check ( nf90_put_var ( nc_id, kx_id, kxsav ) )
         !call check ( nf90_put_var ( nc_id, ky_id, kysav ) )
         nc_stat = nf90_put_var ( nc_id, dens_id, g%densitySpec )
