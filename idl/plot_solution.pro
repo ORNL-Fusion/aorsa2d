@@ -1,3 +1,27 @@
+
+pro dlg_deriv1, x, y, dydx = dydx, dy2dx2 = dy2dx2 
+
+		h	= x[1]-x[0]
+		dy2dx2	= y*0
+		dy2dx2[0]	= ( 2*y[0]-5*y[1]+4*y[2]-1*y[3] ) / h^2
+		dy2dx2[-1]	= ( 2*y[-1]-5*y[-2]+4*y[-3]-1*y[-4] ) / h^2
+	
+		for i=1,n_elements(x[*])-2 do begin
+			dy2dx2[i]	= ( 1*y[i-1]-2*y[i]+1*y[i+1] ) / h^2
+		endfor
+
+		dydx	= y*0
+		dydx[0]	= ( -3*y[0]+4*y[1]-1*y[2] ) / (2*h)
+		dydx[-1]	= ( 3*y[-1]-4*y[-2]+1*y[-3] ) / (2*h)
+	
+		for i=1,n_elements(x[*])-2 do begin
+			dydx[i]	= ( -1*y[i-1]+1*y[i+1] ) / (2*h)
+		endfor
+
+end
+
+
+
 pro contour_field, field, x, y, nLevs, scale, $
 		id = id, view = view, log = log, nolines = nolines
 
@@ -410,17 +434,25 @@ pro plot_solution, oneD = oneD, full = full, $
 		;e0	= 8.85d-12
 		;u0
 
-		term1_r = -nPhi * ( nPhi * e_r + II * ( e_t + r * deriv ( r, e_t ) ) ) / r^2
-		term2_r = w^2 / c^2 * ( e_r + II / ( w * e0 ) * jP_r )
+		jP_r_total	= total ( jP_r, 3 )
+		jP_t_total	= total ( jP_t, 3 )
+		jP_z_total	= total ( jP_z, 3 )
+
+		dlg_deriv1, r, e_r, dydx = de_r, dy2dx2 = d2e_r
+		dlg_deriv1, r, e_t, dydx = de_t, dy2dx2 = d2e_t
+		dlg_deriv1, r, e_z, dydx = de_z, dy2dx2 = d2e_z
+
+		term1_r = -nPhi * ( nPhi * e_r + II * ( e_t + r * de_t ) ) / r^2
+		term2_r = w^2 / c^2 * ( e_r + II / ( w * e0 ) * jP_r_total )
 		term3_r = -II * w * u0 * jA_r
 
 		term1_t = 1 / r^2 * ( II * nPhi * e_r - e_t + $
-			r * ( -II * nPhi * deriv(r,e_r) + deriv(r,e_t) + r*deriv(r,deriv(r,e_t))))
-		term2_t = w^2 / c^2 * ( e_t + II / ( w * e0 ) * jP_t )
+			r * ( -II * nPhi * de_r + de_t + r * d2e_t ))
+		term2_t = w^2 / c^2 * ( e_t + II / ( w * e0 ) * jP_t_total )
 		term3_t = -II * w * u0 * jA_t
 
-		term1_z = (-nPhi^2 * e_z + r * ( deriv ( r, e_z ) + r * deriv ( r, deriv (r, e_z ) ) ) ) / r^2
-		term2_z = w^2 / c^2 * ( e_z + II / ( w * e0 ) * jP_z )
+		term1_z = (-nPhi^2 * e_z + r * ( de_z + r * d2e_z ) ) / r^2
+		term2_z = w^2 / c^2 * ( e_z + II / ( w * e0 ) * jP_z_total )
 		term3_z = -II * w * u0 * jA_z
 
 		p = plot ( term1_r, layout=[1,3,1] )
@@ -437,7 +469,6 @@ pro plot_solution, oneD = oneD, full = full, $
 		p = plot ( imaginary(term1_z), color='red',/over )
 		p = plot ( -term2_z+term3_z, lineStyle='--', /over )
 		p = plot ( imaginary(-term2_z+term3_z), color='red',lineStyle='--' ,/over )
-
 
 	endif else begin
 

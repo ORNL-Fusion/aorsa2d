@@ -51,33 +51,33 @@ subroutine current ( g )
                         bFn = g%xx(n,i) * g%yy(m,j)
                         !bFn = xBasis(n,g%rNorm(i)) * yBasis(m,g%zNorm(j))
 
-                        !ek_nm(1) = g%eAlphak(n,m)
-                        !ek_nm(2) = g%eBetak(n,m)
-                        !ek_nm(3) = g%eBk(n,m) 
+                        ek_nm(1) = g%eAlphak(n,m)
+                        ek_nm(2) = g%eBetak(n,m)
+                        ek_nm(3) = g%eBk(n,m) 
 
-                        !thisSigma = sigma(i,j,n,m,:,:,s)
+                        thisSigma = sigma(i,j,n,m,:,:,s)
  
-                        !jVec = matMul ( thisSigma, ek_nm ) 
+                        jVec = matMul ( thisSigma, ek_nm ) 
 
-                        !g%jAlpha(i,j,s) = g%jAlpha(i,j,s) + jVec(1) * bFn
-                        !g%jBeta(i,j,s) = g%jBeta(i,j,s) + jVec(2) * bFn
-                        !g%jB(i,j,s) = g%jB(i,j,s) + jVec(3) * bFn
+                        g%jAlpha(i,j,s) = g%jAlpha(i,j,s) + jVec(1) * bFn
+                        g%jBeta(i,j,s) = g%jBeta(i,j,s) + jVec(2) * bFn
+                        g%jB(i,j,s) = g%jB(i,j,s) + jVec(3) * bFn
 
 
-                        g%jAlpha(i,j,s) = g%jAlpha(i,j,s) &
-                            + ( sigma(i,j,n,m,1,1,s) * g%eAlphak(n,m) &
-                            + sigma(i,j,n,m,1,2,s) * g%eBetak(n,m) &
-                            + sigma(i,j,n,m,1,3,s) * g%eBk(n,m) ) * bFn 
+                        !g%jAlpha(i,j,s) = g%jAlpha(i,j,s) &
+                        !    + ( sigma(i,j,n,m,1,1,s) * g%eAlphak(n,m) &
+                        !    + sigma(i,j,n,m,1,2,s) * g%eBetak(n,m) &
+                        !    + sigma(i,j,n,m,1,3,s) * g%eBk(n,m) ) * bFn 
 
-                        g%jBeta(i,j,s) = g%jBeta(i,j,s) &
-                            + ( sigma(i,j,n,m,2,1,s) * g%eAlphak(n,m) &
-                            + sigma(i,j,n,m,2,2,s) * g%eBetak(n,m) &
-                            + sigma(i,j,n,m,2,3,s) * g%eBk(n,m) ) * bFn 
+                        !g%jBeta(i,j,s) = g%jBeta(i,j,s) &
+                        !    + ( sigma(i,j,n,m,2,1,s) * g%eAlphak(n,m) &
+                        !    + sigma(i,j,n,m,2,2,s) * g%eBetak(n,m) &
+                        !    + sigma(i,j,n,m,2,3,s) * g%eBk(n,m) ) * bFn 
 
-                        g%jB(i,j,s) = g%jB(i,j,s) &
-                            + ( sigma(i,j,n,m,3,1,s) * g%eAlphak(n,m) &
-                            + sigma(i,j,n,m,3,2,s) * g%eBetak(n,m) &
-                            + sigma(i,j,n,m,3,3,s) * g%eBk(n,m) ) * bFn 
+                        !g%jB(i,j,s) = g%jB(i,j,s) &
+                        !    + ( sigma(i,j,n,m,3,1,s) * g%eAlphak(n,m) &
+                        !    + sigma(i,j,n,m,3,2,s) * g%eBetak(n,m) &
+                        !    + sigma(i,j,n,m,3,3,s) * g%eBk(n,m) ) * bFn 
 
                     enddo
                 enddo

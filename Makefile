@@ -123,7 +123,13 @@ LINK_FLAGS =
 .PHONY: depend clean
 
 ${AORSA2D}: ${SRC_DIR}/aorsa2dMain.F90  
-	$(F90) ${F90FLAGS} ${SRC_DIR}/aorsa2dMain.F90 -o ${AORSA2D} $(OBJ_FILES) ${GPTL} $(LIBS) ${LINK_FLAGS} ${CPP_DIRECTIVES} ${INC_DIR}
+	$(F90) ${F90FLAGS} ${SRC_DIR}/aorsa2dMain.F90 -o \
+			${AORSA2D} \
+			$(OBJ_FILES) \
+			${GPTL} $(LIBS) \
+			${LINK_FLAGS} \
+			${CPP_DIRECTIVES} \
+			${INC_DIR}
 
 # SRC files
 
