@@ -105,9 +105,9 @@ pro plot_solution, oneD = oneD, full = full, $
 			nCdf_varGet, cdfId, 'jz_re', jz_re 
 			nCdf_varGet, cdfId, 'jz_im', jz_im 
 			nCdf_varGet, cdfId, 'bmod', bmod
-			nCdf_varGet, cdfId, 'bxn', bxn
-			nCdf_varGet, cdfId, 'byn', byn
-			nCdf_varGet, cdfId, 'bzn', bzn
+			nCdf_varGet, cdfId, 'brU', brU
+			nCdf_varGet, cdfId, 'btU', btU
+			nCdf_varGet, cdfId, 'bzU', bzU
 			nCdf_varGet, cdfId, 'densitySpec', densitySpec
 			nCdf_varGet, cdfId, 'tempSpec', tempSpec
 			nCdf_varGet, cdfId, 'tempSpec', tempSpec
@@ -143,6 +143,7 @@ pro plot_solution, oneD = oneD, full = full, $
 			y2D = fltArr(1)+y
 		endelse
 
+	
 		cdfId = ncdf_open ( fileList[iii], /noWrite ) 
 
 			nCdf_varGet, cdfId, 'ealpha_re', ealpha_re 
@@ -388,9 +389,9 @@ pro plot_solution, oneD = oneD, full = full, $
 
 	if keyword_set(oneD) then begin
 
-		;restore, '../smithe_1/soln.sav' 
+		restore, '../smithe/soln.sav' 
 		;restore, '../tftr_ibw/soln.sav' 
-		restore, '../cmod_ibw_1d/soln.sav'
+		;restore, '../cmod_ibw_1d/soln.sav'
 		;restore, '../d3d_ibw_1d/soln.sav'
 		;restore, '../brambilla/soln.sav'
 		;restore, '../jaeger_1/soln.sav'
@@ -398,27 +399,33 @@ pro plot_solution, oneD = oneD, full = full, $
 		;restore, '../cynthia/soln.sav'
 		;restore, '../cMod_naoto_He3/soln.sav' 
 
-		iPlot, xorig, ealphaorig, thick=2, view_grid=[3,1], /stretch_to_fit, $
-				dimensions = [900,300], /zoom_on_resize
-		iPlot, xorig, eBetaorig, thick=2, /view_next, /stretch_to_fit, /zoom_on_resize
-		iPlot, xorig, eBorig, thick=2, /view_next, /stretch_to_fit, /zoom_on_resize
+		;iPlot, xorig, ealphaorig, thick=2, view_grid=[3,1], /stretch_to_fit, $
+		;		dimensions = [900,300], /zoom_on_resize
+		;iPlot, xorig, eBetaorig, thick=2, /view_next, /stretch_to_fit, /zoom_on_resize
+		;iPlot, xorig, eBorig, thick=2, /view_next, /stretch_to_fit, /zoom_on_resize
 
-		for i=0,n_elements(fileList)-1 do begin
+		;for i=0,n_elements(fileList)-1 do begin
 
-			if i mod 3 eq 0 then color = red
-			if i mod 3 eq 1 then color = blue
-			if i mod 3 eq 2 then color = green
-			if i gt 0 then startII = total(nAll[0:i-1]) else startII=0
-			stopII = startII+nAll[i]-1
-			print, i, startII, stopII
-			iplot, xall[startII:stopII],eAlphaAll[startII:stopII], $
-					color=color, /over, sym_index=4, view_number=1
-			iplot, xall[startII:stopII],eBetaAll[startII:stopII], $
-					color=color, /over, sym_index=4, view_number=2
-			iplot, xall[startII:stopII],eBAll[startII:stopII], $
-					color=color, /over, sym_index=4, view_number=3
-		endfor
+		;	if i mod 3 eq 0 then color = red
+		;	if i mod 3 eq 1 then color = blue
+		;	if i mod 3 eq 2 then color = green
+		;	if i gt 0 then startII = total(nAll[0:i-1]) else startII=0
+		;	stopII = startII+nAll[i]-1
+		;	print, i, startII, stopII
+		;	iplot, xall[startII:stopII],eAlphaAll[startII:stopII], $
+		;			color=color, /over, sym_index=4, view_number=1
+		;	iplot, xall[startII:stopII],eBetaAll[startII:stopII], $
+		;			color=color, /over, sym_index=4, view_number=2
+		;	iplot, xall[startII:stopII],eBAll[startII:stopII], $
+		;			color=color, /over, sym_index=4, view_number=3
+		;endfor
 
+		p = plot ( x, e_r, layout=[1,3,1] )
+		p = plot ( x, imaginary(e_r), color='red',/over )
+		p = plot ( x, e_t, layout=[1,3,2], /current  )
+		p = plot ( x, imaginary(e_t), color='red',/over )
+		p = plot ( x, e_z, layout=[1,3,3], /current  )
+		p = plot ( x, imaginary(e_z), color='red',/over )
 
 		; Check solution against wave equation
 
@@ -434,9 +441,29 @@ pro plot_solution, oneD = oneD, full = full, $
 		;e0	= 8.85d-12
 		;u0
 
+
 		jP_r_total	= total ( jP_r, 3 )
 		jP_t_total	= total ( jP_t, 3 )
 		jP_z_total	= total ( jP_z, 3 )
+
+		jP_r_total_	= jP_r_total
+		jP_t_total_	= jP_t_total
+		jP_z_total_	= jP_z_total
+		
+		e_r_ = e_r
+		e_t_ = e_t
+		e_z_ = e_z
+
+		cdfId = ncdf_open ( 'sigma001.nc', /noWrite ) 
+
+			nCdf_varGet, cdfId, 'sigma_re', sigma_re 
+			nCdf_varGet, cdfId, 'sigma_im', sigma_im
+
+		ncdf_close, cdfId
+
+		sigma	= complex ( sigma_re, sigma_im )
+
+		;restore, '~/code/rsfwc_1D/idl/solutionVals.sav'
 
 		dlg_deriv1, r, e_r, dydx = de_r, dy2dx2 = d2e_r
 		dlg_deriv1, r, e_t, dydx = de_t, dy2dx2 = d2e_t
@@ -455,20 +482,54 @@ pro plot_solution, oneD = oneD, full = full, $
 		term2_z = w^2 / c^2 * ( e_z + II / ( w * e0 ) * jP_z_total )
 		term3_z = -II * w * u0 * jA_z
 
+		;term1_r = -nPhi * ( nPhi * e_r + II * r^2 * de_t ) / r^4
+		;term2_r = w^2 / c^2 * ( e_r + II / ( w * e0 ) * jP_r_total )
+		;term3_r = -II * w * u0 * jA_r
+
+		;term1_t = -1 / r^4 * ( nPhi * ( -2 * II * r ) * e_r $
+		;			+ r^2*e_t $
+		;			- r^2*(-II*nPhi*de_r+r*de_t+r^2*d2e_t))
+		;term2_t = w^2 / c^2 * ( e_t + II / ( w * e0 ) * jP_t_total )
+		;term3_t = -II * w * u0 * jA_t
+
+		;term1_z = (-nPhi^2*e_z $
+		;	   + r^2*(r*de_z+r^2*d2e_z)) / r^4
+		;term2_z = w^2 / c^2 * ( e_z + II / ( w * e0 ) * jP_z_total )
+		;term3_z = -II * w * u0 * jA_z
+
+
 		p = plot ( term1_r, layout=[1,3,1] )
 		p = plot ( imaginary(term1_r), color='red',/over )
-		p = plot ( -term2_r+term3_r, lineStyle='--', /over )
-		p = plot ( imaginary(-term2_r+term3_r), color='red',lineStyle='--' ,/over )
+		p = plot ( -term2_r+term3_r, lineStyle='--', thick = 4, transp = 50, /over )
+		p = plot ( imaginary(-term2_r+term3_r), $
+				color='r',lineStyle='--' , thick = 4, transp = 50, /over )
 
 		p = plot ( term1_t, layout=[1,3,2], /current )
 		p = plot ( imaginary(term1_t), color='red',/over )
-		p = plot ( -term2_t+term3_t, lineStyle='--', /over )
-		p = plot ( imaginary(-term2_t+term3_t), color='red',lineStyle='--' ,/over )
+		p = plot ( -term2_t+term3_t, lineStyle='--', thick = 4, transp = 50, /over )
+		p = plot ( imaginary(-term2_t+term3_t), color='r',lineStyle='--', thick = 4, transp = 50 ,/over )
 
 		p = plot ( term1_z, layout=[1,3,3], /current )
 		p = plot ( imaginary(term1_z), color='red',/over )
-		p = plot ( -term2_z+term3_z, lineStyle='--', /over )
-		p = plot ( imaginary(-term2_z+term3_z), color='red',lineStyle='--' ,/over )
+		p = plot ( -term2_z+term3_z, lineStyle='--', thick = 4, transp = 50, /over )
+		p = plot ( imaginary(-term2_z+term3_z), color='r',lineStyle='--', thick = 4, transp = 50 ,/over )
+
+
+		nSpec	= n_elements ( jp_r[0,0,*] )
+
+		jDotE	= jp_r[*,*,0] * conj(e_r) $
+					+ jp_t[*,*,0] * conj(e_t) $
+					+ jp_z[*,*,0] * conj(e_z)
+		p = plot ( x, jDotE )
+		for s=1,nSpec-1 do begin
+
+			jDotE	= jp_r[*,*,s] * conj(e_r) $
+					+ jp_t[*,*,s] * conj(e_t) $
+					+ jp_z[*,*,s] * conj(e_z)
+
+			p	= plot ( x, jDotE, /over )
+
+		endfor
 
 	endif else begin
 

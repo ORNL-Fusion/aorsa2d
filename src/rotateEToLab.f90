@@ -17,6 +17,8 @@ subroutine rotate_E_to_lab ( g )
     complex :: ELab_RTZ(3), jPLab_RTZ(3)
     integer :: i, j, s
 
+    real :: mag1, mag2
+
     allocate ( g%eR(g%nR,g%nZ), &
                 g%eTh(g%nR,g%nZ), &
                 g%eZ(g%nR,g%nZ) )
@@ -41,6 +43,18 @@ subroutine rotate_E_to_lab ( g )
             g%eTh(i,j) = ELab_RTZ(2)
             g%eZ(i,j) = ELab_RTZ(3)
 
+            !! Check rotated field is equal in magnitude
+
+            !mag1 = abs ( sqrt ( g%eAlpha(i,j)**2 + g%eBeta(i,j)**2 + g%eB(i,j)**2 ))
+            !mag2 = abs ( sqrt ( g%eR(i,j)**2 + g%eTh(i,j)**2 + g%eZ(i,j)**2 ) )
+
+            !if(abs(1-mag1/mag2)>1e-4)then
+            !    write(*,*) 'ERROR: src/rotateEtoLab.f90 - magntiude was not invariant (E)'
+            !    write(*,*) abs(1-mag1/mag2) 
+            !    stop
+            !endif
+
+
             do s=1,nSpec
 
                 jPLab_RTZ = &
@@ -50,6 +64,17 @@ subroutine rotate_E_to_lab ( g )
                 g%jP_r(i,j,s) = jPLab_RTZ(1)
                 g%jP_t(i,j,s) = jPLab_RTZ(2)
                 g%jP_z(i,j,s) = jPLab_RTZ(3)
+
+                !! Check rotation
+
+                !mag1 = abs ( sqrt ( g%jAlpha(i,j,s)**2 + g%jBeta(i,j,s)**2 + g%jB(i,j,s)**2 ))
+                !mag2 = abs ( sqrt ( g%jP_r(i,j,s)**2 + g%jP_t(i,j,s)**2 + g%jP_z(i,j,s)**2 ) )
+
+                !if(abs(1-mag1/mag2)>1e-4)then
+                !    write(*,*) 'ERROR: src/rotateEtoLab.f90 - magntiude was not invariant (Jp)'
+                !    write(*,*) abs(1-mag1/mag2)
+                !    stop 
+                !endif
 
             enddo    
 

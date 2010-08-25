@@ -23,7 +23,7 @@ contains
         integer :: nModesX_id, nModesY_id, nSpec_id
         integer :: &
             x_id, y_id, &
-            bx_id, by_id, bz_id, bmod_id, &
+            brU_id, btU_id, bzU_id, bmod_id, &
             jr_re_id, jr_im_id, jt_re_id, jt_im_id, &
             jz_re_id, jz_im_id, kx_id, ky_id, &
             dens_id, temp_id, omgc_id, omgp2_id, &
@@ -65,12 +65,12 @@ contains
         call check ( nf90_def_var ( nc_id, "y", NF90_REAL, &
             (/nY_id/), y_id ) ) 
  
-        call check ( nf90_def_var ( nc_id, "bxn", NF90_REAL, &
-            (/nX_id,nY_id/), bx_id ) ) 
-        call check ( nf90_def_var ( nc_id, "byn", NF90_REAL, &
-            (/nX_id,nY_id/), by_id ) ) 
-        call check ( nf90_def_var ( nc_id, "bzn", NF90_REAL, &
-            (/nX_id,nY_id/), bz_id ) ) 
+        call check ( nf90_def_var ( nc_id, "brU", NF90_REAL, &
+            (/nX_id,nY_id/), brU_id ) ) 
+        call check ( nf90_def_var ( nc_id, "btU", NF90_REAL, &
+            (/nX_id,nY_id/), btU_id ) ) 
+        call check ( nf90_def_var ( nc_id, "bzU", NF90_REAL, &
+            (/nX_id,nY_id/), bzU_id ) ) 
         call check ( nf90_def_var ( nc_id, "bmod", NF90_REAL, &
             (/nX_id,nY_id/), bmod_id ) ) 
 
@@ -160,9 +160,9 @@ contains
         call check ( nf90_put_var ( nc_id, x_id, g%R ) )
         call check ( nf90_put_var ( nc_id, y_id, g%Z ) )
 
-        call check ( nf90_put_var ( nc_id, bx_id, g%bR_unit ) )
-        call check ( nf90_put_var ( nc_id, by_id, g%bT_unit ) )
-        call check ( nf90_put_var ( nc_id, bz_id, g%bZ_unit ) )
+        call check ( nf90_put_var ( nc_id, brU_id, g%bR_unit ) )
+        call check ( nf90_put_var ( nc_id, btU_id, g%bT_unit ) )
+        call check ( nf90_put_var ( nc_id, bzU_id, g%bZ_unit ) )
         call check ( nf90_put_var ( nc_id, bmod_id, g%bMag ) )
 
         call check ( nf90_put_var ( nc_id, jr_re_id, real(g%jR) ) )

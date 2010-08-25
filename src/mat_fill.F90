@@ -540,7 +540,7 @@ contains
 
                             z   = g%z(j)
                             r   = g%R(i)
-                            kt  = g%kPhi(i)
+                            kt  = nPhi!g%kPhi(i)
 
                             bFn = g%xx(n, i) * g%yy(m, j)
 
