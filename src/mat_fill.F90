@@ -446,6 +446,21 @@ contains
                                     g%sinTh(i,j), g%bPol(i,j), g%bMag(i,j), g%gradPrlB(i,j), &
                                     g%nuOmg(i,j) )
 
+                                !if(cosX)then
+                                !kVec_stix = matMul( g%U_RTZ_to_ABb(i,j,:,:), (/ -kr, g%kPhi(i), kz /) ) 
+
+                                !sigma_tmp_neg = sigmaHot_maxwellian&
+                                !    ( mSpec(s), &
+                                !    g%ktSpec(i,j,s), g%omgc(i,j,s), g%omgp2(i,j,s), &
+                                !    kVec_stix, g%R(i), &
+                                !    omgrf, k0, &
+                                !    g%k_cutoff, s, &
+                                !    g%sinTh(i,j), g%bPol(i,j), g%bMag(i,j), g%gradPrlB(i,j), &
+                                !    g%nuOmg(i,j) )
+
+                                !sigma_tmp = ( sigma_tmp + sigma_tmp_neg ) / 2
+                                !endif
+
                             endif hotPlasma
 
 

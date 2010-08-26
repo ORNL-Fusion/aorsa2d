@@ -33,10 +33,10 @@ contains
 
         if(chebyshevX)then
             g%nS = g%nMin
-            g%nF = g%nMax!2.0/3.0
+            g%nF = g%nMax
         elseif(cosX)then
             g%nS = g%nMin
-            g%nF = g%nMax!2.0/3.0
+            g%nF = g%nMax
         else
             g%nS = g%nMin*2.0/3.0
             g%nF = g%nMax*2.0/3.0
@@ -44,10 +44,10 @@ contains
 
         if(chebyshevY)then
             g%mS = g%mMin
-            g%mF = g%mMax!2.0/3.0
+            g%mF = g%mMax
         elseif(cosY)then
             g%mS = g%mMin
-            g%mF = g%mMax!2.0/3.0
+            g%mF = g%mMax
         else
             g%mS = g%mMin*2.0/3.0
             g%mF = g%mMax*2.0/3.0

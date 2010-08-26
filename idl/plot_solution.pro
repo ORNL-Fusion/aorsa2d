@@ -431,16 +431,9 @@ pro plot_solution, oneD = oneD, full = full, $
 
 		@constants
 
-		;II 	= complex ( 0, 1 )
 		r	= x
-		;nPhi= 10.0
-		;f	= 30d6
 		f	= freq
 		w 	= 2 * !pi * f
-		;c	= 2.99792458d8
-		;e0	= 8.85d-12
-		;u0
-
 
 		jP_r_total	= total ( jP_r, 3 )
 		jP_t_total	= total ( jP_t, 3 )
@@ -520,7 +513,7 @@ pro plot_solution, oneD = oneD, full = full, $
 		jDotE	= jp_r[*,*,0] * conj(e_r) $
 					+ jp_t[*,*,0] * conj(e_t) $
 					+ jp_z[*,*,0] * conj(e_z)
-		p = plot ( x, jDotE )
+		p = plot ( x, jDotE, color='b', thick = 3, transp = 50 )
 		for s=1,nSpec-1 do begin
 
 			jDotE	= jp_r[*,*,s] * conj(e_r) $
