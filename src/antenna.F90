@@ -77,10 +77,10 @@ contains
                     -( (g%rho(i,j)-rhoAnt)**2/antSigRho**2 + (g%Z(j)-zAnt)**2/antSigY**2 ) &
                           )
                 else
-                    g%jT(i,j) = exp ( &
+                    g%jZ(i,j) = exp ( &
                     -( (g%R(i)-rAnt)**2/antSigX**2 + (g%Z(j)-zAnt)**2/antSigY**2 ) &
                           )
-                    write(*,*) 'WARNING --- using jT NOT jZ ---'
+                    !write(*,*) 'WARNING --- using jT NOT jZ ---'
                 endif
 
                 !   boundary conditions
