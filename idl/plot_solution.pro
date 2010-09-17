@@ -427,6 +427,18 @@ pro plot_solution, oneD = oneD, full = full, $
 		p = plot ( x, e_z, layout=[1,3,3], /current  )
 		p = plot ( x, imaginary(e_z), color='red',/over )
 
+
+		;w=80e6*2*!pi
+		;dt	= 1/80e6/100.0
+
+		;plot, x, real_part(e_r)*cos(w*0*dt)+imaginary(e_r)*sin(w*0*dt), yrange = [-4,4]
+		;for i=0,10000 do begin
+		;		plot, x, real_part(e_r)*cos(w*i*dt)+imaginary(e_r)*sin(w*i*dt), yrange = [-4,4]
+		;		wait, 0.05
+		;endfor
+		;stop
+
+
 		; Check solution against wave equation
 
 		@constants
