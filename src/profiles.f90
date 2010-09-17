@@ -106,6 +106,16 @@ contains
                         g%densitySpec(i,:,s)  = ( dSpec(s)-scaleFacD*(g%R(i)-r0)**2 ) 
                     enddo
 
+                    if(any(g%ktSpec(:,:,s)<0))then
+                        write(*,*) 'ERROR - src/profiles.f90: ktSpec < 0'
+                        stop
+                    endif
+
+                    if(any(g%densitySpec(:,:,s)<=0))then
+                        write(*,*) 'ERROR - src/profiles.f90: densitySpec <= 0'
+                        stop
+                    endif
+
                 endif
             endif
         
