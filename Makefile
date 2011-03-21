@@ -26,7 +26,7 @@ BLACS = \
 SCALAPACK = ${HOME}/code/scalapack/scalapack_gnu64/libscalapack.a
 PAPI_INC = -I/usr/include 
 PAPI = -lpapi
-CUDA_DIR = ${HOME}/code/cuda/3.0/cuda
+CUDA_DIR = ${HOME}/code/cuda/4.0/cuda
 CUDA = -L ${CUDA_DIR}/lib64 -lcublas -lcudart -lcuda -L /usr/lib64
 MAGMA_DIR = ${HOME}/code/magma/magma_0.2
 MAGMA = -L ${MAGMA_DIR}/lib -lmagma -lmagmablas ${MAGMA_DIR}/lib/libmagma_64.a
@@ -55,11 +55,24 @@ ZFUN = "zFunHammett"
 
 USEPAPI = "false"
 
+# use CUDA
+
+USECUDA = "false"
+
+# the order of linking libs is important
+
+LIBS = ${NETCDF}
+INC_DIR = 
+
+
 # pre-processor directives
 # ------------------------
 
 ifeq (${MODE},"parallel")
 	CPP_DIRECTIVES = -Dpar
+	LIBS += ${SCALAPACK} ${BLACS} ${BLAS} ${LAPACK}
+else
+	LIBS += ${LAPACK} ${BLAS}
 endif
 
 ifeq (${SOLVE_PREC},"double")
@@ -76,6 +89,12 @@ endif
 
 ifeq (${USEPAPI},"true")
 	CPP_DIRECTIVES := -Dusepapi ${CPP_DIRECTIVES}
+	LIBS += ${PAPI}
+	INC_DIR += ${PAPI_INC}
+endif
+
+ifeq (${USECUDA},"true")
+	LIBS += ${MAGMA} ${CUDA} -lstdc++
 endif
 
 
@@ -89,7 +108,7 @@ DOUBLE = -fdefault-real-8
 ifeq (${MODE},"parallel")
 	F90 = mpif90
 else
-	F90 = gfortran
+	F90 = /home/dg6/code/gcc/gcc-4.4.5/bin/gfortran
 endif
 MOD_LOC = -Jmod
 
@@ -108,14 +127,6 @@ endif
 ifeq (${HOME},/Users/dg6)
 	include Makefile.greendl
 endif
-
-# the order of linking libs is important
-ifeq (${MODE},"parallel")
-	LIBS = ${SCALAPACK} ${BLACS} ${BLAS} ${LAPACK} ${NETCDF} ${PAPI}
-else
-	LIBS = ${LAPACK} ${NETCDF} ${PAPI} ${MAGMA} ${CUDA} -lstdc++ ${BLAS} 
-endif
-INC_DIR = ${PAPI_INC} ${GPTL}
 
 F90FLAGS = ${WARN} ${DEBUG} ${BOUNDS} ${MOD_LOC} 
 LINK_FLAGS = 

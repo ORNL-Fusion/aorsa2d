@@ -260,7 +260,7 @@ pro plot_solution, oneD = oneD, full = full, $
 			alpha = h2/h1
 			dEdR_R = (-1*alpha^2*eAlpha[nX-3]+1*eAlpha[nX-2]*(alpha^2-1)+eAlpha[nX-1])/(h1*(alpha+1)*alpha)
 
-			print, 'dEdR - ', dEdR_L, dEdR_R, dReAlpha[1], dReAlpha[nX-2]
+			print, 'dEdR - ', dEdR_L, dEdR_R;, dReAlpha[1], dReAlpha[nX-2]
 
 			print, ''
 			print, 'eBet: '
@@ -389,7 +389,7 @@ pro plot_solution, oneD = oneD, full = full, $
 
 	if keyword_set(oneD) then begin
 
-		restore, '../smithe/soln.sav' 
+		;restore, '../smithe/soln.sav' 
 		;restore, '../tftr_ibw/soln.sav' 
 		;restore, '../cmod_ibw_1d/soln.sav'
 		;restore, '../d3d_ibw_1d/soln.sav'
