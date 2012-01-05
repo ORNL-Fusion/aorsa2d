@@ -15,10 +15,10 @@ OBJ_FILES = $(wildcard obj/*.o)
 # libraries 
 # ---------
 
-BLAS = ${HOME}/code/goto_blas/GotoBLAS2/libgoto2.a -pthread
+BLAS = ${HOME}/code/goto_blas/libgoto2_gnu_4.3.2_64.a -pthread
 LAPACK = ${HOME}/code/lapack/lapack-3.1.1/lapack_LINUX.a 
-NETCDF_DIR = /home/dg6/code/netcdf/netcdf_gnu64
-NETCDF = -I ${NETCDF_DIR}/include -L ${NETCDF_DIR}/lib -lnetcdf 
+NETCDF_DIR = /home/dg6/code/netcdf/gnu_4.3.2
+NETCDF = -I ${NETCDF_DIR}/include -L ${NETCDF_DIR}/lib -lnetcdf -lnetcdff
 BLACS = \
 	${HOME}/code/blacs/blacs_gnu64/LIB/blacs_MPI-LINUX-0.a \
 	${HOME}/code/blacs/blacs_gnu64/LIB/blacsF77init_MPI-LINUX-0.a \
@@ -108,7 +108,7 @@ DOUBLE = -fdefault-real-8
 ifeq (${MODE},"parallel")
 	F90 = mpif90
 else
-	F90 = /home/dg6/code/gcc/gcc-4.4.5/bin/gfortran
+	F90 = gfortran
 endif
 MOD_LOC = -Jmod
 
