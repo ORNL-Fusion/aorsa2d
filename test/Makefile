@@ -13,8 +13,8 @@ DEBUG = -g -fbacktrace -fsignaling-nans -ffpe-trap=zero,invalid#,underflow,overf
 DOUBLE = -fdefault-real-8
 F90FLAGS = ${MOD_LOC} ${BOUNDS} ${DEBUG} ${WARN}
 
-NETCDF_DIR = /home/dg6/code/netcdf/netcdf_gnu64
-NETCDF = -I ${NETCDF_DIR}/include -L ${NETCDF_DIR}/lib -lnetcdf
+NETCDF_DIR = /home/dg6/code/netcdf/gnu_4.3.2
+NETCDF = -I ${NETCDF_DIR}/include -L ${NETCDF_DIR}/lib -lnetcdf -lnetcdff
 
 CPP_DIRECTIVES = -DcylXYZ -DzFunHammett
 
@@ -57,7 +57,8 @@ ${EXE_DIR}/test_chebyshev: \
 ${EXE_DIR}/test_cerf: \
 		${OBJ_DIR}/constants.o \
 		${OBJ_DIR}/zfunHammett.o \
-		${OBJ_DIR}/cerf_wrapper.o
+		${OBJ_DIR}/cerf_wrapper.o \
+		${OBJ_DIR}/z_erfc.o
 
 ${EXE_DIR}/test_spline: \
 		${OBJ_DIR}/spline_dlg.o \

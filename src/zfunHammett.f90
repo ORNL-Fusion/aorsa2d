@@ -1,47 +1,59 @@
 module hammett
 
+
+interface Zfun
+    module procedure Zfun_zd
+    module procedure Zfun_rd
+end interface
+
 contains
 
-complex function Zfun(zeta)
-  ! calculate the plasma dispersion function Z(zeta)
-  ! by calling the wofz.f subroutine.
+complex function Zfun_zd(zeta)
 
   use constants
+  use z_erfc
 
   implicit none
-  complex zeta
-  
-  real(kind=dbl) :: x, y
+
+  complex(kind=dbl), intent(in) :: zeta
   logical :: flag
   real(kind=dbl), parameter :: sqrt_pi = 1.772453850905516
+  complex(kind=dbl) :: y
   
-  call wofz(real(zeta,kind=dbl), real(aimag(zeta),kind=dbl), x, y, flag)
-  Zfun = sqrt_pi*cmplx(-y,x)
-  
-  return
-end function Zfun
+  call wofz_f90(zeta, y, flag)
 
-! for a purely real argument:
-
-complex function Zfunr(z_real)
-  use constants
-  implicit none
-  real z_real
-  
-  real(kind=dbl) :: x, y
-  logical :: flag
-  
-  real*8, parameter :: sqrt_pi = 1.772453850905516
-  
-  call wofz(real(z_real,kind=dbl), 0d0, x, y, flag)
   if(flag)then 
-    write(*,*) 'CRAP: wofz failed'
+    write(*,*) 'CRAP: wofz_f90 failed'
     stop
   endif
-  Zfunr = sqrt_pi*cmplx(-y,x)
+ 
+  Zfun_zd = sqrt_pi*conjg(y)
+
+end function Zfun_zd
+
+complex function Zfun_rd(zeta)
+
+  use constants
+  use z_erfc
+
+  implicit none
+
+  real(kind=dbl), intent(in) :: zeta
+  logical :: flag
+  real(kind=dbl), parameter :: sqrt_pi = 1.772453850905516
+  complex(kind=dbl) :: y
+ 
+  call wofz_f90(cmplx(zeta,0,dbl),y, flag)
+
+  if(flag)then 
+    write(*,*) 'CRAP: wofz_f90 failed'
+    stop
+  endif
+
+  Zfun_rd = sqrt_pi*conjg(y)
   
-  return
-end function Zfunr
+end function Zfun_rd
+
 
 ! GWH: the following directly evaluates the equivalent of the Z function 
 ! using various expansion formulas.  While the paper it is based on says it
