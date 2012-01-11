@@ -77,6 +77,7 @@ pro plot_solution, oneD = oneD, full = full, $
 		scale1 = scale1, scale2 = scale2, scale3_ = scale3_, $
 		sav = sav
 
+	@constants
 
 	; Load data from all grids
 	; ------------------------
