@@ -73,7 +73,7 @@ pro contour_field, field, x, y, nLevs, scale, $
 
 end
 
-pro plot_solution, oneD = oneD, full = full, $
+pro plot_solution, full = full, $
 		scale1 = scale1, scale2 = scale2, scale3_ = scale3_, $
 		sav = sav
 
@@ -210,7 +210,7 @@ pro plot_solution, oneD = oneD, full = full, $
 
 		@load_colors
 
-		if (keyword_set(oneD) ) then begin
+		if size(y,/dim) eq 0 then begin
 
 			if keyword_set(full) then begin
 
@@ -387,7 +387,7 @@ pro plot_solution, oneD = oneD, full = full, $
 	; Plot all grid solutions
 	; -----------------------
 
-	if keyword_set(oneD) then begin
+	if size(y,/dim) eq 0 then begin
 
 		iix = n_elements(x)/2
 		wrf = freq * 2 * !pi
@@ -399,7 +399,6 @@ pro plot_solution, oneD = oneD, full = full, $
 		print, 'kPar: [1/m]', brambillaNumber * wpe / vThe
 		print, 'lambda: [m]', 2*!pi/(brambillaNumber* wpe / vThe)
 		print, 'lambda_de: [m]', lambda_de
-		stop
 
 		;restore, '../smithe/soln.sav' 
 		;restore, '../tftr_ibw/soln.sav' 
@@ -432,11 +431,15 @@ pro plot_solution, oneD = oneD, full = full, $
 		;			color=color, /over, sym_index=4, view_number=3
 		;endfor
 
-		p = plot ( x, e_r, layout=[1,3,1] )
+		eRange = max(abs([e_r,e_t,e_z]))
+		p = plot ( x, e_r, layout=[1,3,1],$
+				title='Er',yRange=[-eRange,eRange],ytitle='Er [V/m]' )
 		p = plot ( x, imaginary(e_r), color='red',/over )
-		p = plot ( x, e_t, layout=[1,3,2], /current  )
+		p = plot ( x, e_t, layout=[1,3,2],/current,$
+				title='Et',yRange=[-eRange,eRange],ytitle='Et [V/m]'  )
 		p = plot ( x, imaginary(e_t), color='red',/over )
-		p = plot ( x, e_z, layout=[1,3,3], /current  )
+		p = plot ( x, e_z, layout=[1,3,3],/current,$
+				title='Ez',yRange=[-eRange,eRange],ytitle='Ez [V/m]'  )
 		p = plot ( x, imaginary(e_z), color='red',/over )
 
 
@@ -451,85 +454,85 @@ pro plot_solution, oneD = oneD, full = full, $
 		;stop
 
 
-		; Check solution against wave equation
+		;; Check solution against wave equation
 
-		@constants
+		;;@constants
 
-		r	= x
-		f	= freq
-		w 	= 2 * !pi * f
+		;r	= x
+		;f	= freq
+		;w 	= 2 * !pi * f
 
-		jP_r_total	= total ( jP_r, 3 )
-		jP_t_total	= total ( jP_t, 3 )
-		jP_z_total	= total ( jP_z, 3 )
+		;jP_r_total	= total ( jP_r, 3 )
+		;jP_t_total	= total ( jP_t, 3 )
+		;jP_z_total	= total ( jP_z, 3 )
 
-		jP_r_total_	= jP_r_total
-		jP_t_total_	= jP_t_total
-		jP_z_total_	= jP_z_total
-		
-		e_r_ = e_r
-		e_t_ = e_t
-		e_z_ = e_z
+		;jP_r_total_	= jP_r_total
+		;jP_t_total_	= jP_t_total
+		;jP_z_total_	= jP_z_total
+		;
+		;e_r_ = e_r
+		;e_t_ = e_t
+		;e_z_ = e_z
 
-		cdfId = ncdf_open ( 'sigma001.nc', /noWrite ) 
+		;cdfId = ncdf_open ( 'sigma001.nc', /noWrite ) 
 
-			nCdf_varGet, cdfId, 'sigma_re', sigma_re 
-			nCdf_varGet, cdfId, 'sigma_im', sigma_im
+		;	nCdf_varGet, cdfId, 'sigma_re', sigma_re 
+		;	nCdf_varGet, cdfId, 'sigma_im', sigma_im
 
-		ncdf_close, cdfId
+		;ncdf_close, cdfId
 
-		sigma	= complex ( sigma_re, sigma_im )
+		;sigma	= complex ( sigma_re, sigma_im )
 
-		;restore, '~/code/rsfwc_1D/idl/solutionVals.sav'
+		;;restore, '~/code/rsfwc_1D/idl/solutionVals.sav'
 
-		dlg_deriv1, r, e_r, dydx = de_r, dy2dx2 = d2e_r
-		dlg_deriv1, r, e_t, dydx = de_t, dy2dx2 = d2e_t
-		dlg_deriv1, r, e_z, dydx = de_z, dy2dx2 = d2e_z
+		;dlg_deriv1, r, e_r, dydx = de_r, dy2dx2 = d2e_r
+		;dlg_deriv1, r, e_t, dydx = de_t, dy2dx2 = d2e_t
+		;dlg_deriv1, r, e_z, dydx = de_z, dy2dx2 = d2e_z
 
-		term1_r = -nPhi * ( nPhi * e_r + II * ( e_t + r * de_t ) ) / r^2
-		term2_r = w^2 / c^2 * ( e_r + II / ( w * e0 ) * jP_r_total )
-		term3_r = -II * w * u0 * jA_r
-
-		term1_t = 1 / r^2 * ( II * nPhi * e_r - e_t + $
-			r * ( -II * nPhi * de_r + de_t + r * d2e_t ))
-		term2_t = w^2 / c^2 * ( e_t + II / ( w * e0 ) * jP_t_total )
-		term3_t = -II * w * u0 * jA_t
-
-		term1_z = (-nPhi^2 * e_z + r * ( de_z + r * d2e_z ) ) / r^2
-		term2_z = w^2 / c^2 * ( e_z + II / ( w * e0 ) * jP_z_total )
-		term3_z = -II * w * u0 * jA_z
-
-		;term1_r = -nPhi * ( nPhi * e_r + II * r^2 * de_t ) / r^4
+		;term1_r = -nPhi * ( nPhi * e_r + II * ( e_t + r * de_t ) ) / r^2
 		;term2_r = w^2 / c^2 * ( e_r + II / ( w * e0 ) * jP_r_total )
 		;term3_r = -II * w * u0 * jA_r
 
-		;term1_t = -1 / r^4 * ( nPhi * ( -2 * II * r ) * e_r $
-		;			+ r^2*e_t $
-		;			- r^2*(-II*nPhi*de_r+r*de_t+r^2*d2e_t))
+		;term1_t = 1 / r^2 * ( II * nPhi * e_r - e_t + $
+		;	r * ( -II * nPhi * de_r + de_t + r * d2e_t ))
 		;term2_t = w^2 / c^2 * ( e_t + II / ( w * e0 ) * jP_t_total )
 		;term3_t = -II * w * u0 * jA_t
 
-		;term1_z = (-nPhi^2*e_z $
-		;	   + r^2*(r*de_z+r^2*d2e_z)) / r^4
+		;term1_z = (-nPhi^2 * e_z + r * ( de_z + r * d2e_z ) ) / r^2
 		;term2_z = w^2 / c^2 * ( e_z + II / ( w * e0 ) * jP_z_total )
 		;term3_z = -II * w * u0 * jA_z
 
+		;;term1_r = -nPhi * ( nPhi * e_r + II * r^2 * de_t ) / r^4
+		;;term2_r = w^2 / c^2 * ( e_r + II / ( w * e0 ) * jP_r_total )
+		;;term3_r = -II * w * u0 * jA_r
 
-		p = plot ( term1_r, layout=[1,3,1] )
-		p = plot ( imaginary(term1_r), color='red',/over )
-		p = plot ( -term2_r+term3_r, lineStyle='--', thick = 4, transp = 50, /over )
-		p = plot ( imaginary(-term2_r+term3_r), $
-				color='r',lineStyle='--' , thick = 4, transp = 50, /over )
+		;;term1_t = -1 / r^4 * ( nPhi * ( -2 * II * r ) * e_r $
+		;;			+ r^2*e_t $
+		;;			- r^2*(-II*nPhi*de_r+r*de_t+r^2*d2e_t))
+		;;term2_t = w^2 / c^2 * ( e_t + II / ( w * e0 ) * jP_t_total )
+		;;term3_t = -II * w * u0 * jA_t
 
-		p = plot ( term1_t, layout=[1,3,2], /current )
-		p = plot ( imaginary(term1_t), color='red',/over )
-		p = plot ( -term2_t+term3_t, lineStyle='--', thick = 4, transp = 50, /over )
-		p = plot ( imaginary(-term2_t+term3_t), color='r',lineStyle='--', thick = 4, transp = 50 ,/over )
+		;;term1_z = (-nPhi^2*e_z $
+		;;	   + r^2*(r*de_z+r^2*d2e_z)) / r^4
+		;;term2_z = w^2 / c^2 * ( e_z + II / ( w * e0 ) * jP_z_total )
+		;;term3_z = -II * w * u0 * jA_z
 
-		p = plot ( term1_z, layout=[1,3,3], /current )
-		p = plot ( imaginary(term1_z), color='red',/over )
-		p = plot ( -term2_z+term3_z, lineStyle='--', thick = 4, transp = 50, /over )
-		p = plot ( imaginary(-term2_z+term3_z), color='r',lineStyle='--', thick = 4, transp = 50 ,/over )
+
+		;p = plot ( term1_r, layout=[1,3,1] )
+		;p = plot ( imaginary(term1_r), color='red',/over )
+		;p = plot ( -term2_r+term3_r, lineStyle='--', thick = 4, transp = 50, /over )
+		;p = plot ( imaginary(-term2_r+term3_r), $
+		;		color='r',lineStyle='--' , thick = 4, transp = 50, /over )
+
+		;p = plot ( term1_t, layout=[1,3,2], /current )
+		;p = plot ( imaginary(term1_t), color='red',/over )
+		;p = plot ( -term2_t+term3_t, lineStyle='--', thick = 4, transp = 50, /over )
+		;p = plot ( imaginary(-term2_t+term3_t), color='r',lineStyle='--', thick = 4, transp = 50 ,/over )
+
+		;p = plot ( term1_z, layout=[1,3,3], /current )
+		;p = plot ( imaginary(term1_z), color='red',/over )
+		;p = plot ( -term2_z+term3_z, lineStyle='--', thick = 4, transp = 50, /over )
+		;p = plot ( imaginary(-term2_z+term3_z), color='r',lineStyle='--', thick = 4, transp = 50 ,/over )
 
 
 		nSpec	= n_elements ( jp_r[0,0,*] )
@@ -537,16 +540,37 @@ pro plot_solution, oneD = oneD, full = full, $
 		jDotE	= jp_r[*,*,0] * conj(e_r) $
 					+ jp_t[*,*,0] * conj(e_t) $
 					+ jp_z[*,*,0] * conj(e_z)
-		p = plot ( x, jDotE, color='b', thick = 3, transp = 50 )
+
+		p = plot (x,jDotE,color='b',thick=3,transp=50,$
+				title='J dot E',name='jDote_total',font_size=10,$
+				layout=[1,2,1])
+
+		p_array = !NULL
+		p_array = [p_array,p]
+
 		for s=1,nSpec-1 do begin
 
 			jDotE	= jp_r[*,*,s] * conj(e_r) $
 					+ jp_t[*,*,s] * conj(e_t) $
 					+ jp_z[*,*,s] * conj(e_z)
 
-			p	= plot ( x, jDotE, /over )
+			p = plot ( x, jDotE, /over,name='jDotE_'+strTrim(string(s),2) )
+			p_array = [p_array,p]
 
 		endfor
+
+	   	l = legend(target=p_array,position=[0.8,0.9],/norm,font_size=10)
+
+		pr = plot (x,jA_r,color='b',thick=3,transp=50,$
+				title='jAnt',name='jAnt_r',font_size=10,$
+				layout=[1,2,2],/current)
+		pt = plot (x,jA_t,color='r',thick=3,transp=50,$
+				name='jAnt_t',/over)
+		pz = plot (x,jA_z,color='g',thick=3,transp=50,$
+				name='jAnt_z',/over)
+
+	   	l = legend(target=[pr,pt,pz],position=[0.8,0.4],/norm,font_size=10)
+
 
 	endif else begin
 
