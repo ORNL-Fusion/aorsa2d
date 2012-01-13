@@ -111,7 +111,6 @@ pro plot_solution, oneD = oneD, full = full, $
 			nCdf_varGet, cdfId, 'bzU', bzU
 			nCdf_varGet, cdfId, 'densitySpec', densitySpec
 			nCdf_varGet, cdfId, 'tempSpec', tempSpec
-			nCdf_varGet, cdfId, 'tempSpec', tempSpec
 			nCdf_varGet, cdfId, 'xx_re', xx_re 
 			nCdf_varGet, cdfId, 'xx_im', xx_im
 			nCdf_varGet, cdfId, 'yy_re', yy_re 
@@ -389,6 +388,18 @@ pro plot_solution, oneD = oneD, full = full, $
 	; -----------------------
 
 	if keyword_set(oneD) then begin
+
+		iix = n_elements(x)/2
+		wrf = freq * 2 * !pi
+		wpe = sqrt ( densitySpec[iix,0,0] * e^2 / (me * e0 ) )
+		vThe = sqrt ( 2 * tempSpec[iix,0,0]*e / me )
+		lambda_de =  sqrt(e0 * tempSpec[iix,0,0]*e/(e^2*densitySpec[iix,0,0]))
+		print, 'w/wpe: ', wrf / wpe
+		brambillaNumber = 0.25
+		print, 'kPar: [1/m]', brambillaNumber * wpe / vThe
+		print, 'lambda: [m]', 2*!pi/(brambillaNumber* wpe / vThe)
+		print, 'lambda_de: [m]', lambda_de
+		stop
 
 		;restore, '../smithe/soln.sav' 
 		;restore, '../tftr_ibw/soln.sav' 
