@@ -288,10 +288,6 @@ contains
         complex :: metal
         logical, allocatable :: isMetal(:,:)
         real :: kr, kt, kz, r, z, kVec_stix(3)
-        complex :: &
-            dxx, dxy, dxz, &
-            dyx, dyy, dyz, &
-            dzx, dzy, dzz 
 
         complex :: &
             mat_r_alp, mat_r_bet, mat_r_prl, &
@@ -843,19 +839,7 @@ contains
           (Uzr*drzBfn_bfn(d)) - drzUzr + &
           (Uzz*drrBfn_bfn(d)) + drrUzz)
 
-                            dxx = mat_r_alp / k0**2
-                            dxy = mat_r_bet / k0**2
-                            dxz = mat_r_prl / k0**2
-
-                            dyx = mat_th_alp / k0**2
-                            dyy = mat_th_bet / k0**2
-                            dyz = mat_th_prl / k0**2
-
-                            dzx = mat_z_alp / k0**2
-                            dzy = mat_z_bet / k0**2
-                            dzz = mat_z_prl / k0**2
-
-           endif interior
+            endif interior
 
                             ii_loop: &
                             do ii=0,2
@@ -891,17 +875,17 @@ contains
 
                                         if(g%label(i,j)==0) then 
 
-                                            if (ii==0 .and. jj==0) aMat(localRow,localCol) = dxx * bFn  
-                                            if (ii==0 .and. jj==1) aMat(localRow,localCol) = dxy * bFn   
-                                            if (ii==0 .and. jj==2) aMat(localRow,localCol) = dxz * bFn   
+                                            if (ii==0 .and. jj==0) aMat(localRow,localCol) = mat_r_alp * bFn  
+                                            if (ii==0 .and. jj==1) aMat(localRow,localCol) = mat_r_bet * bFn   
+                                            if (ii==0 .and. jj==2) aMat(localRow,localCol) = mat_r_prl * bFn   
                                                                                                   
-                                            if (ii==1 .and. jj==0) aMat(localRow,localCol) = dyx * bFn   
-                                            if (ii==1 .and. jj==1) aMat(localRow,localCol) = dyy * bFn   
-                                            if (ii==1 .and. jj==2) aMat(localRow,localCol) = dyz * bFn   
+                                            if (ii==1 .and. jj==0) aMat(localRow,localCol) = mat_th_alp * bFn   
+                                            if (ii==1 .and. jj==1) aMat(localRow,localCol) = mat_th_bet * bFn   
+                                            if (ii==1 .and. jj==2) aMat(localRow,localCol) = mat_th_prl * bFn   
                                                                                                   
-                                            if (ii==2 .and. jj==0) aMat(localRow,localCol) = dzx * bFn   
-                                            if (ii==2 .and. jj==1) aMat(localRow,localCol) = dzy * bFn   
-                                            if (ii==2 .and. jj==2) aMat(localRow,localCol) = dzz * bFn   
+                                            if (ii==2 .and. jj==0) aMat(localRow,localCol) = mat_z_alp * bFn   
+                                            if (ii==2 .and. jj==1) aMat(localRow,localCol) = mat_z_bet * bFn   
+                                            if (ii==2 .and. jj==2) aMat(localRow,localCol) = mat_z_prl * bFn   
 
                                         endif
 

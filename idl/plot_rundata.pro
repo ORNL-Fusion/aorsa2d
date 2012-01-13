@@ -7,12 +7,16 @@ pro plot_rundata
 	cdfId = ncdf_open ( fileList[jj], /noWrite ) 
 		nCdf_varGet, cdfId, 'capR', x 
 		nCdf_varGet, cdfId, 'y', y 
-		nCdf_varGet, cdfId, 'xjy_re', jy_re 
-		nCdf_varGet, cdfId, 'xjy_im', jy_im 
+		nCdf_varGet, cdfId, 'jr_re', jr_re 
+		nCdf_varGet, cdfId, 'jr_im', jr_im 
+		nCdf_varGet, cdfId, 'jt_re', jt_re 
+		nCdf_varGet, cdfId, 'jt_im', jt_im 
+		nCdf_varGet, cdfId, 'jz_re', jy_re 
+		nCdf_varGet, cdfId, 'jz_im', jy_im 
 		nCdf_varGet, cdfId, 'bmod', bmod
-		nCdf_varGet, cdfId, 'bxn', bxn
-		nCdf_varGet, cdfId, 'byn', byn
-		nCdf_varGet, cdfId, 'bzn', bzn
+		nCdf_varGet, cdfId, 'brU', bxn
+		nCdf_varGet, cdfId, 'btU', bzn
+		nCdf_varGet, cdfId, 'bzU', byn
 
 		nCdf_varGet, cdfId, 'densitySpec', densitySpec
 		nCdf_varGet, cdfId, 'tempSpec', tempSpec

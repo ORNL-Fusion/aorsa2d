@@ -73,14 +73,15 @@ contains
                 g%jT(i,j) = 0.0
                 if(useEqdsk) then
                     if(g%R(i)>r0) &
-                    g%jZ(i,j) = exp ( &
+                    g%jR(i,j) = exp ( &
                     -( (g%rho(i,j)-rhoAnt)**2/antSigRho**2 + (g%Z(j)-zAnt)**2/antSigY**2 ) &
                           )
                 else
-                    g%jZ(i,j) = exp ( &
-                    -( (g%R(i)-rAnt)**2/antSigX**2 + (g%Z(j)-zAnt)**2/antSigY**2 ) &
-                          )
-                    !write(*,*) 'WARNING --- using jT NOT jZ ---'
+                    !g%jR(i,j) = exp ( &
+                    !-( (g%R(i)-rAnt)**2/antSigX**2 + (g%Z(j)-zAnt)**2/antSigY**2 ) &
+                    !      )
+                    g%jR(i,j) = 5000*exp ( -( (g%R(i)-rAnt)**2/antSigX**2 ) )
+                    write(*,*) 'WARNING --- using 1D jR NOT 2D jZ ---', antSigX
                 endif
 
                 !   boundary conditions

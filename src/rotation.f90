@@ -63,9 +63,9 @@ contains
             - g%Urt * g%Utr * g%Uzz &
             - g%Urz * g%Utt * g%Uzr
 
-        if ( any(1-det>1e-4) ) then
+        if ( any(1-det>1e-2) ) then
 
-            write(*,*) 'rotation.f90: ERROR det != 1'
+            write(*,*) 'rotation.f90: ERROR det != 1, it is = ', 1-det
             stop
 
         endif

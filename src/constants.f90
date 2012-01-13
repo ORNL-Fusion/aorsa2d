@@ -1,5 +1,6 @@
 module constants
 
+    integer, parameter :: sgl = selected_real_kind ( p=6)
     integer, parameter :: dbl = selected_real_kind ( p=13 )
     integer, parameter :: long = selected_real_kind ( p=9 )
     real(kind=dbl), parameter :: eOverAmu = 9.58084d7
