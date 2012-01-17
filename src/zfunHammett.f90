@@ -27,7 +27,7 @@ complex function Zfun_zd(zeta)
     stop
   endif
  
-  Zfun_zd = sqrt_pi*conjg(y)
+  Zfun_zd = sqrt_pi*zi*y
 
 end function Zfun_zd
 
@@ -50,7 +50,7 @@ complex function Zfun_rd(zeta)
     stop
   endif
 
-  Zfun_rd = sqrt_pi*conjg(y)
+  Zfun_rd = sqrt_pi*zi*y
   
 end function Zfun_rd
 

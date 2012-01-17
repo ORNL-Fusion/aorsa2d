@@ -24,7 +24,7 @@ implicit none
     logical :: parabolic = .false.
     logical :: noPoloidalField = .false.
     logical :: toroidalBroadening = .true.
-    real :: kPrlEffLimit = 0.0
+    real :: kPrlEffLimit = 1e-08
     integer :: nSpec = 2
     real :: r0 = 1.0
     real :: a = 1.0
