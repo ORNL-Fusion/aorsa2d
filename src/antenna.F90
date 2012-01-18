@@ -81,6 +81,7 @@ contains
                     !-( (g%R(i)-rAnt)**2/antSigX**2 + (g%Z(j)-zAnt)**2/antSigY**2 ) &
                     !      )
                     g%jR(i,j) = 5000*exp ( -( (g%R(i)-rAnt)**2/antSigX**2 ) )
+                    !if(i==g%nR/2) g%jR(i,j) = 5000
                     write(*,*) 'WARNING --- using 1D jR NOT 2D jZ ---', antSigX
                 endif
 
@@ -115,19 +116,13 @@ contains
            enddo
         enddo
 
-        !jT = 0
-        !jT(nPtsX/2,nPtsY/2)    = 1
-
-        !g%jR = -zi / omgrf / eps0 * g%jR 
-        !g%jT = -zi / omgrf / eps0 * g%jT
-        !g%jZ = -zi / omgrf / eps0 * g%jZ
-
         do i = 1, g%nR
             do j = 1, g%nZ
 
                 iRow = (j-1) * 3 + (i-1) * g%nZ * 3 + 1
                 iRow = iRow + ( g%startRow-1 )
 
+                !if(i==1 .or. i==g%nR)then
                 do ii = 0, 2
 
 #ifdef par
@@ -165,9 +160,12 @@ contains
                     if (ii==0) brhs(iRow+0)    = -zi*omgrf*mu0*g%jR(i,j)
                     if (ii==1) brhs(iRow+1)    = -zi*omgrf*mu0*g%jT(i,j)
                     if (ii==2) brhs(iRow+2)    = -zi*omgrf*mu0*g%jZ(i,j)
+                    !if (ii==0) brhs(iRow+0)    = 0
+                    !if (ii==1) brhs(iRow+1)    = 0
+                    !if (ii==2) brhs(iRow+2)    = 1e3
 #endif
                 enddo
-
+                !endif
             enddo
         enddo
         

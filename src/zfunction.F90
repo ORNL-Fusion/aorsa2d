@@ -1,3 +1,6 @@
+#define ERROR(string) write(*,'(/,a,a,/,a,a,a,i5)') \
+    "Error: ", string, "In ",__FILE__,":", __LINE__ ;stop
+
 module zfunction_mod
 
 contains
@@ -46,7 +49,7 @@ contains
             + gamma**2 / 4. * zfunc(4)
 
 
-      end if
+      endif
 
       return
 
@@ -123,114 +126,128 @@ contains
 !***************************************************************************
 !
 
-    subroutine z_approx_dlg ( zeta, Z, zPrime )
+subroutine z_approx_dlg ( sgn_kprl, zeta, z, zPrime, zeta_zPrime )
 
-        ! This routine is for the Brambilla toroidal broadening
-        ! method ... NOT the Smithe approach. i.e., gamma_ is 
-        ! gamma_brambilla
+    use hammett, zfun_hammett => zfun
 
-        use constants
-        use hammett, zfun_hammett => zfun
-        !use zFunOriginal
+    implicit none
 
-        implicit none
+    real, intent(in) :: sgn_kPrl
+    complex, intent(in) :: zeta(:)
+    complex, intent(out) :: z(:), zPrime(:), zeta_zPrime(:)
 
-        complex(kind=dbl), intent(in) :: zeta(:)
-        complex(kind=dbl), intent(out) :: Z(:), ZPrime(:)
+    real, parameter :: y0 = 1.5
+    real, allocatable :: fGam(:), y(:), descrim(:)
+    complex, allocatable :: zetat(:), zFunct(:)
+    complex :: fzeta
+    complex :: zFunctCheck
+    integer :: nL, i
 
-        !complex, allocatable :: zFunct(:)
-        integer :: nL, i
+    nL = size ( zeta )
 
-        nL = size ( zeta )
+    allocate ( zFunct(nL), fGam(nL), y(nL), descrim(nL) )
+    y = y0
+    fGam = 1.0
 
-        do i=1,nL 
-            Z(i) = zfun_hammett ( zeta(i) )
-            !call zfun ( zeta(i), Z(i) )
-        enddo
+    if(sgn_kprl>=0.0)then
 
-        !ZPrime      = -2d0 * ( 1d0 + zeta * Z )
-        ZPrime      = -2d0 - 2d0 * zeta * Z 
+      do i=1,nL 
+          zFunct(i) = zfun_hammett ( fGam(i) * zeta(i) )
+      enddo
 
-   end subroutine z_approx_dlg
+       z = zfunct 
+       zPrime = -2d0 * (1.0 + zeta * z) 
+       zeta_zPrime = zeta * zPrime
+
+    else
+
+      do i=1,nL
+          zfunct(i) = zfun_hammett (-zeta(i))
+      enddo
+
+       z = -zfunct 
+       zPrime = 2d0 * (1.0 + zeta * z) 
+       zeta_zPrime = zeta * zPrime 
+
+    endif
+
+    return
+
+end subroutine z_approx_dlg
 
 
-      subroutine z_approx(sgn_kprl, zeta, gamma_, z0, z1, z2)
+subroutine z_approx(sgn_kprl, zeta, gamma_, z0, z1, z2)
 
-      ! This routine is for the Brambilla toroidal broadening
-      ! method ... NOT the Smithe approach. i.e., gamma_ is 
-      ! gamma_brambilla
+    ! This routine is for the Brambilla toroidal broadening
+    ! method ... NOT the Smithe approach. i.e., gamma_ is 
+    ! gamma_brambilla
 
-      use ztable_mod
-      use hammett, zfun_hammett => zfun
+    use hammett, zfun_hammett => zfun
 
-      implicit none
+    implicit none
 
-      real, intent(in) :: sgn_kPrl, gamma_(:)
-      complex, intent(in) :: zeta(:)
-      complex, intent(out) :: z0(:), z1(:), z2(:)
+    real, intent(in) :: sgn_kPrl, gamma_(:)
+    complex, intent(in) :: zeta(:)
+    complex, intent(out) :: z0(:), z1(:), z2(:)
 
-      real, parameter :: y0 = 1.5
-      real, allocatable :: fGam(:), y(:), descrim(:)
-      complex, allocatable :: zetat(:), zFunct(:)
-      complex :: fzeta
-      complex :: zFunctCheck
-      integer :: nL, i
+    real, parameter :: y0 = 1.5
+    real, allocatable :: fGam(:), y(:), descrim(:)
+    complex, allocatable :: zetat(:), zFunct(:)
+    complex :: fzeta
+    complex :: zFunctCheck
+    integer :: nL, i
 
-        if(any(gamma_<0))then
+    if(any(gamma_<0)) then
+        ERROR("gamma_ should be >= 0")
+    endif
 
-            write(*,*) "ERROR [z_approx]: gamma_ should be >= 0"
-            write(*,*) "    gamma_ = ", gamma_
-            stop
+    nL = size ( zeta )
 
-        endif   
+    allocate ( zFunct(nL), fGam(nL), y(nL), descrim(nL) )
+    y = y0
+    fGam = 1.0
 
-      nL = size ( zeta )
+    if(sgn_kprl>=0.0)then
 
-      allocate ( zFunct(nL), fGam(nL), y(nL), descrim(nL) )
-      y = y0
-      fGam = 1.0
+      !where(gamma_>1.0e-5)
+      !    fGam = (sqrt(1.0 +  4.0 * gamma_ * y0) - 1.0) / (2.0 * gamma_ * y0)
+      !endwhere
 
-      if(sgn_kprl>=0.0)then
+      do i=1,nL 
+          zFunct(i) = zfun_hammett ( fGam(i) * zeta(i) )
+      enddo
 
-        where(gamma_>1.0e-5)
-            fgam = (sqrt(1. +  4. * gamma_ * y0) - 1.) &
-                / (2. * gamma_ * y0)
-        endwhere
+       z0 = zfunct !* fGam
+       z1 = -2d0 * (1.0 + zeta * z0) !* fGam
+       z2 = zeta * z1 !* fGam
 
-        do i=1,nL 
-            zFunct(i) = zfun_hammett ( fGam(i) * zeta(i) )
-        enddo
+    else
 
-         z0 = fgam * zfunct
-         z1 = fgam * (1.0 + fgam * zeta * zfunct)
-         z2 =  fgam**2 * zeta * (1.0 + fgam * zeta * zfunct)
+      !descrim = 1.0 - 4.0 * gamma_ * y0
+      !where(descrim>=0.0)
+      !        y = y0
+      !elsewhere
+      !        y = -y0
+      !endwhere
 
-      else
+      !where(gamma_>1.0e-5)
+      !    fGam = (1.0 - sqrt(1.0 -  4.0 * gamma_ * y) ) / (2.0 * gamma_ * y)
+      !endwhere
 
-        descrim = 1. - 4. * gamma_ * y0
-        where(descrim>=0.0)
-                y = y0
-        elsewhere
-                y = -y0
-        endwhere
+      do i=1,nL
+          !zfunct(i) = zfun_hammett (-fGam(i)*zeta(i))
+          zfunct(i) = zfun_hammett (-zeta(i))
+      enddo
 
-        where(gamma_>1.0e-5)
-            fgam = (1. - sqrt(1. -  4. * gamma_ * y) ) &
-               / (2. * gamma_ * y)
-        endwhere
+       z0 = -zfunct !* fGam
+       z1 = 2d0 * y / abs(y) * (1.0 + zeta * z0) !* fGam
+       z2 = zeta * z1 !* fGam
 
-        do i=1,nL
-            zfunct(i) = zfun_hammett (-fGam(i)*zeta(i))
-        enddo
+    endif
 
-         z0 = - fgam * zfunct
-         z1 = y / abs(y) * fgam * (1.0 - fgam * zeta * zfunct)
-         z2 =  fgam**2 * zeta * (1.0 - fgam * zeta * zfunct)
+    return
 
-      endif
-
-      return
-      end subroutine z_approx
+end subroutine z_approx
 
 !
 !******************************************************************************
@@ -247,7 +264,7 @@ contains
 !     ------------------
 !     Finite k_parallel:
 !     ------------------
-      real gamma, fgam, y0, y, sgn_kprl, descrim
+      real gamma, fGam, y0, y, sgn_kprl, descrim
       complex zeta, z0, z1, z2, zfunct, zetat, fzeta
 
 
@@ -256,41 +273,41 @@ contains
 
 
       if(sgn_kprl .ge. 0.0)then
-         fgam = 1.0
+         fGam = 1.0
 
          if(gamma .gt. 1.0e-05)then
             y = y0
-            fgam = (sqrt(1. +  4. * gamma * y) - 1.) &
+            fGam = (sqrt(1. +  4. * gamma * y) - 1.) &
                / (2. * gamma * y)
          endif
 
-         zetat = fgam * zeta
+         zetat = fGam * zeta
 !        zfunct = fzeta(zetat)
          call zfun_im (zetat, zfunct)
-         z0 = fgam * zfunct
-         z1 = fgam * (1.0 + fgam * zeta * zfunct)
-         z2 =  fgam**2 * zeta * (1.0 + fgam * zeta * zfunct)
+         z0 = fGam * zfunct
+         z1 = fGam * (1.0 + fGam * zeta * zfunct)
+         z2 =  fGam**2 * zeta * (1.0 + fGam * zeta * zfunct)
       end if
 
 
       if(sgn_kprl .lt. 0.0)then
-         fgam = 1.0
+         fGam = 1.0
 
          if(gamma .gt. 1.0e-05)then
             descrim = 1. - 4. * gamma * y0
             if (descrim .ge. 0.0) y =   y0
             if (descrim .lt. 0.0) y = - y0
-            fgam = (1. - sqrt(1. -  4. * gamma * y) ) &
+            fGam = (1. - sqrt(1. -  4. * gamma * y) ) &
                / (2. * gamma * y)
          endif
 
 
-         zetat = - fgam * zeta
+         zetat = - fGam * zeta
 !         zfunct = fzeta( zetat)
          call zfun_im (zetat, zfunct)
-         z0 = - fgam * zfunct
-         z1 = y / abs(y) * fgam * (1.0 - fgam * zeta * zfunct)
-         z2 =  fgam**2 * zeta * (1.0 - fgam * zeta * zfunct)
+         z0 = - fGam * zfunct
+         z1 = y / abs(y) * fGam * (1.0 - fGam * zeta * zfunct)
+         z2 =  fGam**2 * zeta * (1.0 - fGam * zeta * zfunct)
       end if
 
 

@@ -101,6 +101,7 @@ endif
 # compile flags
 # -------------
 
+FORMAT := -ffree-line-length-none
 BOUNDS = -fbounds-check 
 WARN = #-Wall
 DEBUG = -pg -g -fbacktrace -fsignaling-nans -ffpe-trap=zero,invalid#,overflow#,underflow
@@ -128,7 +129,7 @@ ifeq (${HOME},/Users/dg6)
 	include Makefile.greendl
 endif
 
-F90FLAGS = ${WARN} ${DEBUG} ${BOUNDS} ${MOD_LOC} 
+F90FLAGS = ${FORMAT} ${WARN} ${DEBUG} ${BOUNDS} ${MOD_LOC} 
 LINK_FLAGS = 
 
 .PHONY: depend clean

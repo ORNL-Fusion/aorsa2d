@@ -1,3 +1,6 @@
+#define ERROR(string) write(*,'(/,a,a,/,a,a,a,i5)') \
+    "Error: ", string, "In ",__FILE__,":", __LINE__ ;stop
+
 module sigma_mod
 
 contains
@@ -50,7 +53,7 @@ contains
         real :: kAlp, kBet, rgamma
         real(kind=dbl) :: kr, step
         complex(kind=dbl) :: omgrfc
-        complex(kind=dbl), allocatable :: Z(:), ZPrime(:), zetaZPrime(:)
+        complex(kind=dbl), allocatable :: Z(:), zPrime(:), zeta_zPrime(:)
         complex(kind=dbl) :: sig0, sig1, sig2, sig3, sig4, sig5
         complex(kind=dbl), dimension(-lmax:lmax) :: &
             sig0l, sig1l, sig2l, sig3l, sig4l, sig5l
@@ -82,8 +85,8 @@ contains
 
         kPerp = sqrt(kAlp**2 + kBet**2)
 
-        if (kPrl  <= 1d-2) kPrl  = 1d-2
-        if (kPerp == 0.0) kPerp = 1.0e-03
+        if (kPrl  == 0.0) kPrl  = 1.0e-08
+        if (kPerp == 0.0) kPerp = 1.0e-08
 
         sgn_kPrl    = sign ( 1.0, kPrl )
 
@@ -111,13 +114,17 @@ contains
             sinPh = bPol / bMod
             gamma_brambilla(l) = omgrf / ( 2.0 * kPrl**2 * capR * vTh ) * abs ( sinTh * sinPh ) 
 
+            if(gamma_brambilla(l)<0)then
+                ERROR("gamma_brambilla<0")
+            endif
+
 
             ! ions only 
             ! ---------
 
             if(specNo==1) then 
 
-                alpha_smithe(l) = 0
+                !alpha_smithe(l) = 0
                 gamma_brambilla(l) = 0
 
             endif
@@ -126,19 +133,21 @@ contains
             ! Create and effective kPrl that includes toroidal broadening
             ! ----------------------------------------------------------
 
-            if(gamma_brambilla(l)>0 .and. toroidalBroadening)  then
+            if(toroidalBroadening .and. abs(sinTh)>0)  then
 
-                kPrlEff = kPrl * ( sqrt ( 1 + 4 * gamma_brambilla(l) ) - 1 ) &
-                                / ( 2 * gamma_brambilla(l))
+                if(kPrl==0.0)then
+                    kPrlEff = sqrt ( omgrf / ( 2*capR*vTh) * sinPh )
+                else
+                    kPrlEff = kPrl &
+                        * ( sqrt ( 1 + 4 * gamma_brambilla(l) ) - 1 ) &
+                        / ( 2 * gamma_brambilla(l))
+                endif
+
             else
-
                 kPrlEff = kPrl
-
             endif
 
-            if (kPrlEff  <= kPrlEffLimit) kPrlEff  = kPrlEffLimit
-
-            zetal(l) = (omgrfc - l * omgc) / ( abs( kPrlEff ) * vTh) 
+            zetal(l) = (omgrfc - l * omgc) / ( kPrlEff * vTh) 
 
         enddo
 
@@ -163,10 +172,9 @@ contains
         ! Calculate Z function
         ! --------------------
 
-        allocate ( Z(-lMax:lMax), ZPrime(-lMax:lMax), zetaZPrime(-lMax:lMax) )
+        allocate ( Z(-lMax:lMax), zPrime(-lMax:lMax), zeta_zPrime(-lMax:lMax) )
 
-        call z_approx_dlg ( zetal, Z, ZPrime )
-        !call z_approx(sgn_kprl, zetal, gamma_brambilla*0, z, zPrime, zetaZPrime)
+        call z_approx_dlg ( sgn_kprl, zetal, z, zPrime, zeta_zPrime )
 
 
         ! Calculate sigmas according to Swanson
@@ -177,7 +185,7 @@ contains
             labs = abs(l)
 
             P = omgp2 / (abs(kPrlEff) * vTh) * Z(l)
-            PPrime = omgp2 / (abs(kPrlEff) * vTh) * ZPrime(l)
+            PPrime = omgp2 / (abs(kPrlEff) * vTh) * zPrime(l)
 
             sig0l(l) = - zieps0 * rhol**2 * (expBesselI(labs) - expBesselIPrime(labs)) * P 
             sig1l(l) = - zieps0 * l**2 * expBesselIOverGam(labs) * P
