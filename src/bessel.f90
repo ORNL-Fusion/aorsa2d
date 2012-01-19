@@ -883,8 +883,8 @@ contains
         complex(kind=dbl) :: gamma_dbl
 
         gamma_dbl = gamma_
-
-        allocate ( besselI(0:lMax), besselIPrime(0:lMax), b(lMax+1), stat = status )
+        !LAB  added to lenght of arrays 1 and 3 to allow for lmax = 0
+        allocate ( besselI(0:lMax+1), besselIPrime(0:lMax), b(lMax+2), stat = status )
 
         b       = 0
         besselI     = 0
@@ -901,7 +901,7 @@ contains
                 write(*,*) 'bessel.f90: ERROR - ', ier
            endif
 
-           do l = 0, lMax
+           do l = 0, lMax + 1  !  LAB -- need to fix lMax = 0
               besselI(l) = b(l+1)
            enddo
 
