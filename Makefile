@@ -17,7 +17,9 @@ OBJ_FILES = $(wildcard obj/*.o)
 
 BLAS = ${HOME}/code/goto_blas/libgoto2_gnu_4.3.2_64.a -pthread
 LAPACK = ${HOME}/code/lapack/lapack-3.1.1/lapack_LINUX.a 
-NETCDF_DIR = /home/dg6/code/netcdf/gnu_4.3.2
+HDF_DIR := ${HOME}/code/hdf/gnu_4.3.2
+HDF := -I ${HDF_DIR}/include -L ${HDF_DIR}/lib -lhdf5 -lhdf5_hl
+NETCDF_DIR = ${HOME}/code/netcdf/gnu_4.3.2
 NETCDF = -I ${NETCDF_DIR}/include -L ${NETCDF_DIR}/lib -lnetcdf -lnetcdff
 BLACS = \
 	${HOME}/code/blacs/blacs_gnu64/LIB/blacs_MPI-LINUX-0.a \
@@ -61,7 +63,7 @@ USECUDA = "false"
 
 # the order of linking libs is important
 
-LIBS = ${NETCDF}
+LIBS = ${HDF} ${NETCDF}
 INC_DIR = 
 
 

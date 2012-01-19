@@ -52,7 +52,7 @@ noPoloidalField = .false.,
 eqdsk = 'eqdsk',
 b0 = 0.0001,
 bx_frac = 100.0,
-r0 = 10.0,
+r0 = 100.0,
 
 lmax = 2,
 
