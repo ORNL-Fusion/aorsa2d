@@ -541,6 +541,9 @@ pro plot_solution, full = full, $
 
 		nSpec	= n_elements ( jp_r[0,0,*] )
 
+		; jDotE
+		; -----
+
 		jDotE	= jp_r[*,*,0] * conj(e_r) $
 					+ jp_t[*,*,0] * conj(e_t) $
 					+ jp_z[*,*,0] * conj(e_z)
@@ -563,6 +566,9 @@ pro plot_solution, full = full, $
 
 		endfor
 
+		; jAnt
+		; ---
+
 	   	l = legend(target=p_array,position=[0.8,0.9],/norm,font_size=10)
 
 		pr = plot (x,jA_r,color='b',thick=3,transp=50,$
@@ -574,6 +580,60 @@ pro plot_solution, full = full, $
 				name='jAnt_z',/over)
 
 	   	l = legend(target=[pr,pt,pz],position=[0.8,0.4],/norm,font_size=10)
+
+		; jP
+		; --
+
+		jpRange = max(abs([abs(jp_r),abs(jp_t),abs(jp_z)]))
+
+		s = 0
+		p_array = !NULL
+		p = plot (x,jp_r[*,0,s],thick=2,transp=50,$
+				title='jPr',name='jPr_re_'+strTrim(string(s),2),font_size=10,$
+				layout=[1,3,1],yRange=[-jpRange,jpRange])
+		p_array = [p_array,p]
+		p = plot (x,imaginary(jp_r[*,0,s]),/over,name='jPr_im_'+strTrim(string(s),2),color='r',thick=2)
+		p_array = [p_array,p]
+		for s=1,nSpec-1 do begin
+			p = plot ( x, jp_r[*,0,s],/over,name='jPr_re_'+strTrim(string(s),2),thick=2,lineStyle=s)
+			p_array = [p_array,p]
+			p = plot ( x, imaginary(jp_r[*,0,s]),/over,name='jPr_im_'+strTrim(string(s),2),thick=2,lineStyle=s,color='r')
+			p_array = [p_array,p]
+		endfor
+	   	l = legend(target=p_array,position=[0.99,0.9],/norm,font_size=10,horizontal_align='RIGHT')
+
+		s = 0
+		p_array = !null
+		p = plot (x,jp_t[*,0,s],thick=2,transp=50,$
+				title='jPt',name='jPt_re_'+strtrim(string(s),2),font_size=10,$
+				layout=[1,3,2],yrange=[-jPrange,jPrange],/current)
+		p_array = [p_array,p]
+		p = plot (x,imaginary(jp_t[*,0,s]),/over,name='jPt_im_'+strtrim(string(s),2),color='r',thick=2)
+		p_array = [p_array,p]
+		for s=1,nspec-1 do begin
+			p = plot ( x, jp_t[*,0,s],/over,name='jPt_re_'+strtrim(string(s),2),thick=2,linestyle=s)
+			p_array = [p_array,p]
+			p = plot ( x, imaginary(jp_t[*,0,s]),/over,name='jPt_im_'+strtrim(string(s),2),thick=2,linestyle=s,color='r')
+			p_array = [p_array,p]
+		endfor
+	   	l = legend(target=p_array,position=[0.99,0.6],/norm,font_size=10,horizontal_align='right')
+
+		s = 0
+		p_array = !null
+		p = plot (x,jP_z[*,0,s],thick=2,transp=50,$
+				title='jPz',name='jPz_re_'+strtrim(string(s),2),font_size=10,$
+				layout=[1,3,3],yrange=[-jPrange,jPrange],/current)
+		p_array = [p_array,p]
+		p = plot (x,imaginary(jP_z[*,0,s]),/over,name='jPz_im_'+strtrim(string(s),2),color='r',thick=2)
+		p_array = [p_array,p]
+		for s=1,nspec-1 do begin
+			p = plot ( x, jP_z[*,0,s],/over,name='jPz_re_'+strtrim(string(s),2),thick=2,linestyle=s)
+			p_array = [p_array,p]
+			p = plot ( x, imaginary(jP_z[*,0,s]),/over,name='jPz_im_'+strtrim(string(s),2),thick=2,linestyle=s,color='r')
+			p_array = [p_array,p]
+		endfor
+	   	l = legend(target=p_array,position=[0.99,0.25],/norm,font_size=10,horizontal_align='right')
+
 
 
 	endif else begin
