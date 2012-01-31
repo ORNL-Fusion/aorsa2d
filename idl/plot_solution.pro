@@ -400,40 +400,9 @@ pro plot_solution, full = full, $
 		print, 'lambda: [m]', 2*!pi/(brambillaNumber* wpe / vThe)
 		print, 'lambda_de: [m]', lambda_de
 
-		;restore, '../smithe/soln.sav' 
-		;restore, '../tftr_ibw/soln.sav' 
-		;restore, '../cmod_ibw_1d/soln.sav'
-		;restore, '../d3d_ibw_1d/soln.sav'
-		;restore, '../brambilla/soln.sav'
-		;restore, '../jaeger_1/soln.sav'
-		;restore, '../jaeger_2/soln.sav'
-		;restore, '../cynthia/soln.sav'
-		;restore, '../cMod_naoto_He3/soln.sav' 
-
-		;iPlot, xorig, ealphaorig, thick=2, view_grid=[3,1], /stretch_to_fit, $
-		;		dimensions = [900,300], /zoom_on_resize
-		;iPlot, xorig, eBetaorig, thick=2, /view_next, /stretch_to_fit, /zoom_on_resize
-		;iPlot, xorig, eBorig, thick=2, /view_next, /stretch_to_fit, /zoom_on_resize
-
-		;for i=0,n_elements(fileList)-1 do begin
-
-		;	if i mod 3 eq 0 then color = red
-		;	if i mod 3 eq 1 then color = blue
-		;	if i mod 3 eq 2 then color = green
-		;	if i gt 0 then startII = total(nAll[0:i-1]) else startII=0
-		;	stopII = startII+nAll[i]-1
-		;	print, i, startII, stopII
-		;	iplot, xall[startII:stopII],eAlphaAll[startII:stopII], $
-		;			color=color, /over, sym_index=4, view_number=1
-		;	iplot, xall[startII:stopII],eBetaAll[startII:stopII], $
-		;			color=color, /over, sym_index=4, view_number=2
-		;	iplot, xall[startII:stopII],eBAll[startII:stopII], $
-		;			color=color, /over, sym_index=4, view_number=3
-		;endfor
-
 		eRange = max(abs([e_r,e_t,e_z]))
 		p_r = plot ( x, e_r, layout=[1,3,1],$
-				title='Er',yRange=[-eRange,eRange],ytitle='Er [V/m]',name='Re')
+				title='Er',yRange=[-eRange,eRange],ytitle='Er [V/m]',name='Re',window_title='aorsa')
 		p_i = plot ( x, imaginary(e_r), color='red',/over,name='Im')
 		l = legend(target=[p_r,p_i],position=[0.98,0.95],/norm,font_size=10,horizontal_align='RIGHT')
 
@@ -446,17 +415,6 @@ pro plot_solution, full = full, $
 				title='Ez',yRange=[-eRange,eRange],ytitle='Ez [V/m]',name='Re')
 		p_i = plot ( x, imaginary(e_z), color='red',/over,name='Im')
 		l = legend(target=[p_r,p_i],position=[0.98,0.28],/norm,font_size=10,horizontal_align='RIGHT')
-
-		;w=80e6*2*!pi
-		;dt	= 1/80e6/100.0
-
-		;plot, x, real_part(e_r)*cos(w*0*dt)+imaginary(e_r)*sin(w*0*dt), yrange = [-4,4]
-		;for i=0,10000 do begin
-		;		plot, x, real_part(e_r)*cos(w*i*dt)+imaginary(e_r)*sin(w*i*dt), yrange = [-4,4]
-		;		wait, 0.05
-		;endfor
-		;stop
-
 
 		;; Check solution against wave equation
 
@@ -549,8 +507,8 @@ pro plot_solution, full = full, $
 					+ jp_z[*,*,0] * conj(e_z)
 
 		p = plot (x,jDotE,color='b',thick=3,transp=50,$
-				title='J dot E',name='jDote_total',font_size=10,$
-				layout=[1,2,1])
+				title='J dot E',name='jDote_0',font_size=10,$
+				layout=[1,2,1],window_title='aorsa')
 
 		p_array = !NULL
 		p_array = [p_array,p]
@@ -590,7 +548,7 @@ pro plot_solution, full = full, $
 		p_array = !NULL
 		p = plot (x,jp_r[*,0,s],thick=2,transp=50,$
 				title='jPr',name='jPr_re_'+strTrim(string(s),2),font_size=10,$
-				layout=[1,3,1],yRange=[-jpRange,jpRange])
+				layout=[1,3,1],yRange=[-jpRange,jpRange],window_title='aorsa')
 		p_array = [p_array,p]
 		p = plot (x,imaginary(jp_r[*,0,s]),/over,name='jPr_im_'+strTrim(string(s),2),color='r',thick=2)
 		p_array = [p_array,p]
@@ -635,6 +593,25 @@ pro plot_solution, full = full, $
 	   	l = legend(target=p_array,position=[0.99,0.25],/norm,font_size=10,horizontal_align='right')
 
 
+		; Jp.E vs Jant.E integrals
+
+		jP_r_total	= total ( jP_r, 3 )
+		jP_t_total	= total ( jP_t, 3 )
+		jP_z_total	= total ( jP_z, 3 )
+
+		jPDotE	= -0.5 * real_part ( conj(jP_r) * e_r $
+				+ conj(jP_t) * e_t $
+				+ conj(jP_z) * e_z )
+
+		jADotE	= -0.5 * real_part ( conj(jA_r) * e_r $
+				+ conj(jA_t) * e_t $
+				+ conj(jA_z) * e_z )
+
+		intJPDotE = total ( jPDotE*2*!pi*x )
+		intJADotE = total ( jADotE*2*!pi*x )
+
+		print, 'intJPDotE: ', intJPDotE
+		print, 'intJADotE: ', intJADotE
 
 	endif else begin
 

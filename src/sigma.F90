@@ -147,6 +147,10 @@ contains
                 kPrlEff = kPrl
             endif
 
+            if(abs(kPrlEff)<kPrlEffLimit)then
+                    kPrlEff = sign(kPrlEffLimit,kPrlEff)
+            endif
+
             zetal(l) = (omgrfc - l * omgc) / ( kPrlEff * vTh) 
 
         enddo

@@ -38,17 +38,17 @@ contains
 
         sqr     = sqrt ( 1d0 - g%bR_unit**2 )
 
-        g%Urr     = sqr
+        g%Urr    = sqr
         g%Urt    = -g%bR_unit * g%bT_unit / sqr
-        g%Urz     = -g%bR_unit * g%bZ_unit / sqr
+        g%Urz    = -g%bR_unit * g%bZ_unit / sqr
 
-        g%Utr    = 0
+        g%Utr   = 0
         g%Utt   = g%bZ_unit / sqr
-        g%Utz    = -g%bT_unit / sqr
+        g%Utz   = -g%bT_unit / sqr
 
-        g%Uzr     = g%bR_unit
+        g%Uzr    = g%bR_unit
         g%Uzt    = g%bT_unit
-        g%Uzz     = g%bZ_unit
+        g%Uzz    = g%bZ_unit
 
 
         ! Check the determinant, should = 1
