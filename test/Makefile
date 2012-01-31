@@ -13,7 +13,7 @@ DEBUG = -g -fbacktrace -fsignaling-nans -ffpe-trap=zero,invalid#,underflow,overf
 DOUBLE = -fdefault-real-8
 F90FLAGS = ${MOD_LOC} ${BOUNDS} ${DEBUG} ${WARN}
 
-NETCDF_DIR = /home/dg6/code/netcdf/gnu_4.3.2
+NETCDF_DIR = ${HOME}/code/netcdf/gnu_4.3.2
 NETCDF = -I ${NETCDF_DIR}/include -L ${NETCDF_DIR}/lib -lnetcdf -lnetcdff
 
 CPP_DIRECTIVES = -DcylXYZ -DzFunHammett
