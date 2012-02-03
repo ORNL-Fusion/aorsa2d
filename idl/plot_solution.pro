@@ -400,6 +400,24 @@ pro plot_solution, full = full, $
 		print, 'lambda: [m]', 2*!pi/(brambillaNumber* wpe / vThe)
 		print, 'lambda_de: [m]', lambda_de
 
+		; Check with cold plasma theory
+
+		iiMaxE	= where(abs(e_r)^2 eq max(abs(e_r)^2))
+
+		print, 'Er[iiMaxE]: ', e_r[iiMaxE]
+		print, 'Jp[iiMaxE]: ', jP_r[iiMaxE]
+		print, 'Ja[iiMaxE]: ', jA_r[iiMaxE]
+
+		print, 'Jp/Ja theory: ', (wpe^2/wrf^2)/(1-wpe^2/wrf^2)
+		print, 'Jp/Ja actual: ', jP_r[iiMaxE]/jA_r[iiMaxE]
+
+		print, 'Jp/E theory: ', II*wrf*e0*wpe^2/wrf^2
+		print, 'Jp/E actual: ', jP_r[iiMaxE]/e_r[iiMaxE]
+
+		print, 'Ja/E theory: ', II*wrf*e0*(1-wpe^2/wrf^2)
+		print, 'Ja/E actual: ', jA_r[iiMaxE]/e_r[iiMaxE]
+
+
 		eRange = max(abs([e_r,e_t,e_z]))
 		p_r = plot ( x, e_r, layout=[1,3,1],$
 				title='Er',yRange=[-eRange,eRange],ytitle='Er [V/m]',name='Re',window_title='aorsa')
