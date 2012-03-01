@@ -45,7 +45,7 @@ contains
         real :: kPrlEff, fgam, y0, y
         real(kind=dbl) :: sgn_kPrl
         real :: descrim
-        real :: nu_coll
+        !real :: nu_coll
         real :: vTh
         real(kind=dbl) :: alpha_smithe(-lmax:lmax), gamma_smithe(-lmax:lmax)
         real(kind=dbl) :: gamma_brambilla(-lmax:lmax)
@@ -94,7 +94,7 @@ contains
         ! Calculate Z function argument
         ! -----------------------------
 
-        nu_coll =  .01 * omgrf
+        !nu_coll =  .01 * omgrf
 
         do l = -lmax, lmax
 
@@ -107,40 +107,27 @@ contains
             !gamma_smithe(l) = nu_coll / (abs(kPrl) * vTh)
 
 
-            ! Brambilla has a single approximate broadening term
-            ! Phys. Lett. A, 188, 376-383, 1994
-            ! ---------------------------------
+            ! Effective kPrl for ions 
+            ! -----------------------
+
+            if(toroidalBroadening .and. abs(sinTh)>0 .and. specNo>1)  then
+
+                ! Brambilla has a single approximate broadening term
+                ! Phys. Lett. A, 188, 376-383, 1994
+                ! ---------------------------------
     
-            sinPh = bPol / bMod
-            gamma_brambilla(l) = omgrf / ( 2.0 * kPrl**2 * capR * vTh ) * abs ( sinTh * sinPh ) 
+                sinPh = bPol / bMod
+                gamma_brambilla(l) = omgrf / ( 2.0 * kPrl**2 * capR * vTh ) * abs ( sinTh * sinPh ) 
 
-            if(gamma_brambilla(l)<0)then
-                ERROR("gamma_brambilla<0")
-            endif
-
-
-            ! ions only 
-            ! ---------
-
-            if(specNo==1) then 
-
-                !alpha_smithe(l) = 0
-                gamma_brambilla(l) = 0
-
-            endif
-
-
-            ! Create and effective kPrl that includes toroidal broadening
-            ! ----------------------------------------------------------
-
-            if(toroidalBroadening .and. abs(sinTh)>0)  then
+                if(gamma_brambilla(l)<=0)then
+                    write(*,*) kPrl,capR,vTh,gamma_brambilla(l),sinTh,sinPh
+                    ERROR("gamma_brambilla<0")
+                endif
 
                 if(kPrl==0.0)then
                     kPrlEff = sqrt ( omgrf / ( 2*capR*vTh) * sinPh )
                 else
-                    kPrlEff = kPrl &
-                        * ( sqrt ( 1 + 4 * gamma_brambilla(l) ) - 1 ) &
-                        / ( 2 * gamma_brambilla(l))
+                    kPrlEff = kPrl*( sqrt(1 + 4*gamma_brambilla(l)) - 1 ) / (2*gamma_brambilla(l))
                 endif
 
             else

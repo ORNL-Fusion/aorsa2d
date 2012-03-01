@@ -180,17 +180,17 @@ contains
                 call deriv_x(g%R, g%Uzt, i, j, dfdx = g%drUzt(i,j), d2fdx2 = g%drrUzt(i,j))
                 call deriv_x(g%R, g%Uzz, i, j, dfdx = g%drUzz(i,j), d2fdx2 = g%drrUzz(i,j))
 
-                call deriv_y(g%z, g%Urr, i, j, dfdy = g%drUrr(i,j), d2fdy2 = g%drrUrr(i,j))
-                call deriv_y(g%z, g%Urt, i, j, dfdy = g%drUrt(i,j), d2fdy2 = g%drrUrt(i,j))
-                call deriv_y(g%z, g%Urz, i, j, dfdy = g%drUrz(i,j), d2fdy2 = g%drrUrz(i,j))
+                call deriv_y(g%z, g%Urr, i, j, dfdy = g%dzUrr(i,j), d2fdy2 = g%dzzUrr(i,j))
+                call deriv_y(g%z, g%Urt, i, j, dfdy = g%dzUrt(i,j), d2fdy2 = g%dzzUrt(i,j))
+                call deriv_y(g%z, g%Urz, i, j, dfdy = g%dzUrz(i,j), d2fdy2 = g%dzzUrz(i,j))
 
-                call deriv_y(g%z, g%Utr, i, j, dfdy = g%drUtr(i,j), d2fdy2 = g%drrUtr(i,j))
-                call deriv_y(g%z, g%Utt, i, j, dfdy = g%drUtt(i,j), d2fdy2 = g%drrUtt(i,j))
-                call deriv_y(g%z, g%Utz, i, j, dfdy = g%drUtz(i,j), d2fdy2 = g%drrUtz(i,j))
+                call deriv_y(g%z, g%Utr, i, j, dfdy = g%dzUtr(i,j), d2fdy2 = g%dzzUtr(i,j))
+                call deriv_y(g%z, g%Utt, i, j, dfdy = g%dzUtt(i,j), d2fdy2 = g%dzzUtt(i,j))
+                call deriv_y(g%z, g%Utz, i, j, dfdy = g%dzUtz(i,j), d2fdy2 = g%dzzUtz(i,j))
 
-                call deriv_y(g%z, g%Uzr, i, j, dfdy = g%drUzr(i,j), d2fdy2 = g%drrUzr(i,j))
-                call deriv_y(g%z, g%Uzt, i, j, dfdy = g%drUzt(i,j), d2fdy2 = g%drrUzt(i,j))
-                call deriv_y(g%z, g%Uzz, i, j, dfdy = g%drUzz(i,j), d2fdy2 = g%drrUzz(i,j))
+                call deriv_y(g%z, g%Uzr, i, j, dfdy = g%dzUzr(i,j), d2fdy2 = g%dzzUzr(i,j))
+                call deriv_y(g%z, g%Uzt, i, j, dfdy = g%dzUzt(i,j), d2fdy2 = g%dzzUzt(i,j))
+                call deriv_y(g%z, g%Uzz, i, j, dfdy = g%dzUzz(i,j), d2fdy2 = g%dzzUzz(i,j))
 
                 call deriv_xy(g%R, g%z, g%Urr, i, j, d2fdxy = g%drzUrr(i,j))
                 call deriv_xy(g%R, g%z, g%Urt, i, j, d2fdxy = g%drzUrt(i,j))

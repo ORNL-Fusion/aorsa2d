@@ -495,9 +495,12 @@ contains
         ! Write sigma
         ! -----------
 
-        write(*,*) 'Writing sigma'
+        write(*,*)
+        write(*,*) 'Writing sigma ...'
         call write_sigma_pt ( sigma_write, &
             sigma_nc_id, sigma_re_id, sigma_im_id )
+        write(*,*) 'DONE'
+        write(*,*) 'Filling aMat ...'
 
         ! Close sigma file
         ! ----------------

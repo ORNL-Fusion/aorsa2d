@@ -72,17 +72,18 @@ contains
                 g%jR(i,j) = 0.0
                 g%jT(i,j) = 0.0
                 if(useEqdsk) then
-                    if(g%R(i)>r0) &
-                    g%jR(i,j) = exp ( &
-                    -( (g%rho(i,j)-rhoAnt)**2/antSigRho**2 + (g%Z(j)-zAnt)**2/antSigY**2 ) &
-                          )
+                    !if(g%R(i)>r0) &
+                    !g%jZ(i,j) = exp ( &
+                    !-( (g%rho(i,j)-rhoAnt)**2/antSigRho**2 + (g%Z(j)-zAnt)**2/antSigY**2 ) &
+                    !      )
+                    g%jZ(i,j) = 50*exp ( -( (g%R(i)-rAnt)**2/antSigX**2 + (g%Z(j)-zAnt)**2/antSigY**2 ) )
                 else
                     !g%jR(i,j) = exp ( &
                     !-( (g%R(i)-rAnt)**2/antSigX**2 + (g%Z(j)-zAnt)**2/antSigY**2 ) &
                     !      )
-                    g%jR(i,j) = 5000*exp ( -( (g%R(i)-rAnt)**2/antSigX**2 ) )
+                    g%jZ(i,j) = 50*exp ( -( (g%R(i)-rAnt)**2/antSigX**2 + (g%Z(j)-zAnt)**2/antSigY**2 ) )
                     !if(i==g%nR/2) g%jR(i,j) = 5000
-                    write(*,*) 'WARNING --- using 1D jR NOT 2D jZ ---', antSigX
+                    !write(*,*) 'WARNING --- using 1D jR NOT 2D jZ ---', antSigX
                 endif
 
                 !   boundary conditions

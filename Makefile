@@ -105,8 +105,9 @@ endif
 
 FORMAT := -ffree-line-length-none
 BOUNDS = -fbounds-check 
-WARN = #-Wall
+WARN = -Wall
 DEBUG = -pg -g -fbacktrace -fsignaling-nans -ffpe-trap=zero,invalid#,overflow#,underflow
+OPTIMIZATION = #-O3
 DOUBLE = -fdefault-real-8
 ifeq (${MODE},"parallel")
 	F90 = mpif90
@@ -131,7 +132,7 @@ ifeq (${HOME},/Users/dg6)
 	include Makefile.greendl
 endif
 
-F90FLAGS = ${FORMAT} ${WARN} ${DEBUG} ${BOUNDS} ${MOD_LOC} 
+F90FLAGS = ${FORMAT} ${WARN} ${DEBUG} ${BOUNDS} ${MOD_LOC} ${OPTIMIZATION}
 LINK_FLAGS = 
 
 .PHONY: depend clean
