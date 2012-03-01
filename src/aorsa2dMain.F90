@@ -61,9 +61,6 @@ program aorsa2dMain
 !   read namelist input data
 !   ------------------------
 
-    if (iAm==0) &
-    write(*,*) 'Reading namelist'
-
     call read_nameList ()
 
 
@@ -382,10 +379,13 @@ program aorsa2dMain
     if (iAm==0) &
     write(*,*) 'Rotating E solution to lab frame (R,Th,z)'
 
-    do i=1,nGrid 
-        call rotate_E_to_lab ( allGrids(i) )
-    enddo
+    if ( iAm == 0 ) then
 
+        do i=1,nGrid 
+            call rotate_E_to_lab ( allGrids(i) )
+        enddo
+
+    endif
 
 
 !   Calculate the Joule Heating 

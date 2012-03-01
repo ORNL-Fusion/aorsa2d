@@ -34,6 +34,11 @@ complex, allocatable, dimension(:) :: &
     complex(kind=dbl), allocatable :: aMat(:,:)
 #endif
 
+type :: workListEntry
+        integer :: i,j,m,n
+end type workListEntry
+
+
 contains
 
     subroutine alloc_total_aMat ( nPts_tot )
@@ -298,7 +303,7 @@ contains
         real :: h1, h2, alpha
 
         complex(kind=dbl) :: sigma_tmp(3,3), sigma_tmp_neg(3,3)
-        complex, allocatable :: sigma_write(:,:,:,:,:,:,:), sigma_smooth(:,:,:,:)
+        complex, allocatable :: sigma_write(:,:,:,:,:,:,:)
 
         integer :: nr, nz, iStat
         integer :: sigma_nc_id, sigma_re_id, sigma_im_id
@@ -333,7 +338,6 @@ contains
             drzUtr, drzUtt, drzUtz, &
             drzUzr, drzUzt, drzUzz
 
-
 #ifdef par
         !   scalapack indicies
         !   see http://www.netlib.org/scalapack/slug/node76.html
@@ -341,6 +345,10 @@ contains
         integer :: l_sp, m_sp, pr_sp, pc_sp, x_sp, y_sp
         integer :: pr_sp_thisPt(3), pc_sp_thisPt(3)
 #endif
+
+        integer :: workListPosition
+        type(workListEntry) :: thisWorkList
+        type(workListEntry), allocatable :: workList(:), workListTooLong(:)
 
         metal   = ( 1e8,1e8 )
 
@@ -371,10 +379,10 @@ contains
         ! Initialize grid sigma file
         ! --------------------------
 
+        if(iAm==0) &
         call init_sigma_file ( g, 'sigma'//g%fNumber//'.nc', &
             sigma_nc_id, sigma_re_id, sigma_im_id, nSpec )
 
-        allocate ( sigma_smooth(g%nR,g%nZ,3,3) )
         allocate ( sigma_write(g%nR,g%nZ,g%nMin:g%nMax,g%mMin:g%mMax,3,3,nSpec), stat = iStat )
         if(iStat/=0)then
                 write(*,*) 'ERROR src/mat_fill.f90 - allocation failed :('
@@ -382,14 +390,13 @@ contains
         endif
 
         sigma_write = 0
-        sigma_smooth = 0
 
         ! Calculate sigma seperately outside main loop
         ! --------------------------------------------
 
         do s=1,nSpec
 
-        write(*,*)
+        if(iAm==0) &
         write(*,*) 'Calculating sigma for species ', s, ' of', nSpec
 
             do m=g%mMin,g%mMax
@@ -408,8 +415,7 @@ contains
 
                             if(chebyshevX) then
                                 if(n>1) then
-                                    !kr = n / sqrt ( sin ( pi * (g%rNorm(i)+1)/2  ) ) * g%normFacR 
-                                    kr = n * g%normFacR
+                                    kr = n / sqrt ( sin ( pi * (g%rNorm(i)+1)/2  ) ) * g%normFacR 
                                 else
                                     kr = n * g%normFacR
                                 endif
@@ -474,38 +480,77 @@ contains
                         enddo
                     enddo
 
-                    !! Try smoothing sigma in space
-                    !! ----------------------------
-
-                    !do i=2,g%nR-1
-
-                    !        sigma_smooth(i,1,:,:) = &
-                    !        (sigma_write(i-1,1,n,m,:,:,s) + sigma_write(i+1,1,n,m,:,:,s) ) / 2
-
-                    !enddo
-
-                    !sigma_write(2:g%nR-1,1,n,m,:,:,s) = sigma_smooth(2:g%nR-1,1,:,:)
-
                 enddo
             enddo
 
         enddo
-
+#ifndef par
+        write(*,*)
+#endif
 
         ! Write sigma
         ! -----------
-
-        write(*,*)
+        if(iAm==0) &
         write(*,*) 'Writing sigma ...'
+        if(iAm==0) &
         call write_sigma_pt ( sigma_write, &
             sigma_nc_id, sigma_re_id, sigma_im_id )
+        if(iAm==0) &
         write(*,*) 'DONE'
-        write(*,*) 'Filling aMat ...'
 
         ! Close sigma file
         ! ----------------
 
+        if(iAm==0) &
         call close_sigma_file ( sigma_nc_id )
+
+
+        ! Create a work list for this processor
+        ! -------------------------------------
+
+        allocate(workListTooLong(nRowLocal*nColLocal))
+        workListPosition = 0
+
+        i_workList: &
+        do i=1,g%nR
+            j_workList: &
+            do j=1,g%nZ
+
+                iRow = (i-1) * 3 * g%nZ + (j-1) * 3 + 1
+                iRow = iRow + ( g%startRow-1 )
+
+                n_workList: &
+                do n=g%nMin,g%nMax
+                    m_workList: &
+                    do m=g%mMin,g%mMax
+
+                        iCol = (n-g%nMin) * 3 * g%nModesZ + (m-g%mMin) * 3 + 1
+                        iCol = iCol + ( g%startCol-1 )
+#ifdef par
+                        pr_sp_thisPt   = mod ( rowStartProc + (iRow-1+(/0,1,2/))/rowBlockSize, npRow )
+                        pc_sp_thisPt   = mod ( colStartProc + (iCol-1+(/0,1,2/))/colBlockSize, npCol )
+
+                        addToWorkList: &
+                        if ( any(pr_sp_thisPt==myRow) .and. any(pc_sp_thisPt==myCol) ) then
+#endif
+                            workListPosition = workListPosition + 1
+                            if(workListPosition > size(workListTooLong)) &
+                            write(*,*) iAm, workListPosition, size(workListTooLong)
+                            thisWorkList = workListEntry(i,j,m,n)
+                            workListTooLong(workListPosition) = thisWorkList
+#ifdef par
+                        endif addToWorkList
+#endif
+                    enddo m_workList
+                enddo n_workList
+
+            enddo j_workList
+        enddo i_workList
+
+        allocate(workList(workListPosition))
+        workList = workListTooLong(1:workListPosition)
+        deallocate(workListTooLong)
+
 
 
         ! Begin loop
@@ -540,7 +585,7 @@ contains
                         pc_sp_thisPt   = mod ( colStartProc + (iCol-1+(/0,1,2/))/colBlockSize, npCol )
 
                         doWork: &
-                        if ( any(pr_sp_thisPt==myRow) .and.  any(pc_sp_thisPt==myCol) ) then
+                        if ( any(pr_sp_thisPt==myRow) .and. any(pc_sp_thisPt==myCol) ) then
 #endif
                             sigAlpAlp = 0.0
                             sigAlpBet = 0.0
