@@ -37,7 +37,7 @@ GPTL = #-I ${GPTL_DIR}/include -L ${GPTL_DIR} -lgptl
 
 # set the MODE to "serial" or "parallel"
 
-MODE = "serial"
+MODE = "parallel"
 
 # set solve precision to "single" or "double" 
 
@@ -60,6 +60,10 @@ USEPAPI = "false"
 # use CUDA
 
 USECUDA = "false"
+
+# caculate sigma as part of the fill ("infill") or standalone with file write ("standalone")
+
+SIGMA = -D__sigma__=2
 
 # the order of linking libs is important
 
@@ -94,6 +98,8 @@ ifeq (${USEPAPI},"true")
 	LIBS += ${PAPI}
 	INC_DIR += ${PAPI_INC}
 endif
+
+CPP_DIRECTIVES += ${SIGMA}
 
 ifeq (${USECUDA},"true")
 	LIBS += ${MAGMA} ${CUDA} -lstdc++

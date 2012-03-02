@@ -120,4 +120,5 @@ ${OBJ_DIR}/rotateEToLab.o: \
 		${OBJ_DIR}/rotation.o
 
 ${OBJ_DIR}/power.o: \
-		${OBJ_DIR}/read_data.o
+		${OBJ_DIR}/read_data.o \
+		${OBJ_DIR}/sigma.o
