@@ -34,10 +34,6 @@ complex, allocatable, dimension(:) :: &
     complex(kind=dbl), allocatable :: aMat(:,:)
 #endif
 
-type :: workListEntry
-        integer :: i,j,m,n
-end type workListEntry
-
 
 contains
 
@@ -346,9 +342,16 @@ contains
         integer :: pr_sp_thisPt(3), pc_sp_thisPt(3)
 #endif
 
-        integer :: workListPosition
+        type :: workListEntry
+                integer :: i
+                integer :: j
+                integer :: m
+                integer :: n
+        end type workListEntry
+
+        integer :: workListPosition, w
         type(workListEntry) :: thisWorkList
-        type(workListEntry), allocatable :: workList(:), workListTooLong(:)
+        type(workListEntry), allocatable :: wl(:), workListTooLong(:)
 
         metal   = ( 1e8,1e8 )
 
@@ -534,9 +537,10 @@ contains
                         if ( any(pr_sp_thisPt==myRow) .and. any(pc_sp_thisPt==myCol) ) then
 #endif
                             workListPosition = workListPosition + 1
-                            if(workListPosition > size(workListTooLong)) &
-                            write(*,*) iAm, workListPosition, size(workListTooLong)
-                            thisWorkList = workListEntry(i,j,m,n)
+                            thisWorkList%i = i
+                            thisWorkList%j = j
+                            thisWorkList%m = m
+                            thisWorkList%n = n
                             workListTooLong(workListPosition) = thisWorkList
 #ifdef par
                         endif addToWorkList
@@ -547,46 +551,49 @@ contains
             enddo j_workList
         enddo i_workList
 
-        allocate(workList(workListPosition))
-        workList = workListTooLong(1:workListPosition)
+        allocate(wl(workListPosition))
+        wl = workListTooLong(1:workListPosition)
         deallocate(workListTooLong)
 
-
+        write(*,*) 'Proc: ', iAm, '  number of wl: ', workListPosition
 
         ! Begin loop
         ! ----------
 
-        i_loop: &
-        do i=1,g%nR
+        workListLoop: &
+        do w=1,size(wl)
+
+        !i_loop: &
+        !do i=1,g%nR
 
 #ifndef par
-            !   progress indicator
-            !   ------------------
-            do p=1,7 
-                write(*,'(a)',advance='no') char(8)
-            enddo
-            write(*,'(1x,f5.1,a)',advance='no') real(i)/g%nR*100, '%'
+            !!   progress indicator
+            !!   ------------------
+            !do p=1,7 
+            !    write(*,'(a)',advance='no') char(8)
+            !enddo
+            !write(*,'(1x,f5.1,a)',advance='no') real(i)/g%nR*100, '%'
 #endif
-            j_loop: &
-            do j=1,g%nZ
+            !j_loop: &
+            !do j=1,g%nZ
 
-                iRow = (i-1) * 3 * g%nZ + (j-1) * 3 + 1
+                iRow = (wl(w)%i-1) * 3 * g%nZ + (wl(w)%j-1) * 3 + 1
                 iRow = iRow + ( g%startRow-1 )
 
-                n_loop: &
-                do n=g%nMin,g%nMax
-                    m_loop: &
-                    do m=g%mMin,g%mMax
+                !n_loop: &
+                !do n=g%nMin,g%nMax
+                    !m_loop: &
+                    !do m=g%mMin,g%mMax
 
-                        iCol = (n-g%nMin) * 3 * g%nModesZ + (m-g%mMin) * 3 + 1
+                        iCol = (wl(w)%n-g%nMin) * 3 * g%nModesZ + (wl(w)%m-g%mMin) * 3 + 1
                         iCol = iCol + ( g%startCol-1 )
-#ifdef par
-                        pr_sp_thisPt   = mod ( rowStartProc + (iRow-1+(/0,1,2/))/rowBlockSize, npRow )
-                        pc_sp_thisPt   = mod ( colStartProc + (iCol-1+(/0,1,2/))/colBlockSize, npCol )
-
-                        doWork: &
-                        if ( any(pr_sp_thisPt==myRow) .and. any(pc_sp_thisPt==myCol) ) then
-#endif
+!#ifdef par
+!                        pr_sp_thisPt   = mod ( rowStartProc + (iRow-1+(/0,1,2/))/rowBlockSize, npRow )
+!                        pc_sp_thisPt   = mod ( colStartProc + (iCol-1+(/0,1,2/))/colBlockSize, npCol )
+!
+!                        doWork: &
+!                        if ( any(pr_sp_thisPt==myRow) .and. any(pc_sp_thisPt==myCol) ) then
+!#endif
                             sigAlpAlp = 0.0
                             sigAlpBet = 0.0
                             sigAlpPrl = 0.0
@@ -597,14 +604,14 @@ contains
                             sigPrlBet = 0.0
                             sigPrlPrl = 0.0
 
-                            z   = g%z(j)
-                            r   = g%R(i)
+                            z   = g%z(wl(w)%j)
+                            r   = g%R(wl(w)%i)
                             kt  = nPhi!g%kPhi(i)
 
-                            bFn = g%xx(n, i) * g%yy(m, j)
+                            bFn = g%xx(wl(w)%n, wl(w)%i) * g%yy(wl(w)%m, wl(w)%j)
 
         interior: &
-        if(g%label(i,j)==0)then
+        if(g%label(wl(w)%i,wl(w)%j)==0)then
 
 
                             !   interior plasma region:
@@ -621,23 +628,23 @@ contains
                             ! as the Fourier equiv.
 
                             if(chebyshevX) then
-                                if(n>1) then
-                                    kr = n / sqrt ( sin ( pi * (g%rNorm(i)+1)/2  ) ) * g%normFacR 
+                                if(wl(w)%n>1) then
+                                    kr = wl(w)%n / sqrt ( sin ( pi * (g%rNorm(wl(w)%i)+1)/2  ) ) * g%normFacR 
                                 else
-                                    kr = n * g%normFacR
+                                    kr = wl(w)%n * g%normFacR
                                 endif
                             else
-                                kr = n * g%normFacR
+                                kr = wl(w)%n * g%normFacR
                             endif
 
                             if(chebyshevY) then
-                                if(m>1) then
-                                    kz = m / sqrt ( sin ( pi * (g%zNorm(j)+1)/2 ) ) * g%normFacZ 
+                                if(wl(w)%m>1) then
+                                    kz = wl(w)%m / sqrt ( sin ( pi * (g%zNorm(wl(w)%j)+1)/2 ) ) * g%normFacZ 
                                 else
-                                    kz = m * g%normFacZ
+                                    kz = wl(w)%m * g%normFacZ
                                 endif
                             else
-                                kz = m * g%normFacZ
+                                kz = wl(w)%m * g%normFacZ
                             endif
 
 
@@ -664,22 +671,22 @@ contains
                             ! Sum sigma over species
                             ! ----------------------
                     
-                            sigAlpAlp = sum ( sigma_write(i,j,n,m,1,1,:) )
-                            sigAlpBet = sum ( sigma_write(i,j,n,m,1,2,:) )
-                            sigAlpPrl = sum ( sigma_write(i,j,n,m,1,3,:) )
-
-                            sigBetAlp = sum ( sigma_write(i,j,n,m,2,1,:) )
-                            sigBetBet = sum ( sigma_write(i,j,n,m,2,2,:) )
-                            sigBetPrl = sum ( sigma_write(i,j,n,m,2,3,:) )
-
-                            sigPrlAlp = sum ( sigma_write(i,j,n,m,3,1,:) )
-                            sigPrlBet = sum ( sigma_write(i,j,n,m,3,2,:) )
-                            sigPrlPrl = sum ( sigma_write(i,j,n,m,3,3,:) )
+                            sigAlpAlp = sum ( sigma_write(wl(w)%i,wl(w)%j,wl(w)%n,wl(w)%m,1,1,:) )
+                            sigAlpBet = sum ( sigma_write(wl(w)%i,wl(w)%j,wl(w)%n,wl(w)%m,1,2,:) )
+                            sigAlpPrl = sum ( sigma_write(wl(w)%i,wl(w)%j,wl(w)%n,wl(w)%m,1,3,:) )
+                                                                                        
+                            sigBetAlp = sum ( sigma_write(wl(w)%i,wl(w)%j,wl(w)%n,wl(w)%m,2,1,:) )
+                            sigBetBet = sum ( sigma_write(wl(w)%i,wl(w)%j,wl(w)%n,wl(w)%m,2,2,:) )
+                            sigBetPrl = sum ( sigma_write(wl(w)%i,wl(w)%j,wl(w)%n,wl(w)%m,2,3,:) )
+                                                                                        
+                            sigPrlAlp = sum ( sigma_write(wl(w)%i,wl(w)%j,wl(w)%n,wl(w)%m,3,1,:) )
+                            sigPrlBet = sum ( sigma_write(wl(w)%i,wl(w)%j,wl(w)%n,wl(w)%m,3,2,:) )
+                            sigPrlPrl = sum ( sigma_write(wl(w)%i,wl(w)%j,wl(w)%n,wl(w)%m,3,3,:) )
  
                             ! Metal
                             ! -----
 
-                            if (isMetal(i,j)) then 
+                            if (isMetal(wl(w)%i,wl(w)%j)) then 
 
                                 sigAlpAlp = metal 
                                 sigAlpBet = 0
@@ -707,86 +714,86 @@ contains
                             kPrlBet =       zi / (eps0 * omgrf) * sigPrlBet
                             kPrlPrl = 1.0 + zi / (eps0 * omgrf) * sigPrlPrl
 
-                            d%n = n
-                            d%m = m
-                            d%xNorm = g%rNorm(i)
-                            d%yNorm = g%zNorm(j)
+                            d%n = wl(w)%n
+                            d%m = wl(w)%m
+                            d%xNorm = g%rNorm(wl(w)%i)
+                            d%yNorm = g%zNorm(wl(w)%j)
                             d%normFacX = g%normFacR
                             d%normFacY = g%normFacZ
 
-                            Urr = g%Urr(i,j)
-                            Urt = g%Urt(i,j)
-                            Urz = g%Urz(i,j)
-
-                            Utr = g%Utr(i,j)
-                            Utt = g%Utt(i,j)
-                            Utz = g%Utz(i,j)
-
-                            Uzr = g%Uzr(i,j)
-                            Uzt = g%Uzt(i,j)
-                            Uzz = g%Uzz(i,j)
-
-
-                            drUrr = g%drUrr(i,j)
-                            drUrt = g%drUrt(i,j)
-                            drUrz = g%drUrz(i,j)
-
-                            drUtr = g%drUtr(i,j)
-                            drUtt = g%drUtt(i,j)
-                            drUtz = g%drUtz(i,j)
-
-                            drUzr = g%drUzr(i,j)
-                            drUzt = g%drUzt(i,j)
-                            drUzz = g%drUzz(i,j)
-
-                            dzUrr = g%dzUrr(i,j)
-                            dzUrt = g%dzUrt(i,j)
-                            dzUrz = g%dzUrz(i,j)
-
-                            dzUtr = g%dzUtr(i,j)
-                            dzUtt = g%dzUtt(i,j)
-                            dzUtz = g%dzUtz(i,j)
-
-                            dzUzr = g%dzUzr(i,j)
-                            dzUzt = g%dzUzt(i,j)
-                            dzUzz = g%dzUzz(i,j)
+                            Urr = g%Urr(wl(w)%i,wl(w)%j)
+                            Urt = g%Urt(wl(w)%i,wl(w)%j)
+                            Urz = g%Urz(wl(w)%i,wl(w)%j)
+                                                      
+                            Utr = g%Utr(wl(w)%i,wl(w)%j)
+                            Utt = g%Utt(wl(w)%i,wl(w)%j)
+                            Utz = g%Utz(wl(w)%i,wl(w)%j)
+                                                      
+                            Uzr = g%Uzr(wl(w)%i,wl(w)%j)
+                            Uzt = g%Uzt(wl(w)%i,wl(w)%j)
+                            Uzz = g%Uzz(wl(w)%i,wl(w)%j)
 
 
-                            drrUrr = g%drrUrr(i,j)
-                            drrUrt = g%drrUrt(i,j)
-                            drrUrz = g%drrUrz(i,j)
+                            drUrr = g%drUrr(wl(w)%i,wl(w)%j)
+                            drUrt = g%drUrt(wl(w)%i,wl(w)%j)
+                            drUrz = g%drUrz(wl(w)%i,wl(w)%j)
+
+                            drUtr = g%drUtr(wl(w)%i,wl(w)%j)
+                            drUtt = g%drUtt(wl(w)%i,wl(w)%j)
+                            drUtz = g%drUtz(wl(w)%i,wl(w)%j)
+
+                            drUzr = g%drUzr(wl(w)%i,wl(w)%j)
+                            drUzt = g%drUzt(wl(w)%i,wl(w)%j)
+                            drUzz = g%drUzz(wl(w)%i,wl(w)%j)
+
+                            dzUrr = g%dzUrr(wl(w)%i,wl(w)%j)
+                            dzUrt = g%dzUrt(wl(w)%i,wl(w)%j)
+                            dzUrz = g%dzUrz(wl(w)%i,wl(w)%j)
+
+                            dzUtr = g%dzUtr(wl(w)%i,wl(w)%j)
+                            dzUtt = g%dzUtt(wl(w)%i,wl(w)%j)
+                            dzUtz = g%dzUtz(wl(w)%i,wl(w)%j)
+
+                            dzUzr = g%dzUzr(wl(w)%i,wl(w)%j)
+                            dzUzt = g%dzUzt(wl(w)%i,wl(w)%j)
+                            dzUzz = g%dzUzz(wl(w)%i,wl(w)%j)
+
+
+                            drrUrr = g%drrUrr(wl(w)%i,wl(w)%j)
+                            drrUrt = g%drrUrt(wl(w)%i,wl(w)%j)
+                            drrUrz = g%drrUrz(wl(w)%i,wl(w)%j)
                             
-                            drrUtr = g%drrUtr(i,j)
-                            drrUtt = g%drrUtt(i,j)
-                            drrUtz = g%drrUtz(i,j)
+                            drrUtr = g%drrUtr(wl(w)%i,wl(w)%j)
+                            drrUtt = g%drrUtt(wl(w)%i,wl(w)%j)
+                            drrUtz = g%drrUtz(wl(w)%i,wl(w)%j)
 
-                            drrUzr = g%drrUzr(i,j)
-                            drrUzt = g%drrUzt(i,j)
-                            drrUzz = g%drrUzz(i,j)
+                            drrUzr = g%drrUzr(wl(w)%i,wl(w)%j)
+                            drrUzt = g%drrUzt(wl(w)%i,wl(w)%j)
+                            drrUzz = g%drrUzz(wl(w)%i,wl(w)%j)
 
-                            dzzUrr = g%dzzUrr(i,j)
-                            dzzUrt = g%dzzUrt(i,j)
-                            dzzUrz = g%dzzUrz(i,j)
+                            dzzUrr = g%dzzUrr(wl(w)%i,wl(w)%j)
+                            dzzUrt = g%dzzUrt(wl(w)%i,wl(w)%j)
+                            dzzUrz = g%dzzUrz(wl(w)%i,wl(w)%j)
                             
-                            dzzUtr = g%dzzUtr(i,j)
-                            dzzUtt = g%dzzUtt(i,j)
-                            dzzUtz = g%dzzUtz(i,j)
+                            dzzUtr = g%dzzUtr(wl(w)%i,wl(w)%j)
+                            dzzUtt = g%dzzUtt(wl(w)%i,wl(w)%j)
+                            dzzUtz = g%dzzUtz(wl(w)%i,wl(w)%j)
 
-                            dzzUzr = g%dzzUzr(i,j)
-                            dzzUzt = g%dzzUzt(i,j)
-                            dzzUzz = g%dzzUzz(i,j)
+                            dzzUzr = g%dzzUzr(wl(w)%i,wl(w)%j)
+                            dzzUzt = g%dzzUzt(wl(w)%i,wl(w)%j)
+                            dzzUzz = g%dzzUzz(wl(w)%i,wl(w)%j)
 
-                            drzUrr = g%drzUrr(i,j)
-                            drzUrt = g%drzUrt(i,j)
-                            drzUrz = g%drzUrz(i,j)
+                            drzUrr = g%drzUrr(wl(w)%i,wl(w)%j)
+                            drzUrt = g%drzUrt(wl(w)%i,wl(w)%j)
+                            drzUrz = g%drzUrz(wl(w)%i,wl(w)%j)
                             
-                            drzUtr = g%drzUtr(i,j)
-                            drzUtt = g%drzUtt(i,j)
-                            drzUtz = g%drzUtz(i,j)
+                            drzUtr = g%drzUtr(wl(w)%i,wl(w)%j)
+                            drzUtt = g%drzUtt(wl(w)%i,wl(w)%j)
+                            drzUtz = g%drzUtz(wl(w)%i,wl(w)%j)
 
-                            drzUzr = g%drzUzr(i,j)
-                            drzUzt = g%drzUzt(i,j)
-                            drzUzz = g%drzUzz(i,j)
+                            drzUzr = g%drzUzr(wl(w)%i,wl(w)%j)
+                            drzUzt = g%drzUzt(wl(w)%i,wl(w)%j)
+                            drzUzz = g%drzUzz(wl(w)%i,wl(w)%j)
 
 
         ! Matrix elements. See mathematica worksheet for calculation of 
@@ -921,7 +928,7 @@ contains
                                         ! Interior points
                                         ! ---------------
 
-                                        if(g%label(i,j)==0) then 
+                                        if(g%label(wl(w)%i,wl(w)%j)==0) then 
 
                                             if (ii==0 .and. jj==0) aMat(localRow,localCol) = mat_r_alp * bFn  
                                             if (ii==0 .and. jj==1) aMat(localRow,localCol) = mat_r_bet * bFn   
@@ -941,7 +948,7 @@ contains
                                         ! Outer boundary points
                                         ! ---------------------
 
-                                        if (g%label(i,j)==888) then
+                                        if (g%label(wl(w)%i,wl(w)%j)==888) then
                                             
                                             if (ii==0 .and. jj==0) aMat(localRow,localCol) = bFn * lsWeightFac 
                                             if (ii==0 .and. jj==1) aMat(localRow,localCol) = 0
@@ -957,7 +964,7 @@ contains
 
                                         endif
 
-                                        if (g%label(i,j)==999) then
+                                        if (g%label(wl(w)%i,wl(w)%j)==999) then
 
                                             !iOL = 1+overlap
                                             !jOL = j
@@ -982,7 +989,7 @@ contains
                                         ! Mesh-Mesh boundary for R bFn 
                                         ! ----------------------------
 
-                                        if (g%label(i,j)>=1 .and. g%label(i,j)<=20) then
+                                        if (g%label(wl(w)%i,wl(w)%j)>=1 .and. g%label(wl(w)%i,wl(w)%j)<=20) then
 
                                             !if(mod(g%label(i,j),2)==1) then 
                                             !    iOL = 1+overlap
@@ -1018,14 +1025,15 @@ contains
 #endif
                                 enddo jj_loop
                             enddo ii_loop
-#ifdef par
-                        endif doWork
-#endif
-                    enddo m_loop
-                enddo n_loop 
+!#ifdef par
+!                        endif doWork
+!#endif
+                    !enddo m_loop
+                !enddo n_loop 
 
-            enddo j_loop
-        enddo i_loop 
+            !enddo j_loop
+        !enddo i_loop 
+        enddo workListLoop
 
 
         deallocate ( sigma_write )
