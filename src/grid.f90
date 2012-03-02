@@ -7,6 +7,16 @@ only: chebyshevX, chebyshevY, cosX, cosY
 
 implicit none
 
+! Define the workList type
+! ------------------------
+
+type :: workListEntry
+        integer :: i
+        integer :: j
+        integer :: m
+        integer :: n
+end type workListEntry
+
 
 ! Define the grid objects
 ! -----------------------
@@ -124,6 +134,9 @@ type :: gridBlock
         drzUrr, drzUrt, drzUrz, &
         drzUtr, drzUtt, drzUtz, &
         drzUzr, drzUzt, drzUzz
+
+    ! workList
+    type(workListEntry), allocatable :: wl(:)
 
 end type gridBlock
 

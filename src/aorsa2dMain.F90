@@ -216,6 +216,16 @@ program aorsa2dMain
     call labelPts ( allGrids, nPts_tot )
 
 
+!   Create workLists
+!   ----------------
+
+    do i=1,nGrid
+
+        call createWorkList ( allGrids(i) )
+
+    enddo
+
+
 !   Fill matrix 
 !   -----------
 

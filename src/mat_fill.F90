@@ -260,6 +260,99 @@ contains
     end subroutine amat_boundaries
 
 
+    subroutine createWorkList ( g )
+
+        use grid
+        use parallel
+        use aorsa2din_mod, &
+            only: npRow, npCol
+ 
+        implicit none
+
+        type(gridBlock), intent(inout) :: g
+
+        integer :: workListPosition, i, j, n, m
+        type(workListEntry) :: thisWorkList
+        type(workListEntry), allocatable :: workListTooLong(:)
+#ifdef par
+        integer :: iCol, iRow
+        !   scalapack indicies
+        !   see http://www.netlib.org/scalapack/slug/node76.html
+        integer :: l_sp, m_sp, pr_sp, pc_sp, x_sp, y_sp
+        integer :: pr_sp_thisPt(3), pc_sp_thisPt(3)
+#endif
+
+
+        ! Create a work list for this processor
+        ! -------------------------------------
+
+#ifndef par
+        allocate(g%wl(g%nR*g%nZ*g%nModesR*g%nModesZ))
+        workListPosition = 0
+
+        i_workList: &
+        do i=1,g%nR
+            j_workList: &
+            do j=1,g%nZ
+
+                n_workList: &
+                do n=g%nMin,g%nMax
+                    m_workList: &
+                    do m=g%mMin,g%mMax
+
+                        workListPosition = workListPosition + 1
+                        g%wl(workListPosition) = workListEntry(i,j,m,n)
+
+                    enddo m_workList
+                enddo n_workList
+
+            enddo j_workList
+        enddo i_workList
+#else
+        allocate(workListTooLong(nRowLocal*nColLocal))
+        workListPosition = 0
+
+        i_workList: &
+        do i=1,g%nR
+            j_workList: &
+            do j=1,g%nZ
+
+                iRow = (i-1) * 3 * g%nZ + (j-1) * 3 + 1
+                iRow = iRow + ( g%startRow-1 )
+
+                n_workList: &
+                do n=g%nMin,g%nMax
+                    m_workList: &
+                    do m=g%mMin,g%mMax
+
+                        iCol = (n-g%nMin) * 3 * g%nModesZ + (m-g%mMin) * 3 + 1
+                        iCol = iCol + ( g%startCol-1 )
+
+                        pr_sp_thisPt   = mod ( rowStartProc + (iRow-1+(/0,1,2/))/rowBlockSize, npRow )
+                        pc_sp_thisPt   = mod ( colStartProc + (iCol-1+(/0,1,2/))/colBlockSize, npCol )
+
+                        addToWorkList: &
+                        if ( any(pr_sp_thisPt==myRow) .and. any(pc_sp_thisPt==myCol) ) then
+
+                            workListPosition = workListPosition + 1
+                            thisWorkList = workListEntry(i,j,m,n)
+                            workListTooLong(workListPosition) = thisWorkList
+
+                        endif addToWorkList
+
+                    enddo m_workList
+                enddo n_workList
+
+            enddo j_workList
+        enddo i_workList
+
+        allocate(g%wl(workListPosition))
+        g%wl = workListTooLong(1:workListPosition)
+        deallocate(workListTooLong)
+#endif
+
+    end subroutine createWorkList
+
 
     subroutine amat_fill ( g )
 
@@ -298,7 +391,7 @@ contains
         complex :: bFn_iL, bFn_iR, bFn_i0, bFn_i1, bFn_i2, bFn_i3, bFn_i4, bFn_i5 
         real :: h1, h2, alpha
 
-        complex(kind=dbl) :: sigma_tmp(3,3), sigma_tmp_neg(3,3)
+        complex(kind=dbl) :: sigma_tmp(3,3), sigma_tmp_neg(3,3), sigmaHere(3,3)
         complex, allocatable :: sigma_write(:,:,:,:,:,:,:)
 
         integer :: nr, nz, iStat
@@ -342,16 +435,7 @@ contains
         integer :: pr_sp_thisPt(3), pc_sp_thisPt(3)
 #endif
 
-        type :: workListEntry
-                integer :: i
-                integer :: j
-                integer :: m
-                integer :: n
-        end type workListEntry
-
-        integer :: workListPosition, w
-        type(workListEntry) :: thisWorkList
-        type(workListEntry), allocatable :: wl(:), workListTooLong(:)
+        integer :: w
 
         metal   = ( 1e8,1e8 )
 
@@ -379,6 +463,8 @@ contains
         if(square) lsWeightFac = 1
 
 
+#if __sigma__ != 2
+
         ! Initialize grid sigma file
         ! --------------------------
 
@@ -404,15 +490,15 @@ contains
 
             do m=g%mMin,g%mMax
                 do n=g%nMin,g%nMax
-#ifndef par
-                !   progress indicator
-                !   ------------------
-                do p=1,7 
-                    write(*,'(a)',advance='no') char(8)
-                enddo
-                write(*,'(1x,f5.1,a)',advance='no') &
-                    real((m-g%mMin)*g%nR+(n-g%nMin))/(g%nR*g%nZ)*100, '%'
-#endif
+!#ifndef par
+!                !   progress indicator
+!                !   ------------------
+!                do p=1,7 
+!                    write(*,'(a)',advance='no') char(8)
+!                enddo
+!                write(*,'(1x,f5.1,a)',advance='no') &
+!                    real((m-g%mMin)*g%nR+(n-g%nMin))/(g%nR*g%nZ)*100, '%'
+!#endif
                     do j=1,g%nZ
                         do i=1,g%nR
 
@@ -507,61 +593,14 @@ contains
         if(iAm==0) &
         call close_sigma_file ( sigma_nc_id )
 
-
-        ! Create a work list for this processor
-        ! -------------------------------------
-
-        allocate(workListTooLong(nRowLocal*nColLocal))
-        workListPosition = 0
-
-        i_workList: &
-        do i=1,g%nR
-            j_workList: &
-            do j=1,g%nZ
-
-                iRow = (i-1) * 3 * g%nZ + (j-1) * 3 + 1
-                iRow = iRow + ( g%startRow-1 )
-
-                n_workList: &
-                do n=g%nMin,g%nMax
-                    m_workList: &
-                    do m=g%mMin,g%mMax
-
-                        iCol = (n-g%nMin) * 3 * g%nModesZ + (m-g%mMin) * 3 + 1
-                        iCol = iCol + ( g%startCol-1 )
-#ifdef par
-                        pr_sp_thisPt   = mod ( rowStartProc + (iRow-1+(/0,1,2/))/rowBlockSize, npRow )
-                        pc_sp_thisPt   = mod ( colStartProc + (iCol-1+(/0,1,2/))/colBlockSize, npCol )
-
-                        addToWorkList: &
-                        if ( any(pr_sp_thisPt==myRow) .and. any(pc_sp_thisPt==myCol) ) then
-#endif
-                            workListPosition = workListPosition + 1
-                            thisWorkList%i = i
-                            thisWorkList%j = j
-                            thisWorkList%m = m
-                            thisWorkList%n = n
-                            workListTooLong(workListPosition) = thisWorkList
-#ifdef par
-                        endif addToWorkList
-#endif
-                    enddo m_workList
-                enddo n_workList
-
-            enddo j_workList
-        enddo i_workList
-
-        allocate(wl(workListPosition))
-        wl = workListTooLong(1:workListPosition)
-        deallocate(workListTooLong)
-
-        write(*,*) 'Proc: ', iAm, '  number of wl: ', workListPosition
+#endif 
+! __sigma__ != 2
 
         ! Begin loop
         ! ----------
 
         workListLoop: &
-        do w=1,size(wl)
+        do w=1,size(g%wl)
 
         !i_loop: &
         !do i=1,g%nR
@@ -577,7 +616,7 @@ contains
             !j_loop: &
             !do j=1,g%nZ
 
-                iRow = (wl(w)%i-1) * 3 * g%nZ + (wl(w)%j-1) * 3 + 1
+                iRow = (g%wl(w)%i-1) * 3 * g%nZ + (g%wl(w)%j-1) * 3 + 1
                 iRow = iRow + ( g%startRow-1 )
 
                 !n_loop: &
@@ -585,7 +624,7 @@ contains
                     !m_loop: &
                     !do m=g%mMin,g%mMax
 
-                        iCol = (wl(w)%n-g%nMin) * 3 * g%nModesZ + (wl(w)%m-g%mMin) * 3 + 1
+                        iCol = (g%wl(w)%n-g%nMin) * 3 * g%nModesZ + (g%wl(w)%m-g%mMin) * 3 + 1
                         iCol = iCol + ( g%startCol-1 )
 !#ifdef par
 !                        pr_sp_thisPt   = mod ( rowStartProc + (iRow-1+(/0,1,2/))/rowBlockSize, npRow )
@@ -604,14 +643,14 @@ contains
                             sigPrlBet = 0.0
                             sigPrlPrl = 0.0
 
-                            z   = g%z(wl(w)%j)
-                            r   = g%R(wl(w)%i)
+                            z   = g%z(g%wl(w)%j)
+                            r   = g%R(g%wl(w)%i)
                             kt  = nPhi!g%kPhi(i)
 
-                            bFn = g%xx(wl(w)%n, wl(w)%i) * g%yy(wl(w)%m, wl(w)%j)
+                            bFn = g%xx(g%wl(w)%n, g%wl(w)%i) * g%yy(g%wl(w)%m, g%wl(w)%j)
 
         interior: &
-        if(g%label(wl(w)%i,wl(w)%j)==0)then
+        if(g%label(g%wl(w)%i,g%wl(w)%j)==0)then
 
 
                             !   interior plasma region:
@@ -628,23 +667,23 @@ contains
                             ! as the Fourier equiv.
 
                             if(chebyshevX) then
-                                if(wl(w)%n>1) then
-                                    kr = wl(w)%n / sqrt ( sin ( pi * (g%rNorm(wl(w)%i)+1)/2  ) ) * g%normFacR 
+                                if(g%wl(w)%n>1) then
+                                    kr = g%wl(w)%n / sqrt ( sin ( pi * (g%rNorm(g%wl(w)%i)+1)/2  ) ) * g%normFacR 
                                 else
-                                    kr = wl(w)%n * g%normFacR
+                                    kr = g%wl(w)%n * g%normFacR
                                 endif
                             else
-                                kr = wl(w)%n * g%normFacR
+                                kr = g%wl(w)%n * g%normFacR
                             endif
 
                             if(chebyshevY) then
-                                if(wl(w)%m>1) then
-                                    kz = wl(w)%m / sqrt ( sin ( pi * (g%zNorm(wl(w)%j)+1)/2 ) ) * g%normFacZ 
+                                if(g%wl(w)%m>1) then
+                                    kz = g%wl(w)%m / sqrt ( sin ( pi * (g%zNorm(g%wl(w)%j)+1)/2 ) ) * g%normFacZ 
                                 else
-                                    kz = wl(w)%m * g%normFacZ
+                                    kz = g%wl(w)%m * g%normFacZ
                                 endif
                             else
-                                kz = wl(w)%m * g%normFacZ
+                                kz = g%wl(w)%m * g%normFacZ
                             endif
 
 
@@ -667,26 +706,82 @@ contains
                             !    sigPrlPrl = metal 
 
                             !endif
+#if __sigma__ == 2
+                            sigmaHere = 0
 
+                            do s=1,nSpec
+
+                                hotPlasma:& 
+                                if (iSigma==1 .and. (.not. isMetal(g%wl(w)%i,g%wl(w)%j)) ) then        
+
+                                    kVec_stix = matMul( g%U_RTZ_to_ABb(g%wl(w)%i,g%wl(w)%j,:,:), &
+                                        (/ kr, g%kPhi(g%wl(w)%i), kz /) ) 
+
+                                    sigma_tmp = sigmaHot_maxwellian &
+                                        ( mSpec(s), &
+                                        g%ktSpec(g%wl(w)%i,g%wl(w)%j,s), &
+                                        g%omgc(g%wl(w)%i,g%wl(w)%j,s), &
+                                        g%omgp2(g%wl(w)%i,g%wl(w)%j,s), &
+                                        kVec_stix, g%R(g%wl(w)%i), &
+                                        omgrf, k0, &
+                                        g%k_cutoff, s, &
+                                        g%sinTh(g%wl(w)%i,g%wl(w)%j), &
+                                        g%bPol(g%wl(w)%i,g%wl(w)%j), g%bMag(g%wl(w)%i,g%wl(w)%j), &
+                                        g%gradPrlB(g%wl(w)%i,g%wl(w)%j), &
+                                        g%nuOmg(g%wl(w)%i,g%wl(w)%j) )
+
+                                endif hotPlasma
+
+                                coldPlasma: &
+                                if (iSigma==0 .and. (.not. isMetal(g%wl(w)%i,g%wl(w)%j)) ) then 
+
+                                    sigma_tmp = sigmaCold_stix &
+                                        ( g%omgc(g%wl(w)%i,g%wl(w)%j,s), &
+                                        g%omgp2(g%wl(w)%i,g%wl(w)%j,s), omgrf, &
+                                        g%nuOmg(g%wl(w)%i,g%wl(w)%j) )
+
+                                endif coldPlasma
+
+                                ! Sum sigma over species
+                                sigmaHere = sigmaHere + sigma_tmp
+
+                            enddo
+
+                            sigAlpAlp = sigmaHere(1,1)
+                            sigAlpBet = sigmaHere(1,2)
+                            sigAlpPrl = sigmaHere(1,3)
+                                             
+                            sigBetAlp = sigmaHere(2,1)
+                            sigBetBet = sigmaHere(2,2)
+                            sigBetPrl = sigmaHere(2,3)
+                                             
+                            sigPrlAlp = sigmaHere(3,1)
+                            sigPrlBet = sigmaHere(3,2)
+                            sigPrlPrl = sigmaHere(3,3)
+
+#else 
+! __sigma__ == 2
                             ! Sum sigma over species
                             ! ----------------------
                     
-                            sigAlpAlp = sum ( sigma_write(wl(w)%i,wl(w)%j,wl(w)%n,wl(w)%m,1,1,:) )
-                            sigAlpBet = sum ( sigma_write(wl(w)%i,wl(w)%j,wl(w)%n,wl(w)%m,1,2,:) )
-                            sigAlpPrl = sum ( sigma_write(wl(w)%i,wl(w)%j,wl(w)%n,wl(w)%m,1,3,:) )
+                            sigAlpAlp = sum ( sigma_write(g%wl(w)%i,g%wl(w)%j,g%wl(w)%n,g%wl(w)%m,1,1,:) )
+                            sigAlpBet = sum ( sigma_write(g%wl(w)%i,g%wl(w)%j,g%wl(w)%n,g%wl(w)%m,1,2,:) )
+                            sigAlpPrl = sum ( sigma_write(g%wl(w)%i,g%wl(w)%j,g%wl(w)%n,g%wl(w)%m,1,3,:) )
                                                                                         
-                            sigBetAlp = sum ( sigma_write(wl(w)%i,wl(w)%j,wl(w)%n,wl(w)%m,2,1,:) )
-                            sigBetBet = sum ( sigma_write(wl(w)%i,wl(w)%j,wl(w)%n,wl(w)%m,2,2,:) )
-                            sigBetPrl = sum ( sigma_write(wl(w)%i,wl(w)%j,wl(w)%n,wl(w)%m,2,3,:) )
+                            sigBetAlp = sum ( sigma_write(g%wl(w)%i,g%wl(w)%j,g%wl(w)%n,g%wl(w)%m,2,1,:) )
+                            sigBetBet = sum ( sigma_write(g%wl(w)%i,g%wl(w)%j,g%wl(w)%n,g%wl(w)%m,2,2,:) )
+                            sigBetPrl = sum ( sigma_write(g%wl(w)%i,g%wl(w)%j,g%wl(w)%n,g%wl(w)%m,2,3,:) )
                                                                                         
-                            sigPrlAlp = sum ( sigma_write(wl(w)%i,wl(w)%j,wl(w)%n,wl(w)%m,3,1,:) )
-                            sigPrlBet = sum ( sigma_write(wl(w)%i,wl(w)%j,wl(w)%n,wl(w)%m,3,2,:) )
-                            sigPrlPrl = sum ( sigma_write(wl(w)%i,wl(w)%j,wl(w)%n,wl(w)%m,3,3,:) )
+                            sigPrlAlp = sum ( sigma_write(g%wl(w)%i,g%wl(w)%j,g%wl(w)%n,g%wl(w)%m,3,1,:) )
+                            sigPrlBet = sum ( sigma_write(g%wl(w)%i,g%wl(w)%j,g%wl(w)%n,g%wl(w)%m,3,2,:) )
+                            sigPrlPrl = sum ( sigma_write(g%wl(w)%i,g%wl(w)%j,g%wl(w)%n,g%wl(w)%m,3,3,:) )
  
+#endif 
+! __sigma__ == 2
                             ! Metal
                             ! -----
 
-                            if (isMetal(wl(w)%i,wl(w)%j)) then 
+                            if (isMetal(g%wl(w)%i,g%wl(w)%j)) then 
 
                                 sigAlpAlp = metal 
                                 sigAlpBet = 0
@@ -714,86 +809,86 @@ contains
                             kPrlBet =       zi / (eps0 * omgrf) * sigPrlBet
                             kPrlPrl = 1.0 + zi / (eps0 * omgrf) * sigPrlPrl
 
-                            d%n = wl(w)%n
-                            d%m = wl(w)%m
-                            d%xNorm = g%rNorm(wl(w)%i)
-                            d%yNorm = g%zNorm(wl(w)%j)
+                            d%n = g%wl(w)%n
+                            d%m = g%wl(w)%m
+                            d%xNorm = g%rNorm(g%wl(w)%i)
+                            d%yNorm = g%zNorm(g%wl(w)%j)
                             d%normFacX = g%normFacR
                             d%normFacY = g%normFacZ
 
-                            Urr = g%Urr(wl(w)%i,wl(w)%j)
-                            Urt = g%Urt(wl(w)%i,wl(w)%j)
-                            Urz = g%Urz(wl(w)%i,wl(w)%j)
+                            Urr = g%Urr(g%wl(w)%i,g%wl(w)%j)
+                            Urt = g%Urt(g%wl(w)%i,g%wl(w)%j)
+                            Urz = g%Urz(g%wl(w)%i,g%wl(w)%j)
                                                       
-                            Utr = g%Utr(wl(w)%i,wl(w)%j)
-                            Utt = g%Utt(wl(w)%i,wl(w)%j)
-                            Utz = g%Utz(wl(w)%i,wl(w)%j)
+                            Utr = g%Utr(g%wl(w)%i,g%wl(w)%j)
+                            Utt = g%Utt(g%wl(w)%i,g%wl(w)%j)
+                            Utz = g%Utz(g%wl(w)%i,g%wl(w)%j)
                                                       
-                            Uzr = g%Uzr(wl(w)%i,wl(w)%j)
-                            Uzt = g%Uzt(wl(w)%i,wl(w)%j)
-                            Uzz = g%Uzz(wl(w)%i,wl(w)%j)
+                            Uzr = g%Uzr(g%wl(w)%i,g%wl(w)%j)
+                            Uzt = g%Uzt(g%wl(w)%i,g%wl(w)%j)
+                            Uzz = g%Uzz(g%wl(w)%i,g%wl(w)%j)
 
 
-                            drUrr = g%drUrr(wl(w)%i,wl(w)%j)
-                            drUrt = g%drUrt(wl(w)%i,wl(w)%j)
-                            drUrz = g%drUrz(wl(w)%i,wl(w)%j)
+                            drUrr = g%drUrr(g%wl(w)%i,g%wl(w)%j)
+                            drUrt = g%drUrt(g%wl(w)%i,g%wl(w)%j)
+                            drUrz = g%drUrz(g%wl(w)%i,g%wl(w)%j)
 
-                            drUtr = g%drUtr(wl(w)%i,wl(w)%j)
-                            drUtt = g%drUtt(wl(w)%i,wl(w)%j)
-                            drUtz = g%drUtz(wl(w)%i,wl(w)%j)
+                            drUtr = g%drUtr(g%wl(w)%i,g%wl(w)%j)
+                            drUtt = g%drUtt(g%wl(w)%i,g%wl(w)%j)
+                            drUtz = g%drUtz(g%wl(w)%i,g%wl(w)%j)
 
-                            drUzr = g%drUzr(wl(w)%i,wl(w)%j)
-                            drUzt = g%drUzt(wl(w)%i,wl(w)%j)
-                            drUzz = g%drUzz(wl(w)%i,wl(w)%j)
+                            drUzr = g%drUzr(g%wl(w)%i,g%wl(w)%j)
+                            drUzt = g%drUzt(g%wl(w)%i,g%wl(w)%j)
+                            drUzz = g%drUzz(g%wl(w)%i,g%wl(w)%j)
 
-                            dzUrr = g%dzUrr(wl(w)%i,wl(w)%j)
-                            dzUrt = g%dzUrt(wl(w)%i,wl(w)%j)
-                            dzUrz = g%dzUrz(wl(w)%i,wl(w)%j)
+                            dzUrr = g%dzUrr(g%wl(w)%i,g%wl(w)%j)
+                            dzUrt = g%dzUrt(g%wl(w)%i,g%wl(w)%j)
+                            dzUrz = g%dzUrz(g%wl(w)%i,g%wl(w)%j)
 
-                            dzUtr = g%dzUtr(wl(w)%i,wl(w)%j)
-                            dzUtt = g%dzUtt(wl(w)%i,wl(w)%j)
-                            dzUtz = g%dzUtz(wl(w)%i,wl(w)%j)
+                            dzUtr = g%dzUtr(g%wl(w)%i,g%wl(w)%j)
+                            dzUtt = g%dzUtt(g%wl(w)%i,g%wl(w)%j)
+                            dzUtz = g%dzUtz(g%wl(w)%i,g%wl(w)%j)
 
-                            dzUzr = g%dzUzr(wl(w)%i,wl(w)%j)
-                            dzUzt = g%dzUzt(wl(w)%i,wl(w)%j)
-                            dzUzz = g%dzUzz(wl(w)%i,wl(w)%j)
+                            dzUzr = g%dzUzr(g%wl(w)%i,g%wl(w)%j)
+                            dzUzt = g%dzUzt(g%wl(w)%i,g%wl(w)%j)
+                            dzUzz = g%dzUzz(g%wl(w)%i,g%wl(w)%j)
 
 
-                            drrUrr = g%drrUrr(wl(w)%i,wl(w)%j)
-                            drrUrt = g%drrUrt(wl(w)%i,wl(w)%j)
-                            drrUrz = g%drrUrz(wl(w)%i,wl(w)%j)
+                            drrUrr = g%drrUrr(g%wl(w)%i,g%wl(w)%j)
+                            drrUrt = g%drrUrt(g%wl(w)%i,g%wl(w)%j)
+                            drrUrz = g%drrUrz(g%wl(w)%i,g%wl(w)%j)
                             
-                            drrUtr = g%drrUtr(wl(w)%i,wl(w)%j)
-                            drrUtt = g%drrUtt(wl(w)%i,wl(w)%j)
-                            drrUtz = g%drrUtz(wl(w)%i,wl(w)%j)
+                            drrUtr = g%drrUtr(g%wl(w)%i,g%wl(w)%j)
+                            drrUtt = g%drrUtt(g%wl(w)%i,g%wl(w)%j)
+                            drrUtz = g%drrUtz(g%wl(w)%i,g%wl(w)%j)
 
-                            drrUzr = g%drrUzr(wl(w)%i,wl(w)%j)
-                            drrUzt = g%drrUzt(wl(w)%i,wl(w)%j)
-                            drrUzz = g%drrUzz(wl(w)%i,wl(w)%j)
+                            drrUzr = g%drrUzr(g%wl(w)%i,g%wl(w)%j)
+                            drrUzt = g%drrUzt(g%wl(w)%i,g%wl(w)%j)
+                            drrUzz = g%drrUzz(g%wl(w)%i,g%wl(w)%j)
 
-                            dzzUrr = g%dzzUrr(wl(w)%i,wl(w)%j)
-                            dzzUrt = g%dzzUrt(wl(w)%i,wl(w)%j)
-                            dzzUrz = g%dzzUrz(wl(w)%i,wl(w)%j)
+                            dzzUrr = g%dzzUrr(g%wl(w)%i,g%wl(w)%j)
+                            dzzUrt = g%dzzUrt(g%wl(w)%i,g%wl(w)%j)
+                            dzzUrz = g%dzzUrz(g%wl(w)%i,g%wl(w)%j)
                             
-                            dzzUtr = g%dzzUtr(wl(w)%i,wl(w)%j)
-                            dzzUtt = g%dzzUtt(wl(w)%i,wl(w)%j)
-                            dzzUtz = g%dzzUtz(wl(w)%i,wl(w)%j)
+                            dzzUtr = g%dzzUtr(g%wl(w)%i,g%wl(w)%j)
+                            dzzUtt = g%dzzUtt(g%wl(w)%i,g%wl(w)%j)
+                            dzzUtz = g%dzzUtz(g%wl(w)%i,g%wl(w)%j)
 
-                            dzzUzr = g%dzzUzr(wl(w)%i,wl(w)%j)
-                            dzzUzt = g%dzzUzt(wl(w)%i,wl(w)%j)
-                            dzzUzz = g%dzzUzz(wl(w)%i,wl(w)%j)
+                            dzzUzr = g%dzzUzr(g%wl(w)%i,g%wl(w)%j)
+                            dzzUzt = g%dzzUzt(g%wl(w)%i,g%wl(w)%j)
+                            dzzUzz = g%dzzUzz(g%wl(w)%i,g%wl(w)%j)
 
-                            drzUrr = g%drzUrr(wl(w)%i,wl(w)%j)
-                            drzUrt = g%drzUrt(wl(w)%i,wl(w)%j)
-                            drzUrz = g%drzUrz(wl(w)%i,wl(w)%j)
+                            drzUrr = g%drzUrr(g%wl(w)%i,g%wl(w)%j)
+                            drzUrt = g%drzUrt(g%wl(w)%i,g%wl(w)%j)
+                            drzUrz = g%drzUrz(g%wl(w)%i,g%wl(w)%j)
                             
-                            drzUtr = g%drzUtr(wl(w)%i,wl(w)%j)
-                            drzUtt = g%drzUtt(wl(w)%i,wl(w)%j)
-                            drzUtz = g%drzUtz(wl(w)%i,wl(w)%j)
+                            drzUtr = g%drzUtr(g%wl(w)%i,g%wl(w)%j)
+                            drzUtt = g%drzUtt(g%wl(w)%i,g%wl(w)%j)
+                            drzUtz = g%drzUtz(g%wl(w)%i,g%wl(w)%j)
 
-                            drzUzr = g%drzUzr(wl(w)%i,wl(w)%j)
-                            drzUzt = g%drzUzt(wl(w)%i,wl(w)%j)
-                            drzUzz = g%drzUzz(wl(w)%i,wl(w)%j)
+                            drzUzr = g%drzUzr(g%wl(w)%i,g%wl(w)%j)
+                            drzUzt = g%drzUzt(g%wl(w)%i,g%wl(w)%j)
+                            drzUzz = g%drzUzz(g%wl(w)%i,g%wl(w)%j)
 
 
         ! Matrix elements. See mathematica worksheet for calculation of 
@@ -928,7 +1023,7 @@ contains
                                         ! Interior points
                                         ! ---------------
 
-                                        if(g%label(wl(w)%i,wl(w)%j)==0) then 
+                                        if(g%label(g%wl(w)%i,g%wl(w)%j)==0) then 
 
                                             if (ii==0 .and. jj==0) aMat(localRow,localCol) = mat_r_alp * bFn  
                                             if (ii==0 .and. jj==1) aMat(localRow,localCol) = mat_r_bet * bFn   
@@ -948,7 +1043,7 @@ contains
                                         ! Outer boundary points
                                         ! ---------------------
 
-                                        if (g%label(wl(w)%i,wl(w)%j)==888) then
+                                        if (g%label(g%wl(w)%i,g%wl(w)%j)==888) then
                                             
                                             if (ii==0 .and. jj==0) aMat(localRow,localCol) = bFn * lsWeightFac 
                                             if (ii==0 .and. jj==1) aMat(localRow,localCol) = 0
@@ -964,7 +1059,7 @@ contains
 
                                         endif
 
-                                        if (g%label(wl(w)%i,wl(w)%j)==999) then
+                                        if (g%label(g%wl(w)%i,g%wl(w)%j)==999) then
 
                                             !iOL = 1+overlap
                                             !jOL = j
@@ -989,7 +1084,7 @@ contains
                                         ! Mesh-Mesh boundary for R bFn 
                                         ! ----------------------------
 
-                                        if (g%label(wl(w)%i,wl(w)%j)>=1 .and. g%label(wl(w)%i,wl(w)%j)<=20) then
+                                        if (g%label(g%wl(w)%i,g%wl(w)%j)>=1 .and. g%label(g%wl(w)%i,g%wl(w)%j)<=20) then
 
                                             !if(mod(g%label(i,j),2)==1) then 
                                             !    iOL = 1+overlap
@@ -1035,8 +1130,9 @@ contains
         !enddo i_loop 
         enddo workListLoop
 
-
+#if __sigma__ != 2
         deallocate ( sigma_write )
+#endif
 
         !if(iAm==0) then
         !write(*,*) 
