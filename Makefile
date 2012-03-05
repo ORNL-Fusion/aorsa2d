@@ -98,7 +98,7 @@ endif
 # --------------
 
 ifeq (${HOME},/global/homes/g/greendl1)
-	include Makefile.franklin
+	include Makefile.nersc
 endif
 
 ifeq (${HOME},/ccs/home/dg6)
