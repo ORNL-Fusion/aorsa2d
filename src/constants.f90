@@ -14,6 +14,6 @@ module constants
     complex, parameter :: zi = cmplx ( 0.0, 1.0 )
     real(kind=dbl), parameter :: mu0 = 1.2566370614d-06
     real(kind=dbl), parameter ::  clight = 299792458.0 
-
+    complex :: metal = ( 1e8,1e8 )
 
 end module constants

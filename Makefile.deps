@@ -121,4 +121,8 @@ ${OBJ_DIR}/rotateEToLab.o: \
 
 ${OBJ_DIR}/power.o: \
 		${OBJ_DIR}/read_data.o \
-		${OBJ_DIR}/sigma.o
+		${OBJ_DIR}/sigma.o \
+		${OBJ_DIR}/parallel.o \
+		${OBJ_DIR}/profiles.o \
+		${OBJ_DIR}/constants.o
+

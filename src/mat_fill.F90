@@ -331,6 +331,18 @@ contains
                         pr_sp_thisPt   = mod ( rowStartProc + (iRow-1+(/0,1,2/))/rowBlockSize, npRow )
                         pc_sp_thisPt   = mod ( colStartProc + (iCol-1+(/0,1,2/))/colBlockSize, npCol )
 
+                        ! Check to ensure each all 9 (3x3 vector elements)
+                        ! pieces of this workList element are on the SAME
+                        ! processor. i.e., There is NO overlap such that when
+                        ! calculating the current, we get doubling up. The
+                        ! following if test should return null IF the blocksize
+                        ! is a multiple of 3.
+
+                        if(pr_sp_thisPt(1) /= pr_sp_thisPt(2) .or. pr_sp_thisPt(1) /= pr_sp_thisPt(3) &
+                            .or. pc_sp_thisPt(1) /= pc_sp_thisPt(2) .or. pc_sp_thisPt(1) /= pc_sp_thisPt(3)) then
+                                write(*,*) pr_sp_thisPt, pc_sp_thisPt
+                        endif
+
                         addToWorkList: &
                         if ( any(pr_sp_thisPt==myRow) .and. any(pc_sp_thisPt==myCol) ) then
 
@@ -379,8 +391,6 @@ contains
         type(dBfnArg) :: d
         integer :: iRow, iCol, i, j, n, m, p, s, ii, jj, iOL, jOL
         integer :: localRow, localCol
-        complex :: metal
-        logical, allocatable :: isMetal(:,:)
         real :: kr, kt, kz, r, z, kVec_stix(3)
 
         complex :: &
@@ -437,28 +447,6 @@ contains
 
         integer :: w
 
-        metal   = ( 1e8,1e8 )
-
-
-        ! Set the metal regions
-        ! ---------------------
-
-        allocate (isMetal(g%nR,g%nZ))
-        isMetal = .false.
-
-        !if(useEqdsk)then
-        !where(g%rho>=0.99)
-        !        isMetal = .true.
-        !endwhere
-        !endif
-
-        do i=1,g%nR
-            do j=1,g%nZ
-                if ( g%R(i) < metalLeft .or. g%R(i) > metalRight &
-                        .or. g%Z(j) > metalTop .or. g%Z(j) < metalBot ) &
-                    isMetal(i,j) = .true.
-            enddo
-        enddo
 
         if(square) lsWeightFac = 1
 
@@ -524,7 +512,7 @@ contains
 
   
                             hotPlasma:& 
-                            if (iSigma==1 .and. (.not. isMetal(i,j)) ) then        
+                            if (iSigma==1 .and. (.not. g%isMetal(i,j)) ) then        
 
                                 kVec_stix = matMul( g%U_RTZ_to_ABb(i,j,:,:), (/ kr, g%kPhi(i), kz /) ) 
 
@@ -556,7 +544,7 @@ contains
 
 
                             coldPlasma: &
-                            if (iSigma==0 .and. (.not. isMetal(i,j)) ) then 
+                            if (iSigma==0 .and. (.not. g%isMetal(i,j)) ) then 
 
                                 sigma_tmp = sigmaCold_stix &
                                     ( g%omgc(i,j,s), g%omgp2(i,j,s), omgrf, &
@@ -712,7 +700,7 @@ contains
                             do s=1,nSpec
 
                                 hotPlasma:& 
-                                if (iSigma==1 .and. (.not. isMetal(g%wl(w)%i,g%wl(w)%j)) ) then        
+                                if (iSigma==1 .and. (.not. g%isMetal(g%wl(w)%i,g%wl(w)%j)) ) then        
 
                                     kVec_stix = matMul( g%U_RTZ_to_ABb(g%wl(w)%i,g%wl(w)%j,:,:), &
                                         (/ kr, g%kPhi(g%wl(w)%i), kz /) ) 
@@ -733,7 +721,7 @@ contains
                                 endif hotPlasma
 
                                 coldPlasma: &
-                                if (iSigma==0 .and. (.not. isMetal(g%wl(w)%i,g%wl(w)%j)) ) then 
+                                if (iSigma==0 .and. (.not. g%isMetal(g%wl(w)%i,g%wl(w)%j)) ) then 
 
                                     sigma_tmp = sigmaCold_stix &
                                         ( g%omgc(g%wl(w)%i,g%wl(w)%j,s), &
@@ -781,7 +769,7 @@ contains
                             ! Metal
                             ! -----
 
-                            if (isMetal(g%wl(w)%i,g%wl(w)%j)) then 
+                            if (g%isMetal(g%wl(w)%i,g%wl(w)%j)) then 
 
                                 sigAlpAlp = metal 
                                 sigAlpBet = 0

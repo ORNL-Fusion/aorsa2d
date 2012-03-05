@@ -633,6 +633,15 @@ pro ar2_plot_solution, full = full, $
 
 	endif else begin
 
+
+		nLevs = 11
+		scale = 40
+		levels = fIndGen(nLevs)/(nLevs-1)*scale
+		colors = reverse(bytScl(levels, top=253)+1)
+		c = contour ( jPAlpha[*,*,0], x, y, c_value=levels, rgb_indices=colors, rgb_table=3, /fill )
+		c = contour ( -jPAlpha[*,*,0], x, y, c_value=levels, rgb_indices=colors, rgb_table=1, /fill,/over )
+		stop
+
 		; Field contour plot
 		; ------------------
 

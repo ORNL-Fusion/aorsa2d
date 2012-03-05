@@ -7,9 +7,12 @@ subroutine current ( g )
     use grid
     use read_data
     use aorsa2din_mod, &
-        only: nSpec
+        only: nSpec, iSigma, fracOfModesInSolution
     use sigma_mod
     use parallel
+    use profiles, &
+        only: k0, omgrf, mSpec
+    use constants
 
     implicit none
    
@@ -20,13 +23,15 @@ subroutine current ( g )
     complex :: bFn
 
     integer :: i, j, n, m, iStat, s, w
-
-    real :: kr, kz
+    real :: kr, kz, kVec_stix(3)
+    complex, allocatable :: jAlphaTmp(:,:), jBetaTmp(:,:), jBTmp(:,:)
 
     allocate ( &
         g%jAlpha(g%nR,g%nZ,nSpec), &
         g%jBeta(g%nR,g%nZ,nSpec), &
         g%jB(g%nR,g%nZ,nSpec) )
+
+    allocate ( jAlphaTmp(g%nR,g%nZ), jBetaTmp(g%nR,g%nZ), jBTmp(g%nR,g%nZ) )
 
     g%jAlpha = 0
     g%jBeta = 0
@@ -54,8 +59,12 @@ subroutine current ( g )
 
         workList: &
         do w=1,size(g%wl)
-                        !write(*,*) i,j,n,m,s, sigma(i,j,n,m,:,1,s)
 
+            twoThirdsRule: &
+            if(g%wl(w)%m >= g%mMin*fracOfModesInSolution .and. g%wl(w)%m <= g%mMax*fracOfModesInSolution &
+                .and. g%wl(w)%n >= g%nMin*fracOfModesInSolution .and. g%wl(w)%n <= g%nMax*fracOfModesInSolution ) then
+
+            
                         bFn = g%xx(g%wl(w)%n,g%wl(w)%i) * g%yy(g%wl(w)%m,g%wl(w)%j)
                         !bFn = xBasis(n,g%rNorm(i)) * yBasis(m,g%zNorm(j))
 
@@ -63,7 +72,7 @@ subroutine current ( g )
                         ek_nm(2) = g%eBetak(g%wl(w)%n,g%wl(w)%m)
                         ek_nm(3) = g%eBk(g%wl(w)%n,g%wl(w)%m) 
 
-#if __sigma__ == 2
+#if __sigma__ != 2
                         thisSigma = sigma(g%wl(w)%i,g%wl(w)%j,g%wl(w)%n,g%wl(w)%m,:,:,s)
 #else
                         if(chebyshevX) then
@@ -88,7 +97,7 @@ subroutine current ( g )
 
 
                         hotPlasma:& 
-                        if (iSigma==1 .and. (.not. isMetal(g%wl(w)%i,g%wl(w)%j)) ) then        
+                        if (iSigma==1 .and. (.not. g%isMetal(g%wl(w)%i,g%wl(w)%j)) ) then        
 
                             kVec_stix = matMul( g%U_RTZ_to_ABb(g%wl(w)%i,g%wl(w)%j,:,:), &
                                 (/ kr, g%kPhi(g%wl(w)%i), kz /) ) 
@@ -109,7 +118,7 @@ subroutine current ( g )
                         endif hotPlasma
 
                         coldPlasma: &
-                        if (iSigma==0 .and. (.not. isMetal(g%wl(w)%i,g%wl(w)%j)) ) then 
+                        if (iSigma==0 .and. (.not. g%isMetal(g%wl(w)%i,g%wl(w)%j)) ) then 
 
                             thisSigma = sigmaCold_stix &
                                 ( g%omgc(g%wl(w)%i,g%wl(w)%j,s), &
@@ -117,6 +126,19 @@ subroutine current ( g )
                                 g%nuOmg(g%wl(w)%i,g%wl(w)%j) )
 
                         endif coldPlasma
+
+                        ! Metal
+                        ! -----
+
+                        if (g%isMetal(g%wl(w)%i,g%wl(w)%j)) then 
+
+                            thisSigma = 0
+                            thisSigma(1,1) = metal 
+                            thisSigma(2,2) = metal
+                            thisSigma(3,3) = metal
+
+                        endif
+
 #endif
                         jVec = matMul ( thisSigma, ek_nm ) 
 
@@ -144,24 +166,37 @@ subroutine current ( g )
         !    enddo
         !enddo
 
+            endif twoThirdsRule
+
         enddo workList
 
     enddo species
 #if __sigma__ != 2
     deallocate ( sigma )
 #else
+#ifdef par
 
-    ! Sum current from all processors
+    ! Switch to individual 2D arrays for the sum over processors
 
     do s=1,nSpec
-        call dGSUM2D ( iContext, 'All', ' ', g%nZ, g%nR, g%jAlpha(:,:,s), -1, 1 )
-        call dGSUM2D ( iContext, 'All', ' ', g%nZ, g%nR, g%jBeta(:,:,s), -1, 1 )
-        call dGSUM2D ( iContext, 'All', ' ', g%nZ, g%nR, g%jB(:,:,s), -1, 1 )
+
+        jAlphaTmp = g%jAlpha(:,:,s)
+        jBetaTmp = g%jBeta(:,:,s)
+        jBTmp = g%jB(:,:,s)
+
+        call cGSUM2D ( iContext, 'All', ' ', g%nR, g%nZ, jAlphaTmp, g%nR, -1, -1 )
+        call cGSUM2D ( iContext, 'All', ' ', g%nR, g%nZ, jBetaTmp, g%nR, -1, -1 )
+        call cGSUM2D ( iContext, 'All', ' ', g%nR, g%nZ, jBTmp, g%nR, -1, -1 )
+
+        call blacs_barrier ( iContext, 'All' ) 
+
+        g%jAlpha(:,:,s) = jAlphaTmp
+        g%jBeta(:,:,s) = jBetaTmp
+        g%jB(:,:,s) = jBTmp
+
     enddo
-
 #endif
-
-
+#endif
 
 end subroutine current 
 

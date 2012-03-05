@@ -25,6 +25,7 @@ implicit none
     logical :: noPoloidalField = .false.
     logical :: toroidalBroadening = .true.
     real :: kPrlEffLimit = 1e-08
+    real :: fracOfModesInSolution = 0.66
     integer :: nSpec = 2
     real :: r0 = 1.0
     real :: a = 1.0
@@ -472,7 +473,7 @@ implicit none
      &    chebyshevX, chebyshevY, magma, rhoAnt, antSigRho, toroidalBroadening,&
      &    kPrlEffLimit, nGrid, &
      &    nRAll, nZAll, rMinAll, rMaxAll, zMinAll, zMaxAll, &
-     &    overlap, parabolic, cosX, cosY, nZ_1D
+     &    overlap, parabolic, cosX, cosY, nZ_1D, fracOfModesInSolution
 
                 
 contains

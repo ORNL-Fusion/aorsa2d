@@ -31,8 +31,11 @@ contains
         rowBlockSize  = nRow / npRow
         colBlockSize  = nCol / npCol
 
-        if ( rowBlockSize >= 64 ) rowBlockSize = 64 
-        if ( colBlockSize >= 64 ) colBlockSize = 64 
+        ! Keep this a multiple of 3 such that each 3 rows of a spatial point
+        ! is confined to a single processor
+
+        if ( rowBlockSize >= 66 ) rowBlockSize = 66 
+        if ( colBlockSize >= 66 ) colBlockSize = 66 
 
         ! proc grid starting locations
 

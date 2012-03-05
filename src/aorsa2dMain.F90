@@ -374,13 +374,13 @@ program aorsa2dMain
     if (iAm==0) &
     write(*,*) 'Calculating plasma current'
 
-    if ( iAm == 0 ) then
+    !if ( iAm == 0 ) then
 
         do i=1,nGrid
             call current ( allGrids(i) )
         enddo
 
-    endif
+    !endif
 
 
 !   Rotation to Lab frame 

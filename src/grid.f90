@@ -42,6 +42,7 @@ type :: gridBlock
     real :: rMinIn, rMaxIn, zMinIn, zMaxIn
     real :: normFacR, normFacZ
     integer, allocatable :: label(:,:)
+    logical, allocatable :: isMetal(:,:)
     integer, allocatable :: neighbr_startRow(:,:),neighbr_startCol(:,:)
 
     ! Basis functions
@@ -163,9 +164,10 @@ contains
     function init_gridBlock ( nR, nZ, rMin, rMax, zMin, zMax ) result ( grid )
 
         use aorsa2din_mod, &
-        only : nPhi, xkPerp_cutOff, overlap, &
-        rMinAll, rMaxAll, zMinAll, zMaxAll, nGrid, &
-        nZ_1D
+            only : nPhi, xkPerp_cutOff, overlap, &
+            rMinAll, rMaxAll, zMinAll, zMaxAll, nGrid, &
+            nZ_1D, metalLeft, metalRight, metalTop, metalBot
+ 
         use parallel
 
         implicit none
@@ -413,6 +415,27 @@ contains
 
                     grid%dZBfn_bfn(m,j) = dzBfn_bfn(d)
 
+                enddo
+            enddo
+
+
+            ! Set the metal regions
+            ! ---------------------
+
+            allocate (grid%isMetal(grid%nR,grid%nZ))
+            grid%isMetal = .false.
+
+            !if(useEqdsk)then
+            !where(grid%rho>=0.99)
+            !        isMetal = .true.
+            !endwhere
+            !endif
+
+            do i=1,grid%nR
+                do j=1,grid%nZ
+                    if ( grid%R(i) < metalLeft .or. grid%R(i) > metalRight &
+                            .or. grid%Z(j) > metalTop .or. grid%Z(j) < metalBot ) &
+                        grid%isMetal(i,j) = .true.
                 enddo
             enddo
 

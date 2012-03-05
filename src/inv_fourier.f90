@@ -7,7 +7,7 @@ contains
     subroutine sftinv2d( g )
 
         use aorsa2din_mod, &
-        only: chebyshevX, chebyshevY, cosX, cosY
+        only: chebyshevX, chebyshevY, cosX, cosY, fracOfModesInSolution
         use grid
  
         implicit none
@@ -38,8 +38,8 @@ contains
             g%nS = g%nMin
             g%nF = g%nMax
         else
-            g%nS = g%nMin*2.0/3.0
-            g%nF = g%nMax*2.0/3.0
+            g%nS = g%nMin*fracOfModesInSolution
+            g%nF = g%nMax*fracOfModesInSolution
         endif
 
         if(chebyshevY)then
@@ -49,8 +49,8 @@ contains
             g%mS = g%mMin
             g%mF = g%mMax
         else
-            g%mS = g%mMin*2.0/3.0
-            g%mF = g%mMax*2.0/3.0
+            g%mS = g%mMin*fracOfModesInSolution
+            g%mF = g%mMax*fracOfModesInSolution
             if(g%nZ==1)then
                 g%mS = g%mMin
                 g%mF = g%mMax
