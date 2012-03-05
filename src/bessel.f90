@@ -998,12 +998,12 @@ contains
         complex z, exil, exilp
 
         mu = 4 * n**2
-        exil =  1d0 / csqrt(2d0 * pi * z) &
+        exil =  1d0 / sqrt(2d0 * pi * z) &
            * (1d0 &
            - (mu - 1)/(8d0 * z) &
            + (mu - 1) * (mu - 9) / (2d0 * (8d0 * z)**2) &
            - (mu - 1) * (mu - 9) * (mu - 25) / (6d0 * (8d0 * z)**3)  )
-        exilp = 1d0 / csqrt(2.0 * pi * z) &
+        exilp = 1d0 / sqrt(2.0 * pi * z) &
            * (1d0 &
            - (mu + 3)/(8d0 * z) &
            + (mu - 1) * (mu + 15) / (2d0 * (8d0 * z)**2) &

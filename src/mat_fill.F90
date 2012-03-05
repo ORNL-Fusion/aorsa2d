@@ -45,18 +45,20 @@ contains
 
         integer, intent(in) :: nPts_tot
 
-        write(*,*) '    nPts_tot: ', nPts_tot
 
 #ifdef par
 
-        if (iAm == 0) &
-        write(*,100), &
-            nPts_tot*3*nPts_tot*3*2*8.0 / 1024.0**2, &
-            nRowLocal*nColLocal*2*8.0 / 1024.0**2
-        100 format (' Filling aMat [global size: ',f8.1,' MB, local size: ',f8.1' MB]')
+        if (iAm == 0) then
+            write(*,*) '    nPts_tot: ', nPts_tot
+            write(*,100), &
+                nPts_tot*3*nPts_tot*3*2*8.0 / 1024.0**2, &
+                nRowLocal*nColLocal*2*8.0 / 1024.0**2
+            100 format (' Filling aMat [global size: ',f8.1,' MB, local size: ',f8.1' MB]')
+        endif
 
         allocate ( aMat(nRowLocal,nColLocal) )
 #else 
+        write(*,*) '    nPts_tot: ', nPts_tot
         write(*,100), &
             nPts_tot*3*nPts_tot*3*2*8.0 / 1024.0**2
         100 format (' Filling aMat [global size: ',f8.1,' MB]')
