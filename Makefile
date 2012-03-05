@@ -9,118 +9,89 @@ MOD_DIR = mod
 # objects
 # -------
 
-#OBJ_FILES := $(patsubst src/%,obj/%.o,$(basename $(wildcard src/*.*)))
 OBJ_FILES = $(wildcard obj/*.o)
 
 # libraries 
 # ---------
 
-BLAS = ${HOME}/code/goto_blas/libgoto2_gnu_4.3.2_64.a -pthread
-LAPACK = ${HOME}/code/lapack/lapack-3.1.1/lapack_LINUX.a 
+BLAS := ${HOME}/code/goto_blas/libgoto2_gnu_4.3.2_64.a -pthread
+LAPACK := ${HOME}/code/lapack/lapack-3.1.1/lapack_LINUX.a 
 HDF_DIR := ${HOME}/code/hdf/gnu_4.3.2
 HDF := -I ${HDF_DIR}/include -L ${HDF_DIR}/lib -lhdf5 -lhdf5_hl
-NETCDF_DIR = ${HOME}/code/netcdf/gnu_4.3.2
-NETCDF = -I ${NETCDF_DIR}/include -L ${NETCDF_DIR}/lib -lnetcdf -lnetcdff
+NETCDF_DIR := ${HOME}/code/netcdf/gnu_4.3.2
+NETCDF := -I ${NETCDF_DIR}/include -L ${NETCDF_DIR}/lib -lnetcdf -lnetcdff
+
+LIBS := ${HDF} ${NETCDF} ${BLAS} ${LAPACK}
+INC_DIR := 
+CPP_DIRECTIVES :=
+
+# set the mode to serial (PARALLEL=0) or parallel (=1)
+# --------------------------------------------
+PARALLEL := 1
+CPP_DIRECTIVES += -Dpar=${PARALLEL}
 BLACS = \
 	${HOME}/code/blacs/blacs_gnu64/LIB/blacs_MPI-LINUX-0.a \
 	${HOME}/code/blacs/blacs_gnu64/LIB/blacsF77init_MPI-LINUX-0.a \
 	${HOME}/code/blacs/blacs_gnu64/LIB/blacs_MPI-LINUX-0.a
 SCALAPACK = ${HOME}/code/scalapack/scalapack_gnu64/libscalapack.a
-PAPI_INC = -I/usr/include 
-PAPI = -lpapi
-CUDA_DIR = ${HOME}/code/cuda/4.0/cuda
-CUDA = -L ${CUDA_DIR}/lib64 -lcublas -lcudart -lcuda -L /usr/lib64
-MAGMA_DIR = ${HOME}/code/magma/magma_0.2
-MAGMA = -L ${MAGMA_DIR}/lib -lmagma -lmagmablas ${MAGMA_DIR}/lib/libmagma_64.a
-GPTL_DIR = #${HOME}/code/gptl
-GPTL = #-I ${GPTL_DIR}/include -L ${GPTL_DIR} -lgptl
+LIBS := ${SCALAPACK} ${BLACS} ${LIBS}
 
-# set the MODE to "serial" or "parallel"
-
-MODE = "parallel"
-
-# set solve precision to "single" or "double" 
-
-SOLVE_PREC = "double"
+# set solve precision to double 
+# -----------------------------
+CPP_DIRECTIVES += -Ddblprec 
 
 # set the coordinate system to an understandable 
-# cylindrical ("cylProper") or old version ("cylXYZ")
-
-COORDSYS = "cylProper"
+# cylindrical ("-DcylProper")  
+# ----------------------------------------------
+CPP_DIRECTIVES += -DcylProper
 
 # set the z function to use
 # either "zFunOriginal" or "zFunHammett"
+# --------------------------------------
+CPP_DIRECTIVES += -DzFunHammett 
 
-ZFUN = "zFunHammett"
-
-# use papi, set to "true" or "false"
-
-USEPAPI = "false"
+# use papi, set to "-Dusepapi"
+# ----------------------------
+#CPP_DIRECTIVES := -Dusepapi 
+#PAPI_INC = -I/usr/include 
+#PAPI = -lpapi
+#LIBS += ${PAPI}
+#INC_DIR += ${PAPI_INC}
 
 # use CUDA
+# --------
+#LIBS += #${MAGMA} ${CUDA} -lstdc++
+#CUDA_DIR = ${HOME}/code/cuda/4.0/cuda
+#CUDA = -L ${CUDA_DIR}/lib64 -lcublas -lcudart -lcuda -L /usr/lib64
+#MAGMA_DIR = ${HOME}/code/magma/magma_0.2
+#MAGMA = -L ${MAGMA_DIR}/lib -lmagma -lmagmablas ${MAGMA_DIR}/lib/libmagma_64.a
 
-USECUDA = "false"
+# caculate sigma as part of the fill (=2) or standalone with file write (=1)
+# --------------------------------------------------------------------------
+CPP_DIRECTIVES += -D__sigma__=2
 
-# caculate sigma as part of the fill ("infill") or standalone with file write ("standalone")
-
-SIGMA = -D__sigma__=2
-
-# the order of linking libs is important
-
-LIBS = ${HDF} ${NETCDF}
-INC_DIR = 
-
-
-# pre-processor directives
-# ------------------------
-
-ifeq (${MODE},"parallel")
-	CPP_DIRECTIVES = -Dpar
-	LIBS += ${SCALAPACK} ${BLACS} ${BLAS} ${LAPACK}
-else
-	LIBS += ${LAPACK} ${BLAS}
-endif
-
-ifeq (${SOLVE_PREC},"double")
-	CPP_DIRECTIVES := -Ddblprec ${CPP_DIRECTIVES}
-endif
-
-ifeq (${COORDSYS},"cylProper")
-	CPP_DIRECTIVES := -DcylProper ${CPP_DIRECTIVES}
-endif
-
-ifeq (${ZFUN},"zFunHammett")
-	CPP_DIRECTIVES := -DzFunHammett ${CPP_DIRECTIVES}
-endif
-
-ifeq (${USEPAPI},"true")
-	CPP_DIRECTIVES := -Dusepapi ${CPP_DIRECTIVES}
-	LIBS += ${PAPI}
-	INC_DIR += ${PAPI_INC}
-endif
-
-CPP_DIRECTIVES += ${SIGMA}
-
-ifeq (${USECUDA},"true")
-	LIBS += ${MAGMA} ${CUDA} -lstdc++
-endif
+# GPTL
+# ----
+#GPTL_DIR = #${HOME}/code/gptl
+#GPTL = #-I ${GPTL_DIR}/include -L ${GPTL_DIR} -lgptl
 
 
 # compile flags
 # -------------
 
 FORMAT := -ffree-line-length-none
-BOUNDS = -fbounds-check 
-WARN = -Wall
-DEBUG = -pg -g -fbacktrace -fsignaling-nans -ffpe-trap=zero,invalid#,overflow#,underflow
-OPTIMIZATION = #-O3
-DOUBLE = -fdefault-real-8
-ifeq (${MODE},"parallel")
+BOUNDS := -fbounds-check 
+WARN := -Wall
+DEBUG := -pg -g -fbacktrace -fsignaling-nans -ffpe-trap=zero,invalid#,overflow#,underflow
+OPTIMIZATION := #-O3
+DOUBLE := -fdefault-real-8
+MOD_LOC := -Jmod
+
+ifeq (${PARALLEL},1)
 	F90 = mpif90
 else
 	F90 = gfortran
 endif
-MOD_LOC = -Jmod
 
 
 # other machines
