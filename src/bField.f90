@@ -41,11 +41,13 @@ contains
                             rhoHere = g%rho(i,j) )  
 
                g%bR_unit(i,j) = bHere(1) / g%bMag(i,j)
-               g%bT_unit(i,j) = bHere(3) / g%bMag(i,j)
-               g%bZ_unit(i,j) = bHere(2) / g%bMag(i,j)
+               g%bT_unit(i,j) = bHere(2) / g%bMag(i,j)
+               g%bZ_unit(i,j) = bHere(3) / g%bMag(i,j)
 
+                !write(*,*) g%bMag(i,j), bHere, g%bR_unit(i,j), g%bT_unit(i,j), g%bZ_unit(i,j) 
             enddo
         enddo
+
 
         r0  = rmaxis__
 

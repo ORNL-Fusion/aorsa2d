@@ -1,4 +1,4 @@
-pro plot_rundata
+pro ar2_plot_rundata
 
 	fileList = file_search ( 'runData*.nc' )
 

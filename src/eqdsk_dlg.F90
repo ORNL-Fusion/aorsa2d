@@ -106,7 +106,7 @@ contains
                 bz__(i,j)  = -bz__(i,j) / r(i)
             enddo
         enddo
-       
+        
         allocate ( temp(4*nw), fpolRZ(nw,nh), yp_c(nw) ) 
 
         !   force the fluxGrid to have an ascending order
@@ -138,6 +138,7 @@ contains
 
                 end do
             end do
+
 
             rhoNorm = ( psizr - siMag ) / ( siBry - siMag )
             if(all(rhoNorm>=0)) then
@@ -186,10 +187,6 @@ contains
         endif
 
         bMag__    = sqrt ( bR**2 + bPhi**2 + bz__**2 )
-
-#if DEBUG > 0
-        write(*,*) bMag__
-#endif
 
     end subroutine read_geqdsk
 
