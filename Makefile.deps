@@ -17,13 +17,20 @@ ${AORSA2D}: \
 		${OBJ_DIR}/solve.o \
 		${OBJ_DIR}/timer.o \
 		${OBJ_DIR}/rotateEToLab.o \
-		${OBJ_DIR}/power.o
+		${OBJ_DIR}/power.o \
+		${OBJ_DIR}/setMetal.o
 
 ${OBJ_DIR}/eqdsk_dlg.o: \
 		${OBJ_DIR}/dlg.o \
 		${OBJ_DIR}/fitpack.o \
 		${OBJ_DIR}/grid.o \
-		${OBJ_DIR}/aorsa2din_mod.o
+		${OBJ_DIR}/aorsa2din_mod.o \
+		${OBJ_DIR}/parallel.o
+
+${OBJ_DIR}/setMetal.o: \
+		${OBJ_DIR}/aorsa2din_mod.o \
+		${OBJ_DIR}/grid.o \
+		${OBJ_DIR}/eqdsk_dlg.o
 
 ${OBJ_DIR}/sigma.o: \
 		${OBJ_DIR}/bessel.o \

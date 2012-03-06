@@ -166,8 +166,7 @@ contains
         use aorsa2din_mod, &
             only : nPhi, xkPerp_cutOff, overlap, &
             rMinAll, rMaxAll, zMinAll, zMaxAll, nGrid, &
-            nZ_1D, metalLeft, metalRight, metalTop, metalBot
- 
+            nZ_1D
         use parallel
 
         implicit none
@@ -419,27 +418,7 @@ contains
             enddo
 
 
-            ! Set the metal regions
-            ! ---------------------
-
-            allocate (grid%isMetal(grid%nR,grid%nZ))
-            grid%isMetal = .false.
-
-            !if(useEqdsk)then
-            !where(grid%rho>=0.99)
-            !        isMetal = .true.
-            !endwhere
-            !endif
-
-            do i=1,grid%nR
-                do j=1,grid%nZ
-                    if ( grid%R(i) < metalLeft .or. grid%R(i) > metalRight &
-                            .or. grid%Z(j) > metalTop .or. grid%Z(j) < metalBot ) &
-                        grid%isMetal(i,j) = .true.
-                enddo
-            enddo
-
-
+            
     end function init_gridBlock
 
 

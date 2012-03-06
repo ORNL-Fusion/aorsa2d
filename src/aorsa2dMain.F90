@@ -17,6 +17,7 @@ program aorsa2dMain
     use timer_mod
     use E_to_lab
     use power
+    use setMetal
 
     implicit none
 
@@ -66,9 +67,6 @@ program aorsa2dMain
 
 !   initialise the parallel env
 !   ---------------------------
-
-    if (iAm==0) &
-    write(*,*) 'Initialising the parallel environment'
 
     nPts_tot = sum ( nRAll(1:nGrid)*nZAll(1:nGrid) )
 
@@ -120,6 +118,13 @@ program aorsa2dMain
             call bFieldAnalytical ( allGrids(i) )
         endif
 
+    enddo
+
+!   define the metal regions
+!   ------------------------
+
+    do i=1,nGrid
+        call setMetalRegions( allGrids(i) )
     enddo
 
 

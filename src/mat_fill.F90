@@ -374,8 +374,7 @@ contains
         only: &
             delta0, nSpec, &
             iSigma, npRow, npCol, &
-            metalLeft, metalRight, &
-            metalTop, metalBot, nPhi, square, lsWeightFac, &
+            nPhi, square, lsWeightFac, &
             useEqdsk, overlap
         use grid
         use sigma_mod

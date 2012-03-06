@@ -26,8 +26,13 @@ contains
         use dlg
         use fitpack
         use aorsa2din_mod, &
-        only: noPoloidalField
- 
+            only: noPoloidalField
+#ifdef par 
+        use parallel, only: iAm
+#define MSG(X) if (iAm==0) write(*,*) X 
+#else
+#define MSG(X) write(*,*) X
+#endif
         implicit none
         
         integer :: i, j, iErr
@@ -35,11 +40,6 @@ contains
         logical, intent(IN), optional :: plot
         real, allocatable :: yp(:), xp(:), temp(:), ss(:), yp_c(:)
         real :: spl1 = 0.0, spln = 0.0, t, sigma = 0.0
-
-        !!   Plotting variables
-    
-        !integer :: nLevs
-        !real :: levStep, lev
 
         !   Read in variables from geqdsk file
 
@@ -64,7 +64,7 @@ contains
         read ( 8, 2020 ) ( qpsi (i), i=1, nw ) 
         
         read ( 8, 2022 ) nbbbs,limitr 
-        
+       
         allocate ( rbbbs ( nbbbs ), zbbbs ( nbbbs ), &
             rlim__ ( limitr ), zlim ( limitr ) )
         
@@ -111,7 +111,7 @@ contains
 
         !   force the fluxGrid to have an ascending order
         if ( .not. ascending_flux ) then
-            write(*,*) 'NOTE:  Reversing the flux grid for curv1 (PERHAPS AN ITER EQDSK?)'
+            MSG('NOTE:  Reversing the flux grid for curv1 (PERHAPS AN ITER EQDSK?)')
             do i=1,nw 
                 fluxGrid_(i)    = fluxGrid(nw-i+1)
                 fpol_(i)    = fpol(nw-i+1)
