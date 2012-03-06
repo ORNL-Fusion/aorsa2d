@@ -27,14 +27,14 @@ CPP_DIRECTIVES :=
 
 # set the mode to serial (PARALLEL=0) or parallel (=1)
 # --------------------------------------------
-PARALLEL := 0
-CPP_DIRECTIVES += #-Dpar=${PARALLEL}
+PARALLEL := 1
 BLACS = \
 	${HOME}/code/blacs/blacs_gnu64/LIB/blacs_MPI-LINUX-0.a \
 	${HOME}/code/blacs/blacs_gnu64/LIB/blacsF77init_MPI-LINUX-0.a \
 	${HOME}/code/blacs/blacs_gnu64/LIB/blacs_MPI-LINUX-0.a
 SCALAPACK = ${HOME}/code/scalapack/scalapack_gnu64/libscalapack.a
 ifeq (${PARALLEL},1)
+    CPP_DIRECTIVES += -Dpar
 	LIBS := ${SCALAPACK} ${BLACS} ${LIBS}
 endif
 
