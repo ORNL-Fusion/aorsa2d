@@ -38,6 +38,10 @@ ${OBJ_DIR}/sigma.o: \
 		${OBJ_DIR}/aorsa2din_mod.o \
 		${OBJ_DIR}/constants.o
 
+${OBJ_DIR}/sigmaInputGeneration.o: \
+		${OBJ_DIR}/grid.o \
+		${OBJ_DIR}/sigma.o
+
 ${OBJ_DIR}/zfunHammett.o: \
 		${OBJ_DIR}/constants.o \
 		${OBJ_DIR}/z_erfc.o
