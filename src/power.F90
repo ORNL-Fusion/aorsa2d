@@ -26,6 +26,8 @@ subroutine current ( g )
     real :: kr, kz, kVec_stix(3)
     complex, allocatable :: jAlphaTmp(:,:), jBetaTmp(:,:), jBTmp(:,:)
 
+    type(spatialSigmaInput_cold) :: sigmaIn_cold
+
     allocate ( &
         g%jAlpha(g%nR,g%nZ,nSpec), &
         g%jBeta(g%nR,g%nZ,nSpec), &
@@ -120,10 +122,18 @@ subroutine current ( g )
                         coldPlasma: &
                         if (iSigma==0 .and. (.not. g%isMetal(g%wl(w)%i,g%wl(w)%j)) ) then 
 
-                            thisSigma = sigmaCold_stix &
-                                ( g%omgc(g%wl(w)%i,g%wl(w)%j,s), &
-                                g%omgp2(g%wl(w)%i,g%wl(w)%j,s), omgrf, &
+                            sigmaIn_cold = spatialSigmaInput_cold( &
+                                g%omgc(g%wl(w)%i,g%wl(w)%j,s), &
+                                g%omgp2(g%wl(w)%i,g%wl(w)%j,s), &
+                                omgrf, &
                                 g%nuOmg(g%wl(w)%i,g%wl(w)%j) )
+
+                            !thisSigma = sigmaCold_stix &
+                            !    ( g%omgc(g%wl(w)%i,g%wl(w)%j,s), &
+                            !    g%omgp2(g%wl(w)%i,g%wl(w)%j,s), omgrf, &
+                            !    g%nuOmg(g%wl(w)%i,g%wl(w)%j) )
+                            thisSigma = sigmaCold_stix ( sigmaIn_cold )
+
 
                         endif coldPlasma
 

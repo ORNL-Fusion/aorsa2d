@@ -3,6 +3,17 @@
 
 module sigma_mod
 
+use constants
+
+type :: spatialSigmaInput_cold
+
+        real(kind=dbl) :: omgc
+        real(kind=dbl) :: omgp2
+        real :: omgrf
+        real :: nuOmg
+
+end type spatialSigmaInput_cold
+
 contains
 
     function sigmaHot_maxwellian( &
@@ -242,8 +253,9 @@ contains
     end function sigmaHot_maxwellian
 
 
-    function sigmaCold_stix &
-        ( omgC, omgP2, omgRF, nuOmg )
+!    function sigmaCold_stix &
+!        ( omgC, omgP2, omgRF, nuOmg )
+    function sigmaCold_stix ( a )
 
         use constants 
 
@@ -253,8 +265,9 @@ contains
 
         implicit none
 
-        real(kind=dbl), intent(in) :: omgc, omgp2, omgrf
-        real, intent(in) :: nuOmg
+        !real(kind=dbl), intent(in) :: omgc, omgp2, omgrf
+        !real, intent(in) :: nuOmg
+        type(spatialSigmaInput_cold) :: a 
 
         complex :: omgrfc
         complex :: sig1, sig2, sig3
@@ -262,11 +275,11 @@ contains
         complex :: zieps0
 
         zieps0 = zi * eps0
-        omgRFc = omgRF * (1.0 + zi * nuOmg)
+        omgRFc = a%omgRF * (1.0 + zi * a%nuOmg)
 
-        sig1 = zieps0 * omgRFc * omgP2 / (omgRFc**2 - omgC**2)
-        sig2 = eps0 * omgC   * omgP2 / (omgC**2 - omgRFc**2)
-        sig3 = zieps0 * omgp2 / omgRFc
+        sig1 = zieps0 * omgRFc * a%omgP2 / (omgRFc**2 - a%omgC**2)
+        sig2 = eps0 * a%omgC   * a%omgP2 / (a%omgC**2 - omgRFc**2)
+        sig3 = zieps0 * a%omgp2 / omgRFc
 
         sigmaCold_stix(1,1) = sig1 
         sigmaCold_stix(1,2) = sig2 

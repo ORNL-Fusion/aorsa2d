@@ -3,7 +3,8 @@ module grid
 use constants
 use chebyshev_mod
 use aorsa2din_mod, &
-only: chebyshevX, chebyshevY, cosX, cosY
+    only: chebyshevX, chebyshevY, cosX, cosY
+use sigma_mod, only: spatialSigmaInput_cold
 
 implicit none
 
@@ -16,7 +17,6 @@ type :: workListEntry
         integer :: m
         integer :: n
 end type workListEntry
-
 
 ! Define the grid objects
 ! -----------------------
@@ -138,6 +138,10 @@ type :: gridBlock
 
     ! workList
     type(workListEntry), allocatable :: wl(:)
+
+    ! anti-alias extra points list
+    !type(spatialSigmaInput_cold), allocatable :: aaExtaPoints(:,:)
+
 
 end type gridBlock
 
