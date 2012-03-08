@@ -5,7 +5,7 @@ contains
     subroutine setMetalRegions ( g )
 
         use grid
-        use aorsa2din_mod, only : &
+        use aorsaNamelist, only : &
             metalLeft, metalRight, metalTop, metalBot, &
             limiter_boundary, useEqdsk
         use eqdsk_dlg, only: is_inside_lim

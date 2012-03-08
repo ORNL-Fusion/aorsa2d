@@ -1,4 +1,4 @@
-module aorsa2din_mod
+module aorsaNamelist
       
 implicit none
 
@@ -496,5 +496,5 @@ contains
 
     end subroutine read_namelist
 
-end module aorsa2din_mod
+end module aorsaNamelist
 

@@ -11,6 +11,7 @@ module interp
         zp_bR(:), zp_bPhi(:), zp_bz(:), zp_psi(:), zp_rho(:)
     real :: sigma = 0.0
 
+    
 contains
 
     subroutine init_interp ()

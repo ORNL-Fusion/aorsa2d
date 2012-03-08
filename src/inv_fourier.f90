@@ -6,7 +6,7 @@ contains
 
     subroutine sftinv2d( g )
 
-        use aorsa2din_mod, &
+        use aorsaNamelist, &
         only: chebyshevX, chebyshevY, cosX, cosY, fracOfModesInSolution
         use grid
  

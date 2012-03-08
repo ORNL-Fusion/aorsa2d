@@ -7,7 +7,7 @@ subroutine rotate_E_to_lab ( g )
     use solve
     use rotation
     use grid
-    use aorsa2din_mod, &
+    use aorsaNamelist, &
     only: nSpec
 
     implicit none

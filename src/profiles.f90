@@ -17,7 +17,7 @@ contains
 
     subroutine init_profiles ( )
 
-        use aorsa2din_mod, &
+        use aorsaNamelist, &
         only: freqcy, nSpec, zSpecIn, amuSpecIn, &
             tSpecIn, dSpecIn, tLimIn, dLimIn, &
             dAlphaIn, dBetaIn, tAlphaIn, tBetaIn
@@ -57,7 +57,7 @@ contains
 
     subroutine flat_profiles ( g, parabolic )
 
-        use aorsa2din_mod, &
+        use aorsaNamelist, &
         only: nSpec, xNuOmg, r0, a
         use bField
         use grid
@@ -154,7 +154,7 @@ contains
 
     subroutine circular_profiles ( g )
 
-        use aorsa2din_mod, &
+        use aorsaNamelist, &
         only: nSpec, xNuOmgOutside, a, r0, xNuOmg
         use bField
         use parallel
@@ -213,7 +213,7 @@ contains
     
     subroutine flux_profiles ( g )
 
-        use aorsa2din_mod, &
+        use aorsaNamelist, &
         only: nSpec, xNuOmgOutside, xNuOmg
         use bField
         use parallel
@@ -346,7 +346,7 @@ contains
     
     subroutine omega_freqs ( g )
 
-        use aorsa2din_mod, &
+        use aorsaNamelist, &
         only: nSpec
         use bField
         use grid

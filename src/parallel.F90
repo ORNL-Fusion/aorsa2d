@@ -14,7 +14,7 @@ contains
 
     subroutine init_procGrid ( nPts_tot )
 
-        use aorsa2din_mod, &
+        use aorsaNamelist, &
         only: npRow, npCol
 
         implicit none
@@ -102,7 +102,7 @@ contains
 
     subroutine init_parallel_aMat ()
 
-        use aorsa2din_mod, &
+        use aorsaNamelist, &
         only: npRow, npCol
 
         implicit none

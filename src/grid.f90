@@ -2,9 +2,9 @@ module grid
 
 use constants
 use chebyshev_mod
-use aorsa2din_mod, &
+use aorsaNamelist, &
     only: chebyshevX, chebyshevY, cosX, cosY
-use sigma_mod, only: spatialSigmaInput_cold
+use sigma, only: spatialSigmaInput_cold
 
 implicit none
 
@@ -139,9 +139,12 @@ type :: gridBlock
     ! workList
     type(workListEntry), allocatable :: wl(:)
 
-    ! anti-alias extra points list
-    !type(spatialSigmaInput_cold), allocatable :: aaExtaPoints(:,:)
-
+    ! plasma parameter interpolation splines
+    real :: interpSigma = 0.0
+    real, allocatable :: &
+        spline_omgC(:,:), &
+        spline_omgP2(:,:), &
+        spline_nuOmg(:)
 
 end type gridBlock
 
@@ -167,7 +170,7 @@ contains
 
     function init_gridBlock ( nR, nZ, rMin, rMax, zMin, zMax ) result ( grid )
 
-        use aorsa2din_mod, &
+        use aorsaNamelist, &
             only : nPhi, xkPerp_cutOff, overlap, &
             rMinAll, rMaxAll, zMinAll, zMaxAll, nGrid, &
             nZ_1D
@@ -432,7 +435,7 @@ contains
 
     subroutine labelPts ( gAll, nPts_tot )
 
-        use aorsa2din_mod, &
+        use aorsaNamelist, &
         only: rMinAll, rMaxAll, zMinAll, zMaxAll, nGrid, overlap
 
         implicit none

@@ -8,7 +8,7 @@ contains
 
     subroutine solve_lsq ()
 
-        use aorsa2din_mod, &
+        use aorsaNamelist, &
         only: square, magma
         use mat_fill, &
         only: aMat!, aMat_
@@ -129,7 +129,7 @@ contains
 
     subroutine solve_lsq_parallel ()
 
-        use aorsa2din_mod, &
+        use aorsaNamelist, &
         only: npRow, npCol, square
         use mat_fill, &
         only: aMat
@@ -266,7 +266,7 @@ contains
 
     subroutine gather_coeffs ()
 
-        use aorsa2din_mod, &
+        use aorsaNamelist, &
         only: npRow, npCol
         use antenna, &
         only: brhs, brhs_global

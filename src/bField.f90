@@ -13,7 +13,7 @@ contains
 
     subroutine bFieldEqdsk ( g )
 
-        use aorsa2din_mod, &
+        use aorsaNamelist, &
         only: r0
         use grid
         use interp
@@ -71,7 +71,7 @@ contains
 
     subroutine bFieldAnalytical ( g )
 
-        use aorsa2din_mod, &
+        use aorsaNamelist, &
         only: r0, b0, &
             bx_frac, by_frac, noPoloidalField
         use grid
@@ -125,7 +125,7 @@ contains
 
     subroutine bFieldCircular ( g )
 
-        use aorsa2din_mod, &
+        use aorsaNamelist, &
         only: r0, b0, a, &
             rhoScale, rhoWidth, rhoPower, bPol_frac, noPoloidalField
         use grid
@@ -189,7 +189,7 @@ contains
 
     subroutine soloviev ( g )
 
-        use aorsa2din_mod, &
+        use aorsaNamelist, &
         only: eKappa, r0, b0, a, q0, psiExp, &
             noPoloidalField
         use grid

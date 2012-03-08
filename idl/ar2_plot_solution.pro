@@ -635,7 +635,7 @@ pro ar2_plot_solution, full = full, $
 
 
 		nLevs = 11
-		scale = 5 
+		scale = 100 
 		levels = fIndGen(nLevs)/(nLevs-1)*scale
 		colors = reverse(bytScl(levels, top=253)+1)
 		c = contour ( jPAlpha[*,*,0], x, y, c_value=levels, rgb_indices=colors, rgb_table=3, /fill, aspect_ratio=1.0 )

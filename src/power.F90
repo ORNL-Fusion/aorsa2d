@@ -6,9 +6,9 @@ subroutine current ( g )
 
     use grid
     use read_data
-    use aorsa2din_mod, &
+    use aorsaNamelist, &
         only: nSpec, iSigma, fracOfModesInSolution
-    use sigma_mod
+    use sigma
     use parallel
     use profiles, &
         only: k0, omgrf, mSpec
@@ -18,7 +18,7 @@ subroutine current ( g )
    
     type(gridBlock), intent(inout) :: g 
 
-    complex, allocatable :: sigma(:,:,:,:,:,:,:)
+    complex, allocatable :: sigmaAll(:,:,:,:,:,:,:)
     complex :: ek_nm(3), jVec(3), thisSigma(3,3)
     complex :: bFn
 
@@ -48,7 +48,7 @@ subroutine current ( g )
             stop
     endif 
 
-    call read_sigma ( 'sigma'//g%fNumber//'.nc', sigma = sigma ) 
+    call read_sigma ( 'sigma'//g%fNumber//'.nc', sigma = sigmaAll ) 
 #endif
 
     species: &
@@ -75,7 +75,7 @@ subroutine current ( g )
                         ek_nm(3) = g%eBk(g%wl(w)%n,g%wl(w)%m) 
 
 #if __sigma__ != 2
-                        thisSigma = sigma(g%wl(w)%i,g%wl(w)%j,g%wl(w)%n,g%wl(w)%m,:,:,s)
+                        thisSigma = sigmaAll(g%wl(w)%i,g%wl(w)%j,g%wl(w)%n,g%wl(w)%m,:,:,s)
 #else
                         if(chebyshevX) then
                             if(g%wl(w)%n>1) then
@@ -182,7 +182,7 @@ subroutine current ( g )
 
     enddo species
 #if __sigma__ != 2
-    deallocate ( sigma )
+    deallocate ( sigmaAll )
 #else
 #ifdef par
 
@@ -214,7 +214,7 @@ end subroutine current
 subroutine jDotE ( g )
 
     use grid
-    use aorsa2din_mod, &
+    use aorsaNamelist, &
     only: nSpec
 
     implicit none

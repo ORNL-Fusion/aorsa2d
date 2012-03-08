@@ -76,7 +76,7 @@ contains
 
         use grid
         use antenna
-        use aorsa2din_mod, &
+        use aorsaNamelist, &
         only: overlap
         use spline_dlg
 
@@ -265,7 +265,7 @@ contains
 
         use grid
         use parallel
-        use aorsa2din_mod, &
+        use aorsaNamelist, &
             only: npRow, npCol
  
         implicit none
@@ -369,13 +369,13 @@ contains
 
     subroutine amat_fill ( g )
 
-        use aorsa2din_mod, only: &
+        use aorsaNamelist, only: &
             delta0, nSpec, &
             iSigma, npRow, npCol, &
             nPhi, square, lsWeightFac, &
             useEqdsk, overlap
         use grid
-        use sigma_mod
+        use sigma
         use rotation
         use profiles
         use bField
@@ -636,7 +636,17 @@ contains
 
                             bFn = g%xx(g%wl(w)%n, g%wl(w)%i) * g%yy(g%wl(w)%m, g%wl(w)%j)
 
-                            mat3by3Block = get3by3Block ( g, w)
+                            ! This is where the anti-aliasing will go. i.e.,
+                            ! call this multiple times and average the result.
+                            ! REMEMBER that the "bfn" multiplication will have
+                            ! to come up here into the average too. No problem
+                            ! though.
+                            interior: &
+                            if(g%label(g%wl(w)%i,g%wl(w)%j)==0)then
+
+                                mat3by3Block = get3by3Block ( g, w, g%r(g%wl(w)%i), g%z(g%wl(w)%j) )
+
+                            endif interior
 
                             ii_loop: &
                             do ii=0,2

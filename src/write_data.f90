@@ -7,7 +7,7 @@ contains
 
     subroutine write_runData ( g )
  
-        use aorsa2din_mod, &
+        use aorsaNamelist, &
         only: nSpec, nPhi, freqcy
         use bField
         use grid
@@ -233,7 +233,7 @@ contains
     subroutine write_solution ( g )
 
         use grid
-        use aorsa2din_mod, &
+        use aorsaNamelist, &
         only: nSpec
 
         implicit none

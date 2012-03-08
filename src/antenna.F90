@@ -36,7 +36,7 @@ contains
 
     subroutine init_brhs ( g )
 
-        use aorsa2din_mod, &
+        use aorsaNamelist, &
         only: rAnt, zAnt, npRow, npCol, &
             antSigX, antSigY, &
             metalLeft, metalRight, metalTop, metalBot, &

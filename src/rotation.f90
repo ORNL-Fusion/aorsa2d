@@ -91,7 +91,7 @@ contains
 
     subroutine deriv_rotation ( g )
 
-        use aorsa2din_mod, &
+        use aorsaNamelist, &
         only: nZFUn, r0
         use grid
         use derivatives 

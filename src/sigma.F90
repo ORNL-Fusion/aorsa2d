@@ -1,14 +1,14 @@
 #define ERROR(string) write(*,'(/,a,a,/,a,a,a,i5)') \
     "Error: ", string, "In ",__FILE__,":", __LINE__ ;stop
 
-module sigma_mod
+module sigma
 
 use constants
 
 type :: spatialSigmaInput_cold
 
-        real(kind=dbl) :: omgc
-        real(kind=dbl) :: omgp2
+        real(kind=dbl) :: omgC
+        real(kind=dbl) :: omgP2
         real :: omgrf
         real :: nuOmg
 
@@ -25,7 +25,7 @@ contains
 
         use constants
         use zfunction_mod
-        use aorsa2din_mod, &
+        use aorsaNamelist, &
         only: upshift, nzfun, damping, lmax, &
             nPhi, delta0, toroidalBroadening, &
             kPrlEffLimit
@@ -297,4 +297,4 @@ contains
 
     end function sigmaCold_stix
 
-end module sigma_mod
+end module sigma

@@ -25,7 +25,7 @@ contains
 
         use dlg
         use fitpack
-        use aorsa2din_mod, &
+        use aorsaNamelist, &
             only: noPoloidalField
 #ifdef par 
         use parallel, only: iAm
@@ -310,7 +310,7 @@ contains
 
     function is_inside_domain ( rIn, zIn )
 
-        use aorsa2din_mod, only: rwLeft, rwRight, yTop, yBot
+        use aorsaNamelist, only: rwLeft, rwRight, yTop, yBot
 
         implicit none
         logical :: is_inside_domain

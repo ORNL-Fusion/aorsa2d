@@ -2,7 +2,7 @@ program aorsa2dMain
    
     use constants
     use eqdsk_dlg
-    use aorsa2din_mod
+    use aorsaNamelist
     use inv_fourier
     use write_data
     use grid
@@ -18,6 +18,7 @@ program aorsa2dMain
     use E_to_lab
     use power
     use setMetal
+    use sigmaInputGeneration
 
     implicit none
 
@@ -146,6 +147,16 @@ program aorsa2dMain
         else
             call flat_profiles ( allGrids(i), parabolic = parabolic )
         endif
+
+    enddo
+
+
+!   Setup the plasma paraemter splines for sigma input
+!   --------------------------------------------------
+
+    do i=1,nGrid
+
+        call setupSigmaParameterSplines ( allGrids(i) )
 
     enddo
 
