@@ -171,14 +171,14 @@ function get3by3Block( g, w, r, z)
             coldPlasma: &
             if (iSigma==0 .and. (.not. g%isMetal(g%wl(w)%i,g%wl(w)%j)) ) then 
 
-                !sigmaIn_cold = spatialSigmaInput_cold( &
-                !    g%omgc(g%wl(w)%i,g%wl(w)%j,s), &
-                !    g%omgp2(g%wl(w)%i,g%wl(w)%j,s), &
-                !    omgrf, &
-                !    g%nuOmg(g%wl(w)%i,g%wl(w)%j) )
+                sigmaIn_cold = spatialSigmaInput_cold( &
+                    g%omgc(g%wl(w)%i,g%wl(w)%j,s), &
+                    g%omgp2(g%wl(w)%i,g%wl(w)%j,s), &
+                    omgrf, &
+                    g%nuOmg(g%wl(w)%i,g%wl(w)%j) )
 
                 !sigmaIn_cold = getSigmaInputHere ( g%r(g%wl(w)%i), g%z(g%wl(w)%j), g, s )
-                sigmaIn_cold = getSigmaInputHere ( r, z, g, s )
+                !sigmaIn_cold = getSigmaInputHere ( r, z, g, s )
 
                 !sigma_tmp = sigmaCold_stix &
                 !    ( g%omgc(g%wl(w)%i,g%wl(w)%j,s), &
@@ -229,10 +229,9 @@ function get3by3Block( g, w, r, z)
         ! Metal
         ! -----
 
-        !if (g%isMetal(g%wl(w)%i,g%wl(w)%j)) then 
-        if (biLinearInterp(r,z,g,g%isMetal)>0.5) then 
+        if (g%isMetal(g%wl(w)%i,g%wl(w)%j)) then 
+        !if (biLinearInterp(r,z,g,g%isMetal)>0.5) then 
 
-                write(*,*) 'METAL'
             sigAlpAlp = metal 
             sigAlpBet = 0
             sigAlpPrl = 0 
@@ -270,149 +269,149 @@ function get3by3Block( g, w, r, z)
         d%normFacX = g%normFacR
         d%normFacY = g%normFacZ
 
-        !Urr = g%Urr(g%wl(w)%i,g%wl(w)%j)
-        !Urt = g%Urt(g%wl(w)%i,g%wl(w)%j)
-        !Urz = g%Urz(g%wl(w)%i,g%wl(w)%j)
-        !
-        !Utr = g%Utr(g%wl(w)%i,g%wl(w)%j)
-        !Utt = g%Utt(g%wl(w)%i,g%wl(w)%j)
-        !Utz = g%Utz(g%wl(w)%i,g%wl(w)%j)
-        !                          
-        !Uzr = g%Uzr(g%wl(w)%i,g%wl(w)%j)
-        !Uzt = g%Uzt(g%wl(w)%i,g%wl(w)%j)
-        !Uzz = g%Uzz(g%wl(w)%i,g%wl(w)%j)
-
-        Urr = biLinearInterp(r,z,g,g%Urr)
-        Urt = biLinearInterp(r,z,g,g%Urt)
-        Urz = biLinearInterp(r,z,g,g%Urz)
-
-        Utr = biLinearInterp(r,z,g,g%Utr)
-        Utt = biLinearInterp(r,z,g,g%Utt)
-        Utz = biLinearInterp(r,z,g,g%Utz)
-
-        Uzr = biLinearInterp(r,z,g,g%Uzr)
-        Uzt = biLinearInterp(r,z,g,g%Uzt)
-        Uzz = biLinearInterp(r,z,g,g%Uzz)
-
-        !drUrr = g%drUrr(g%wl(w)%i,g%wl(w)%j)
-        !drUrt = g%drUrt(g%wl(w)%i,g%wl(w)%j)
-        !drUrz = g%drUrz(g%wl(w)%i,g%wl(w)%j)
-
-        !drUtr = g%drUtr(g%wl(w)%i,g%wl(w)%j)
-        !drUtt = g%drUtt(g%wl(w)%i,g%wl(w)%j)
-        !drUtz = g%drUtz(g%wl(w)%i,g%wl(w)%j)
-
-        !drUzr = g%drUzr(g%wl(w)%i,g%wl(w)%j)
-        !drUzt = g%drUzt(g%wl(w)%i,g%wl(w)%j)
-        !drUzz = g%drUzz(g%wl(w)%i,g%wl(w)%j)
-
-        drUrr = biLinearInterp(r,z,g,g%drUrr)
-        drUrt = biLinearInterp(r,z,g,g%drUrt)
-        drUrz = biLinearInterp(r,z,g,g%drUrz)
-
-        drUtr = biLinearInterp(r,z,g,g%drUtr)
-        drUtt = biLinearInterp(r,z,g,g%drUtt)
-        drUtz = biLinearInterp(r,z,g,g%drUtz)
-
-        drUzr = biLinearInterp(r,z,g,g%drUzr)
-        drUzt = biLinearInterp(r,z,g,g%drUzt)
-        drUzz = biLinearInterp(r,z,g,g%drUzz)
-
-        !dzUrr = g%dzUrr(g%wl(w)%i,g%wl(w)%j)
-        !dzUrt = g%dzUrt(g%wl(w)%i,g%wl(w)%j)
-        !dzUrz = g%dzUrz(g%wl(w)%i,g%wl(w)%j)
-
-        !dzUtr = g%dzUtr(g%wl(w)%i,g%wl(w)%j)
-        !dzUtt = g%dzUtt(g%wl(w)%i,g%wl(w)%j)
-        !dzUtz = g%dzUtz(g%wl(w)%i,g%wl(w)%j)
-
-        !dzUzr = g%dzUzr(g%wl(w)%i,g%wl(w)%j)
-        !dzUzt = g%dzUzt(g%wl(w)%i,g%wl(w)%j)
-        !dzUzz = g%dzUzz(g%wl(w)%i,g%wl(w)%j)
-
-        dzUrr = biLinearInterp(r,z,g,g%dzUrr)
-        dzUrt = biLinearInterp(r,z,g,g%dzUrt)
-        dzUrz = biLinearInterp(r,z,g,g%dzUrz)
-
-        dzUtr = biLinearInterp(r,z,g,g%dzUtr)
-        dzUtt = biLinearInterp(r,z,g,g%dzUtt)
-        dzUtz = biLinearInterp(r,z,g,g%dzUtz)
-
-        dzUzr = biLinearInterp(r,z,g,g%dzUzr)
-        dzUzt = biLinearInterp(r,z,g,g%dzUzt)
-        dzUzz = biLinearInterp(r,z,g,g%dzUzz)
-
-        !drrUrr = g%drrUrr(g%wl(w)%i,g%wl(w)%j)
-        !drrUrt = g%drrUrt(g%wl(w)%i,g%wl(w)%j)
-        !drrUrz = g%drrUrz(g%wl(w)%i,g%wl(w)%j)
-
-        !drrUtr = g%drrUtr(g%wl(w)%i,g%wl(w)%j)
-        !drrUtt = g%drrUtt(g%wl(w)%i,g%wl(w)%j)
-        !drrUtz = g%drrUtz(g%wl(w)%i,g%wl(w)%j)
-
-        !drrUzr = g%drrUzr(g%wl(w)%i,g%wl(w)%j)
-        !drrUzt = g%drrUzt(g%wl(w)%i,g%wl(w)%j)
-        !drrUzz = g%drrUzz(g%wl(w)%i,g%wl(w)%j)
-
-        drrUrr = biLinearInterp(r,z,g,g%drrUrr)
-        drrUrt = biLinearInterp(r,z,g,g%drrUrt)
-        drrUrz = biLinearInterp(r,z,g,g%drrUrz)
-
-        drrUtr = biLinearInterp(r,z,g,g%drrUtr)
-        drrUtt = biLinearInterp(r,z,g,g%drrUtt)
-        drrUtz = biLinearInterp(r,z,g,g%drrUtz)
+        Urr = g%Urr(g%wl(w)%i,g%wl(w)%j)
+        Urt = g%Urt(g%wl(w)%i,g%wl(w)%j)
+        Urz = g%Urz(g%wl(w)%i,g%wl(w)%j)
         
-        drrUzr = biLinearInterp(r,z,g,g%drrUzr)
-        drrUzt = biLinearInterp(r,z,g,g%drrUzt)
-        drrUzz = biLinearInterp(r,z,g,g%drrUzz)
+        Utr = g%Utr(g%wl(w)%i,g%wl(w)%j)
+        Utt = g%Utt(g%wl(w)%i,g%wl(w)%j)
+        Utz = g%Utz(g%wl(w)%i,g%wl(w)%j)
+                                  
+        Uzr = g%Uzr(g%wl(w)%i,g%wl(w)%j)
+        Uzt = g%Uzt(g%wl(w)%i,g%wl(w)%j)
+        Uzz = g%Uzz(g%wl(w)%i,g%wl(w)%j)
+
+        !Urr = biLinearInterp(r,z,g,g%Urr)
+        !Urt = biLinearInterp(r,z,g,g%Urt)
+        !Urz = biLinearInterp(r,z,g,g%Urz)
+
+        !Utr = biLinearInterp(r,z,g,g%Utr)
+        !Utt = biLinearInterp(r,z,g,g%Utt)
+        !Utz = biLinearInterp(r,z,g,g%Utz)
+
+        !Uzr = biLinearInterp(r,z,g,g%Uzr)
+        !Uzt = biLinearInterp(r,z,g,g%Uzt)
+        !Uzz = biLinearInterp(r,z,g,g%Uzz)
+
+        drUrr = g%drUrr(g%wl(w)%i,g%wl(w)%j)
+        drUrt = g%drUrt(g%wl(w)%i,g%wl(w)%j)
+        drUrz = g%drUrz(g%wl(w)%i,g%wl(w)%j)
+
+        drUtr = g%drUtr(g%wl(w)%i,g%wl(w)%j)
+        drUtt = g%drUtt(g%wl(w)%i,g%wl(w)%j)
+        drUtz = g%drUtz(g%wl(w)%i,g%wl(w)%j)
+
+        drUzr = g%drUzr(g%wl(w)%i,g%wl(w)%j)
+        drUzt = g%drUzt(g%wl(w)%i,g%wl(w)%j)
+        drUzz = g%drUzz(g%wl(w)%i,g%wl(w)%j)
+
+        !drUrr = biLinearInterp(r,z,g,g%drUrr)
+        !drUrt = biLinearInterp(r,z,g,g%drUrt)
+        !drUrz = biLinearInterp(r,z,g,g%drUrz)
+
+        !drUtr = biLinearInterp(r,z,g,g%drUtr)
+        !drUtt = biLinearInterp(r,z,g,g%drUtt)
+        !drUtz = biLinearInterp(r,z,g,g%drUtz)
+
+        !drUzr = biLinearInterp(r,z,g,g%drUzr)
+        !drUzt = biLinearInterp(r,z,g,g%drUzt)
+        !drUzz = biLinearInterp(r,z,g,g%drUzz)
+
+        dzUrr = g%dzUrr(g%wl(w)%i,g%wl(w)%j)
+        dzUrt = g%dzUrt(g%wl(w)%i,g%wl(w)%j)
+        dzUrz = g%dzUrz(g%wl(w)%i,g%wl(w)%j)
+
+        dzUtr = g%dzUtr(g%wl(w)%i,g%wl(w)%j)
+        dzUtt = g%dzUtt(g%wl(w)%i,g%wl(w)%j)
+        dzUtz = g%dzUtz(g%wl(w)%i,g%wl(w)%j)
+
+        dzUzr = g%dzUzr(g%wl(w)%i,g%wl(w)%j)
+        dzUzt = g%dzUzt(g%wl(w)%i,g%wl(w)%j)
+        dzUzz = g%dzUzz(g%wl(w)%i,g%wl(w)%j)
+
+        !dzUrr = biLinearInterp(r,z,g,g%dzUrr)
+        !dzUrt = biLinearInterp(r,z,g,g%dzUrt)
+        !dzUrz = biLinearInterp(r,z,g,g%dzUrz)
+
+        !dzUtr = biLinearInterp(r,z,g,g%dzUtr)
+        !dzUtt = biLinearInterp(r,z,g,g%dzUtt)
+        !dzUtz = biLinearInterp(r,z,g,g%dzUtz)
+
+        !dzUzr = biLinearInterp(r,z,g,g%dzUzr)
+        !dzUzt = biLinearInterp(r,z,g,g%dzUzt)
+        !dzUzz = biLinearInterp(r,z,g,g%dzUzz)
+
+        drrUrr = g%drrUrr(g%wl(w)%i,g%wl(w)%j)
+        drrUrt = g%drrUrt(g%wl(w)%i,g%wl(w)%j)
+        drrUrz = g%drrUrz(g%wl(w)%i,g%wl(w)%j)
+
+        drrUtr = g%drrUtr(g%wl(w)%i,g%wl(w)%j)
+        drrUtt = g%drrUtt(g%wl(w)%i,g%wl(w)%j)
+        drrUtz = g%drrUtz(g%wl(w)%i,g%wl(w)%j)
+
+        drrUzr = g%drrUzr(g%wl(w)%i,g%wl(w)%j)
+        drrUzt = g%drrUzt(g%wl(w)%i,g%wl(w)%j)
+        drrUzz = g%drrUzz(g%wl(w)%i,g%wl(w)%j)
+
+        !drrUrr = biLinearInterp(r,z,g,g%drrUrr)
+        !drrUrt = biLinearInterp(r,z,g,g%drrUrt)
+        !drrUrz = biLinearInterp(r,z,g,g%drrUrz)
+
+        !drrUtr = biLinearInterp(r,z,g,g%drrUtr)
+        !drrUtt = biLinearInterp(r,z,g,g%drrUtt)
+        !drrUtz = biLinearInterp(r,z,g,g%drrUtz)
+        !
+        !drrUzr = biLinearInterp(r,z,g,g%drrUzr)
+        !drrUzt = biLinearInterp(r,z,g,g%drrUzt)
+        !drrUzz = biLinearInterp(r,z,g,g%drrUzz)
    
-        !dzzUrr = g%dzzUrr(g%wl(w)%i,g%wl(w)%j)
-        !dzzUrt = g%dzzUrt(g%wl(w)%i,g%wl(w)%j)
-        !dzzUrz = g%dzzUrz(g%wl(w)%i,g%wl(w)%j)
-        !
-        !dzzUtr = g%dzzUtr(g%wl(w)%i,g%wl(w)%j)
-        !dzzUtt = g%dzzUtt(g%wl(w)%i,g%wl(w)%j)
-        !dzzUtz = g%dzzUtz(g%wl(w)%i,g%wl(w)%j)
-
-        !dzzUzr = g%dzzUzr(g%wl(w)%i,g%wl(w)%j)
-        !dzzUzt = g%dzzUzt(g%wl(w)%i,g%wl(w)%j)
-        !dzzUzz = g%dzzUzz(g%wl(w)%i,g%wl(w)%j)
-
-        dzzUrr = biLinearInterp(r,z,g,g%dzzUrr)
-        dzzUrt = biLinearInterp(r,z,g,g%dzzUrt)
-        dzzUrz = biLinearInterp(r,z,g,g%dzzUrz)
-
-        dzzUtr = biLinearInterp(r,z,g,g%dzzUtr)
-        dzzUtt = biLinearInterp(r,z,g,g%dzzUtt)
-        dzzUtz = biLinearInterp(r,z,g,g%dzzUtz)
+        dzzUrr = g%dzzUrr(g%wl(w)%i,g%wl(w)%j)
+        dzzUrt = g%dzzUrt(g%wl(w)%i,g%wl(w)%j)
+        dzzUrz = g%dzzUrz(g%wl(w)%i,g%wl(w)%j)
         
-        dzzUzr = biLinearInterp(r,z,g,g%dzzUzr)
-        dzzUzt = biLinearInterp(r,z,g,g%dzzUzt)
-        dzzUzz = biLinearInterp(r,z,g,g%dzzUzz)
+        dzzUtr = g%dzzUtr(g%wl(w)%i,g%wl(w)%j)
+        dzzUtt = g%dzzUtt(g%wl(w)%i,g%wl(w)%j)
+        dzzUtz = g%dzzUtz(g%wl(w)%i,g%wl(w)%j)
+
+        dzzUzr = g%dzzUzr(g%wl(w)%i,g%wl(w)%j)
+        dzzUzt = g%dzzUzt(g%wl(w)%i,g%wl(w)%j)
+        dzzUzz = g%dzzUzz(g%wl(w)%i,g%wl(w)%j)
+
+        !dzzUrr = biLinearInterp(r,z,g,g%dzzUrr)
+        !dzzUrt = biLinearInterp(r,z,g,g%dzzUrt)
+        !dzzUrz = biLinearInterp(r,z,g,g%dzzUrz)
+
+        !dzzUtr = biLinearInterp(r,z,g,g%dzzUtr)
+        !dzzUtt = biLinearInterp(r,z,g,g%dzzUtt)
+        !dzzUtz = biLinearInterp(r,z,g,g%dzzUtz)
+        !
+        !dzzUzr = biLinearInterp(r,z,g,g%dzzUzr)
+        !dzzUzt = biLinearInterp(r,z,g,g%dzzUzt)
+        !dzzUzz = biLinearInterp(r,z,g,g%dzzUzz)
  
-        !drzUrr = g%drzUrr(g%wl(w)%i,g%wl(w)%j)
-        !drzUrt = g%drzUrt(g%wl(w)%i,g%wl(w)%j)
-        !drzUrz = g%drzUrz(g%wl(w)%i,g%wl(w)%j)
-        !
-        !drzUtr = g%drzUtr(g%wl(w)%i,g%wl(w)%j)
-        !drzUtt = g%drzUtt(g%wl(w)%i,g%wl(w)%j)
-        !drzUtz = g%drzUtz(g%wl(w)%i,g%wl(w)%j)
-
-        !drzUzr = g%drzUzr(g%wl(w)%i,g%wl(w)%j)
-        !drzUzt = g%drzUzt(g%wl(w)%i,g%wl(w)%j)
-        !drzUzz = g%drzUzz(g%wl(w)%i,g%wl(w)%j)
-
-        drzUrr = biLinearInterp(r,z,g,g%drzUrr)
-        drzUrt = biLinearInterp(r,z,g,g%drzUrt)
-        drzUrz = biLinearInterp(r,z,g,g%drzUrz)
-
-        drzUtr = biLinearInterp(r,z,g,g%drzUtr)
-        drzUtt = biLinearInterp(r,z,g,g%drzUtt)
-        drzUtz = biLinearInterp(r,z,g,g%drzUtz)
+        drzUrr = g%drzUrr(g%wl(w)%i,g%wl(w)%j)
+        drzUrt = g%drzUrt(g%wl(w)%i,g%wl(w)%j)
+        drzUrz = g%drzUrz(g%wl(w)%i,g%wl(w)%j)
         
-        drzUzr = biLinearInterp(r,z,g,g%drzUzr)
-        drzUzt = biLinearInterp(r,z,g,g%drzUzt)
-        drzUzz = biLinearInterp(r,z,g,g%drzUzz)
+        drzUtr = g%drzUtr(g%wl(w)%i,g%wl(w)%j)
+        drzUtt = g%drzUtt(g%wl(w)%i,g%wl(w)%j)
+        drzUtz = g%drzUtz(g%wl(w)%i,g%wl(w)%j)
+
+        drzUzr = g%drzUzr(g%wl(w)%i,g%wl(w)%j)
+        drzUzt = g%drzUzt(g%wl(w)%i,g%wl(w)%j)
+        drzUzz = g%drzUzz(g%wl(w)%i,g%wl(w)%j)
+
+        !drzUrr = biLinearInterp(r,z,g,g%drzUrr)
+        !drzUrt = biLinearInterp(r,z,g,g%drzUrt)
+        !drzUrz = biLinearInterp(r,z,g,g%drzUrz)
+
+        !drzUtr = biLinearInterp(r,z,g,g%drzUtr)
+        !drzUtt = biLinearInterp(r,z,g,g%drzUtt)
+        !drzUtz = biLinearInterp(r,z,g,g%drzUtz)
+        !
+        !drzUzr = biLinearInterp(r,z,g,g%drzUzr)
+        !drzUzt = biLinearInterp(r,z,g,g%drzUzt)
+        !drzUzz = biLinearInterp(r,z,g,g%drzUzz)
  
 
         ! Matrix elements. See mathematica worksheet for calculation of 

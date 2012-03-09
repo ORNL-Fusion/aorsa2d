@@ -449,6 +449,9 @@ contains
 #endif
 
         integer :: w
+        integer :: aa
+        real :: aa_rPts(4), aa_zPts(4)
+
 
         if(square) lsWeightFac = 1
 
@@ -640,11 +643,27 @@ contains
                             ! call this multiple times and average the result.
                             ! REMEMBER that the "bfn" multiplication will have
                             ! to come up here into the average too. No problem
-                            ! though.
+                            ! though. Or will it?
+
                             interior: &
                             if(g%label(g%wl(w)%i,g%wl(w)%j)==0)then
+   
+                                !mat3by3Block = 0 
 
-                                mat3by3Block = get3by3Block ( g, w, g%r(g%wl(w)%i), g%z(g%wl(w)%j) )
+                                !aa_rPts = (/-0.5,0.5,0.5,-0.5 /)*(g%r(2)-g%r(1))+g%r(g%wl(w)%i)
+                                !aa_zPts = (/-0.5,-0.5,0.5,0.5 /)*(g%z(2)-g%z(1))+g%z(g%wl(w)%j)
+
+                                !antiAlias: &
+                                !do aa=1,4
+                                !    if(aa_rPts(aa)>g%rMax) aa_rPts(aa)=g%rMax
+                                !    if(aa_rPts(aa)<g%rMin) aa_rPts(aa)=g%rMin
+                                !    if(aa_zPts(aa)>g%zMax) aa_zPts(aa)=g%zMax
+                                !    if(aa_zPts(aa)<g%zMin) aa_zPts(aa)=g%zMin
+
+                                !   mat3by3Block = mat3by3Block + get3by3Block ( g, w, aa_rPts(aa), aa_zPts(aa) )
+                                !enddo antiAlias
+                                !mat3by3Block = mat3by3Block / 4
+                                mat3by3Block = get3by3Block ( g, w, g%r(g%wl(w)%i), g%z(g%wl(w)%j))
 
                             endif interior
 
