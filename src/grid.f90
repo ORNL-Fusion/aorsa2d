@@ -222,7 +222,8 @@ contains
                         grid%rNorm(i)  = (i-1) * pi / ( nR - 1 )
                     else
                         ! Uniform grid [0,2pi] (Exp basis)
-                        grid%rNorm(i)  = (i-1) * 2 * pi / ( nR - 1 )
+                        !grid%rNorm(i)  = (i-1) * 2 * pi / ( nR - 1 )
+                        grid%rNorm(i)  = (i-1) * 2 * pi / ( nR )
                     endif
        
                 enddo
@@ -287,7 +288,8 @@ contains
                         grid%zNorm(j)  = (j-1) * pi / ( nZ - 1 )
                     else
                         ! Uniform grid [0,2pi] (Exp basis)
-                        grid%zNorm(j)  = (j-1) * 2 * pi / ( nZ - 1 )
+                        !grid%zNorm(j)  = (j-1) * 2 * pi / ( nZ - 1 )
+                        grid%zNorm(j)  = (j-1) * 2 * pi / ( nZ )
                     endif
 
                 enddo

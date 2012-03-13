@@ -65,6 +65,8 @@ implicit none
 
       CHARACTER*128 :: eqdsk = 'g1080408021.txt'               ! eqdsk name
       logical :: useEqdsk = .false.
+      logical :: useAr2Input = .false.
+      character(len=100) :: AR2InputFileName = 'AR2Input.nc'
       CHARACTER*128 :: netCDF_file1 = 'phillips_nstx3.5.2.nc'  !cql3d distribution file name 1
       CHARACTER*128 :: netCDF_file2 = 'phillips_nstx3.5.2.nc'  !cql3d distribution file name 2
 
@@ -471,7 +473,7 @@ implicit none
      &    noPoloidalField, rhoScale, rhoWidth, rhoPower, useCircular, &
      &    bPol_frac, useCircularProfiles, lsWeightFac, xkx_cutOff, xky_cutOff, &
      &    chebyshevX, chebyshevY, magma, rhoAnt, antSigRho, toroidalBroadening,&
-     &    kPrlEffLimit, nGrid, &
+     &    kPrlEffLimit, nGrid, useAr2Input, AR2InputFileName, &
      &    nRAll, nZAll, rMinAll, rMaxAll, zMinAll, zMaxAll, &
      &    overlap, parabolic, cosX, cosY, nZ_1D, fracOfModesInSolution
 

@@ -11,6 +11,42 @@ implicit none
 
 contains
 
+    subroutine bFieldAR2 ( g )
+
+        use aorsaNamelist, only: r0
+        use grid
+        use interp
+
+        implicit none
+
+        type(gridBlock), intent(inout) :: g
+        integer :: i, j 
+        real :: bHere(3)
+
+        allocate ( &
+            g%bMag(g%nR,g%nZ), &
+            g%bR_unit(g%nR,g%nZ), &
+            g%bT_unit(g%nR,g%nZ), &
+            g%bZ_unit(g%nR,g%nZ), &
+            g%rho(g%nR,g%nZ), &
+            g%mask(g%nR,g%nZ) )
+
+        do i=1,g%nR
+            do j=1,g%nZ
+
+               bHere = dlg_interpB ( (/g%R(i),0.0,g%z(j)/), &
+                            bMagHere = g%bMag(i,j) )  
+
+               g%bR_unit(i,j) = bHere(1) / g%bMag(i,j)
+               g%bT_unit(i,j) = bHere(2) / g%bMag(i,j)
+               g%bZ_unit(i,j) = bHere(3) / g%bMag(i,j)
+
+            enddo
+        enddo
+
+    end subroutine bFieldAR2
+
+
     subroutine bFieldEqdsk ( g )
 
         use aorsaNamelist, &

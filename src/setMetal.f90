@@ -8,7 +8,8 @@ contains
         use aorsaNamelist, only : &
             metalLeft, metalRight, metalTop, metalBot, &
             limiter_boundary, useEqdsk
-        use eqdsk_dlg, only: is_inside_lim
+        use eqdsk_dlg, only: is_inside_lim, rLim__,zLim
+        use IsInside, only: IsInsideOf
 
         implicit none
 
@@ -29,7 +30,7 @@ contains
 
             do i=1,g%nR
                 do j=1,g%nZ
-                    g%isMetal(i,j) = .not. is_inside_lim ( g%R(i), g%z(j) )
+                    g%isMetal(i,j) = .not. IsInsideOf ( g%R(i), g%z(j), rLim__, zLim )
                 enddo
             enddo
 

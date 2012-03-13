@@ -19,6 +19,7 @@ program aorsa2dMain
     use power
     use setMetal
     use sigmaInputGeneration
+    use ar2Input
 
     implicit none
 
@@ -107,10 +108,17 @@ program aorsa2dMain
         call init_interp ()
     endif
 
+    if(useAr2Input)then
+        call ReadAr2Input (AR2InputFileName)
+        call init_interp ()
+    endif
+
     do i=1,nGrid
 
         if (useEqdsk) then
             call bFieldEqdsk ( allGrids(i) )
+        elseif(useAR2Input)then
+            call bFieldAR2 ( allGrids(i) )
         elseif (useSoloviev) then
             call soloviev ( allGrids(i) )
         elseif (useCircular) then
