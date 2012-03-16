@@ -65,22 +65,31 @@ contains
         real(kind=dbl) :: kr, step
         complex(kind=dbl) :: omgrfc
         complex(kind=dbl), allocatable :: Z(:), zPrime(:), zeta_zPrime(:)
+        complex(kind=dbl), allocatable :: Z_swan(:), ZPrime_swan(:), ZetaZPrime_swan(:)
         complex(kind=dbl) :: sig0, sig1, sig2, sig3, sig4, sig5
         complex(kind=dbl), dimension(-lmax:lmax) :: &
             sig0l, sig1l, sig2l, sig3l, sig4l, sig5l
         integer, parameter :: lmaxdim = 99
         complex(kind=dbl), allocatable, dimension(:) :: &
           expBesselI, expBesselIPrime, expBesselIOverGam
-        complex(kind=dbl) :: zetal(-lmax:lmax)
+        complex(kind=dbl) :: zetal(-lmax:lmax),Zeta_l_swan(-lmax:lmax)
         complex :: zieps0 
         complex(kind=dbl) :: P, PPrime 
-        complex(kind=dbl) ::gamma_
+        complex(kind=dbl) ::gamma_,lambda_swan
         real :: dR, Lpar
         integer :: stat
         real :: sinPh
         real :: cosPsi, sinPsi
 
+        real :: e_swan,factor1,factor2
+        complex(kind=DBL) :: K0_swan,K1_swan,K2_swan,K3_swan,K4_swan,K5_swan
+        complex(kind=dbl) :: SigmaHotMaxwellian_swan(3,3),EpsilonHotMaxwellian_swan(3,3)
+        integer :: IdentMat(3,3)
+        type(SpatialSigmaInput_cold) :: scIn
+        complex :: sc(3,3)
+
         zetal = 0
+        Zeta_l_swan = 0
 
         zieps0 = zi * eps0
         vTh = sqrt(2. * kt / xm)
@@ -150,6 +159,7 @@ contains
             endif
 
             zetal(l) = (omgrfc - l * omgc) / ( kPrlEff * vTh) 
+            Zeta_l_swan(l) = (omgrfc+l*omgc)/(kPrlEff*vTh)
 
         enddo
 
@@ -158,7 +168,7 @@ contains
         ! --------------------
 
         gamma_ = 0.5 * kPerp**2 * rhol**2
-        
+
         allocate ( &
             expBesselI(0:lMax), &
             expBesselIPrime(0:lMax), &
@@ -175,8 +185,10 @@ contains
         ! --------------------
 
         allocate ( Z(-lMax:lMax), zPrime(-lMax:lMax), zeta_zPrime(-lMax:lMax) )
+        allocate ( Z_swan(-lMax:lMax), ZPrime_swan(-lMax:lMax), ZetaZPrime_swan(-lMax:lMax) )
 
         call z_approx_dlg ( sgn_kprl, zetal, z, zPrime, zeta_zPrime )
+        call z_approx_dlg ( sgn_kprl, Zeta_l_swan, Z_swan, ZPrime_swan, ZetaZPrime_swan )
 
 
         ! Calculate sigmas according to Swanson
@@ -197,6 +209,39 @@ contains
             sig5l(l) =   0.5d0 * eps0 * rhol * (expBesselI(labs) - expBesselIPrime(labs)) * PPrime
 
         enddo
+
+        ! Try using the Swanson approach
+
+        factor1 = omgp2/(omgrfc*kPrlEff*vTh)
+        factor2 = kPerp**2*omgp2/(2*kPrlEff*omgrfc*omgc)
+        e_swan = sign(1d0,omgc) ! this is q/|q|
+
+        K0_swan=(0,0) 
+        K1_swan=(0,0) 
+        K2_swan=(0,0) 
+        K3_swan=(0,0) 
+        K4_swan=(0,0) 
+        K5_swan=(0,0)
+
+        do l=-lmax,lmax
+
+            labs = abs(l)
+
+            K0_swan = K0_swan + gamma_*(expBesselI(labs)-expBesselIPrime(labs))*Z_swan(l)
+            K1_swan = K1_swan + l**2*expBesselIOverGam(labs)*Z_swan(l)
+            K2_swan = K2_swan + l*(expBesselI(labs)-expBesselIPrime(labs))*Z_swan(l)
+            K3_swan = K3_swan + expBesselI(labs)*Zeta_l_swan(l)*ZPrime_swan(l)
+            K4_swan = K4_swan + l*expBesselIOverGam(labs)*ZPrime_swan(l)
+            K5_swan = K5_swan + (expBesselI(labs)-expBesselIPrime(labs))*ZPrime_swan(l)
+
+        enddo
+
+        K0_swan = 2*factor1*K0_swan
+        K1_swan = 1+factor1*K1_swan
+        K2_swan = zi*e_swan*factor1*K2_swan
+        K3_swan = 1-factor1*K3_swan
+        K4_swan = factor2*K4_swan
+        K5_swan = zi*e_swan*factor2*K5_swan
 
         sig0    = sum ( sig0l )
         sig1    = sum ( sig1l )
@@ -247,6 +292,35 @@ contains
         sigmaHot_maxwellian(3,1) = sig4 * cosPsi - sig5 * sinPsi
         sigmaHot_maxwellian(3,2) = sig4 * sinPsi + sig5 * cosPsi
         sigmaHot_maxwellian(3,3) = sig3
+
+
+        EpsilonHotMaxwellian_swan(1,1) = K1_swan+sinPsi**2*K0_swan
+        EpsilonHotMaxwellian_swan(1,2) = K2_swan-cosPsi*sinPsi*K0_swan
+        EpsilonHotMaxwellian_swan(1,3) = cosPsi*K4_swan+sinPsi*K5_swan
+
+        EpsilonHotMaxwellian_swan(2,1) = -K2_swan-cosPsi*sinPsi*K0_swan
+        EpsilonHotMaxwellian_swan(2,2) = K1_swan+cosPsi**2*K0_swan 
+        EpsilonHotMaxwellian_swan(2,3) = sinPsi*K4_swan-cosPsi*K5_swan
+
+        EpsilonHotMaxwellian_swan(3,1) = cosPsi*K4_swan-sinPsi*K5_swan
+        EpsilonHotMaxwellian_swan(3,2) = sinPsi*K4_swan+cosPsi*K5_swan 
+        EpsilonHotMaxwellian_swan(3,3) = K3_swan 
+
+        IdentMat = 0
+        IdentMat(1,1) = 1
+        IdentMat(2,2) = 1
+        IdentMat(3,3) = 1
+
+        SigmaHotMaxwellian_swan = -(EpsilonHotMaxwellian_swan-IdentMat)*omgrfc*eps0*zi
+
+        scIn = SpatialSigmaInput_cold(omgc,omgp2,omgrf,nuOmg)
+        sc = SigmaCold_stix(scIn)
+
+        write(*,*) '1,1  ', sigmaHot_maxwellian(1,1), SigmaHotMaxwellian_swan(1,1)/sc(1,1)
+        write(*,*) '2,2  ', sigmaHot_maxwellian(2,2), SigmaHotMaxwellian_swan(2,2)/sc(2,2)
+        write(*,*) '3,3  ', sigmaHot_maxwellian(3,3), SigmaHotMaxwellian_swan(3,3)/sc(3,3)
+
+        !sigmaHot_maxwellian = sc
 
         return
 

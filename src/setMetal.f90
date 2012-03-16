@@ -27,7 +27,7 @@ contains
         !endif
 
         if(limiter_boundary .and. useEqdsk)then
-
+    
             do i=1,g%nR
                 do j=1,g%nZ
                     g%isMetal(i,j) = .not. IsInsideOf ( g%R(i), g%z(j), rLim__, zLim )
@@ -45,6 +45,8 @@ contains
             enddo
 
         endif
+
+        write(*,*) 'No. metal points: ', count(g%isMetal)
 
     end subroutine setMetalRegions
 

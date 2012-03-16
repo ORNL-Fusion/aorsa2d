@@ -635,7 +635,7 @@ pro ar2_plot_solution, full = full, $
 
 
 		nLevs = 11
-		scale = 1 
+		scale = 10 
 		levels = fIndGen(nLevs)/(nLevs-1)*scale
 		colors = reverse(bytScl(levels, top=253)+1)
 		c = contour ( jPAlpha[*,*,0], x, y, c_value=levels, rgb_indices=colors, rgb_table=3, /fill, aspect_ratio=1.0 )
@@ -643,6 +643,16 @@ pro ar2_plot_solution, full = full, $
 		g = readgeqdsk('Scen4_bn2.57_129x129.dlgMod',/noTor)
 		p = plot ( g.rlim, g.zlim, /over )
 		p = plot ( g.rbbbs, g.zbbbs, /over )
+
+		nLevs = 11
+		scale = 0.1e3 
+		levels = fIndGen(nLevs)/(nLevs-1)*scale
+		colors = reverse(bytScl(levels, top=253)+1)
+		c = contour ( eAlpha[*,*,0], x, y, c_value=levels, rgb_indices=colors, rgb_table=3, /fill, aspect_ratio=1.0 )
+		c = contour ( -eAlpha[*,*,0], x, y, c_value=levels, rgb_indices=colors, rgb_table=1, /fill,/over )
+		p = plot ( g.rlim, g.zlim, /over )
+		p = plot ( g.rbbbs, g.zbbbs, /over )
+	
 		stop
 
 		; Field contour plot

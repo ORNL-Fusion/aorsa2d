@@ -2,7 +2,7 @@ module getMatElements
 
 contains
 
-function get3by3Block( g, w, r, z)
+function get3by3Block( g, w)!, r, z)
 
     use grid
     use aorsaNamelist, only: &
@@ -17,7 +17,7 @@ function get3by3Block( g, w, r, z)
 
     type(gridBlock), intent(in) :: g
     integer, intent(in) :: w
-    real, intent(in) :: r, z
+    !real, intent(in) :: r, z
     
     complex :: get3by3Block(3,3)
 
@@ -29,7 +29,7 @@ function get3by3Block( g, w, r, z)
     type(dBfnArg) :: d
     complex(kind=dbl) :: sigma_tmp(3,3), sigma_tmp_neg(3,3), sigmaHere(3,3)
 
-    real :: kr, kt, kz, kVec_stix(3)
+    real :: r, z, kr, kt, kz, kVec_stix(3)
 
     real :: &
         Urr, Urt, Urz, &
@@ -75,8 +75,8 @@ function get3by3Block( g, w, r, z)
 
     type(spatialSigmaInput_cold) :: sigmaIn_cold
 
-    !z   = g%z(g%wl(w)%j)
-    !r   = g%R(g%wl(w)%i)
+    z   = g%z(g%wl(w)%j)
+    r   = g%R(g%wl(w)%i)
     kt  = nPhi!g%kPhi(i)
 
     !interior: &
@@ -147,10 +147,10 @@ function get3by3Block( g, w, r, z)
             hotPlasma:& 
             if (iSigma==1 .and. (.not. g%isMetal(g%wl(w)%i,g%wl(w)%j)) ) then        
 
-                kVec_stix = matMul( g%U_RTZ_to_ABb(g%wl(w)%i,g%wl(w)%j,:,:), &
-                    (/ kr, nPhi/r, kz /) ) 
                 !kVec_stix = matMul( g%U_RTZ_to_ABb(g%wl(w)%i,g%wl(w)%j,:,:), &
-                !    (/ kr, g%kPhi(g%wl(w)%i), kz /) ) 
+                !    (/ kr, nPhi/r, kz /) ) 
+                kVec_stix = matMul( g%U_RTZ_to_ABb(g%wl(w)%i,g%wl(w)%j,:,:), &
+                    (/ kr, g%kPhi(g%wl(w)%i), kz /) ) 
                 sigma_tmp = sigmaHot_maxwellian &
                     ( mSpec(s), &
                     g%ktSpec(g%wl(w)%i,g%wl(w)%j,s), &
@@ -192,7 +192,7 @@ function get3by3Block( g, w, r, z)
             sigmaHere = sigmaHere + sigma_tmp
 
         enddo
-
+        
         sigAlpAlp = sigmaHere(1,1)
         sigAlpBet = sigmaHere(1,2)
         sigAlpPrl = sigmaHere(1,3)
@@ -204,6 +204,8 @@ function get3by3Block( g, w, r, z)
         sigPrlAlp = sigmaHere(3,1)
         sigPrlBet = sigmaHere(3,2)
         sigPrlPrl = sigmaHere(3,3)
+        !write(*,*) g%wl(w)%i,g%wl(w)%j,g%wl(w)%n,g%wl(w)%m,sigBetAlp
+
 
 #else 
 ! __sigma__ == 2

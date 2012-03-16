@@ -663,7 +663,7 @@ contains
                                 !   mat3by3Block = mat3by3Block + get3by3Block ( g, w, aa_rPts(aa), aa_zPts(aa) )
                                 !enddo antiAlias
                                 !mat3by3Block = mat3by3Block / 4
-                                mat3by3Block = get3by3Block ( g, w, g%r(g%wl(w)%i), g%z(g%wl(w)%j))
+                                mat3by3Block = get3by3Block ( g, w)!, g%r(g%wl(w)%i), g%z(g%wl(w)%j))
 
                             endif interior
 
