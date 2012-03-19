@@ -31,9 +31,6 @@ contains
             kPrlEffLimit
         use bessel_mod
 
-        use mikna, only: ikna
-        use miknb, only: iknb
-
         ! Calculate the hot Maxwellian sigma at a single
         ! point in space in Stix frame including toriodal
         ! broadening using either Smithe or Brambilla
