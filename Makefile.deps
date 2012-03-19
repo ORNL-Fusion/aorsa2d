@@ -43,7 +43,9 @@ ${OBJ_DIR}/sigma.o: \
 		${OBJ_DIR}/bessel.o \
 		${OBJ_DIR}/zfunction.o \
 		${OBJ_DIR}/aorsaNamelist.o \
-		${OBJ_DIR}/constants.o
+		${OBJ_DIR}/constants.o \
+		${OBJ_DIR}/mikna.o \
+		${OBJ_DIR}/miknb.o
 
 ${OBJ_DIR}/sigmaInputGeneration.o: \
 		${OBJ_DIR}/grid.o \
@@ -52,7 +54,7 @@ ${OBJ_DIR}/sigmaInputGeneration.o: \
 
 ${OBJ_DIR}/zfunHammett.o: \
 		${OBJ_DIR}/constants.o \
-		${OBJ_DIR}/z_erfc.o
+		${OBJ_DIR}/z_erf.o
 
 ${OBJ_DIR}/zfunction.o: \
 		${OBJ_DIR}/ztable.o \

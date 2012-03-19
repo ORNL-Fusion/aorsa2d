@@ -5,57 +5,6 @@ module zfunction_mod
 
 contains
 
-      subroutine z_table(sgn_kprl, zeta, gamma, xnu, z0, z1, z2)
-
-!     ----------------------------------------------------
-!     z_table is a wrapper routine for David Smithe's table
-!     lookup Z function
-!     ----------------------------------------------------
-
-        use ztable_mod
-
-      implicit none
-
-      complex, intent(inout)   :: z0, z1, z2
-      complex, intent(in)    :: zeta
-      real, intent(in)       :: sgn_kprl, gamma, xnu
-      complex, dimension(0:4)  :: zfunc
-
-      real alpha_s
-      complex zi
-
-      zi = cmplx(0.0, 1.0)
-
-      alpha_s = -2.0 * gamma
-
-
-      if (sgn_kprl .ge. 0.0) then
-
-         call ztable_zfunc( real(zeta), alpha_s, xnu, zfunc )
-         z0 = zfunc(0)
-         z1 = - 0.5 * zfunc(1) - gamma / (2.0 * zi) * zfunc(2)
-         z2 = 0.5 * zfunc(0) + 0.25 * zfunc(2) &
-            + gamma / (2.0 * zi) * zfunc(3) &
-            - gamma**2 / 4. * zfunc(4)
-
-
-      else if (sgn_kprl .lt. 0.0) then
-
-         call ztable_zfunc( - real(zeta), - alpha_s, - xnu, zfunc )
-         z0 = - zfunc(0)
-         z1 = - 0.5 * zfunc(1) + gamma / (2.0 * zi) * zfunc(2)
-         z2 = - 0.5 * zfunc(0) - 0.25 * zfunc(2) &
-            + gamma / (2.0 * zi) * zfunc(3) &
-            + gamma**2 / 4. * zfunc(4)
-
-
-      endif
-
-      return
-
-      end subroutine z_table
-
-
 
 !
 !*******************************************************************************
@@ -137,7 +86,7 @@ subroutine z_approx_dlg ( sgn_kprl, zeta, z, zPrime, zeta_zPrime )
     complex, intent(out) :: z(:), zPrime(:), zeta_zPrime(:)
 
     real, parameter :: y0 = 1.5
-    real, allocatable :: fGam(:), y(:), descrim(:)
+    real, allocatable :: y(:), descrim(:)
     complex, allocatable :: zetat(:), zFunct(:)
     complex :: fzeta
     complex :: zFunctCheck
@@ -145,18 +94,19 @@ subroutine z_approx_dlg ( sgn_kprl, zeta, z, zPrime, zeta_zPrime )
 
     nL = size ( zeta )
 
-    allocate ( zFunct(nL), fGam(nL), y(nL), descrim(nL) )
+    allocate ( zFunct(nL), y(nL), descrim(nL) )
     y = y0
-    fGam = 1.0
+
+    ! See pg. 202 of Stix.
 
     if(sgn_kprl>=0.0)then
 
       do i=1,nL 
-          zFunct(i) = zfun_hammett ( fGam(i) * zeta(i) )
+          zFunct(i) = zfun_hammett ( zeta(i) )
       enddo
 
        z = zfunct 
-       zPrime = -2d0 * (1.0 + zeta * z) 
+       zPrime = -2d0 * (1.0 + zeta * z) ! pg. 201 of Stix.
        zeta_zPrime = zeta * zPrime
 
     else
@@ -166,7 +116,11 @@ subroutine z_approx_dlg ( sgn_kprl, zeta, z, zPrime, zeta_zPrime )
       enddo
 
        z = -zfunct 
-       zPrime = 2d0 * (1.0 + zeta * z) 
+       !Not sure about which is correct yet ...
+       !zPrime = -2d0 * (1.0 - zeta * zfunct) 
+       ! or is it
+       zPrime = +2d0 * (1.0 - zeta * z)
+
        zeta_zPrime = zeta * zPrime 
 
     endif
@@ -209,39 +163,39 @@ subroutine z_approx(sgn_kprl, zeta, gamma_, z0, z1, z2)
 
     if(sgn_kprl>=0.0)then
 
-      !where(gamma_>1.0e-5)
-      !    fGam = (sqrt(1.0 +  4.0 * gamma_ * y0) - 1.0) / (2.0 * gamma_ * y0)
-      !endwhere
+      where(gamma_>1.0e-5)
+          fGam = (sqrt(1.0 +  4.0 * gamma_ * y0) - 1.0) / (2.0 * gamma_ * y0)
+      endwhere
 
       do i=1,nL 
           zFunct(i) = zfun_hammett ( fGam(i) * zeta(i) )
       enddo
 
-       z0 = zfunct !* fGam
-       z1 = -2d0 * (1.0 + zeta * z0) !* fGam
-       z2 = zeta * z1 !* fGam
+       z0 = zfunct * fGam
+       z1 = -2d0 * (1.0 + zeta * z0) * fGam
+       z2 = zeta * z1 * fGam
 
     else
 
-      !descrim = 1.0 - 4.0 * gamma_ * y0
-      !where(descrim>=0.0)
-      !        y = y0
-      !elsewhere
-      !        y = -y0
-      !endwhere
+      descrim = 1.0 - 4.0 * gamma_ * y0
+      where(descrim>=0.0)
+              y = y0
+      elsewhere
+              y = -y0
+      endwhere
 
-      !where(gamma_>1.0e-5)
-      !    fGam = (1.0 - sqrt(1.0 -  4.0 * gamma_ * y) ) / (2.0 * gamma_ * y)
-      !endwhere
+      where(gamma_>1.0e-5)
+          fGam = (1.0 - sqrt(1.0 -  4.0 * gamma_ * y) ) / (2.0 * gamma_ * y)
+      endwhere
 
       do i=1,nL
-          !zfunct(i) = zfun_hammett (-fGam(i)*zeta(i))
-          zfunct(i) = zfun_hammett (-zeta(i))
+          zfunct(i) = zfun_hammett (-fGam(i)*zeta(i))
+          !zfunct(i) = zfun_hammett (-zeta(i))
       enddo
 
-       z0 = -zfunct !* fGam
-       z1 = 2d0 * y / abs(y) * (1.0 + zeta * z0) !* fGam
-       z2 = zeta * z1 !* fGam
+       z0 = -zfunct * fGam
+       z1 = 2d0 * y / abs(y) * (1.0 + zeta * z0) * fGam
+       z2 = zeta * z1 * fGam
 
     endif
 
