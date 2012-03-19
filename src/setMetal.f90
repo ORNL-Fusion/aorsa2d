@@ -7,9 +7,10 @@ contains
         use grid
         use aorsaNamelist, only : &
             metalLeft, metalRight, metalTop, metalBot, &
-            limiter_boundary, useEqdsk
+            limiter_boundary, useEqdsk, UseAR2Input
         use eqdsk_dlg, only: is_inside_lim, rLim__,zLim
         use IsInside, only: IsInsideOf
+        use ar2Input, only: ar2_rLim=>rLim, ar2_zLim=>zLim
 
         implicit none
 
@@ -31,6 +32,15 @@ contains
             do i=1,g%nR
                 do j=1,g%nZ
                     g%isMetal(i,j) = .not. IsInsideOf ( g%R(i), g%z(j), rLim__, zLim )
+                enddo
+            enddo
+
+        elseif(limiter_boundary .and. UseAR2Input)then
+            
+             do i=1,g%nR
+                do j=1,g%nZ
+                    
+                    g%isMetal(i,j) = .not. IsInsideOf ( g%R(i), g%z(j), ar2_rLim, ar2_zLim )
                 enddo
             enddo
 

@@ -404,10 +404,10 @@ contains
 
         SigmaCold_swan = -(EpsilonCold_swan-IdentMat)*omgrfc*eps0*zi
 
-        write(*,*) '1,1  ', SigmaCold_stix(1,1), SigmaCold_swan(1,1)
-        write(*,*) '2,2  ', SigmaCold_stix(2,2), SigmaCold_swan(2,2)
-        write(*,*) '3,3  ', SigmaCold_stix(3,3), SigmaCold_swan(3,3)
-
+!        write(*,*) '1,1  ', SigmaCold_stix(1,1), SigmaCold_swan(1,1)
+!        write(*,*) '2,2  ', SigmaCold_stix(2,2), SigmaCold_swan(2,2)
+!        write(*,*) '3,3  ', SigmaCold_stix(3,3), SigmaCold_swan(3,3)
+!
         return
 
     end function sigmaCold_stix
