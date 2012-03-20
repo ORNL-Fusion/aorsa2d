@@ -18,6 +18,7 @@ subroutine rotate_E_to_lab ( g )
     integer :: i, j, s
 
     real :: mag1, mag2
+    real :: R_(3,3)
 
     allocate ( g%eR(g%nR,g%nZ), &
                 g%eTh(g%nR,g%nZ), &
@@ -35,10 +36,14 @@ subroutine rotate_E_to_lab ( g )
     do i = 1, g%nR
         do j = 1, g%nZ
 
+            R_ = g%U_RTZ_to_ABb(i,j,:,:)
+#if __noU__==1
+            ELab_RTZ = (/ g%eAlpha(i,j), g%eBeta(i,j), g%eb(i,j) /)
+#else
             ELab_RTZ = &
-                matMul ( transpose ( g%U_RTZ_to_ABb(i,j,:,:) ), &
+                matMul ( transpose ( R_ ), &
                     (/ g%eAlpha(i,j), g%eBeta(i,j), g%eb(i,j) /) )
-
+#endif
             g%eR(i,j) = ELab_RTZ(1)
             g%eTh(i,j) = ELab_RTZ(2)
             g%eZ(i,j) = ELab_RTZ(3)
@@ -57,10 +62,13 @@ subroutine rotate_E_to_lab ( g )
 
             do s=1,nSpec
 
+#if __noU__==1
+                jPLab_RTZ = (/ g%jAlpha(i,j,s), g%jBeta(i,j,s), g%jb(i,j,s) /)
+#else
                 jPLab_RTZ = &
-                    matMul ( transpose ( g%U_RTZ_to_ABb(i,j,:,:) ), &
+                    matMul ( transpose ( R_ ), &
                         (/ g%jAlpha(i,j,s), g%jBeta(i,j,s), g%jb(i,j,s) /) )
-    
+#endif 
                 g%jP_r(i,j,s) = jPLab_RTZ(1)
                 g%jP_t(i,j,s) = jPLab_RTZ(2)
                 g%jP_z(i,j,s) = jPLab_RTZ(3)

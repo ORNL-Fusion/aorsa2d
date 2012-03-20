@@ -394,11 +394,6 @@ contains
         integer :: localRow, localCol
         real :: kr, kt, kz, r, z, kVec_stix(3)
 
-        !complex :: &
-        !    mat_r_alp, mat_r_bet, mat_r_prl, &
-        !    mat_th_alp, mat_th_bet, mat_th_prl, &
-        !    mat_z_alp, mat_z_bet, mat_z_prl
-
         complex :: mat3by3Block(3,3)
 
         complex :: bFn_iL, bFn_iR, bFn_i0, bFn_i1, bFn_i2, bFn_i3, bFn_i4, bFn_i5 
@@ -410,35 +405,6 @@ contains
         integer :: nr, nz, iStat
         integer :: sigma_nc_id, sigma_re_id, sigma_im_id
 
-        !real :: &
-        !    Urr, Urt, Urz, &
-        !    Utr, Utt, Utz, &
-        !    Uzr, Uzt, Uzz
-
-        !real :: &
-        !    drUrr, drUrt, drUrz, &
-        !    drUtr, drUtt, drUtz, &
-        !    drUzr, drUzt, drUzz
-        !
-        !real :: &
-        !    dzUrr, dzUrt, dzUrz, &
-        !    dzUtr, dzUtt, dzUtz, &
-        !    dzUzr, dzUzt, dzUzz
-        !
-        !real :: &
-        !    drrUrr, drrUrt, drrUrz, &
-        !    drrUtr, drrUtt, drrUtz, &
-        !    drrUzr, drrUzt, drrUzz
-        !
-        !real :: &
-        !    dzzUrr, dzzUrt, dzzUrz, &
-        !    dzzUtr, dzzUtt, dzzUtz, &
-        !    dzzUzr, dzzUzt, dzzUzz
-        !
-        !real :: &
-        !    drzUrr, drzUrt, drzUrz, &
-        !    drzUtr, drzUtt, drzUtz, &
-        !    drzUzr, drzUzt, drzUzz
 
 #ifdef par
         !   scalapack indicies
@@ -627,16 +593,6 @@ contains
 !                        doWork: &
 !                        if ( any(pr_sp_thisPt==myRow) .and. any(pc_sp_thisPt==myCol) ) then
 !#endif
-                            !sigAlpAlp = 0.0
-                            !sigAlpBet = 0.0
-                            !sigAlpPrl = 0.0
-                            !sigBetAlp = 0.0
-                            !sigBetBet = 0.0
-                            !sigBetPrl = 0.0
-                            !sigPrlAlp = 0.0
-                            !sigPrlBet = 0.0
-                            !sigPrlPrl = 0.0
-
                             bFn = g%xx(g%wl(w)%n, g%wl(w)%i) * g%yy(g%wl(w)%m, g%wl(w)%j)
 
                             ! This is where the anti-aliasing will go. i.e.,

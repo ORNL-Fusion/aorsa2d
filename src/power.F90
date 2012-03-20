@@ -27,6 +27,9 @@ subroutine current ( g )
     complex, allocatable :: jAlphaTmp(:,:), jBetaTmp(:,:), jBTmp(:,:)
 
     type(spatialSigmaInput_cold) :: sigmaIn_cold
+#if __noU__==1
+    real :: R_(3,3)
+#endif
 
     allocate ( &
         g%jAlpha(g%nR,g%nZ,nSpec), &
@@ -136,6 +139,11 @@ subroutine current ( g )
 
 
                         endif coldPlasma
+#if __noU__==1
+                        ! Rotate sigma from alp,bet,prl to r,t,z
+                        R_ = g%U_RTZ_to_ABb(g%wl(w)%i,g%wl(w)%j,:,:)
+                        thisSigma = matmul(transpose(R_),matmul(thisSigma,R_))
+#endif
 
                         ! Metal
                         ! -----

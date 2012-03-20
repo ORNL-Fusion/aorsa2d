@@ -68,14 +68,22 @@ CPP_DIRECTIVES += -DzFunHammett
 #MAGMA_DIR = ${HOME}/code/magma/magma_0.2
 #MAGMA = -L ${MAGMA_DIR}/lib -lmagma -lmagmablas ${MAGMA_DIR}/lib/libmagma_64.a
 
-# caculate sigma as part of the fill (=2) or standalone with file write (=1)
-# --------------------------------------------------------------------------
-CPP_DIRECTIVES += -D__sigma__=2
-
 # GPTL
 # ----
 #GPTL_DIR = #${HOME}/code/gptl
 #GPTL = #-I ${GPTL_DIR}/include -L ${GPTL_DIR} -lgptl
+
+
+# caculate sigma as part of the fill (=2) or standalone with file write (=1)
+# --------------------------------------------------------------------------
+CPP_DIRECTIVES += -D__sigma__=2
+
+# Try removing the U rotation matricies (actually just set to the identity in places)
+# and just have the output of the sigma routines be in rtz coords and not in alp,bet,prl.
+# This is in an attempt to see how this is related to the noise problem with the poloidal
+# field. 
+# ---------------------------------------------------------------------------------------
+CPP_DIRECTIVES += -D__noU__=0
 
 
 # compile flags

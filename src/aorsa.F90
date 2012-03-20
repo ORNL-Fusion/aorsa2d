@@ -76,6 +76,12 @@ program aorsa2dMain
     call init_procGrid ( nPts_tot )
 #endif
 
+#if __noU__==1
+    if(iAm==0)write(*,*)'noU ==',__noU__
+#else
+    if(iAm==0)write(*,*)'noU ==',__noU__
+#endif
+
 
 !   initialise the spatial grid
 !   ---------------------------

@@ -74,6 +74,9 @@ function get3by3Block( g, w)!, r, z)
     integer :: s
 
     type(spatialSigmaInput_cold) :: sigmaIn_cold
+#if __noU__==1
+    real :: R_(3,3)
+#endif
 
     z   = g%z(g%wl(w)%j)
     r   = g%R(g%wl(w)%i)
@@ -192,7 +195,13 @@ function get3by3Block( g, w)!, r, z)
             sigmaHere = sigmaHere + sigma_tmp
 
         enddo
-        
+       
+#if __noU__==1
+        ! Rotate sigma from alp,bet,prl to r,t,z
+        R_ = g%U_RTZ_to_ABb(g%wl(w)%i,g%wl(w)%j,:,:)
+        sigmaHere = matmul(transpose(R_),matmul(sigmaHere,R_))
+#endif
+
         sigAlpAlp = sigmaHere(1,1)
         sigAlpBet = sigmaHere(1,2)
         sigAlpPrl = sigmaHere(1,3)
@@ -271,6 +280,19 @@ function get3by3Block( g, w)!, r, z)
         d%normFacX = g%normFacR
         d%normFacY = g%normFacZ
 
+#if __noU__ == 1
+        Urr = 1
+        Urt = 0
+        Urz = 0
+        
+        Utr = 0
+        Utt = 1
+        Utz = 0
+              
+        Uzr = 0
+        Uzt = 0
+        Uzz = 1
+#else
         Urr = g%Urr(g%wl(w)%i,g%wl(w)%j)
         Urt = g%Urt(g%wl(w)%i,g%wl(w)%j)
         Urz = g%Urz(g%wl(w)%i,g%wl(w)%j)
@@ -282,7 +304,8 @@ function get3by3Block( g, w)!, r, z)
         Uzr = g%Uzr(g%wl(w)%i,g%wl(w)%j)
         Uzt = g%Uzt(g%wl(w)%i,g%wl(w)%j)
         Uzz = g%Uzz(g%wl(w)%i,g%wl(w)%j)
-
+#endif
+       
         !Urr = biLinearInterp(r,z,g,g%Urr)
         !Urt = biLinearInterp(r,z,g,g%Urt)
         !Urz = biLinearInterp(r,z,g,g%Urz)
@@ -295,6 +318,19 @@ function get3by3Block( g, w)!, r, z)
         !Uzt = biLinearInterp(r,z,g,g%Uzt)
         !Uzz = biLinearInterp(r,z,g,g%Uzz)
 
+#if __noU__==1
+        drUrr = 0 
+        drUrt = 0 
+        drUrz = 0 
+
+        drUtr = 0 
+        drUtt = 0 
+        drUtz = 0 
+
+        drUzr = 0 
+        drUzt = 0 
+        drUzz = 0 
+#else
         drUrr = g%drUrr(g%wl(w)%i,g%wl(w)%j)
         drUrt = g%drUrt(g%wl(w)%i,g%wl(w)%j)
         drUrz = g%drUrz(g%wl(w)%i,g%wl(w)%j)
@@ -306,7 +342,7 @@ function get3by3Block( g, w)!, r, z)
         drUzr = g%drUzr(g%wl(w)%i,g%wl(w)%j)
         drUzt = g%drUzt(g%wl(w)%i,g%wl(w)%j)
         drUzz = g%drUzz(g%wl(w)%i,g%wl(w)%j)
-
+#endif
         !drUrr = biLinearInterp(r,z,g,g%drUrr)
         !drUrt = biLinearInterp(r,z,g,g%drUrt)
         !drUrz = biLinearInterp(r,z,g,g%drUrz)
@@ -318,7 +354,19 @@ function get3by3Block( g, w)!, r, z)
         !drUzr = biLinearInterp(r,z,g,g%drUzr)
         !drUzt = biLinearInterp(r,z,g,g%drUzt)
         !drUzz = biLinearInterp(r,z,g,g%drUzz)
+#if __noU__==1
+        dzUrr = 0 
+        dzUrt = 0 
+        dzUrz = 0 
 
+        dzUtr = 0 
+        dzUtt = 0 
+        dzUtz = 0 
+
+        dzUzr = 0 
+        dzUzt = 0 
+        dzUzz = 0 
+#else
         dzUrr = g%dzUrr(g%wl(w)%i,g%wl(w)%j)
         dzUrt = g%dzUrt(g%wl(w)%i,g%wl(w)%j)
         dzUrz = g%dzUrz(g%wl(w)%i,g%wl(w)%j)
@@ -330,6 +378,7 @@ function get3by3Block( g, w)!, r, z)
         dzUzr = g%dzUzr(g%wl(w)%i,g%wl(w)%j)
         dzUzt = g%dzUzt(g%wl(w)%i,g%wl(w)%j)
         dzUzz = g%dzUzz(g%wl(w)%i,g%wl(w)%j)
+#endif
 
         !dzUrr = biLinearInterp(r,z,g,g%dzUrr)
         !dzUrt = biLinearInterp(r,z,g,g%dzUrt)
@@ -342,7 +391,19 @@ function get3by3Block( g, w)!, r, z)
         !dzUzr = biLinearInterp(r,z,g,g%dzUzr)
         !dzUzt = biLinearInterp(r,z,g,g%dzUzt)
         !dzUzz = biLinearInterp(r,z,g,g%dzUzz)
+#if __noU__==1
+        drrUrr = 0 
+        drrUrt = 0 
+        drrUrz = 0 
 
+        drrUtr = 0 
+        drrUtt = 0 
+        drrUtz = 0 
+
+        drrUzr = 0 
+        drrUzt = 0 
+        drrUzz = 0 
+#else
         drrUrr = g%drrUrr(g%wl(w)%i,g%wl(w)%j)
         drrUrt = g%drrUrt(g%wl(w)%i,g%wl(w)%j)
         drrUrz = g%drrUrz(g%wl(w)%i,g%wl(w)%j)
@@ -354,6 +415,7 @@ function get3by3Block( g, w)!, r, z)
         drrUzr = g%drrUzr(g%wl(w)%i,g%wl(w)%j)
         drrUzt = g%drrUzt(g%wl(w)%i,g%wl(w)%j)
         drrUzz = g%drrUzz(g%wl(w)%i,g%wl(w)%j)
+#endif
 
         !drrUrr = biLinearInterp(r,z,g,g%drrUrr)
         !drrUrt = biLinearInterp(r,z,g,g%drrUrt)
@@ -366,7 +428,19 @@ function get3by3Block( g, w)!, r, z)
         !drrUzr = biLinearInterp(r,z,g,g%drrUzr)
         !drrUzt = biLinearInterp(r,z,g,g%drrUzt)
         !drrUzz = biLinearInterp(r,z,g,g%drrUzz)
-   
+#if __noU__==1 
+        dzzUrr = 0 
+        dzzUrt = 0 
+        dzzUrz = 0 
+        
+        dzzUtr = 0 
+        dzzUtt = 0 
+        dzzUtz = 0 
+
+        dzzUzr = 0 
+        dzzUzt = 0 
+        dzzUzz = 0 
+#else
         dzzUrr = g%dzzUrr(g%wl(w)%i,g%wl(w)%j)
         dzzUrt = g%dzzUrt(g%wl(w)%i,g%wl(w)%j)
         dzzUrz = g%dzzUrz(g%wl(w)%i,g%wl(w)%j)
@@ -378,7 +452,7 @@ function get3by3Block( g, w)!, r, z)
         dzzUzr = g%dzzUzr(g%wl(w)%i,g%wl(w)%j)
         dzzUzt = g%dzzUzt(g%wl(w)%i,g%wl(w)%j)
         dzzUzz = g%dzzUzz(g%wl(w)%i,g%wl(w)%j)
-
+#endif
         !dzzUrr = biLinearInterp(r,z,g,g%dzzUrr)
         !dzzUrt = biLinearInterp(r,z,g,g%dzzUrt)
         !dzzUrz = biLinearInterp(r,z,g,g%dzzUrz)
@@ -390,7 +464,19 @@ function get3by3Block( g, w)!, r, z)
         !dzzUzr = biLinearInterp(r,z,g,g%dzzUzr)
         !dzzUzt = biLinearInterp(r,z,g,g%dzzUzt)
         !dzzUzz = biLinearInterp(r,z,g,g%dzzUzz)
- 
+#if __noU__==1 
+        drzUrr = 0 
+        drzUrt = 0 
+        drzUrz = 0 
+        
+        drzUtr = 0 
+        drzUtt = 0 
+        drzUtz = 0 
+
+        drzUzr = 0 
+        drzUzt = 0 
+        drzUzz = 0 
+#else
         drzUrr = g%drzUrr(g%wl(w)%i,g%wl(w)%j)
         drzUrt = g%drzUrt(g%wl(w)%i,g%wl(w)%j)
         drzUrz = g%drzUrz(g%wl(w)%i,g%wl(w)%j)
@@ -402,6 +488,7 @@ function get3by3Block( g, w)!, r, z)
         drzUzr = g%drzUzr(g%wl(w)%i,g%wl(w)%j)
         drzUzt = g%drzUzt(g%wl(w)%i,g%wl(w)%j)
         drzUzz = g%drzUzz(g%wl(w)%i,g%wl(w)%j)
+#endif
 
         !drzUrr = biLinearInterp(r,z,g,g%drzUrr)
         !drzUrt = biLinearInterp(r,z,g,g%drzUrt)
