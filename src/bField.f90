@@ -13,7 +13,7 @@ contains
 
     subroutine bFieldAR2 ( g )
 
-        use aorsaNamelist, only: r0
+        use aorsaNamelist, only: r0, noPoloidalField
         use grid
         use interp
 
@@ -37,9 +37,16 @@ contains
                bHere = dlg_interpB ( (/g%R(i),0.0,g%z(j)/), &
                             bMagHere = g%bMag(i,j) )  
 
-               g%bR_unit(i,j) = bHere(1) / g%bMag(i,j)
-               g%bT_unit(i,j) = bHere(2) / g%bMag(i,j)
-               g%bZ_unit(i,j) = bHere(3) / g%bMag(i,j)
+               if(noPoloidalField)then
+                    g%bMag(i,j) = abs(bHere(2))
+                    g%bR_unit(i,j) = 0.0 / g%bMag(i,j)
+                    g%bT_unit(i,j) = bHere(2) / g%bMag(i,j)
+                    g%bZ_unit(i,j) = 0.0 / g%bMag(i,j)
+               else
+                    g%bR_unit(i,j) = bHere(1) / g%bMag(i,j)
+                    g%bT_unit(i,j) = bHere(2) / g%bMag(i,j)
+                    g%bZ_unit(i,j) = bHere(3) / g%bMag(i,j)
+               endif
 
             enddo
         enddo
