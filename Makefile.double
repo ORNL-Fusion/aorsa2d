@@ -2,18 +2,21 @@
 # -------------------------
 
 ${OBJ_DIR}/bessel.o: ${SRC_DIR}/bessel.f90
-	${F90} -c ${F90FLAGS} ${DOUBLE} $< -o $@ ${NETCDF} ${INC_DIR}
+	${F90} -c ${F90FLAGS} ${DOUBLE} $< -o $@ ${INC_DIR}
 
 ${OBJ_DIR}/zfunction.o: ${SRC_DIR}/zfunction.F90
-	${F90} -c ${F90FLAGS} ${DOUBLE} $< -o $@ ${NETCDF} ${INC_DIR} ${CPP_DIRECTIVES}
+	${F90} -c ${F90FLAGS} ${DOUBLE} $< -o $@ ${INC_DIR} ${CPP_DIRECTIVES}
 
 ${OBJ_DIR}/zfunHammett.o: ${SRC_DIR}/zfunHammett.f90
-	${F90} -c ${F90FLAGS} ${DOUBLE} $< -o $@ ${NETCDF} ${INC_DIR}
+	${F90} -c ${F90FLAGS} ${DOUBLE} $< -o $@ ${INC_DIR}
 
 ${OBJ_DIR}/zfunOriginal.o: ${SRC_DIR}/zfunOriginal.f90
-	${F90} -c ${F90FLAGS} ${DOUBLE} $< -o $@ ${NETCDF} ${INC_DIR}
+	${F90} -c ${F90FLAGS} ${DOUBLE} $< -o $@ ${INC_DIR}
 
 ${OBJ_DIR}/ztable.o: ${SRC_DIR}/ztable.f90
-	${F90} -c ${F90FLAGS} ${DOUBLE} $< -o $@ ${NETCDF} ${INC_DIR}
+	${F90} -c ${F90FLAGS} ${DOUBLE} $< -o $@ ${INC_DIR}
+
+${OBJ_DIR}/z_erf.o: ${SRC_DIR}/z_erf.f90
+	${F90} -c ${F90FLAGS} ${DOUBLE} $< -o $@ ${INC_DIR}
 
 

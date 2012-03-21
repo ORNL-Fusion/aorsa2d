@@ -154,6 +154,7 @@ function get3by3Block( g, w)!, r, z)
                 !    (/ kr, nPhi/r, kz /) ) 
                 kVec_stix = matMul( g%U_RTZ_to_ABb(g%wl(w)%i,g%wl(w)%j,:,:), &
                     (/ kr, g%kPhi(g%wl(w)%i), kz /) ) 
+                !kVec_stix(3) = sign(g%kPhi(g%wl(w)%i),kVec_stix(3))
                 sigma_tmp = sigmaHot_maxwellian &
                     ( mSpec(s), &
                     g%ktSpec(g%wl(w)%i,g%wl(w)%j,s), &

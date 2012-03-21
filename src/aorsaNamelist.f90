@@ -1,5 +1,7 @@
 module aorsaNamelist
-      
+     
+use constants
+
 implicit none
 
     ! Notes 
@@ -24,7 +26,7 @@ implicit none
     logical :: parabolic = .false.
     logical :: noPoloidalField = .false.
     logical :: toroidalBroadening = .true.
-    real :: kPrlEffLimit = 1e-08
+    real(kind=dbl) :: kPrlEffLimit = 1d-08
     real :: fracOfModesInSolution = 0.66
     integer :: nSpec = 2
     real :: r0 = 1.0

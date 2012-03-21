@@ -77,9 +77,9 @@ program aorsa2dMain
 #endif
 
 #if __noU__==1
-    if(iAm==0)write(*,*)'noU ==',__noU__
+    if(iAm==0)write(*,*)'Am using noU ==',__noU__
 #else
-    if(iAm==0)write(*,*)'noU ==',__noU__
+    if(iAm==0)write(*,*)'Not using noU ==',__noU__
 #endif
 
 

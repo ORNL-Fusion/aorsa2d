@@ -1,8 +1,8 @@
 program test_sigma
 
 use constants
-use sigma_mod
-use aorsa2din_mod, &
+use sigma
+use aorsaNameList, &
 only: nPhi, damping, delta0, lMax, nzfun, xnuomg, upshift, &
     read_nameList, xkPerp_cutOff
 use netcdf

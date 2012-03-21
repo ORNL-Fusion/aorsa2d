@@ -117,9 +117,9 @@ subroutine z_approx_dlg ( sgn_kprl, zeta, z, zPrime, zeta_zPrime )
 
        z = -zfunct 
        !Not sure about which is correct yet ...
-       !zPrime = -2d0 * (1.0 - zeta * zfunct) 
+       zPrime = -2d0 * (1.0 - zeta * zfunct) 
        ! or is it
-       zPrime = +2d0 * (1.0 - zeta * z)
+       !zPrime = 2d0 * (1.0 - zeta * z)
 
        zeta_zPrime = zeta * zPrime 
 

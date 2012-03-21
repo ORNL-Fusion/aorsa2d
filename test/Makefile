@@ -6,12 +6,14 @@ SRC_TST = src
 SRC_DIR = ../src
 
 F90 = gfortran
+F77 = gfortran
 MOD_LOC = -J${MOD_DIR}
 WARN = 
 BOUNDS = -fbounds-check
 DEBUG = -g -fbacktrace -fsignaling-nans -ffpe-trap=zero,invalid#,underflow,overflow
 DOUBLE = -fdefault-real-8
 F90FLAGS = ${MOD_LOC} ${BOUNDS} ${DEBUG} ${WARN}
+F77FLAGS = ${MOD_LOC} ${BOUNDS} ${DEBUG} ${WARN}
 
 NETCDF_DIR = ${HOME}/code/netcdf/gnu_4.3.2
 NETCDF = -I ${NETCDF_DIR}/include -L ${NETCDF_DIR}/lib -lnetcdf -lnetcdff
@@ -35,8 +37,8 @@ ${OBJ_DIR}/%.o: ${SRC_DIR}/%.f90
 ${OBJ_DIR}/%.o: ${SRC_DIR}/%.F90
 	${F90} -c ${F90FLAGS} $< -o $@ ${NETCDF} ${CPP_DIRECTIVES}
 
-${OBJ_DIR}/%: ${SRC_TST}/cerf_wrapper.c 
-	gcc -c $< -o $@ 
+${OBJ_DIR}/%.o: ${SRC_TST}/*.f
+	${F77} -c ${F77FLAGS} $< -o $@ 
 
 
 # Dependencies
@@ -57,8 +59,8 @@ ${EXE_DIR}/test_chebyshev: \
 ${EXE_DIR}/test_cerf: \
 		${OBJ_DIR}/constants.o \
 		${OBJ_DIR}/zfunHammett.o \
-		${OBJ_DIR}/cerf_wrapper.o \
-		${OBJ_DIR}/z_erfc.o
+		${OBJ_DIR}/z_erf.o \
+		${OBJ_DIR}/wofz.o
 
 ${EXE_DIR}/test_spline: \
 		${OBJ_DIR}/spline_dlg.o \

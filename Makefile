@@ -85,6 +85,11 @@ CPP_DIRECTIVES += -D__sigma__=2
 # ---------------------------------------------------------------------------------------
 CPP_DIRECTIVES += -D__noU__=0
 
+# debug flags
+# -----------
+
+CPP_DIRECTIVES += -D__debugSigma__=1
+
 
 # compile flags
 # -------------
@@ -140,6 +145,9 @@ ${OBJ_DIR}/%.o: ${SRC_DIR}/%.f90
 
 ${OBJ_DIR}/%.o: ${SRC_DIR}/%.F90
 	${F90} -c ${F90FLAGS} $< -o $@ ${BOUNDS} ${NETCDF} ${CPP_DIRECTIVES} ${INC_DIR}
+
+${OBJ_DIR}/z_erf.o: ${SRC_DIR}/z_erf.f90
+	${F90} -c ${F90FLAGS} $< -o $@ ${BOUNDS} ${INC_DIR} ${DOUBLE}
 
 # Uncomment the following 4 rules for MAGMA implementation
 # in addition to two lines in Makefile.deps and adding two 
