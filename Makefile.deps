@@ -37,7 +37,8 @@ ${OBJ_DIR}/setMetal.o: \
 		${OBJ_DIR}/aorsaNamelist.o \
 		${OBJ_DIR}/grid.o \
 		${OBJ_DIR}/eqdsk_dlg.o \
-		${OBJ_DIR}/isInside.o
+		${OBJ_DIR}/isInside.o \
+		${OBJ_DIR}/parallel.o
 
 ${OBJ_DIR}/sigma.o: \
 		${OBJ_DIR}/bessel.o \

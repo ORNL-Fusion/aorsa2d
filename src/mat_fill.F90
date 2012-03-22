@@ -44,15 +44,22 @@ contains
 
         integer(kind=long), intent(in) :: nPts_tot
 
+        real :: GlobalSizeMB,LocalSizeMB,GlobalSizeGB
 
 #ifdef par
 
         if (iAm == 0) then
             write(*,*) '    nPts_tot: ', nPts_tot
-            write(*,100), &
-                nPts_tot*3.0*nPts_tot*3.0*2.0*8.0 / 1024.0**2.0, &
-                nRowLocal*nColLocal*2.0*8.0 / 1024.0**2
-            100 format (' Filling aMat [global size: ',f8.1,' MB, local size: ',f8.1' MB]')
+            LocalSizeMB = nRowLocal*nColLocal*2.0*8.0 / 1024.0**2
+            GlobalSizeMB = nPts_tot*3.0*nPts_tot*3.0*2.0*8.0 / 1024.0**2.0
+            GlobalSizeGB = GlobalSizeMB/1024.0
+            if(GlobalSizeMB<=1)then
+                write(*,100), GlobalSizeMB, LocalSizeMB 
+                100 format (' Filling aMat [global size: ',f8.1,' MB, local size: ',f8.1' MB]')
+            else
+                write(*,101), GlobalSizeGB, LocalSizeMB 
+                101 format (' Filling aMat [global size: ',f8.1,' GB, local size: ',f8.1' MB]')
+            endif
         endif
 
         allocate ( aMat(nRowLocal,nColLocal) )

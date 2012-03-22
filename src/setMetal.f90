@@ -11,6 +11,7 @@ contains
         use eqdsk_dlg, only: is_inside_lim, rLim__,zLim
         use IsInside, only: IsInsideOf
         use ar2Input, only: ar2_rLim=>rLim, ar2_zLim=>zLim
+        use parallel, only: iAm
 
         implicit none
 
@@ -56,7 +57,7 @@ contains
 
         endif
 
-        write(*,*) 'No. metal points: ', count(g%isMetal)
+        if(iAM==0)write(*,*) 'No. metal points: ', count(g%isMetal)
 
     end subroutine setMetalRegions
 
