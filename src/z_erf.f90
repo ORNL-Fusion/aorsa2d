@@ -27,7 +27,7 @@ subroutine wofz_f90(zIn,zOut,flag)
 !                floating-point arithmetic
 !     rmaxexp  = ln(rmax) - ln(2)
 !     rmaxgoni = the largest possible argument of a double precision
-!                goniometric function (dcos, dsin, ...)
+!                goniometric function (cos, sin, ...)
 !  the reason why these parameters are needed as they are defined will
 !  be explained in the code by means of comments
 !
@@ -80,8 +80,8 @@ xi = realpart(zIn)
 yi = imagpart(zIn)
 
 flag = .false.
-xabs = dabs(xi)
-yabs = dabs(yi)
+xabs = abs(xi)
+yabs = abs(yi)
 x = xabs/6.3
 y = yabs/4.4
 
@@ -111,8 +111,8 @@ else
         !  n is the minimum number of terms needed to obtain the required
         !  accuracy
 
-        qrho = (1-0.85*y)*dsqrt(qrho)
-        n = idnint(6+72*qrho)
+        qrho = (1-0.85*y)*sqrt(qrho)
+        n = nint(6+72*qrho)
         j = 2*n + 1
         xsum = 1.0/j
         ysum = 0.0d0
@@ -126,9 +126,9 @@ else
 
         u1 = -factor*(xsum*yabs+ysum*xabs) + 1.0
         v1 = factor*(xsum*xabs-ysum*yabs)
-        daux = dexp(-xquad)
-        u2 = daux*dcos(yquad)
-        v2 = -daux*dsin(yquad)
+        daux = exp(-xquad)
+        u2 = daux*cos(yquad)
+        v2 = -daux*sin(yquad)
         
         u = u1*u2 - v1*v2
         v = u1*v2 + v1*u2
@@ -152,16 +152,16 @@ else
 
             h       = 0.0d0
             kapn    = 0
-            qrho    = dsqrt(qrho)
-            nu      = idint(3+(1442/(26*qrho+77)))
+            qrho    = sqrt(qrho)
+            nu      = int(3+(1442/(26*qrho+77)))
 
         else
 
-            qrho    = (1-y)*dsqrt(1-qrho)
+            qrho    = (1-y)*sqrt(1-qrho)
             h       = 1.88*qrho
             h2      = 2*h
-            kapn    = idnint(7+34*qrho)
-            nu      = idnint(16+26*qrho)
+            kapn    = nint(7+34*qrho)
+            nu      = nint(16+26*qrho)
 
         endif
 
@@ -202,7 +202,7 @@ else
            v = factor*sy
         endif
 
-        if ( yabs.eq.0.0 ) u = dexp(-xabs**2)
+        if ( yabs.eq.0.0 ) u = exp(-xabs**2)
 
     endif qrhoBreakdown
 
@@ -233,9 +233,9 @@ else
 
             else
 
-                w1 = 2*dexp(xquad)
-                u2 = w1*dcos(yquad)
-                v2 = -w1*dsin(yquad)
+                w1 = 2*exp(xquad)
+                u2 = w1*cos(yquad)
+                v2 = -w1*sin(yquad)
 
             endif overflowLabel
 

@@ -16,7 +16,7 @@ ${OBJ_DIR}/zfunOriginal.o: ${SRC_DIR}/zfunOriginal.f90
 ${OBJ_DIR}/ztable.o: ${SRC_DIR}/ztable.f90
 	${F90} -c ${F90FLAGS} ${DOUBLE} $< -o $@ ${INC_DIR}
 
-${OBJ_DIR}/z_erf.o: ${SRC_DIR}/z_erf.f90
-	${F90} -c ${F90FLAGS} ${DOUBLE} $< -o $@ ${INC_DIR}
+#${OBJ_DIR}/z_erf.o: ${SRC_DIR}/z_erf.f90
+#	${F90} -c ${F90FLAGS} ${DOUBLE} $< -o $@ ${INC_DIR}
 
 
