@@ -57,8 +57,9 @@ program aorsa2dMain
 
     !call start_timer ( tTotal )
 
-    integer :: i, nPts_tot
-    integer :: nModesR_tot, nModesZ_tot
+    integer(kind=long) :: nPts_tot
+    integer :: i
+    integer(kind=long) :: nModesR_tot, nModesZ_tot
 
 
 !   read namelist input data

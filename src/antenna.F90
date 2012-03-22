@@ -20,7 +20,7 @@ contains
 
         implicit none
 
-        integer, intent(in) :: nPts_tot
+        integer(kind=long), intent(in) :: nPts_tot
 
         allocate ( brhs_global(nPts_tot*3) )
 #ifdef par

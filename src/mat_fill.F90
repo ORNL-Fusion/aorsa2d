@@ -42,7 +42,7 @@ contains
 
         implicit none
 
-        integer, intent(in) :: nPts_tot
+        integer(kind=long), intent(in) :: nPts_tot
 
 
 #ifdef par
@@ -50,8 +50,8 @@ contains
         if (iAm == 0) then
             write(*,*) '    nPts_tot: ', nPts_tot
             write(*,100), &
-                nPts_tot*3*nPts_tot*3*2*8.0 / 1024.0**2, &
-                nRowLocal*nColLocal*2*8.0 / 1024.0**2
+                nPts_tot*3.0*nPts_tot*3.0*2.0*8.0 / 1024.0**2.0, &
+                nRowLocal*nColLocal*2.0*8.0 / 1024.0**2
             100 format (' Filling aMat [global size: ',f8.1,' MB, local size: ',f8.1' MB]')
         endif
 
@@ -83,10 +83,11 @@ contains
         implicit none
 
         type(gridBlock), intent(in) :: gAll(:)
-        integer, intent(in) :: nPts_tot
+        integer(kind=long), intent(in) :: nPts_tot
 
         type(gridBlock) :: me, nbr
-        integer :: i, j, n, m, ii, iRow, iCol 
+        integer :: i, j, n, m, iRow, iCol 
+        integer(kind=long) :: ii 
         complex(kind=dbl) :: aMatBlock(3,3)
         real :: r, kt
         complex :: bFn_iL, bFn_iR, bFn_iRR

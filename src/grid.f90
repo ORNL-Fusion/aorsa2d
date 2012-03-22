@@ -181,7 +181,7 @@ contains
         type(gridBlock) :: grid
         type(dBfnArg) :: d
 
-        integer, intent(in) :: nR, nZ
+        integer(kind=long), intent(in) :: nR, nZ
         real, intent(in) :: rMin, rMax, zMin, zMax
 
         integer :: i, j, n, m
@@ -443,7 +443,7 @@ contains
         implicit none
 
         type(gridBlock), intent(inout) :: gAll(:)
-        integer, intent(in) :: nPts_tot
+        integer(kind=long), intent(in) :: nPts_tot
 
         integer :: iMe, jMe, me, nbr, offSet, label
 

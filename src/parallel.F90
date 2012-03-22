@@ -1,12 +1,14 @@
 module parallel
 
+use constants, only: long
+
 implicit none
 
 integer :: iContext, nProcs, iAm, myRow, myCol
 integer :: descriptor_aMat( 9 ), descriptor_brhs( 9 )
 integer :: rowStartProc, colStartProc
 integer :: rowBlockSize, colBlockSize
-integer :: nRow, nCol, nRowLocal, nColLocal
+integer(kind=long) :: nRow, nCol, nRowLocal, nColLocal
 
 contains
 
@@ -15,11 +17,11 @@ contains
     subroutine init_procGrid ( nPts_tot )
 
         use aorsaNamelist, &
-        only: npRow, npCol
+            only: npRow, npCol
 
         implicit none
 
-        integer, intent(in) :: nPts_tot
+        integer(kind=long), intent(in) :: nPts_tot
 
         integer, external :: numRoC
 

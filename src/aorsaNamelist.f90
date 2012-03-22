@@ -51,8 +51,8 @@ implicit none
 
     integer, parameter :: nGridMax = 10
     integer :: nGrid = 1
-    integer, dimension(nGridMax) :: nRAll = 16
-    integer, dimension(nGridMax) :: nZAll = 32
+    integer(kind=long), dimension(nGridMax) :: nRAll = 16
+    integer(kind=long), dimension(nGridMax) :: nZAll = 32
     real, dimension(nGridMax) :: rMinAll = 1.0
     real, dimension(nGridMax) :: rMaxAll = 2.0
     real, dimension(nGridMax) :: zMinAll = -1.0
