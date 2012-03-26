@@ -8,22 +8,161 @@ real(kind=dbl) :: omgrf, k0
 real(kind=dbl), allocatable, dimension(:) :: mSpec, qSpec, tSpec, dSpec
 integer, allocatable, dimension(:) :: zSpec, amuSpec
 real(kind=dbl), allocatable, dimension(:,:,:) :: &
-    omgc, omgp2, densitySpec, ktSpec
+    omgc, omgp2
 real, allocatable, dimension(:) :: &
     tLim, dLim, dAlpha, dBeta, tAlpha, tBeta
 real, allocatable :: nuOmg2D(:,:)
 
 contains
 
-    subroutine init_profiles ( )
+    subroutine init_AR2_Profiles( g )
+
+        use AR2Input, only: &
+            ar2_nS=>nS,ar2_amu=>amu,ar2_AtomicZ=>AtomicZ, &
+            ar2_nR=>nR, ar2_nZ=>nZ, ar2_r=>r, ar2_z=>z, &
+            Density_m3, Temp_eV
+        use grid
+        use aorsaNameList, only: &
+            nSpec,freqcy,xNuOmg
+
+        use fitpack
+
+        implicit none
+
+        type(gridBlock), intent(inout) :: g
+
+        real, allocatable :: Tmp2DArr(:,:)
+
+        integer :: islpsw, iErr, i, j, s
+        real, allocatable :: temp(:)
+        real, allocatable :: zx1(:), zxm(:), zy1(:), zyn(:)
+        real :: zxy11, zxym1, zxy1n, zxymn
+
+        real, allocatable :: zp_tmp(:)
+        real :: sigma_dp
+        real, allocatable :: ar2_r_dp(:), ar2_z_dp(:)
+        real :: ThisR,ThisZ
+
+        sigma_dp = 0.0
+        islpsw  = 255 
+
+        write(*,*) ar2_nZ, ar2_nR
+
+        allocate(temp(ar2_nZ+ar2_nZ+ar2_nR))
+        allocate(zp_tmp(3*ar2_nZ*ar2_nR) )
+        allocate(zx1(ar2_nZ), zxm(ar2_nZ), zy1(ar2_nR), zyn(ar2_nR))
+        allocate(Tmp2DArr(ar2_nR,ar2_nZ))
+        allocate(ar2_r_dp(ar2_nR),ar2_z_dp(ar2_nZ))
+
+        ar2_r_dp = ar2_r
+        ar2_z_dp = ar2_z
+
+        ! At present these two lines are duplicates of the
+        ! init_profiles() routine below. This is not nice
+        ! and I should change it to get done somewhere else.
+
+        omgrf = 2.0 * pi * freqcy
+        k0 = omgrf / clight
+ 
+        ! Overwrite some nameList varibles with those from 
+        ! the ar2Input file.
+
+        nSpec = ar2_nS
+
+        write(*,*) 'Overwriting namelist inputs for nSpec and profiles'
+
+        allocate ( &
+            mSpec(nSpec), zSpec(nSpec), &
+            qSpec(nSpec), amuSpec(nSpec) )
+
+        amuSpec = ar2_amu
+        zSpec = ar2_AtomicZ
+
+        mSpec       = amuSpec * xmh
+        mSpec(1)    = xme  
+        qSpec       = zSpec * q 
+
+        write(*,*) 'mSpec: ', mSpec
+        write(*,*) 'qSpec: ', qSpec
+
+        ! Interpolate the ar2Input data to the grid.
+
+        allocate ( &
+            g%densitySpec ( g%nR, g%nZ, nSpec ), & 
+            g%ktSpec ( g%nR, g%nZ, nSpec ), &
+            g%nuOmg(g%nR,g%nZ) )
+ 
+        do s=1,nSpec
+
+            ! Density interpolation
+            Tmp2DArr = Density_m3(:,:,s) 
+
+            call surf1 ( ar2_nR, ar2_nZ, ar2_r_dp, ar2_z_dp, Tmp2DArr, ar2_nR, zx1, zxm, &
+                zy1, zyn, zxy11, zxym1, zxy1n, zxymn, islpsw, &
+                zp_tmp, temp, sigma_dp, iErr)
+
+            do i=1,g%nR
+                do j=1,g%nZ
+
+                    ThisR = g%r(i)
+                    ThisZ = g%z(j)
+
+                    g%DensitySpec(i,j,s) = surf2 ( ThisR, ThisZ, ar2_nR, ar2_nZ, ar2_r_dp, ar2_z_dp, &
+                        Tmp2DArr, ar2_nR, zp_tmp, sigma_dp )
+                enddo
+            enddo
+
+            ! Temp interpolation
+            Tmp2DArr = Temp_eV(:,:,s) 
+
+            call surf1 ( ar2_nR, ar2_nZ, ar2_r_dp, ar2_z_dp, Tmp2DArr, ar2_nR, zx1, zxm, &
+                zy1, zyn, zxy11, zxym1, zxy1n, zxymn, islpsw, &
+                zp_tmp, temp, sigma_dp, iErr)
+
+            do i=1,g%nR
+                do j=1,g%nZ
+
+                    ThisR = g%r(i)
+                    ThisZ = g%z(j)
+
+                    g%kTSpec(i,j,s) = surf2 ( ThisR, ThisZ, ar2_nR, ar2_nZ, ar2_r_dp, ar2_z_dp, &
+                        Tmp2DArr, ar2_nR, zp_tmp, sigma_dp ) * q
+                enddo
+            enddo
+         
+        enddo
+
+        ! Santiy checking
+
+        if(count(g%kTSpec<=0)>0)then
+                write(*,*) 'ERROR: -ve temp'
+                stop
+        endif
+        if(count(g%DensitySpec<=0)>0)then
+                write(*,*) 'ERROR: -ve density'
+                stop
+        endif
+
+
+        g%nuOmg = xNuOmg
+
+        call omega_freqs ( g )
+
+    end subroutine init_AR2_Profiles
+
+    subroutine init_profiles ( nSpec )
+
+        use fitpack_dp 
 
         use aorsaNamelist, &
-        only: freqcy, nSpec, zSpecIn, amuSpecIn, &
+        only: freqcy, zSpecIn, amuSpecIn, &
             tSpecIn, dSpecIn, tLimIn, dLimIn, &
             dAlphaIn, dBetaIn, tAlphaIn, tBetaIn
         use grid
 
         implicit none
+
+        integer, intent(in) :: nSpec
 
         omgrf = 2.0 * pi * freqcy
         k0 = omgrf / clight

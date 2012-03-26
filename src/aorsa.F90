@@ -108,7 +108,7 @@ program aorsa2dMain
 !   --------------------
 
     if (iAm==0) &
-    write(*,*) 'Reading eqdsk'
+    write(*,*) 'Reading magnetic field data'
 
     if(useEqdsk)then
         call read_geqdsk ( eqdsk, plot = .false. )
@@ -149,21 +149,28 @@ program aorsa2dMain
 
     if (iAm==0) &
     write(*,*) 'Profile setup'
-   
-    call init_profiles ()
+  
+    if(useAR2Input)then 
 
-    do i=1,nGrid
+        do i=1,nGrid
+            call init_ar2_profiles( allGrids(i) )
+        enddo
 
+    else 
+        call init_profiles (nSpec)
 
-        if (useFluxProfiles) then
-            call flux_profiles ( allGrids(i) )
-        elseif (useCircularProfiles) then
-            call circular_profiles ( allGrids(i) )
-        else
-            call flat_profiles ( allGrids(i), parabolic = parabolic )
-        endif
+        do i=1,nGrid
 
-    enddo
+            if (useFluxProfiles) then
+                call flux_profiles ( allGrids(i) )
+            elseif (useCircularProfiles) then
+                call circular_profiles ( allGrids(i) )
+            else
+                call flat_profiles ( allGrids(i), parabolic = parabolic )
+            endif
+
+        enddo
+    endif
 
 
 !   Setup the plasma paraemter splines for sigma input

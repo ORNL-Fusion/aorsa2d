@@ -10,6 +10,9 @@ ${OBJ_DIR}/zfunction.o: ${SRC_DIR}/zfunction.F90
 ${OBJ_DIR}/zfunHammett.o: ${SRC_DIR}/zfunHammett.f90
 	${F90} -c ${F90FLAGS} ${DOUBLE} $< -o $@ ${INC_DIR}
 
+${OBJ_DIR}/fitpack_dp.o: ${SRC_DIR}/fitpack_dp.f90
+	${F90} -c ${F90FLAGS} ${DOUBLE} $< -o $@ ${INC_DIR}
+
 ${OBJ_DIR}/zfunOriginal.o: ${SRC_DIR}/zfunOriginal.f90
 	${F90} -c ${F90FLAGS} ${DOUBLE} $< -o $@ ${INC_DIR}
 

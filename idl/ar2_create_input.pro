@@ -56,7 +56,7 @@ pro ar2_create_input
 
 	eqdskFileName = 'Scen4_bn2.57_129x129.dlgMod'
 
-	z	= [-1,1,1]
+	atomicZ	= [-1,1,1]
 	amu = [me/mi,2,3]
 
 	; Flux function is : a[0] + ( a[1] - a[0] ) * ( 1.0 - x^a[3] )^a[2]
@@ -72,11 +72,11 @@ pro ar2_create_input
 			[00.3d3,	25.2d3,		6.0,	4.0] ]
 
 	nSpec = n_elements ( amu )
-	w	= freq * 2d0 * !dpi
+	wrf	= freq * 2d0 * !dpi
 
 	for n=1,nSpec-1 do begin
-		nn[0,0]	+= z[n]*nn[0,n] 
-		nn[1,0]	+= z[n]*nn[1,n] 
+		nn[0,0]	+= atomicZ[n]*nn[0,n] 
+		nn[1,0]	+= atomicZ[n]*nn[1,n] 
 	endfor
 
 	; Grid
@@ -138,7 +138,6 @@ pro ar2_create_input
 	iiMaskIn_lim = where ( mask_lim eq 1 )
 	iiMaskOut_lim = where ( mask_lim eq 0 )
 
-
 	print, 'DONE'
 
 
@@ -184,12 +183,17 @@ pro ar2_create_input
 	density_m3	= fltArr ( nR, nZ, nSpec )
 	temp_eV	= fltArr ( nR, nZ, nSpec )
 
-	ar2_create_profiles, nn, tt, nR, nZ, PsiNorm, Mask_bbb, d_bbb, $
+	ar2_create_profiles, nSpec, nn, tt, nR, nZ, PsiNorm, Mask_bbb, d_bbb, $
 			Density_m3, Temp_eV
+
+	; Look at the dispersion relation for these data
+
+	ar2_input_dispersion, wrf, amu, atomicZ, nn, nPhi, nSpec, nR, nZ, $
+			Density_m3, bMag, r2D
 
 	; Write netCdf file
 
-	outFileName	= 'ar2_bFieldInput.nc'
+	outFileName	= 'ar2Input.nc'
 	nc_id	= nCdf_create ( outFileName, /clobber )
 	nCdf_control, nc_id, /fill
 	
@@ -200,15 +204,23 @@ pro ar2_create_input
 	nlim_id	= nCdf_dimDef ( nc_id, 'nlim', n_elements(g.rlim) )
 
 	scalar_id	= nCdf_dimDef ( nc_id, 'scalar', 1 )
-	
+
+	AtomicZ_id = nCdf_varDef ( nc_id, 'AtomicZ', [nSpec_id], /short )
+	amu_id = nCdf_varDef ( nc_id, 'amu', [nSpec_id], /short )
+
+	rMin_id = nCdf_varDef ( nc_id, 'rMin', [scalar_id], /float )
+	rMax_id = nCdf_varDef ( nc_id, 'rMax', [scalar_id], /float )
+	zMin_id = nCdf_varDef ( nc_id, 'zMin', [scalar_id], /float )
+	zMax_id = nCdf_varDef ( nc_id, 'zMax', [scalar_id], /float )
+
 	r_id = nCdf_varDef ( nc_id, 'r', [ nR_id ], /float )
 	z_id = nCdf_varDef ( nc_id, 'z', [ nz_id ], /float )
 	br_id = nCdf_varDef ( nc_id, 'br', [nR_id, nz_id], /float )
 	bt_id = nCdf_varDef ( nc_id, 'bt', [nR_id, nz_id], /float )
 	bz_id = nCdf_varDef ( nc_id, 'bz', [nR_id, nz_id], /float )
 
-	Density_id = nCdf_varDef ( nc_id, 'density_m3', [nR_id, nz_id, nSpec_id], /float )
-	Temp_id = nCdf_varDef ( nc_id, 'temp_eV', [nR_id, nz_id, nSpec_id], /float )
+	Density_id = nCdf_varDef ( nc_id, 'Density_m3', [nR_id, nz_id, nSpec_id], /float )
+	Temp_id = nCdf_varDef ( nc_id, 'Temp_eV', [nR_id, nz_id, nSpec_id], /float )
 
 	rbbbs_id = nCdf_varDef ( nc_id, 'rbbbs', [nbbbs_id], /float )
 	zbbbs_id = nCdf_varDef ( nc_id, 'zbbbs', [nbbbs_id], /float )
@@ -217,12 +229,20 @@ pro ar2_create_input
 	zlim_id = nCdf_varDef ( nc_id, 'zlim', [nlim_id], /float )
 
 	nCdf_control, nc_id, /enDef
-	
+
+	nCdf_varPut, nc_id, rMin_id, rMin
+	nCdf_varPut, nc_id, rMax_id, rMax
+	nCdf_varPut, nc_id, zMin_id, zMin
+	nCdf_varPut, nc_id, zMax_id, zMax
+
 	nCdf_varPut, nc_id, r_id, r 
 	nCdf_varPut, nc_id, z_id, z
 	nCdf_varPut, nc_id, br_id, br
 	nCdf_varPut, nc_id, bt_id, bt 
 	nCdf_varPut, nc_id, bz_id, bz
+
+	nCdf_varPut, nc_id, AtomicZ_id, AtomicZ 
+	nCdf_varPut, nc_id, amu_id, amu 
 
 	nCdf_varPut, nc_id, Density_id, Density_m3
 	nCdf_varPut, nc_id, Temp_id, Temp_eV
@@ -235,5 +255,4 @@ pro ar2_create_input
 
 	nCdf_close, nc_id
 
-	stop
 end
