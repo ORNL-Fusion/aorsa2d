@@ -7,6 +7,7 @@ pro ar2_create_profiles, nSpec, nn, tt, nR, nZ, PsiNorm, Mask_bbb, d_bbb, Densit
 	@constants
 
 	DensityMin = 1e17
+	TempMin = 1e-3
 
 	; exp decay profile from Lamelle et al., Nucl. Fusion, 46 (2006) 432-443
 	; see pages 436-437
@@ -39,6 +40,7 @@ pro ar2_create_profiles, nSpec, nn, tt, nR, nZ, PsiNorm, Mask_bbb, d_bbb, Densit
 	endfor
 
 	Density_m3 = Density_m3>DensityMin
+	Temp_eV = Temp_eV>TempMin
 
    	s_ne = surface(density_m3[*,*,0], layout=[3,1,1])
    	s_te = surface(temp_eV[*,*,0], layout=[3,1,2], /current)
@@ -65,6 +67,12 @@ pro ar2_create_profiles, nSpec, nn, tt, nR, nZ, PsiNorm, Mask_bbb, d_bbb, Densit
 	iiBad = where(temp_eV lt 0,iiBadCnt)
 	if iiBadCnt gt 0 then begin
 		print, 'ERROR: temp failed sanity check'
+		stop
+	endif
+
+	iiBad = where(temp_eV*e lt 0,iiBadCnt)
+	if iiBadCnt gt 0 then begin
+		print, 'ERROR: temp*q failed sanity check'
 		stop
 	endif
 

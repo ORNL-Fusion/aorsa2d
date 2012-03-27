@@ -81,8 +81,8 @@ pro ar2_create_input
 
 	; Grid
 
-	nR = 100
-	nZ = 200
+	nR = 200
+	nZ = 400
 
 	rMin = 3.5
 	rMax = 9.0

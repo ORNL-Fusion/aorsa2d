@@ -43,7 +43,7 @@ contains
         real, allocatable :: ar2_r_dp(:), ar2_z_dp(:)
         real :: ThisR,ThisZ
 
-        sigma_dp = 0.0
+        sigma_dp = 1.0
         islpsw  = 255 
 
         write(*,*) ar2_nZ, ar2_nR
@@ -82,9 +82,6 @@ contains
         mSpec(1)    = xme  
         qSpec       = zSpec * q 
 
-        write(*,*) 'mSpec: ', mSpec
-        write(*,*) 'qSpec: ', qSpec
-
         ! Interpolate the ar2Input data to the grid.
 
         allocate ( &
@@ -109,6 +106,7 @@ contains
 
                     g%DensitySpec(i,j,s) = surf2 ( ThisR, ThisZ, ar2_nR, ar2_nZ, ar2_r_dp, ar2_z_dp, &
                         Tmp2DArr, ar2_nR, zp_tmp, sigma_dp )
+                    !write(*,*) g%DensitySpec(i,j,s)
                 enddo
             enddo
 
@@ -127,6 +125,7 @@ contains
 
                     g%kTSpec(i,j,s) = surf2 ( ThisR, ThisZ, ar2_nR, ar2_nZ, ar2_r_dp, ar2_z_dp, &
                         Tmp2DArr, ar2_nR, zp_tmp, sigma_dp ) * q
+                    !write(*,*) i, j, ThisR, ThisZ, g%kTSpec(i,j,s)
                 enddo
             enddo
          
@@ -140,6 +139,8 @@ contains
         endif
         if(count(g%DensitySpec<=0)>0)then
                 write(*,*) 'ERROR: -ve density'
+                write(*,*) '    This is possibly due to a bad interpolation.'
+                write(*,*) '    Try creating the ar2Input file with higher res.'
                 stop
         endif
 
