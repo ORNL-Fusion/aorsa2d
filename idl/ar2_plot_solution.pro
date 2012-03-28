@@ -635,7 +635,7 @@ pro ar2_plot_solution, full = full, $
 
 
 		nLevs = 11
-		scale = 10
+		scale = 20
 		levels = fIndGen(nLevs)/(nLevs-1)*scale
 		colors = reverse(bytScl(levels, top=253)+1)
 		c = contour ( jPAlpha[*,*,0], x, y, c_value=levels, rgb_indices=colors, rgb_table=3, /fill, aspect_ratio=1.0 )
@@ -645,7 +645,7 @@ pro ar2_plot_solution, full = full, $
 		p = plot ( g.rbbbs, g.zbbbs, /over )
 
 		nLevs = 11
-		scale = 0.1e3 
+		scale = 0.05e3 
 		levels = fIndGen(nLevs)/(nLevs-1)*scale
 		colors = reverse(bytScl(levels, top=253)+1)
 		c = contour ( eAlpha[*,*,0], x, y, c_value=levels, rgb_indices=colors, rgb_table=3, /fill, aspect_ratio=1.0 )
@@ -653,59 +653,6 @@ pro ar2_plot_solution, full = full, $
 		p = plot ( g.rlim, g.zlim, /over )
 		p = plot ( g.rbbbs, g.zbbbs, /over )
 	
-		stop
-
-		; Field contour plot
-		; ------------------
-
-		nLevs	= 21 
-
-		if(not keyword_set(scale1)) then $
-		scale1 = max ( abs ( [ealpha] ) )
-		print, 'Scale1: ', scale1
-		if(not keyword_set(scale3)) then $
-		scale3 = max ( abs ( [eB] ) )
-		print, 'Scale3: ', scale3
-
-
-		nLevs = 20
-		levels	= (fIndGen(nLevs)+1)/(nLevs-1) * scale1 * 0.5
-		colors	= 256-(bytScl ( levels, top = 253 )+1)
-
-		window, 0
-		device, decomposed = 0
-		!p.background = 255
-		loadct, 3
-		contour, ealphaAll, xAll, yAll, $
-			irreg = 1, $
-			levels = levels, $
-			c_colors = colors, $
-			color = 0, /fill
-		loadct, 1
-		contour, -ealphaAll, xAll, yAll, $
-			irreg = 1, $
-			levels = levels, $
-			c_colors = colors, $
-			/over, color = 0, /fill
-
-		levels	= (fIndGen(nLevs)+1)/(nLevs-1) * scale3 * 0.5
-		colors	= 256-(bytScl ( levels, top = 253 )+1)
-
-		window, 1
-		loadct, 3
-		contour, eBAll, xAll, yAll, $
-			irreg = 1, $
-			levels = levels, $
-			c_colors = colors, $
-			color = 0, /fill
-		loadct, 1
-		contour, -eBAll, xAll, yAll, $
-			irreg = 1, $
-			levels = levels, $
-			c_colors = colors, $
-			/over, color = 0, /fill
-
-
 	endelse
 
 	if keyword_set(sav) then begin
