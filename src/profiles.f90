@@ -24,6 +24,7 @@ contains
         use grid
         use aorsaNameList, only: &
             nSpec,freqcy,xNuOmg
+        use parallel, only: iAm
 
         use fitpack
 
@@ -46,8 +47,6 @@ contains
         sigma_dp = 1.0
         islpsw  = 255 
 
-        write(*,*) ar2_nZ, ar2_nR
-
         allocate(temp(ar2_nZ+ar2_nZ+ar2_nR))
         allocate(zp_tmp(3*ar2_nZ*ar2_nR) )
         allocate(zx1(ar2_nZ), zxm(ar2_nZ), zy1(ar2_nR), zyn(ar2_nR))
@@ -69,7 +68,12 @@ contains
 
         nSpec = ar2_nS
 
-        write(*,*) 'Overwriting namelist inputs for nSpec and profiles'
+        if(iAm==0)then
+            write(*,*) 'Overwriting namelist inputs for nSpec and profiles'
+            write(*,*) '    nSpec: ', nSpec
+            write(*,*) '    zSpec: ', zSpec
+            write(*,*) '    amuSpec: ', amuSpec
+        endif
 
         allocate ( &
             mSpec(nSpec), zSpec(nSpec), &

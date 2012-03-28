@@ -78,7 +78,8 @@ ${OBJ_DIR}/profiles.o: \
 		${OBJ_DIR}/bField.o \
 		${OBJ_DIR}/constants.o \
 		${OBJ_DIR}/aorsaNamelist.o \
-		${OBJ_DIR}/fitpack_dp.o
+		${OBJ_DIR}/fitpack_dp.o \
+		${OBJ_DIR}/parallel.o
 
 ${OBJ_DIR}/rotation.o: \
 		${OBJ_DIR}/bField.o \

@@ -64,12 +64,12 @@ pro ar2_create_input
    	;		limiter,	center,		alp,	bet
 
 	nn = [	[0.0,		0.0,		1.0,	32.0],$ ; electrons are spec 0
-			[2.5d19,	3.7d19,		1.0,	32.0],$
-			[0.5d19,	3.6d19,		1.0,	32.0] ]
+			[1.5d19,	2.0d19,		1.0,	32.0],$
+			[0.5d19,	2.0d19,		1.0,	32.0] ]
 
-	tt = [	[00.2d3,	23.9d3,		6.0,	4.0],$
-			[00.3d3,	25.2d3,		6.0,	4.0],$
-			[00.3d3,	25.2d3,		6.0,	4.0] ]
+	tt = [	[00.2d3,	20.0d3,		6.0,	4.0],$
+			[00.3d3,	20.0d3,		6.0,	4.0],$
+			[00.3d3,	20.0d3,		6.0,	4.0] ]
 
 	nSpec = n_elements ( amu )
 	wrf	= freq * 2d0 * !dpi
@@ -189,7 +189,16 @@ pro ar2_create_input
 	; Look at the dispersion relation for these data
 
 	ar2_input_dispersion, wrf, amu, atomicZ, nn, nPhi, nSpec, nR, nZ, $
-			Density_m3, bMag, r2D
+			Density_m3, bMag, r2D, resonances = resonances
+
+	; Plot up resonance locations too.
+
+	p = plot(g.rbbbs,g.zbbbs,thick=2,aspect=1.0)
+	p = plot(g.rlim,g.zlim,thick=2,aspect=1.0,/over)
+
+	for s=1,nSpec-1 do begin
+		c=contour(resonances[*,*,s],r,z,c_value=fIndGen(5)/4.0*0.01,/over)
+	endfor
 
 	; Write netCdf file
 

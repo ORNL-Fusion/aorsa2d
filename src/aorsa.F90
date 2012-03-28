@@ -30,7 +30,7 @@ program aorsa2dMain
 
     !   Timer variables
 
-    type ( timer ) :: tFill, tSolve, tTotal
+    type ( timer ) :: tFill, tSolve, tTotal, tWorkList
 
 #ifdef usepapi
 
@@ -257,11 +257,16 @@ program aorsa2dMain
 !   Create workLists
 !   ----------------
 
+    call start_timer ( tWorkList )
+
     do i=1,nGrid
 
         call createWorkList ( allGrids(i) )
 
     enddo
+
+    if (iAm==0) &
+    write(*,*) 'Time to create WorkList: ', end_timer ( tWorkList )
 
 
 !   Fill matrix 

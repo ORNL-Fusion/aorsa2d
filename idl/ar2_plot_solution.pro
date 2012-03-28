@@ -648,8 +648,19 @@ pro ar2_plot_solution, full = full, $
 		scale = 0.05e3 
 		levels = fIndGen(nLevs)/(nLevs-1)*scale
 		colors = reverse(bytScl(levels, top=253)+1)
-		c = contour ( eAlpha[*,*,0], x, y, c_value=levels, rgb_indices=colors, rgb_table=3, /fill, aspect_ratio=1.0 )
-		c = contour ( -eAlpha[*,*,0], x, y, c_value=levels, rgb_indices=colors, rgb_table=1, /fill,/over )
+		PlotField = (real_part(eAlpha)<max(levels))>min(-levels)
+		c = contour ( PlotField, x, y, c_value=levels, rgb_indices=colors, rgb_table=3, /fill, aspect_ratio=1.0 )
+		c = contour ( -PlotField, x, y, c_value=levels, rgb_indices=colors, rgb_table=1, /fill,/over )
+		p = plot ( g.rlim, g.zlim, /over )
+		p = plot ( g.rbbbs, g.zbbbs, /over )
+
+		nLevs = 11
+		scale = 0.00005e3 
+		levels = fIndGen(nLevs)/(nLevs-1)*scale
+		colors = reverse(bytScl(levels, top=253)+1)
+		PlotField = (real_part(eb)<max(levels))>min(-levels)
+		c = contour ( PlotField, x, y, c_value=levels, rgb_indices=colors, rgb_table=3, /fill, aspect_ratio=1.0 )
+		c = contour ( -PlotField, x, y, c_value=levels, rgb_indices=colors, rgb_table=1, /fill,/over )
 		p = plot ( g.rlim, g.zlim, /over )
 		p = plot ( g.rbbbs, g.zbbbs, /over )
 	
