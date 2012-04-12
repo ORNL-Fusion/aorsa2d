@@ -282,9 +282,9 @@ contains
 
         integer :: workListPosition, i, j, n, m
         type(workListEntry) :: thisWorkList
-        type(workListEntry), allocatable :: workListTooLong(:)
+        type(workListEntry), allocatable :: workListTooLong(:),WorkListJustRight(:)
 #ifdef par
-        integer :: iCol, iRow
+        integer :: iCol,iRow,ii,jj
         !   scalapack indicies
         !   see http://www.netlib.org/scalapack/slug/node76.html
         integer :: l_sp, m_sp, pr_sp, pc_sp, x_sp, y_sp
@@ -319,57 +319,97 @@ contains
         enddo i_workList
 #else
         allocate(workListTooLong(nRowLocal*nColLocal))
-        workListPosition = 0
 
-        i_workList: &
-        do i=1,g%nR
-            j_workList: &
-            do j=1,g%nZ
+        ! Touch this piece of code and die!
+        WorkListPosition = 0
+        do ii=1,nRowLocal,3
+            do jj=1,nColLocal,3
+       
+                x_sp = mod(ii-1,rowBlockSize)+1
+                y_sp = mod(jj-1,colBlockSize)+1
+                l_sp = (ii-1)/rowBlockSize
+                m_sp = (jj-1)/colBlockSize
+                iRow = ( l_sp * npRow + myRow ) * rowBlockSize + x_sp
+                iCol = ( m_sp * npCol + myCol ) * colBlockSize + y_sp        
 
-                iRow = (i-1) * 3 * g%nZ + (j-1) * 3 + 1
-                iRow = iRow + ( g%startRow-1 )
+                i = (iRow-1)/(3*g%nZ)+1
+                j = (mod(iRow-1,3*g%nZ)+1-1)/3+1
+                n = (iCol-1)/(3*g%nModesZ)+1+g%nMin-1
+                m = (mod(iCol-1,3*g%nModesZ)+1-1)/3+1+g%mMin-1
+           
+                workListPosition = workListPosition + 1
+                thisWorkList = workListEntry(i,j,m,n)
+                workListTooLong(workListPosition) = thisWorkList
 
-                n_workList: &
-                do n=g%nMin,g%nMax
-                    m_workList: &
-                    do m=g%mMin,g%mMax
+            enddo
+        enddo
 
-                        iCol = (n-g%nMin) * 3 * g%nModesZ + (m-g%mMin) * 3 + 1
-                        iCol = iCol + ( g%startCol-1 )
-
-                        pr_sp_thisPt   = mod ( rowStartProc + (iRow-1+(/0,1,2/))/rowBlockSize, npRow )
-                        pc_sp_thisPt   = mod ( colStartProc + (iCol-1+(/0,1,2/))/colBlockSize, npCol )
-
-                        ! Check to ensure each all 9 (3x3 vector elements)
-                        ! pieces of this workList element are on the SAME
-                        ! processor. i.e., There is NO overlap such that when
-                        ! calculating the current, we get doubling up. The
-                        ! following if test should return null IF the blocksize
-                        ! is a multiple of 3.
-
-                        if(pr_sp_thisPt(1) /= pr_sp_thisPt(2) .or. pr_sp_thisPt(1) /= pr_sp_thisPt(3) &
-                            .or. pc_sp_thisPt(1) /= pc_sp_thisPt(2) .or. pc_sp_thisPt(1) /= pc_sp_thisPt(3)) then
-                                write(*,*) pr_sp_thisPt, pc_sp_thisPt
-                        endif
-
-                        addToWorkList: &
-                        if ( any(pr_sp_thisPt==myRow) .and. any(pc_sp_thisPt==myCol) ) then
-
-                            workListPosition = workListPosition + 1
-                            thisWorkList = workListEntry(i,j,m,n)
-                            workListTooLong(workListPosition) = thisWorkList
-
-                        endif addToWorkList
-
-                    enddo m_workList
-                enddo n_workList
-
-            enddo j_workList
-        enddo i_workList
-
+        !allocate(WorkListJustRight(workListPosition))
+        !WorkListJustRight = workListTooLong(1:workListPosition)
         allocate(g%wl(workListPosition))
         g%wl = workListTooLong(1:workListPosition)
-        deallocate(workListTooLong)
+
+
+!        WorkListPosition = 0
+!
+!        i_workList: &
+!        do i=1,g%nR
+!            j_workList: &
+!            do j=1,g%nZ
+!
+!                iRow = (i-1) * 3 * g%nZ + (j-1) * 3 + 1
+!                iRow = iRow + ( g%startRow-1 )
+!
+!                n_workList: &
+!                do n=g%nMin,g%nMax
+!                    m_workList: &
+!                    do m=g%mMin,g%mMax
+!
+!                        iCol = (n-g%nMin) * 3 * g%nModesZ + (m-g%mMin) * 3 + 1
+!                        iCol = iCol + ( g%startCol-1 )
+!
+!                        pr_sp_thisPt   = mod ( rowStartProc + (iRow-1+(/0,1,2/))/rowBlockSize, npRow )
+!                        pc_sp_thisPt   = mod ( colStartProc + (iCol-1+(/0,1,2/))/colBlockSize, npCol )
+!
+!                        ! Check to ensure each all 9 (3x3 vector elements)
+!                        ! pieces of this workList element are on the SAME
+!                        ! processor. i.e., There is NO overlap such that when
+!                        ! calculating the current, we get doubling up. The
+!                        ! following if test should return null IF the blocksize
+!                        ! is a multiple of 3.
+!
+!                        if(pr_sp_thisPt(1) /= pr_sp_thisPt(2) .or. pr_sp_thisPt(1) /= pr_sp_thisPt(3) &
+!                            .or. pc_sp_thisPt(1) /= pc_sp_thisPt(2) .or. pc_sp_thisPt(1) /= pc_sp_thisPt(3)) then
+!                                write(*,*) pr_sp_thisPt, pc_sp_thisPt
+!                        endif
+!
+!                        addToWorkList: &
+!                        if ( any(pr_sp_thisPt==myRow) .and. any(pc_sp_thisPt==myCol) ) then
+!
+!                            workListPosition = workListPosition + 1
+!                            thisWorkList = workListEntry(i,j,m,n)
+!                            workListTooLong(workListPosition) = thisWorkList
+!
+!                        endif addToWorkList
+!
+!                    enddo m_workList
+!                enddo n_workList
+!
+!            enddo j_workList
+!        enddo i_workList
+!
+!        allocate(g%wl(workListPosition))
+!        g%wl = workListTooLong(1:workListPosition)
+!        deallocate(workListTooLong)
+!
+!        if(size(g%wl)/=size(WorkListJustRight)) stop
+!
+!        do i=1,WorkListPosition
+!            write(*,*) g%wl(i)%i,WorkListJustRight(i)%i,g%wl(i)%j,WorkListJustRight(i)%j, &
+!                g%wl(i)%m,WorkListJustRight(i)%m,g%wl(i)%n,WorkListJustRight(i)%n
+!
+!        enddo
+
 #endif
 
     end subroutine createWorkList
