@@ -248,9 +248,9 @@ subroutine jDotE ( g )
                 !    0.5 * realpart ( dot_product ( eHere, jHere ) )
 
                 g%jouleHeating(i,j,s) = &
-                    0.5 * realpart ( conjg(g%eAlpha(i,j)) * g%jAlpha(i,j,s) &
+                    0.5 * real(real( conjg(g%eAlpha(i,j)) * g%jAlpha(i,j,s) &
                                     + conjg(g%eBeta(i,j)) * g%jBeta(i,j,s) &
-                                    + conjg(g%eB(i,j)) * g%jB(i,j,s)  )
+                                    + conjg(g%eB(i,j)) * g%jB(i,j,s)  ))
 
             enddo
         enddo  

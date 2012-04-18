@@ -9,7 +9,7 @@ module interp
 
     real, allocatable :: &
         zp_bR(:), zp_bPhi(:), zp_bz(:), zp_psi(:), zp_rho(:)
-    real :: sigma = 0.0
+    real :: SplineSigma = 0.0
 
     
 contains
@@ -44,25 +44,25 @@ contains
 
             call surf1 ( nw, nh, r, z, psizr, nw, zx1, zxm, &
                 zy1, zyn, zxy11, zxym1, zxy1n, zxymn, islpsw, &
-                zp_psi, temp, sigma, iErr)
+                zp_psi, temp, SplineSigma, iErr)
  
             !   rho 
 
             call surf1 ( nw, nh, r, z, rhoNorm, nw, zx1, zxm, &
                 zy1, zyn, zxy11, zxym1, zxy1n, zxymn, islpsw, &
-                zp_rho, temp, sigma, iErr)
+                zp_rho, temp, SplineSigma, iErr)
      
             !   b field
 
             call surf1 ( nw, nh, r, z, bR, nw, zx1, zxm, &
                 zy1, zyn, zxy11, zxym1, zxy1n, zxymn, islpsw, &
-                zp_bR, temp, sigma, iErr)
+                zp_bR, temp, SplineSigma, iErr)
             call surf1 ( nw, nh, r, z, bPhi, nw, zx1, zxm, &
                 zy1, zyn, zxy11, zxym1, zxy1n, zxymn, islpsw, &
-                zp_bPhi, temp, sigma, iErr)
+                zp_bPhi, temp, SplineSigma, iErr)
             call surf1 ( nw, nh, r, z, bz__, nw, zx1, zxm, &
                 zy1, zyn, zxy11, zxym1, zxy1n, zxymn, islpsw, &
-                zp_bz, temp, sigma, iErr)
+                zp_bz, temp, SplineSigma, iErr)
 
         endif eqdskInput
 
@@ -78,13 +78,13 @@ contains
 
             call surf1 ( nR_ar2, nZ_ar2, r_ar2, z_ar2, br_ar2, nR_ar2, zx1, zxm, &
                 zy1, zyn, zxy11, zxym1, zxy1n, zxymn, islpsw, &
-                zp_bR, temp, sigma, iErr)
+                zp_bR, temp, SplineSigma, iErr)
             call surf1 ( nR_ar2, nZ_ar2, r_ar2, z_ar2, bt_ar2, nR_ar2, zx1, zxm, &
                 zy1, zyn, zxy11, zxym1, zxy1n, zxymn, islpsw, &
-                zp_bPhi, temp, sigma, iErr)
+                zp_bPhi, temp, SplineSigma, iErr)
             call surf1 ( nR_ar2, nZ_ar2, r_ar2, z_ar2, bz_ar2, nR_ar2, zx1, zxm, &
                 zy1, zyn, zxy11, zxym1, zxy1n, zxymn, islpsw, &
-                zp_bz, temp, sigma, iErr)
+                zp_bz, temp, SplineSigma, iErr)
 
         endif ar2Input_
  
@@ -106,24 +106,24 @@ contains
 
         if(useEqdsk)then
             bR_here = surf2 ( pos(1), pos(3), nw, nh, r, z, &
-                bR, nw, zp_bR, sigma )
+                bR, nw, zp_bR, SplineSigma )
             bPhi_here = surf2 ( pos(1), pos(3), nw, nh, r, z, &
-                bPhi, nw, zp_bPhi, sigma )
+                bPhi, nw, zp_bPhi, SplineSigma )
             bz_here = surf2 ( pos(1), pos(3), nw, nh, r, z, &
-                bz__, nw, zp_bz, sigma )
+                bz__, nw, zp_bz, SplineSigma )
             psi_here = surf2 ( pos(1), pos(3), nw, nh, r, z, &
-                psizr, nw, zp_psi, sigma )
+                psizr, nw, zp_psi, SplineSigma )
             rho_here = surf2 ( pos(1), pos(3), nw, nh, r, z, &
-                rhoNorm, nw, zp_rho, sigma )
+                rhoNorm, nw, zp_rho, SplineSigma )
         endif
 
         if(useAR2Input)then
             bR_here = surf2 ( pos(1), pos(3), nR_ar2, nZ_ar2, r_ar2, z_ar2, &
-                br_ar2, nR_ar2, zp_bR, sigma )
+                br_ar2, nR_ar2, zp_bR, SplineSigma )
             bPhi_here = surf2 ( pos(1), pos(3), nR_ar2, nZ_ar2, r_ar2, z_ar2, &
-                bt_ar2, nR_ar2, zp_bPhi, sigma )
+                bt_ar2, nR_ar2, zp_bPhi, SplineSigma )
             bz_here = surf2 ( pos(1), pos(3), nR_ar2, nZ_ar2, r_ar2, z_ar2, &
-                bz_ar2, nR_ar2, zp_bz, sigma )
+                bz_ar2, nR_ar2, zp_bz, SplineSigma )
         endif
 
 

@@ -39,7 +39,7 @@ contains
         character(len=*), intent(IN) :: eqdsk_fileName
         logical, intent(IN), optional :: plot
         real, allocatable :: yp(:), xp(:), temp(:), ss(:), yp_c(:)
-        real :: spl1 = 0.0, spln = 0.0, t, sigma = 0.0
+        real :: spl1 = 0.0, spln = 0.0, t, SplineSigma = 0.0
 
         !   Read in variables from geqdsk file
 
@@ -123,7 +123,7 @@ contains
         !flux_grid_direction: &
         !if ( fluxGrid(1) > fluxGrid(2) ) then 
 
-            call curv1 ( nw, fluxGrid, fpol, spl1, spln, 3, yp_c, temp, sigma, iErr )
+            call curv1 ( nw, fluxGrid, fpol, spl1, spln, 3, yp_c, temp, SplineSigma, iErr )
             if ( iErr .ne. 0 ) then 
                     write(*,*) 'eqdsk_dlg.f90 [103]: curv1 error', iErr
                     stop
@@ -133,7 +133,7 @@ contains
                     
                     !   curv2 evaluates the spline (fitpack.f)
                     !t   =  ( psizr(i,j) - simag ) / ( sibry - simag )
-                    fPolRZ(i,j) = curv2 ( psizr(i,j), nw, fluxGrid, fpol, yp_c, sigma )
+                    fPolRZ(i,j) = curv2 ( psizr(i,j), nw, fluxGrid, fpol, yp_c, SplineSigma )
                     bPhi(i,j)   = fpolRZ(i,j) / r(i)
 
                 end do
@@ -150,7 +150,7 @@ contains
 
         !else
 
-        !    call curv1 ( nw, fluxGrid, fpol, spl1, spln, 3, yp_c, temp, sigma, iErr )
+        !    call curv1 ( nw, fluxGrid, fpol, spl1, spln, 3, yp_c, temp, SplineSigma, iErr )
         !    if ( iErr .ne. 0 ) then 
         !            write(*,*) 'eqdsk_dlg.f90 [103]: curv1 error', iErr
         !            stop
@@ -158,7 +158,7 @@ contains
         !    do i=1,nw
         !        do j=1,nh
 
-        !            fPolRZ(i,j) = curv2 ( psizr(i,j), nw, fluxGrid, fpol, yp_c, sigma )
+        !            fPolRZ(i,j) = curv2 ( psizr(i,j), nw, fluxGrid, fpol, yp_c, SplineSigma )
         !            bPhi(i,j)   = fpolRZ(i,j) / r(i)
 
         !        end do

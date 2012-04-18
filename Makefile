@@ -6,6 +6,8 @@ SRC_DIR = src
 OBJ_DIR = obj
 MOD_DIR = mod
 
+COMPILER := PGI
+
 # objects
 # -------
 
@@ -101,6 +103,18 @@ DEBUG := #-pg -g -fbacktrace -fsignaling-nans -ffpe-trap=zero,invalid#,overflow#
 OPTIMIZATION := -O3
 DOUBLE := -fdefault-real-8
 MOD_LOC := -Jmod
+
+ifeq (${COMPILER},PGI)
+    MOD_LOC:= -module mod
+    DOUBLE:= -Mr8
+    WARN:=
+    DEBUG:= -g -traceback -Ktrap=divz,inv,ovf
+    OPTIMIZATION:=
+    BOUNDS:= -Mbounds
+    FORMAT:=
+endif
+
+
 
 ifeq (${PARALLEL},1)
 	F90 = mpif90

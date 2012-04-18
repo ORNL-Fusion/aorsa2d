@@ -76,8 +76,11 @@ real(kind=DBL), parameter :: &
     rmaxexp=708.503061461606d0,&
     rmaxgoni=3.53711887601422d+15
 
-xi = realpart(zIn)
-yi = imagpart(zIn)
+!xi = realpart(zIn)
+!yi = imagpart(zIn)
+xi = real(real(zIn))
+yi = real(aimag(zIn))
+
 
 flag = .false.
 xabs = abs(xi)
