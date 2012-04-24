@@ -204,7 +204,7 @@ contains
 !       explanation of machine-dependent constants
 !
 ! nsig  decimal significance desired.  should be set to
-!       ifix(alog10(2)*nbit+1), where nbit is the number of
+!       int(alog10(2)*nbit+1), where nbit is the number of
 !       bits in the mantissa of a real variable.
 !       setting nsig higher will increase cpu time without
 !       increasing accuracy, while setting nsig lower will
@@ -274,7 +274,7 @@ contains
       data nsig/15/,nten/308/,largez/100000/,exparg/709.78/
 
       tempar = sqrt(x*x+y*y)
-      magz = ifix((tempar))
+      magz = int((tempar))
       if (nb.gt.0 .and. magz.le.largez .and. &
           ((ize.eq.0 .and. abs(y).le.exparg) .or. &
                                      (ize.eq.1 .and. abs(x).le.exparg))) &
@@ -422,7 +422,7 @@ contains
       tempbr = (float(ize))*x+(float(1-ize))*y
       ipos = 0
       if (tempbr) 111,112,111
-  111 ipos = ifix((1.1e0*tempbr/abs(tempbr)))
+  111 ipos = int((1.1e0*tempbr/abs(tempbr)))
   112 mrecur = 4*((2+ize+ipos)/2)-3-2*(ize+ipos)
       k = 2+ipos+2*ize*ipos**2-ize
       l = n-4*(n/4)

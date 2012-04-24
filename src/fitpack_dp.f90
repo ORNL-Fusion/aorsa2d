@@ -1833,7 +1833,7 @@ contains
 !
 ! determine interval
 !
-      tn = t-float(ifix(t))
+      tn = t-float(int(t))
       if (tn .lt. 0.) tn = tn+1.
       tn = s(n)*tn+s(1)
       im1 = n
@@ -1939,7 +1939,7 @@ contains
 !
 ! determine interval
 !
-      tn = t-float(ifix(t))
+      tn = t-float(int(t))
       if (tn .lt. 0.) tn = tn+1.
       tn = s(n)*tn+s(1)
       im1 = n
