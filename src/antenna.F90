@@ -40,7 +40,8 @@ contains
         only: rAnt, zAnt, npRow, npCol, &
             antSigX, antSigY, &
             metalLeft, metalRight, metalTop, metalBot, &
-            useEqdsk, r0, rhoAnt, antSigRho
+            useEqdsk, r0, rhoAnt, antSigRho, &
+            AntennaJ_R, AntennaJ_T, AntennaJ_Z
         use grid
         use parallel
         use profiles, &
@@ -52,6 +53,7 @@ contains
         type(gridBlock), intent(inout) :: g
 
         integer :: i, j, iRow, iCol
+        complex :: TmpAntJ
 
         ! scalapack index variables
 
@@ -72,20 +74,18 @@ contains
                 g%jR(i,j) = 0.0
                 g%jT(i,j) = 0.0
                 if(useEqdsk) then
-                    !if(g%R(i)>r0) &
-                    !g%jZ(i,j) = exp ( &
+                    !TmpAntJ = exp ( &
                     !-( (g%rho(i,j)-rhoAnt)**2/antSigRho**2 + (g%Z(j)-zAnt)**2/antSigY**2 ) &
                     !      )
-                    g%jZ(i,j) = 50*exp ( -( (g%R(i)-rAnt)**2/antSigX**2 + (g%Z(j)-zAnt)**2/antSigY**2 ) )
+                    TmpAntJ = 50*exp ( -( (g%R(i)-rAnt)**2/antSigX**2 + (g%Z(j)-zAnt)**2/antSigY**2 ) )
                 else
-                    !g%jR(i,j) = exp ( &
-                    !-( (g%R(i)-rAnt)**2/antSigX**2 + (g%Z(j)-zAnt)**2/antSigY**2 ) &
-                    !      )
-                    g%jZ(i,j) = 50*exp ( -( (g%R(i)-rAnt)**2/antSigX**2 + (g%Z(j)-zAnt)**2/antSigY**2 ) )
-                    !if(i==g%nR/2) g%jR(i,j) = 5000
-                    !write(*,*) 'WARNING --- using 1D jR NOT 2D jZ ---', antSigX
+                    TmpAntJ = 50*exp ( -( (g%R(i)-rAnt)**2/antSigX**2 + (g%Z(j)-zAnt)**2/antSigY**2 ) )
                 endif
 
+                if (AntennaJ_R) g%jR(i,j) = TmpAntJ
+                if (AntennaJ_T) g%jT(i,j) = TmpAntJ
+                if (AntennaJ_Z) g%jZ(i,j) = TmpAntJ
+ 
                 !   boundary conditions
                 !   -------------------
 

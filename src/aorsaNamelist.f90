@@ -8,6 +8,9 @@ implicit none
     ! -----
     ! Electrons must be the first species 
 
+    logical :: AntennaJ_R = .false.
+    logical :: AntennaJ_T = .false.
+    logical :: AntennaJ_Z = .true.
     integer, parameter :: nSpecMax  = 5 
     integer :: zSpecIn(nSpecMax)    = (/ -1, 2, 0, 0, 0 /)
     integer :: amuSpecIn(nSpecMax)  = (/  0, 4, 0, 0, 0 /) 
@@ -477,7 +480,8 @@ implicit none
      &    chebyshevX, chebyshevY, magma, rhoAnt, antSigRho, toroidalBroadening,&
      &    kPrlEffLimit, nGrid, useAr2Input, AR2InputFileName, &
      &    nRAll, nZAll, rMinAll, rMaxAll, zMinAll, zMaxAll, &
-     &    overlap, parabolic, cosX, cosY, nZ_1D, fracOfModesInSolution
+     &    overlap, parabolic, cosX, cosY, nZ_1D, fracOfModesInSolution, &
+     &    AntennaJ_R, AntennaJ_T, AntennaJ_Z
 
                 
 contains
