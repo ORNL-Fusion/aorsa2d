@@ -275,6 +275,7 @@ contains
         use parallel
         use aorsaNamelist, &
             only: npRow, npCol
+        use scalapack_mod, only: IndxL2G
  
         implicit none
 
@@ -325,12 +326,8 @@ contains
         do ii=1,nRowLocal,3
             do jj=1,nColLocal,3
        
-                x_sp = mod(ii-1,rowBlockSize)+1
-                y_sp = mod(jj-1,colBlockSize)+1
-                l_sp = (ii-1)/rowBlockSize
-                m_sp = (jj-1)/colBlockSize
-                iRow = ( l_sp * npRow + myRow ) * rowBlockSize + x_sp
-                iCol = ( m_sp * npCol + myCol ) * colBlockSize + y_sp        
+                iRow = IndxL2G ( ii, RowBlockSize, MyRow, 0, NpRow )
+                iCol = IndxL2G ( jj, ColBlockSize, MyCol, 0, NpCol )
 
                 i = (iRow-1)/(3*g%nZ)+1
                 j = (mod(iRow-1,3*g%nZ)+1-1)/3+1
@@ -344,71 +341,8 @@ contains
             enddo
         enddo
 
-        !allocate(WorkListJustRight(workListPosition))
-        !WorkListJustRight = workListTooLong(1:workListPosition)
         allocate(g%wl(workListPosition))
         g%wl = workListTooLong(1:workListPosition)
-
-
-!        WorkListPosition = 0
-!
-!        i_workList: &
-!        do i=1,g%nR
-!            j_workList: &
-!            do j=1,g%nZ
-!
-!                iRow = (i-1) * 3 * g%nZ + (j-1) * 3 + 1
-!                iRow = iRow + ( g%startRow-1 )
-!
-!                n_workList: &
-!                do n=g%nMin,g%nMax
-!                    m_workList: &
-!                    do m=g%mMin,g%mMax
-!
-!                        iCol = (n-g%nMin) * 3 * g%nModesZ + (m-g%mMin) * 3 + 1
-!                        iCol = iCol + ( g%startCol-1 )
-!
-!                        pr_sp_thisPt   = mod ( rowStartProc + (iRow-1+(/0,1,2/))/rowBlockSize, npRow )
-!                        pc_sp_thisPt   = mod ( colStartProc + (iCol-1+(/0,1,2/))/colBlockSize, npCol )
-!
-!                        ! Check to ensure each all 9 (3x3 vector elements)
-!                        ! pieces of this workList element are on the SAME
-!                        ! processor. i.e., There is NO overlap such that when
-!                        ! calculating the current, we get doubling up. The
-!                        ! following if test should return null IF the blocksize
-!                        ! is a multiple of 3.
-!
-!                        if(pr_sp_thisPt(1) /= pr_sp_thisPt(2) .or. pr_sp_thisPt(1) /= pr_sp_thisPt(3) &
-!                            .or. pc_sp_thisPt(1) /= pc_sp_thisPt(2) .or. pc_sp_thisPt(1) /= pc_sp_thisPt(3)) then
-!                                write(*,*) pr_sp_thisPt, pc_sp_thisPt
-!                        endif
-!
-!                        addToWorkList: &
-!                        if ( any(pr_sp_thisPt==myRow) .and. any(pc_sp_thisPt==myCol) ) then
-!
-!                            workListPosition = workListPosition + 1
-!                            thisWorkList = workListEntry(i,j,m,n)
-!                            workListTooLong(workListPosition) = thisWorkList
-!
-!                        endif addToWorkList
-!
-!                    enddo m_workList
-!                enddo n_workList
-!
-!            enddo j_workList
-!        enddo i_workList
-!
-!        allocate(g%wl(workListPosition))
-!        g%wl = workListTooLong(1:workListPosition)
-!        deallocate(workListTooLong)
-!
-!        if(size(g%wl)/=size(WorkListJustRight)) stop
-!
-!        do i=1,WorkListPosition
-!            write(*,*) g%wl(i)%i,WorkListJustRight(i)%i,g%wl(i)%j,WorkListJustRight(i)%j, &
-!                g%wl(i)%m,WorkListJustRight(i)%m,g%wl(i)%n,WorkListJustRight(i)%n
-!
-!        enddo
 
 #endif
 
@@ -432,6 +366,7 @@ contains
         use write_data
         use getMatElements
         use fitPack
+        use scalapack_mod, only: IndxG2P, IndxG2L
 
         implicit none
 
@@ -460,6 +395,7 @@ contains
 
         integer :: l_sp, m_sp, pr_sp, pc_sp, x_sp, y_sp
         integer :: pr_sp_thisPt(3), pc_sp_thisPt(3)
+        integer :: Dummy
 #endif
 
         integer :: w
@@ -610,230 +546,171 @@ contains
         workListLoop: &
         do w=1,size(g%wl)
 
-        !i_loop: &
-        !do i=1,g%nR
+            iRow = (g%wl(w)%i-1) * 3 * g%nZ + (g%wl(w)%j-1) * 3 + 1
+            iRow = iRow + ( g%startRow-1 )
 
-#ifndef par
-            !!   progress indicator
-            !!   ------------------
-            !do p=1,7 
-            !    write(*,'(a)',advance='no') char(8)
-            !enddo
-            !write(*,'(1x,f5.1,a)',advance='no') real(i)/g%nR*100, '%'
-#endif
-            !j_loop: &
-            !do j=1,g%nZ
+            iCol = (g%wl(w)%n-g%nMin) * 3 * g%nModesZ + (g%wl(w)%m-g%mMin) * 3 + 1
+            iCol = iCol + ( g%startCol-1 )
 
-                iRow = (g%wl(w)%i-1) * 3 * g%nZ + (g%wl(w)%j-1) * 3 + 1
-                iRow = iRow + ( g%startRow-1 )
+            bFn = g%xx(g%wl(w)%n, g%wl(w)%i) * g%yy(g%wl(w)%m, g%wl(w)%j)
 
-                !n_loop: &
-                !do n=g%nMin,g%nMax
-                    !m_loop: &
-                    !do m=g%mMin,g%mMax
+            ! This is where the anti-aliasing will go. i.e.,
+            ! call this multiple times and average the result.
+            ! REMEMBER that the "bfn" multiplication will have
+            ! to come up here into the average too. No problem
+            ! though. Or will it?
 
-                        iCol = (g%wl(w)%n-g%nMin) * 3 * g%nModesZ + (g%wl(w)%m-g%mMin) * 3 + 1
-                        iCol = iCol + ( g%startCol-1 )
-!#ifdef par
-!                        pr_sp_thisPt   = mod ( rowStartProc + (iRow-1+(/0,1,2/))/rowBlockSize, npRow )
-!                        pc_sp_thisPt   = mod ( colStartProc + (iCol-1+(/0,1,2/))/colBlockSize, npCol )
-!
-!                        doWork: &
-!                        if ( any(pr_sp_thisPt==myRow) .and. any(pc_sp_thisPt==myCol) ) then
-!#endif
-                            bFn = g%xx(g%wl(w)%n, g%wl(w)%i) * g%yy(g%wl(w)%m, g%wl(w)%j)
-
-                            ! This is where the anti-aliasing will go. i.e.,
-                            ! call this multiple times and average the result.
-                            ! REMEMBER that the "bfn" multiplication will have
-                            ! to come up here into the average too. No problem
-                            ! though. Or will it?
-
-                            interior: &
-                            if(g%label(g%wl(w)%i,g%wl(w)%j)==0)then
+            interior: &
+            if(g%label(g%wl(w)%i,g%wl(w)%j)==0)then
    
-                                !mat3by3Block = 0 
+                !mat3by3Block = 0 
 
-                                !aa_rPts = (/-0.5,0.5,0.5,-0.5 /)*(g%r(2)-g%r(1))+g%r(g%wl(w)%i)
-                                !aa_zPts = (/-0.5,-0.5,0.5,0.5 /)*(g%z(2)-g%z(1))+g%z(g%wl(w)%j)
+                !aa_rPts = (/-0.5,0.5,0.5,-0.5 /)*(g%r(2)-g%r(1))+g%r(g%wl(w)%i)
+                !aa_zPts = (/-0.5,-0.5,0.5,0.5 /)*(g%z(2)-g%z(1))+g%z(g%wl(w)%j)
 
-                                !antiAlias: &
-                                !do aa=1,4
-                                !    if(aa_rPts(aa)>g%rMax) aa_rPts(aa)=g%rMax
-                                !    if(aa_rPts(aa)<g%rMin) aa_rPts(aa)=g%rMin
-                                !    if(aa_zPts(aa)>g%zMax) aa_zPts(aa)=g%zMax
-                                !    if(aa_zPts(aa)<g%zMin) aa_zPts(aa)=g%zMin
+                !antiAlias: &
+                !do aa=1,4
+                !    if(aa_rPts(aa)>g%rMax) aa_rPts(aa)=g%rMax
+                !    if(aa_rPts(aa)<g%rMin) aa_rPts(aa)=g%rMin
+                !    if(aa_zPts(aa)>g%zMax) aa_zPts(aa)=g%zMax
+                !    if(aa_zPts(aa)<g%zMin) aa_zPts(aa)=g%zMin
 
-                                !   mat3by3Block = mat3by3Block + get3by3Block ( g, w, aa_rPts(aa), aa_zPts(aa) )
-                                !enddo antiAlias
-                                !mat3by3Block = mat3by3Block / 4
-                                mat3by3Block = get3by3Block ( g, w)!, g%r(g%wl(w)%i), g%z(g%wl(w)%j))
+                !   mat3by3Block = mat3by3Block + get3by3Block ( g, w, aa_rPts(aa), aa_zPts(aa) )
+                !enddo antiAlias
+                !mat3by3Block = mat3by3Block / 4
+                mat3by3Block = get3by3Block ( g, w)!, g%r(g%wl(w)%i), g%z(g%wl(w)%j))
 
-                            endif interior
+            endif interior
 
-                            ii_loop: &
-                            do ii=0,2
-                                jj_loop: &
-                                do jj=0,2
+            ii_loop: &
+            do ii=0,2
+                jj_loop: &
+                do jj=0,2
 #ifdef par
-                                    pr_sp   = mod ( rowStartProc + (iRow-1+ii)/rowBlockSize, npRow )
-                                    pc_sp   = mod ( colStartProc + (iCol-1+jj)/colBlockSize, npCol )
-
-                                    ! scalapack indicies for 2D block cyclic data format
-                                    ! see http://www.netlib.org/scalapack/slug/node76.html
-                                    !       and
-                                    ! http://acts.nersc.gov/scalapack/hands-on/example4.html
- 
-                                    myProc: &
-                                    if ( myRow==pr_sp .and. myCol==pc_sp ) then
-
-                                        l_sp    = ( iRow-1+ii ) / ( npRow * rowBlockSize )
-                                        m_sp    = ( iCol-1+jj ) / ( npCol * colBlockSize )
-
-                                        x_sp    = mod ( iRow-1+ii, rowBlockSize ) + 1
-                                        y_sp    = mod ( iCol-1+jj, colBlockSize ) + 1
-
-                                        localRow    = l_sp*rowBlockSize+x_sp
-                                        localCol    = m_sp*colBlockSize+y_sp
+                    pr_sp = IndxG2P ( iRow, RowBlockSize, Dummy, 0, NpRow )
+                    pc_sp = IndxG2P ( iCol, ColBlockSize, Dummy, 0, NpCol )
+#if __CheckParallelLocation__==1
+                    myProc: &
+                    if ( myRow==pr_sp .and. myCol==pc_sp ) then
+#endif
+                        LocalRow = IndxG2L ( iRow+ii, RowBlockSize, Dummy, Dummy, NpRow )
+                        LocalCol = IndxG2L ( iCol+jj, ColBlockSize, Dummy, Dummy, NpCol )
 #else
-                                        localRow    = iRow+ii
-                                        localCol    = iCol+jj
+                        LocalRow    = iRow+ii
+                        LocalCol    = iCol+jj
 #endif
-                                    
-                                        ! Interior points
-                                        ! ---------------
+                            
+                        ! Interior points
+                        ! ---------------
 
-                                        if(g%label(g%wl(w)%i,g%wl(w)%j)==0) then 
+                        if(g%label(g%wl(w)%i,g%wl(w)%j)==0) then 
 
-                                            !if (ii==0 .and. jj==0) aMat(localRow,localCol) = mat_r_alp * bFn  
-                                            !if (ii==0 .and. jj==1) aMat(localRow,localCol) = mat_r_bet * bFn   
-                                            !if (ii==0 .and. jj==2) aMat(localRow,localCol) = mat_r_prl * bFn   
-                                            !                                                      
-                                            !if (ii==1 .and. jj==0) aMat(localRow,localCol) = mat_th_alp * bFn   
-                                            !if (ii==1 .and. jj==1) aMat(localRow,localCol) = mat_th_bet * bFn   
-                                            !if (ii==1 .and. jj==2) aMat(localRow,localCol) = mat_th_prl * bFn   
-                                            !                                                      
-                                            !if (ii==2 .and. jj==0) aMat(localRow,localCol) = mat_z_alp * bFn   
-                                            !if (ii==2 .and. jj==1) aMat(localRow,localCol) = mat_z_bet * bFn   
-                                            !if (ii==2 .and. jj==2) aMat(localRow,localCol) = mat_z_prl * bFn   
+                            if (ii==0 .and. jj==0) aMat(localRow,localCol) = mat3by3Block(1,1) * bFn  
+                            if (ii==0 .and. jj==1) aMat(localRow,localCol) = mat3by3Block(1,2) * bFn   
+                            if (ii==0 .and. jj==2) aMat(localRow,localCol) = mat3by3Block(1,3) * bFn   
+                                                                                  
+                            if (ii==1 .and. jj==0) aMat(localRow,localCol) = mat3by3Block(2,1) * bFn   
+                            if (ii==1 .and. jj==1) aMat(localRow,localCol) = mat3by3Block(2,2) * bFn   
+                            if (ii==1 .and. jj==2) aMat(localRow,localCol) = mat3by3Block(2,3) * bFn   
+                                                                             
+                            if (ii==2 .and. jj==0) aMat(localRow,localCol) = mat3by3Block(3,1) * bFn   
+                            if (ii==2 .and. jj==1) aMat(localRow,localCol) = mat3by3Block(3,2) * bFn   
+                            if (ii==2 .and. jj==2) aMat(localRow,localCol) = mat3by3Block(3,3) * bFn   
 
-                                            if (ii==0 .and. jj==0) aMat(localRow,localCol) = mat3by3Block(1,1) * bFn  
-                                            if (ii==0 .and. jj==1) aMat(localRow,localCol) = mat3by3Block(1,2) * bFn   
-                                            if (ii==0 .and. jj==2) aMat(localRow,localCol) = mat3by3Block(1,3) * bFn   
-                                                                                                  
-                                            if (ii==1 .and. jj==0) aMat(localRow,localCol) = mat3by3Block(2,1) * bFn   
-                                            if (ii==1 .and. jj==1) aMat(localRow,localCol) = mat3by3Block(2,2) * bFn   
-                                            if (ii==1 .and. jj==2) aMat(localRow,localCol) = mat3by3Block(2,3) * bFn   
-                                                                                             
-                                            if (ii==2 .and. jj==0) aMat(localRow,localCol) = mat3by3Block(3,1) * bFn   
-                                            if (ii==2 .and. jj==1) aMat(localRow,localCol) = mat3by3Block(3,2) * bFn   
-                                            if (ii==2 .and. jj==2) aMat(localRow,localCol) = mat3by3Block(3,3) * bFn   
-
-                                        endif
+                        endif
 
 
-                                        ! Outer boundary points
-                                        ! ---------------------
+                        ! Outer boundary points
+                        ! ---------------------
 
-                                        if (g%label(g%wl(w)%i,g%wl(w)%j)==888) then
-                                            
-                                            if (ii==0 .and. jj==0) aMat(localRow,localCol) = bFn * lsWeightFac 
-                                            if (ii==0 .and. jj==1) aMat(localRow,localCol) = 0
-                                            if (ii==0 .and. jj==2) aMat(localRow,localCol) = 0
-                                   
-                                            if (ii==1 .and. jj==0) aMat(localRow,localCol) = 0
-                                            if (ii==1 .and. jj==1) aMat(localRow,localCol) = bFn * lsWeightFac  
-                                            if (ii==1 .and. jj==2) aMat(localRow,localCol) = 0
-                                   
-                                            if (ii==2 .and. jj==0) aMat(localRow,localCol) = 0
-                                            if (ii==2 .and. jj==1) aMat(localRow,localCol) = 0
-                                            if (ii==2 .and. jj==2) aMat(localRow,localCol) = bFn * lsWeightFac 
+                        if (g%label(g%wl(w)%i,g%wl(w)%j)==888) then
+                            
+                            if (ii==0 .and. jj==0) aMat(localRow,localCol) = bFn * lsWeightFac 
+                            if (ii==0 .and. jj==1) aMat(localRow,localCol) = 0
+                            if (ii==0 .and. jj==2) aMat(localRow,localCol) = 0
+                        
+                            if (ii==1 .and. jj==0) aMat(localRow,localCol) = 0
+                            if (ii==1 .and. jj==1) aMat(localRow,localCol) = bFn * lsWeightFac  
+                            if (ii==1 .and. jj==2) aMat(localRow,localCol) = 0
+                        
+                            if (ii==2 .and. jj==0) aMat(localRow,localCol) = 0
+                            if (ii==2 .and. jj==1) aMat(localRow,localCol) = 0
+                            if (ii==2 .and. jj==2) aMat(localRow,localCol) = bFn * lsWeightFac 
 
-                                        endif
+                        endif
 
-                                        if (g%label(g%wl(w)%i,g%wl(w)%j)==999) then
+                        if (g%label(g%wl(w)%i,g%wl(w)%j)==999) then
 
-                                            !iOL = 1+overlap
-                                            !jOL = j
-                                       
-                                            !bFnHere = g%xx(n, iOL) * g%yy(m, jOL)
+                            !iOL = 1+overlap
+                            !jOL = j
+                        
+                            !bFnHere = g%xx(n, iOL) * g%yy(m, jOL)
 
-                                            if (ii==0 .and. jj==0) aMat(localRow,localCol) = bFn!Here
-                                            if (ii==0 .and. jj==1) aMat(localRow,localCol) = 0  
-                                            if (ii==0 .and. jj==2) aMat(localRow,localCol) = 0  
-                                   
-                                            if (ii==1 .and. jj==0) aMat(localRow,localCol) = 0  
-                                            if (ii==1 .and. jj==1) aMat(localRow,localCol) = bFn!Here
-                                            if (ii==1 .and. jj==2) aMat(localRow,localCol) = 0   
-                                   
-                                            if (ii==2 .and. jj==0) aMat(localRow,localCol) = 0   
-                                            if (ii==2 .and. jj==1) aMat(localRow,localCol) = 0   
-                                            if (ii==2 .and. jj==2) aMat(localRow,localCol) = bFn!Here
+                            if (ii==0 .and. jj==0) aMat(localRow,localCol) = bFn!Here
+                            if (ii==0 .and. jj==1) aMat(localRow,localCol) = 0  
+                            if (ii==0 .and. jj==2) aMat(localRow,localCol) = 0  
+                        
+                            if (ii==1 .and. jj==0) aMat(localRow,localCol) = 0  
+                            if (ii==1 .and. jj==1) aMat(localRow,localCol) = bFn!Here
+                            if (ii==1 .and. jj==2) aMat(localRow,localCol) = 0   
+                        
+                            if (ii==2 .and. jj==0) aMat(localRow,localCol) = 0   
+                            if (ii==2 .and. jj==1) aMat(localRow,localCol) = 0   
+                            if (ii==2 .and. jj==2) aMat(localRow,localCol) = bFn!Here
 
-                                        endif
+                        endif
 
 
-                                        ! Mesh-Mesh boundary for R bFn 
-                                        ! ----------------------------
+                        ! Mesh-Mesh boundary for R bFn 
+                        ! ----------------------------
 
-                                        if (g%label(g%wl(w)%i,g%wl(w)%j)>=1 .and. g%label(g%wl(w)%i,g%wl(w)%j)<=20) then
+                        if (g%label(g%wl(w)%i,g%wl(w)%j)>=1 .and. g%label(g%wl(w)%i,g%wl(w)%j)<=20) then
 
-                                            !if(mod(g%label(i,j),2)==1) then 
-                                            !    iOL = 1+overlap
-                                            !else
-                                            !    iOL = g%nR-overlap
-                                            !endif
+                            !if(mod(g%label(i,j),2)==1) then 
+                            !    iOL = 1+overlap
+                            !else
+                            !    iOL = g%nR-overlap
+                            !endif
  
-                                            !jOL = j
-                                      
-                                            !if(n<=g%nR/(g%label(i,j)+1))then 
-                                            !!if(n==(g%label(i,j)+1))then 
-                                            !    bFnHere = g%xx(n, iOL) * g%yy(m, jOL)
-                                            !else
-                                            !    bFnHere = 0
-                                            !endif
-                                         
-                                            if (ii==0 .and. jj==0) aMat(localRow,localCol) = bFn!Here 
-                                            if (ii==0 .and. jj==1) aMat(localRow,localCol) = 0  
-                                            if (ii==0 .and. jj==2) aMat(localRow,localCol) = 0  
-                                   
-                                            if (ii==1 .and. jj==0) aMat(localRow,localCol) = 0  
-                                            if (ii==1 .and. jj==1) aMat(localRow,localCol) = bFn!Here  
-                                            if (ii==1 .and. jj==2) aMat(localRow,localCol) = 0   
-                                   
-                                            if (ii==2 .and. jj==0) aMat(localRow,localCol) = 0   
-                                            if (ii==2 .and. jj==1) aMat(localRow,localCol) = 0   
-                                            if (ii==2 .and. jj==2) aMat(localRow,localCol) = bFn!Here 
+                            !jOL = j
+                        
+                            !if(n<=g%nR/(g%label(i,j)+1))then 
+                            !!if(n==(g%label(i,j)+1))then 
+                            !    bFnHere = g%xx(n, iOL) * g%yy(m, jOL)
+                            !else
+                            !    bFnHere = 0
+                            !endif
+                         
+                            if (ii==0 .and. jj==0) aMat(localRow,localCol) = bFn!Here 
+                            if (ii==0 .and. jj==1) aMat(localRow,localCol) = 0  
+                            if (ii==0 .and. jj==2) aMat(localRow,localCol) = 0  
+                        
+                            if (ii==1 .and. jj==0) aMat(localRow,localCol) = 0  
+                            if (ii==1 .and. jj==1) aMat(localRow,localCol) = bFn!Here  
+                            if (ii==1 .and. jj==2) aMat(localRow,localCol) = 0   
+                        
+                            if (ii==2 .and. jj==0) aMat(localRow,localCol) = 0   
+                            if (ii==2 .and. jj==1) aMat(localRow,localCol) = 0   
+                            if (ii==2 .and. jj==2) aMat(localRow,localCol) = bFn!Here 
 
-                                        endif
+                        endif
 
 #ifdef par
-                                    endif myProc
+#if __CheckParallelLocation__==1
+                   else
+                       write(*,*) 'THE CODE SHOULD NEVER GET HERE!'
+                   endif myProc
 #endif
-                                enddo jj_loop
-                            enddo ii_loop
-!#ifdef par
-!                        endif doWork
-!#endif
-                    !enddo m_loop
-                !enddo n_loop 
+#endif
+               enddo jj_loop
+           enddo ii_loop
 
-            !enddo j_loop
-        !enddo i_loop 
         enddo workListLoop
 
 #if __sigma__ != 2
         deallocate ( sigma_write )
 #endif
 
-        !if(iAm==0) then
-        !write(*,*) 
-        !do i=1,nRowLocal
-        !    write(*,*) real ( aMat(i,:) )
-        !enddo
-        !endif
-
-        !aMat_   = aMat
     end subroutine amat_fill
 
 end module mat_fill

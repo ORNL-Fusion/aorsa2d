@@ -111,7 +111,8 @@ ${OBJ_DIR}/mat_fill.o: \
 		${OBJ_DIR}/antenna.o \
 		${OBJ_DIR}/spline_dlg.o \
 		${OBJ_DIR}/write_data.o \
-		${OBJ_DIR}/getMatElements.o
+		${OBJ_DIR}/getMatElements.o \
+		${OBJ_DIR}/scalapack_mod.o
 
 ${OBJ_DIR}/getMatElements.o: \
 		${OBJ_DIR}/aorsaNamelist.o \
@@ -164,3 +165,6 @@ ${OBJ_DIR}/power.o: \
 		${OBJ_DIR}/profiles.o \
 		${OBJ_DIR}/constants.o
 
+${OBJ_DIR}/scalapack_mod.o: \
+		${OBJ_DIR}/t4_mod_tprof.o \
+		${OBJ_DIR}/assert_mod.o

@@ -6,7 +6,8 @@ SRC_DIR = src
 OBJ_DIR = obj
 MOD_DIR = mod
 
-COMPILER := PGI
+COMPILER := GNU# GNU, PGI
+PARALLEL := 1# 0, 1
 
 # objects
 # -------
@@ -27,16 +28,13 @@ LIBS := ${HDF} ${NETCDF} ${BLAS} ${LAPACK}
 INC_DIR := 
 CPP_DIRECTIVES :=
 
-# set the mode to serial (PARALLEL=0) or parallel (=1)
-# --------------------------------------------
-PARALLEL := 1
-BLACS = \
-	${HOME}/code/blacs/blacs_gnu64/LIB/blacs_MPI-LINUX-0.a \
-	${HOME}/code/blacs/blacs_gnu64/LIB/blacsF77init_MPI-LINUX-0.a \
-	${HOME}/code/blacs/blacs_gnu64/LIB/blacs_MPI-LINUX-0.a
-SCALAPACK = ${HOME}/code/scalapack/scalapack_gnu64/libscalapack.a
 ifeq (${PARALLEL},1)
     CPP_DIRECTIVES += -Dpar
+	BLACS = \
+		${HOME}/code/blacs/blacs_gnu64/LIB/blacs_MPI-LINUX-0.a \
+		${HOME}/code/blacs/blacs_gnu64/LIB/blacsF77init_MPI-LINUX-0.a \
+		${HOME}/code/blacs/blacs_gnu64/LIB/blacs_MPI-LINUX-0.a
+	SCALAPACK = ${HOME}/code/scalapack/scalapack_gnu64/libscalapack.a
 	LIBS := ${SCALAPACK} ${BLACS} ${LIBS}
 endif
 
@@ -92,6 +90,9 @@ CPP_DIRECTIVES += -D__noU__=0
 
 CPP_DIRECTIVES += -D__debugSigma__=0
 
+# Double check that myRow==pr_sp .and. myCol==pc_sp 
+
+CPP_DIRECTIVES += -D__CheckParallelLocation__=0
 
 # compile flags
 # -------------
@@ -158,6 +159,12 @@ ${OBJ_DIR}/%.o: ${SRC_DIR}/%.f90
 	${F90} -c ${F90FLAGS} $< -o $@ ${BOUNDS} ${NETCDF} ${CPP_DIRECTIVES} ${INC_DIR}
 
 ${OBJ_DIR}/%.o: ${SRC_DIR}/%.F90
+	${F90} -c ${F90FLAGS} $< -o $@ ${BOUNDS} ${NETCDF} ${CPP_DIRECTIVES} ${INC_DIR}
+
+${OBJ_DIR}/%.o: ${SRC_DIR}/%.f
+	${F90} -c ${F90FLAGS} $< -o $@ ${BOUNDS} ${NETCDF} ${CPP_DIRECTIVES} ${INC_DIR}
+
+${OBJ_DIR}/%.o: ${SRC_DIR}/%.F
 	${F90} -c ${F90FLAGS} $< -o $@ ${BOUNDS} ${NETCDF} ${CPP_DIRECTIVES} ${INC_DIR}
 
 ${OBJ_DIR}/z_erf.o: ${SRC_DIR}/z_erf.f90
