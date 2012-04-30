@@ -68,19 +68,19 @@ contains
 
         nSpec = ar2_nS
 
-        if(iAm==0)then
-            write(*,*) 'Overwriting namelist inputs for nSpec and profiles'
-            write(*,*) '    nSpec: ', nSpec
-            write(*,*) '    zSpec: ', zSpec
-            write(*,*) '    amuSpec: ', amuSpec
-        endif
-
         allocate ( &
             mSpec(nSpec), zSpec(nSpec), &
             qSpec(nSpec), amuSpec(nSpec) )
 
         amuSpec = ar2_amu
         zSpec = ar2_AtomicZ
+
+        if(iAm==0)then
+            write(*,*) 'Overwriting namelist inputs for nSpec and profiles'
+            write(*,*) '    nSpec: ', nSpec
+            write(*,*) '    zSpec: ', zSpec
+            write(*,*) '    amuSpec: ', amuSpec
+        endif
 
         mSpec       = amuSpec * xmh
         mSpec(1)    = xme  
