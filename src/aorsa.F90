@@ -46,6 +46,10 @@ program aorsa2dMain
 
 #endif
 
+    integer(kind=long) :: nPts_tot
+    integer :: i
+    integer(kind=long) :: nModesR_tot, nModesZ_tot
+
     !! GPTL vars
 
     !integer :: stat
@@ -57,11 +61,7 @@ program aorsa2dMain
 
     call start_timer ( tTotal )
 
-    integer(kind=long) :: nPts_tot
-    integer :: i
-    integer(kind=long) :: nModesR_tot, nModesZ_tot
-
-
+    
 !   read namelist input data
 !   ------------------------
 
