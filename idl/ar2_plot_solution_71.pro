@@ -1,4 +1,4 @@
-pro ar2_plot_solution_71
+pro ar2_plot_solution_71, NoRunData = NoRunData
 
 	@constants
 
@@ -15,9 +15,9 @@ pro ar2_plot_solution_71
 	eBetaAll = complex (0,0)
 	eBAll = complex (0,0)
 
-	for iii=0,n_elements(fileList)-1 do begin
+	if not keyword_set(NoRunData) then begin
 
-		cdfId = ncdf_open ( fileListData[iii], /noWrite ) 
+		cdfId = ncdf_open ( fileListData[0], /noWrite ) 
 			nCdf_varGet, cdfId, 'nPhi', nPhi 
 			nCdf_varGet, cdfId, 'freq', freq 
 			nCdf_varGet, cdfId, 'capR', x 
@@ -44,30 +44,9 @@ pro ar2_plot_solution_71
 			nCdf_varGet, cdfId, 'dzBfn_im', dzbFn_bFn_im
 		ncdf_close, cdfId
 
-		xx	= complex ( xx_re, xx_im )
-		yy	= complex ( yy_re, yy_im )
+	endif
 
-		jA_r = complex ( jr_re, jr_im )
-		jA_t = complex ( jt_re, jt_im )
-		jA_z = complex ( jz_re, jz_im )
-
-		dRbFn_bFn	= complex ( dRbFn_bFn_re, dRbFn_bFn_im )
-		dZbFn_bFn	= complex ( dZbFn_bFn_re, dZbFn_bFn_im )
-
-		nX	= n_elements ( xx[0,*] )
-		nY	= n_elements ( yy[0,*] )
-		nN	= n_elements ( xx[*,0] )
-		nM	= n_elements ( yy[*,0] )
-
-		x2D	= rebin ( x, nX, nY )
-		if nY gt 1 then begin
-			y2D = transpose(rebin ( y, nY, nX ))
-		endif else begin
-			y2D = fltArr(1)+y
-		endelse
-
-	
-		cdfId = ncdf_open ( fileList[iii], /noWrite ) 
+		cdfId = ncdf_open ( fileList[0], /noWrite ) 
 
 			nCdf_varGet, cdfId, 'ealpha_re', ealpha_re 
 			nCdf_varGet, cdfId, 'ebeta_re', ebeta_re 
@@ -128,7 +107,17 @@ pro ar2_plot_solution_71
 
 		ncdf_close, cdfId
 
-	endfor
+	
+	nR = n_elements ( e_r[*,0] )
+	nZ = n_elements ( e_r[0,*] )
+
+	rMin = 3.5
+	rMax = 9.0
+	zMin = -5.0
+	zMax = 5.0
+
+	r = fIndGen(nR)/(nR-1)*(rMax-rMin)+rMin
+	z = fIndGen(nZ)/(nZ-1)*(zMax-zMin)+zMin
 
 	g = readgeqdsk('Scen4_bn2.57_129x129.dlgMod',/noTor)
 
@@ -141,9 +130,9 @@ pro ar2_plot_solution_71
 	window, 0, xSize=400, ySize=700
 	!p.background = 255
 	loadct, 3
-	contour, PlotField, x, y, levels=levels,c_colors=colors,/fill,/iso,color=0
+	contour, PlotField, r, z, levels=levels,c_colors=colors,/fill,/iso,color=0
 	loadct, 1
-	contour, -PlotField, x, y, levels=levels,c_colors=colors,/fill,/iso,/over,color=0
+	contour, -PlotField, r, z, levels=levels,c_colors=colors,/fill,/iso,/over,color=0
 	loadct, 0
 	oplot, g.rlim, g.zlim, color=0,thick=2
 	oplot, g.rbbbs, g.zbbbs, color=0,thick=1
@@ -154,9 +143,9 @@ pro ar2_plot_solution_71
 	device, filename=outfname, preview=0, /color, bits_per_pixel=8, $
 		xsize=9, ysize=16,xoffset=.1, yoffset=.1, /encapsul
 	loadct, 3
-	contour, PlotField, x, y, levels=levels,c_colors=colors,/fill,/iso,color=0
+	contour, PlotField, r, z, levels=levels,c_colors=colors,/fill,/iso,color=0
 	loadct, 1
-	contour, -PlotField, x, y, levels=levels,c_colors=colors,/fill,/iso,/over,color=0
+	contour, -PlotField, r, z, levels=levels,c_colors=colors,/fill,/iso,/over,color=0
 	loadct, 0
 	oplot, g.rlim, g.zlim, color=0,thick=2
 	oplot, g.rbbbs, g.zbbbs, color=0,thick=1
@@ -167,5 +156,5 @@ pro ar2_plot_solution_71
 	;c = contour ( -PlotField, x, y, c_value=levels, rgb_indices=colors, rgb_table=1, /fill,/over )
 	;p = plot ( g.rlim, g.zlim, /over )
 	;p = plot ( g.rbbbs, g.zbbbs, /over )
-
+stop
 end 
