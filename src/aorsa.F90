@@ -55,7 +55,7 @@ program aorsa2dMain
     !stat = gptlInitialize ()
     !stat = gptlStart ( 'total' )
 
-    !call start_timer ( tTotal )
+    call start_timer ( tTotal )
 
     integer(kind=long) :: nPts_tot
     integer :: i
