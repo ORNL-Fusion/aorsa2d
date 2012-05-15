@@ -6,7 +6,7 @@ SRC_DIR = src
 OBJ_DIR = obj
 MOD_DIR = mod
 
-COMPILER := GNU# GNU, PGI
+COMPILER := PGI# GNU, PGI
 PARALLEL := 1# 0, 1
 
 # objects
@@ -110,8 +110,8 @@ ifeq (${COMPILER},PGI)
     MOD_LOC:= -module mod
     DOUBLE:= -Mr8
     WARN:=
-    DEBUG:= -g -traceback -Ktrap=divz,inv,ovf
-    OPTIMIZATION:=
+    DEBUG:= #-g -traceback -Ktrap=divz,inv,ovf
+    OPTIMIZATION:= -fast
     BOUNDS:= -Mbounds
     FORMAT:=
 endif

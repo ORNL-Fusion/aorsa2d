@@ -565,6 +565,7 @@ program aorsa2dMain
 
     if (iAm==0) then
 
+        Perf%nProcs = npRow*npCol
         Perf%nSpatialPoints = nPts_tot
         Perf%nRowLocal = nRowLocal
         Perf%nColLocal = nColLocal

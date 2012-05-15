@@ -544,6 +544,7 @@ contains
 
         integer :: nc_id, scalar_id
         integer :: &
+            nProcs_id, &
             nSpatialPoints_id, &
             nRowLocal_id, &
             nColLocal_id, &
@@ -568,6 +569,7 @@ contains
         stat = nf90_create ( fName, nf90_clobber, nc_id ) 
         stat = nf90_def_dim ( nc_id, "scalar", 1, scalar_id ) 
 
+        stat = nf90_def_var (nc_id,"nProcs",NF90_INT,(/scalar_id/),nProcs_id)
         stat = nf90_def_var (nc_id,"nSpatialPoints",NF90_INT,(/scalar_id/),nSpatialPoints_id)
         stat = nf90_def_var (nc_id,"nRowLocal",NF90_INT,(/scalar_id/),nRowLocal_id)
         stat = nf90_def_var (nc_id,"nColLocal",NF90_INT,(/scalar_id/),nColLocal_id)
@@ -589,6 +591,7 @@ contains
 
         stat = nf90_enddef ( nc_id )
 
+        stat = nf90_put_var ( nc_id, nProcs_id,      P%nProcs )
         stat = nf90_put_var ( nc_id, nSpatialPoints_id,      P%nSpatialPoints )
         stat = nf90_put_var ( nc_id, nRowLocal_id,           P%nRowLocal)          
         stat = nf90_put_var ( nc_id, nColLocal_id,           P%nColLocal)          

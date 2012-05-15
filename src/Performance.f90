@@ -4,6 +4,7 @@ implicit none
 
 type, public :: RunPerfData 
 
+        integer :: nProcs
         integer :: nSpatialPoints
         integer :: nRowLocal
         integer :: nColLocal
