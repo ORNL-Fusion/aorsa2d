@@ -531,5 +531,86 @@ contains
 
     end subroutine close_sigma_file
 
+    subroutine WritePerformanceData ( P )
+
+        use Performance
+
+        implicit none
+
+        type(RunPerfData), intent(in) :: P
+
+        integer :: stat
+        character(len=100) :: fName 
+
+        integer :: nc_id, scalar_id
+        integer :: &
+            nSpatialPoints_id, &
+            nRowLocal_id, &
+            nColLocal_id, &
+            nRowGlobal_id, &
+            nColGlobal_id, &
+            MatSizeLocal_GB_id, &
+            MatSizeGlobal_GB_id, &
+            TimeWorkList_id, &
+            TimeFill_id, &
+            TimeSolve_id, &
+            TimeCurrent_id, &
+            TimeTotal_id, &
+            GflopsFillLocal_id, &
+            GflopsFillGlobal_id, &
+            GflopsSolveLocal_id, &
+            GflopsSolveGlobal_id, &
+            GflopsCurrentLocal_id, &
+            GflopsCurrentGlobal_id
+
+        fName = 'PerfData.nc'
+
+        stat = nf90_create ( fName, nf90_clobber, nc_id ) 
+        stat = nf90_def_dim ( nc_id, "scalar", 1, scalar_id ) 
+
+        stat = nf90_def_var (nc_id,"nSpatialPoints",NF90_INT,(/scalar_id/),nSpatialPoints_id)
+        stat = nf90_def_var (nc_id,"nRowLocal",NF90_INT,(/scalar_id/),nRowLocal_id)
+        stat = nf90_def_var (nc_id,"nColLocal",NF90_INT,(/scalar_id/),nColLocal_id)
+        stat = nf90_def_var (nc_id,"nRowGlobal",NF90_INT,(/scalar_id/),nRowGlobal_id)
+        stat = nf90_def_var (nc_id,"nColGlobal",NF90_INT,(/scalar_id/),nColGlobal_id)
+        stat = nf90_def_var (nc_id,"MatSizeLocal_GB",NF90_REAL,(/scalar_id/),MatSizeLocal_GB_id)
+        stat = nf90_def_var (nc_id,"MatSizeGlobal_GB",NF90_REAL,(/scalar_id/),MatSizeGlobal_GB_id)
+        stat = nf90_def_var (nc_id,"TimeWorkList",NF90_REAL,(/scalar_id/),TimeWorkList_id)
+        stat = nf90_def_var (nc_id,"TimeFill",NF90_REAL,(/scalar_id/),TimeFill_id)
+        stat = nf90_def_var (nc_id,"TimeSolve",NF90_REAL,(/scalar_id/),TimeSolve_id)
+        stat = nf90_def_var (nc_id,"TimeCurrent",NF90_REAL,(/scalar_id/),TimeCurrent_id)
+        stat = nf90_def_var (nc_id,"TimeTotal",NF90_REAL,(/scalar_id/),TimeTotal_id)
+        stat = nf90_def_var (nc_id,"GflopsFillLocal",NF90_REAL,(/scalar_id/),GflopsFillLocal_id)
+        stat = nf90_def_var (nc_id,"GflopsFillGlobal",NF90_REAL,(/scalar_id/),GflopsFillGlobal_id)
+        stat = nf90_def_var (nc_id,"GflopsSolveLocal",NF90_REAL,(/scalar_id/),GflopsSolveLocal_id)
+        stat = nf90_def_var (nc_id,"GflopsSolveGlobal",NF90_REAL,(/scalar_id/),GflopsSolveGlobal_id)
+        stat = nf90_def_var (nc_id,"GflopsCurrentLocal",NF90_REAL,(/scalar_id/),GflopsCurrentLocal_id)
+        stat = nf90_def_var (nc_id,"GflopsCurrentGlobal",NF90_REAL,(/scalar_id/),GflopsCurrentGlobal_id)
+
+        stat = nf90_enddef ( nc_id )
+
+        stat = nf90_put_var ( nc_id, nSpatialPoints_id,      P%nSpatialPoints )
+        stat = nf90_put_var ( nc_id, nRowLocal_id,           P%nRowLocal)          
+        stat = nf90_put_var ( nc_id, nColLocal_id,           P%nColLocal)          
+        stat = nf90_put_var ( nc_id, nRowGlobal_id,          P%nRowGlobal)         
+        stat = nf90_put_var ( nc_id, nColGlobal_id,          P%nColGlobal)         
+        stat = nf90_put_var ( nc_id, MatSizeLocal_GB_id,     P%MatSizeLocal_GB)    
+        stat = nf90_put_var ( nc_id, MatSizeGlobal_GB_id,    P%MatSizeGlobal_GB)   
+        stat = nf90_put_var ( nc_id, TimeWorkList_id,        P%TimeWorkList)       
+        stat = nf90_put_var ( nc_id, TimeFill_id,            P%TimeFill)           
+        stat = nf90_put_var ( nc_id, TimeSolve_id,           P%TimeSolve)          
+        stat = nf90_put_var ( nc_id, TimeCurrent_id,         P%TimeCurrent)        
+        stat = nf90_put_var ( nc_id, TimeTotal_id,           P%TimeTotal)          
+        stat = nf90_put_var ( nc_id, GflopsFillLocal_id,     P%GflopsFillLocal)    
+        stat = nf90_put_var ( nc_id, GflopsFillGlobal_id,    P%GflopsFillGlobal)   
+        stat = nf90_put_var ( nc_id, GflopsSolveLocal_id,    P%GflopsSolveLocal)   
+        stat = nf90_put_var ( nc_id, GflopsSolveGlobal_id,   P%GflopsSolveGlobal) 
+        stat = nf90_put_var ( nc_id, GflopsCurrentLocal_id,  P%GflopsCurrentLocal)  
+        stat = nf90_put_var ( nc_id, GflopsCurrentGlobal_id, P%GflopsCurrentGlobal)  
+
+        stat = nf90_close ( nc_id )
+
+    end subroutine WritePerformanceData
+
 
 end module write_data

@@ -54,11 +54,12 @@ CPP_DIRECTIVES += -DzFunHammett
 
 # use papi, set to "-Dusepapi"
 # ----------------------------
-#CPP_DIRECTIVES := -Dusepapi 
-#PAPI_INC = -I/usr/include 
-#PAPI = -lpapi
-#LIBS += ${PAPI}
-#INC_DIR += ${PAPI_INC}
+CPP_DIRECTIVES += -Dusepapi 
+PAPI_DIR := /home/dg6/code/papi/gnu_4.3.2
+PAPI_INC := -I${PAPI_DIR}/include/
+PAPI_LINK := -L${PAPI_DIR}/lib -lpapi
+LIBS += ${PAPI_LINK}
+INC_DIR += ${PAPI_INC}
 
 # use CUDA
 # --------

@@ -20,7 +20,8 @@ ${AORSA2D}: \
 		${OBJ_DIR}/power.o \
 		${OBJ_DIR}/setMetal.o \
 		${OBJ_DIR}/sigmaInputGeneration.o \
-		${OBJ_DIR}/ar2Input.o
+		${OBJ_DIR}/ar2Input.o \
+		${OBJ_DIR}/Performance.o
 
 ${OBJ_DIR}/ar2Input.o: \
 		${OBJ_DIR}/check_mod.o
@@ -135,7 +136,8 @@ ${OBJ_DIR}/write_data.o: \
 		${OBJ_DIR}/constants.o \
 		${OBJ_DIR}/check_mod.o \
 		${OBJ_DIR}/bField.o \
-		${OBJ_DIR}/rotation.o
+		${OBJ_DIR}/rotation.o \
+		${OBJ_DIR}/Performance.o
 
 ${OBJ_DIR}/read_data.o: \
 		${OBJ_DIR}/check_mod.o

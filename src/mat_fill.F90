@@ -27,6 +27,8 @@ complex :: &
 complex, allocatable, dimension(:) :: &
     sss, ttt, qqq
 
+real :: GlobalSizeMB,LocalSizeMB,GlobalSizeGB,LocalSizeGB
+
 #ifndef dblprec
     complex, allocatable :: aMat(:,:)
 #else
@@ -44,15 +46,21 @@ contains
 
         integer(kind=long), intent(in) :: nPts_tot
 
-        real :: GlobalSizeMB,LocalSizeMB,GlobalSizeGB
 
 #ifdef par
 
         if (iAm == 0) then
-            write(*,*) '    nPts_tot: ', nPts_tot
+            write(*,*) '    nSpatialPts_tot: ', nPts_tot
+            write(*,*) '    nRowLocal: ', nRowLocal
+            write(*,*) '    nColLocal: ', nColLocal
+            write(*,*) '    nRowGlobal: ', nRow
+            write(*,*) '    nColGlobal: ', nCol
+
             LocalSizeMB = nRowLocal*nColLocal*2.0*8.0 / 1024.0**2
             GlobalSizeMB = nPts_tot*3.0*nPts_tot*3.0*2.0*8.0 / 1024.0**2.0
+            LocalSizeGB = LocalSizeMB/1024.0
             GlobalSizeGB = GlobalSizeMB/1024.0
+
             if(GlobalSizeMB<=1)then
                 write(*,100), GlobalSizeMB, LocalSizeMB 
                 100 format (' Filling aMat [global size: ',f8.1,' MB, local size: ',f8.1' MB]')

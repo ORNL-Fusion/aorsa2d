@@ -20,6 +20,7 @@ program aorsa2dMain
     use setMetal
     use sigmaInputGeneration
     use ar2Input
+    use Performance
 
     implicit none
 
@@ -30,7 +31,7 @@ program aorsa2dMain
 
     !   Timer variables
 
-    type ( timer ) :: tFill, tSolve, tTotal, tWorkList
+    type ( timer ) :: tFill, tSolve, tTotal, tWorkList, tCurrent
 
 #ifdef usepapi
 
@@ -39,10 +40,13 @@ program aorsa2dMain
     integer :: papi_irc
     real :: papi_rtime, papi_ptime, papi_mflops
     real :: papi_mflops_global
-    real :: papi_rtime_zero, papi_ptime_zero
-    real :: papi_rtime_fill, papi_rtime_solve
-    real :: papi_ptime_fill, papi_ptime_solve
+    real :: papi_rtime_zero, papi_ptime_zero, &
+        papi_rTime_ProgramZero, papi_pTime_ProgramZero
+    real :: papi_rtime_fill, papi_rtime_solve, papi_rtime_current, papi_rtime_total
+    real :: papi_ptime_fill, papi_ptime_solve, papi_ptime_current, papi_ptime_total
     integer(kind=long) :: papi_flpins
+
+    type(RunPerfData) :: Perf
 
 #endif
 
@@ -60,6 +64,12 @@ program aorsa2dMain
     !stat = gptlStart ( 'total' )
 
     call start_timer ( tTotal )
+
+#ifdef usepapi
+    call PAPIF_flops ( papi_rTime, papi_pTime, papi_flpins, papi_mflops, papi_irc )
+    papi_rTime_ProgramZero = papi_rTime
+    papi_pTime_ProgramZero = papi_pTime
+#endif
 
     
 !   read namelist input data
@@ -265,8 +275,10 @@ program aorsa2dMain
 
     enddo
 
-    if (iAm==0) &
-    write(*,*) 'Time to create WorkList: ', end_timer ( tWorkList )
+    if (iAm==0) then
+        Perf%TimeWorkList = end_timer ( tWorkList )
+        write(*,*) '    Time to create WorkList: ', Perf%TimeWorkList
+    endif
 
 
 !   Fill matrix 
@@ -309,8 +321,10 @@ program aorsa2dMain
     papi_pTime_fill = papi_pTime - papi_pTime_zero
 #endif
 
-    if (iAm==0) &
-    write(*,*) 'Time to fill aMat: ', end_timer ( tFill )
+    if (iAm==0) then 
+        Perf%TimeFill = end_timer ( tFill )
+        write(*,*) '    Time to fill aMat: ', Perf%TimeFill
+    endif
 
 #ifdef usepapi
     !   sum total mflops from all procs
@@ -324,12 +338,15 @@ program aorsa2dMain
 
     if (iAm==0) then
 
-        write(*,*) 'PAPI data for fill'
+        write(*,*) '    PAPI data for fill'
         write(*,'(a30,f12.1)') 'real time: ', papi_rTime_fill
         write(*,'(a30,f12.1)') 'proc time: ', papi_pTime_fill
         write(*,'(a30,f12.2)') 'iAm Gflops/s: ', papi_mflops / 1e3
         write(*,'(a30,f12.2)') 'global Gflops/s: ', papi_mflops_global / 1e3
         write(*,'(a30,i1)') 'status: ', papi_irc
+
+        Perf%GflopsFillLocal = papi_mflops / 1e3
+        Perf%GflopsFillGlobal = papi_mflops_global / 1e3
 
     endif
 
@@ -369,8 +386,10 @@ program aorsa2dMain
     papi_pTime_solve = papi_pTime - papi_pTime_zero
 #endif
 
-    if (iAm==0) &
-    write(*,*) 'Time to solve: ', end_timer ( tSolve )
+    if (iAm==0) then 
+        Perf%TimeSolve = end_timer ( tSolve )
+        write(*,*) '    Time to solve: ', Perf%TimeSolve
+    endif
 
 #ifdef usepapi
     !   sum total mflops from all procs
@@ -384,14 +403,18 @@ program aorsa2dMain
 
     if (iAm==0) then
 
-        write(*,*) 'PAPI data for solve'
+        write(*,*) '    PAPI data for solve'
         write(*,'(a30,f12.1)') 'real time: ', papi_rTime_solve
         write(*,'(a30,f12.1)') 'proc time: ', papi_pTime_solve
         write(*,'(a30,f12.2)') 'iAm Gflops/s: ', papi_mflops / 1e3
         write(*,'(a30,f12.2)') 'global Gflops/s: ', papi_mflops_global / 1e3
         write(*,'(a30,i1)') 'status: ', papi_irc
 
+        Perf%GflopsSolveLocal = papi_mflops / 1e3
+        Perf%GflopsSolveGlobal = papi_mflops_global / 1e3
+
     endif
+
 #endif
 
     do i=1,nGrid
@@ -414,6 +437,14 @@ program aorsa2dMain
 !   Calculate the plasma current
 !   ----------------------------
 
+#ifdef usepapi
+    call PAPIF_flops ( papi_rTime, papi_pTime, papi_flpins, papi_mflops, papi_irc )
+    papi_rTime_zero = papi_rTime
+    papi_pTime_zero = papi_pTime
+#endif
+
+    call start_timer ( tCurrent )
+
     if (iAm==0) &
     write(*,*) 'Calculating plasma current'
 
@@ -424,6 +455,42 @@ program aorsa2dMain
         enddo
 
     !endif
+
+    if (iAm==0) then
+        Perf%TimeCurrent = end_timer ( tCurrent )
+        write(*,*) 'Total to calculate plasma current: ', Perf%TimeCurrent
+    endif
+
+#ifdef usepapi
+    call PAPIF_flops ( papi_rTime, papi_pTime, papi_flpins, papi_mflops, papi_irc )
+    papi_rTime_current = papi_rTime - papi_rTime_zero
+    papi_pTime_current = papi_pTime - papi_pTime_zero
+#endif
+
+#ifdef usepapi
+    !   sum total mflops from all procs
+
+    papi_mflops_global  = papi_mflops
+
+#ifdef par
+    call sgSum2D ( iContext, 'All', ' ', 1, 1, &
+                papi_mflops_global, 1, -1, -1 )
+#endif
+
+    if (iAm==0) then
+
+        write(*,*) '    PAPI data for plasma current'
+        write(*,'(a30,f12.1)') 'real time: ', papi_rTime_current
+        write(*,'(a30,f12.1)') 'proc time: ', papi_pTime_current
+        write(*,'(a30,f12.2)') 'iAm Gflops/s: ', papi_mflops / 1e3
+        write(*,'(a30,f12.2)') 'global Gflops/s: ', papi_mflops_global / 1e3
+        write(*,'(a30,i1)') 'status: ', papi_irc
+
+        Perf%GflopsCurrentLocal = papi_mflops / 1e3
+        Perf%GflopsCurrentGlobal = papi_mflops_global / 1e3
+
+    endif
+#endif
 
 
 !   Rotation to Lab frame 
@@ -470,6 +537,23 @@ program aorsa2dMain
 
     endif
 
+#ifdef usepapi
+    call PAPIF_flops ( papi_rTime, papi_pTime, papi_flpins, papi_mflops, papi_irc )
+    papi_rTime_Total = papi_rTime - papi_rTime_ProgramZero
+    papi_pTime_Total = papi_pTime - papi_pTime_ProgramZero
+#endif
+#ifdef usepapi
+
+    if (iAm==0) then
+
+        write(*,*) '    PAPI data for program'
+        write(*,'(a30,f12.1)') 'real time: ', papi_rTime_total
+        write(*,'(a30,f12.1)') 'proc time: ', papi_pTime_total
+        write(*,'(a30,i1)') 'status: ', papi_irc
+
+    endif
+#endif
+
 
 #ifdef par
     call release_grid ()
@@ -479,8 +563,22 @@ program aorsa2dMain
     !stat = gptlpr (0)
     !stat = gptlFinalize ()
 
-    if (iAm==0) &
-    write(*,*) 'Total time: ', end_timer ( tTotal )
+    if (iAm==0) then
+
+        Perf%nSpatialPoints = nPts_tot
+        Perf%nRowLocal = nRowLocal
+        Perf%nColLocal = nColLocal
+        Perf%nRowGlobal = nRow
+        Perf%nColGlobal = nCol
+        Perf%MatSizeLocal_GB = LocalSizeGB
+        Perf%MatSizeGlobal_GB = GlobalSizeGB
+        Perf%TimeTotal = end_timer ( tTotal )
+
+        write(*,*) '    Total time: ', Perf%TimeTotal
+
+        call WritePerformanceData ( Perf )
+
+    endif
 
 end program aorsa2dMain
 
