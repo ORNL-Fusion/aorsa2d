@@ -26,4 +26,14 @@ type, public :: RunPerfData
 
 end type RunPerfData
 
+type, public :: MemoryUsage
+
+        integer :: nAllocations
+        real :: MBytes
+
+end type MemoryUsage
+
+type(MemoryUsage) :: Mem
+type(RunPerfData) :: Perf
+
 end module Performance

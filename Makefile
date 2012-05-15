@@ -6,7 +6,7 @@ SRC_DIR = src
 OBJ_DIR = obj
 MOD_DIR = mod
 
-COMPILER := PGI# GNU, PGI
+COMPILER := GNU# GNU, PGI
 PARALLEL := 1# 0, 1
 
 # objects

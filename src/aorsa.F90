@@ -46,7 +46,6 @@ program aorsa2dMain
     real :: papi_ptime_fill, papi_ptime_solve, papi_ptime_current, papi_ptime_total
     integer(kind=long) :: papi_flpins
 
-    type(RunPerfData) :: Perf
 
 #endif
 
@@ -64,6 +63,9 @@ program aorsa2dMain
     !stat = gptlStart ( 'total' )
 
     call start_timer ( tTotal )
+
+    Mem%nAllocations = 0
+    Mem%MBytes = 0
 
 #ifdef usepapi
     call PAPIF_flops ( papi_rTime, papi_pTime, papi_flpins, papi_mflops, papi_irc )
@@ -113,6 +115,10 @@ program aorsa2dMain
 
     enddo
 
+    if(iAm==0)then 
+        write(*,*) '    nAllocations: ', Mem%nAllocations
+        write(*,*) '    Mem Allocated [MBytes]: ', Mem%MBytes
+    endif
 
 !   setup magnetic field 
 !   --------------------
