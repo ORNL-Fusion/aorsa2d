@@ -292,6 +292,10 @@ contains
         integer :: workListPosition, i, j, n, m
         type(workListEntry) :: thisWorkList
         type(workListEntry), allocatable :: workListTooLong(:),WorkListJustRight(:)
+
+        type(SpatialRow), allocatable ::  SpatialRowsTmp(:)
+        integer :: Cnt, row, w
+
 #ifdef par
         integer :: iCol,iRow,ii,jj
         !   scalapack indicies
@@ -343,7 +347,7 @@ contains
                 m = (mod(iCol-1,3*g%nModesZ)+1-1)/3+1+g%mMin-1
            
                 workListPosition = workListPosition + 1
-                thisWorkList = workListEntry(i,j,m,n)
+                thisWorkList = workListEntry(i,j,m,n,0)
                 workListTooLong(workListPosition) = thisWorkList
 
             enddo
@@ -352,7 +356,43 @@ contains
         allocate(g%wl(workListPosition))
         g%wl = workListTooLong(1:workListPosition)
 
+        if(iAM==0)write(*,*) '    MyWork: ', size(g%wl)
+        if(iAM==0)write(*,*) '    AllWork: ', g%nR*g%nZ*g%nModesR*g%nModesZ
+
 #endif
+
+        allocate(SpatialRowsTmp(size(g%wl)))
+        SpatialRowsTmp = SpatialRow(0,0,0)
+        Cnt = 1
+
+        if(iAm==0)write(*,*) '    Calculating wl -> space mapping array ...'
+        do w=1,size(g%wl)
+            i = g%wl(w)%i
+            j = g%wl(w)%j
+            if(i<1.or.i>g%nR.or.j<1.or.j>g%nZ)then
+                    write(*,*) 'ERROR: ', i, j
+                    stop
+            endif
+            Row = (i-1)*g%nZ + j
+            if(any(SpatialRowsTmp(1:Cnt)%row==Row))then
+                g%wl(w)%iPt = minloc(abs(SpatialRowsTmp(1:Cnt)%row-Row),1)
+            else
+                g%wl(w)%iPt = Cnt
+                SpatialRowsTmp(Cnt)%row = Row
+                SpatialRowsTmp(Cnt)%i = i 
+                SpatialRowsTmp(Cnt)%j = j
+                !if(iAm==0)write(*,*) '        Cnt:', cnt, SpatialRowsTmp(Cnt)
+                Cnt = Cnt + 1
+            endif
+        enddo
+
+        Cnt = Cnt - 1
+
+        allocate(g%pt(Cnt))
+        g%pt = SpatialRowsTmp(1:Cnt) 
+        deallocate(SpatialRowsTmp)
+
+        if(iAm==0)write(*,*) '    DONE'
 
     end subroutine createWorkList
 
@@ -569,7 +609,7 @@ contains
             ! though. Or will it?
 
             interior: &
-            if(g%label(g%wl(w)%i,g%wl(w)%j)==0)then
+            if(g%label(g%wl(w)%iPt)==0)then
    
                 !mat3by3Block = 0 
 
@@ -611,7 +651,7 @@ contains
                         ! Interior points
                         ! ---------------
 
-                        if(g%label(g%wl(w)%i,g%wl(w)%j)==0) then 
+                        if(g%label(g%wl(w)%iPt)==0) then 
 
                             if (ii==0 .and. jj==0) aMat(localRow,localCol) = mat3by3Block(1,1) * bFn  
                             if (ii==0 .and. jj==1) aMat(localRow,localCol) = mat3by3Block(1,2) * bFn   
@@ -631,7 +671,7 @@ contains
                         ! Outer boundary points
                         ! ---------------------
 
-                        if (g%label(g%wl(w)%i,g%wl(w)%j)==888) then
+                        if (g%label(g%wl(w)%iPt)==888) then
                             
                             if (ii==0 .and. jj==0) aMat(localRow,localCol) = bFn * lsWeightFac 
                             if (ii==0 .and. jj==1) aMat(localRow,localCol) = 0
@@ -647,7 +687,7 @@ contains
 
                         endif
 
-                        if (g%label(g%wl(w)%i,g%wl(w)%j)==999) then
+                        if (g%label(g%wl(w)%iPt)==999) then
 
                             !iOL = 1+overlap
                             !jOL = j
@@ -672,7 +712,7 @@ contains
                         ! Mesh-Mesh boundary for R bFn 
                         ! ----------------------------
 
-                        if (g%label(g%wl(w)%i,g%wl(w)%j)>=1 .and. g%label(g%wl(w)%i,g%wl(w)%j)<=20) then
+                        if (g%label(g%wl(w)%iPt)>=1 .and. g%label(g%wl(w)%iPt)<=20) then
 
                             !if(mod(g%label(i,j),2)==1) then 
                             !    iOL = 1+overlap

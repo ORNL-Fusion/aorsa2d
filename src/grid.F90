@@ -20,7 +20,14 @@ type :: workListEntry
         integer :: j
         integer :: m
         integer :: n
+        integer :: iPt
 end type workListEntry
+
+type :: SpatialRow
+    integer :: i
+    integer :: j
+    integer :: row
+endtype SpatialRow
 
 ! Define the grid objects
 ! -----------------------
@@ -45,8 +52,8 @@ type :: gridBlock
     real :: rMin, rMax, zMin, zMax, rRange, zRange
     real :: rMinIn, rMaxIn, zMinIn, zMaxIn
     real :: normFacR, normFacZ
-    integer, allocatable :: label(:,:)
-    logical, allocatable :: isMetal(:,:)
+    integer, allocatable :: label(:)
+    logical, allocatable :: isMetal(:)
     integer, allocatable :: neighbr_startRow(:,:),neighbr_startCol(:,:)
 
     ! Basis functions
@@ -63,18 +70,18 @@ type :: gridBlock
 
     ! B field, temp, density, frequencies
     ! -----------------------------------
-    real, allocatable, dimension(:,:) :: bR_unit, bT_unit, bZ_unit, bMag, rho
-    logical, allocatable, dimension(:,:) :: mask
-    real, allocatable :: nuOmg(:,:)
-    real(kind=dbl), allocatable, dimension(:,:,:) :: densitySpec, ktSpec
-    real(kind=dbl), allocatable, dimension(:,:,:) :: omgc, omgp2
+    real, allocatable, dimension(:) :: bR_unit, bT_unit, bZ_unit, bMag, rho
+    logical, allocatable, dimension(:) :: mask
+    real, allocatable :: nuOmg(:)
+    real(kind=dbl), allocatable, dimension(:,:) :: densitySpec, ktSpec
+    real(kind=dbl), allocatable, dimension(:,:) :: omgc, omgp2
 
     ! Toroidal broadening variables
     ! -----------------------------
-    real, allocatable, dimension(:,:,:,:) :: U_RTZ_to_ABb
-    real, allocatable :: sinTh(:,:)
-    real, allocatable, dimension(:,:) :: gradPrlB
-    real, allocatable, dimension(:,:) :: bPol
+    real, allocatable, dimension(:,:,:) :: U_RTZ_to_ABb
+    real, allocatable :: sinTh(:)
+    real, allocatable, dimension(:) :: gradPrlB
+    real, allocatable, dimension(:) :: bPol
 
     ! Antenna Currents
     ! ----------------
@@ -107,41 +114,42 @@ type :: gridBlock
 
     ! Rotation matrix and derivatives
     ! -------------------------------
-    real, allocatable, dimension(:,:) :: &
+    real, allocatable, dimension(:) :: &
         Urr, Urt, Urz, Utr, Utt, Utz, Uzr, Uzt, Uzz
 
     ! dr first derivatives
-    real, allocatable, dimension(:,:) :: &
+    real, allocatable, dimension(:) :: &
         drUrr, drUrt, drUrz, &
         drUtr, drUtt, drUtz, &
         drUzr, drUzt, drUzz
     
     ! dz first derivatives
-    real, allocatable, dimension(:,:) :: &
+    real, allocatable, dimension(:) :: &
         dzUrr, dzUrt, dzUrz, &
         dzUtr, dzUtt, dzUtz, &
         dzUzr, dzUzt, dzUzz
     
     ! drr second derivatives
-    real, allocatable, dimension(:,:) :: &
+    real, allocatable, dimension(:) :: &
         drrUrr, drrUrt, drrUrz, &
         drrUtr, drrUtt, drrUtz, &
         drrUzr, drrUzt, drrUzz
     
     ! dzz second derivatives
-    real, allocatable, dimension(:,:) :: &
+    real, allocatable, dimension(:) :: &
         dzzUrr, dzzUrt, dzzUrz, &
         dzzUtr, dzzUtt, dzzUtz, &
         dzzUzr, dzzUzt, dzzUzz
     
     ! drz derivatives
-    real, allocatable, dimension(:,:) :: &
+    real, allocatable, dimension(:) :: &
         drzUrr, drzUrt, drzUrz, &
         drzUtr, drzUtt, drzUtz, &
         drzUzr, drzUzt, drzUzz
 
     ! workList
     type(workListEntry), allocatable :: wl(:)
+    type(SpatialRow), allocatable :: pt(:)
 
     ! plasma parameter interpolation splines
     real :: interpSigma = 0.0
@@ -462,7 +470,7 @@ contains
         type(gridBlock), intent(inout) :: gAll(:)
         integer(kind=long), intent(in) :: nPts_tot
 
-        integer :: iMe, jMe, me, nbr, offSet, label
+        integer :: wMe, iMe, jMe, me, nbr, offSet, label
 
 
         ! Boundary conditions
@@ -487,15 +495,20 @@ contains
 
         do me=1,nGrid
 
-            allocate ( gAll(me)%label(gAll(me)%nR,gAll(me)%nZ) )
+            !allocate ( gAll(me)%label(gAll(me)%nR,gAll(me)%nZ) )
+            allocate ( gAll(me)%label(size(gAll(me)%pt)) )
 
             ! Interior points
             ! ---------------
 
             gAll(me)%label = 0
 
-            do iMe=1,gAll(me)%nR
-                do jMe=1,gAll(me)%nZ
+            do wMe=1,size(gAll(me)%pt)
+                iMe = gAll(me)%pt(wMe)%i
+                jMe = gAll(me)%pt(wMe)%j
+
+            !do iMe=1,gAll(me)%nR
+            !    do jMe=1,gAll(me)%nZ
 
 
                     ! Left side of block
@@ -514,7 +527,7 @@ contains
 
                             if(abs((iMe-1)-overlap)*2==0) label = 999 
 
-                            gAll(me)%label(iMe,jMe) = label
+                            gAll(me)%label(wMe) = label
 
                             ! find the neighbour block
                             do nbr=1,nGrid                         
@@ -530,7 +543,7 @@ contains
 
                         else ! at domain boundary
 
-                            if(iMe==1) gAll(me)%label(iMe,jMe) = 888 ! outer boundary
+                            if(iMe==1) gAll(me)%label(wMe) = 888 ! outer boundary
 
                         endif at_mesh_mesh_bndry_rhs
 
@@ -551,7 +564,7 @@ contains
                             ! if label equals 0 then Maxwells will be used (see
                             ! left block for E=E condition)
 
-                            gAll(me)%label(iMe,jMe) = label ! left part of mesh-mesh boundary bFn 
+                            gAll(me)%label(wMe) = label ! left part of mesh-mesh boundary bFn 
 
                             ! find the neighbour block
                             do nbr=1,nGrid                         
@@ -567,7 +580,7 @@ contains
 
                         else ! at domain boundary
 
-                            if(iMe==gAll(me)%nR) gAll(me)%label(iMe,jMe) = 888 ! outer boundary
+                            if(iMe==gAll(me)%nR) gAll(me)%label(wMe) = 888 ! outer boundary
 
                         endif at_mesh_mesh_bndry_lhs
 
@@ -579,9 +592,9 @@ contains
 
                     if(jMe==1 .and. gAll(me)%nZ>1) then
                          if(count(gAll(me)%zMinIn==zMaxAll)>0) then
-                            gAll(me)%label(iMe,jMe) = 4 ! inner boundary bot
+                            gAll(me)%label(wMe) = 4 ! inner boundary bot
                         else
-                            gAll(me)%label(iMe,jMe) = 888 ! outer boundary
+                            gAll(me)%label(wMe) = 888 ! outer boundary
                         endif
                     endif
 
@@ -591,14 +604,15 @@ contains
 
                     if(jMe==gAll(me)%nZ .and. gAll(me)%nZ>1) then
                          if(count(gAll(me)%zMaxIn==zMinAll)>0) then
-                            gAll(me)%label(iMe,jMe) = 5 ! inner boundary top
+                            gAll(me)%label(wMe) = 5 ! inner boundary top
                         else
-                            gAll(me)%label(iMe,jMe) = 888 ! outer boundary
+                            gAll(me)%label(wMe) = 888 ! outer boundary
                         endif
                     endif
 
 
-                enddo
+            !    enddo
+            !enddo
             enddo
 
             offSet = offSet + gAll(me)%nR * gAll(me)%nZ

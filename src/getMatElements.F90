@@ -10,7 +10,7 @@ function get3by3Block( g, w)!, r, z)
     use constants
     use profiles, only: k0, omgrf, mSpec
     use sigma
-    use sigmaInputGeneration, only: getSigmaInputHere
+    !use sigmaInputGeneration, only: getSigmaInputHere
     use generic_biLinearInterp
 
     implicit none
@@ -148,38 +148,38 @@ function get3by3Block( g, w)!, r, z)
         do s=1,nSpec
 
             hotPlasma:& 
-            if (iSigma==1 .and. (.not. g%isMetal(g%wl(w)%i,g%wl(w)%j)) ) then        
+            if (iSigma==1 .and. (.not. g%isMetal(g%wl(w)%iPt)) ) then        
 
                 !kVec_stix = matMul( g%U_RTZ_to_ABb(g%wl(w)%i,g%wl(w)%j,:,:), &
                 !    (/ kr, nPhi/r, kz /) ) 
-                kVec_stix = matMul( g%U_RTZ_to_ABb(g%wl(w)%i,g%wl(w)%j,:,:), &
+                kVec_stix = matMul( g%U_RTZ_to_ABb(g%wl(w)%iPt,:,:), &
                     (/ kr, g%kPhi(g%wl(w)%i), kz /) ) 
                 !kVec_stix(3) = sign(g%kPhi(g%wl(w)%i),kVec_stix(3))
                 sigma_tmp = sigmaHot_maxwellian &
                     ( mSpec(s), &
-                    g%ktSpec(g%wl(w)%i,g%wl(w)%j,s), &
-                    g%omgc(g%wl(w)%i,g%wl(w)%j,s), &
-                    g%omgp2(g%wl(w)%i,g%wl(w)%j,s), &
+                    g%ktSpec(g%wl(w)%iPt,s), &
+                    g%omgc(g%wl(w)%iPt,s), &
+                    g%omgp2(g%wl(w)%iPt,s), &
                     kVec_stix, g%R(g%wl(w)%i), &
                     omgrf, k0, &
                     g%k_cutoff, s, &
-                    g%sinTh(g%wl(w)%i,g%wl(w)%j), &
-                    g%bPol(g%wl(w)%i,g%wl(w)%j), g%bMag(g%wl(w)%i,g%wl(w)%j), &
-                    g%gradPrlB(g%wl(w)%i,g%wl(w)%j), &
-                    g%nuOmg(g%wl(w)%i,g%wl(w)%j) )
+                    g%sinTh(g%wl(w)%iPt), &
+                    g%bPol(g%wl(w)%iPt), g%bMag(g%wl(w)%iPt), &
+                    g%gradPrlB(g%wl(w)%iPt), &
+                    g%nuOmg(g%wl(w)%iPt) )
 
             endif hotPlasma
 
 
             ! NEED TO FIX THIS 'isMetal' to an interp
             coldPlasma: &
-            if (iSigma==0 .and. (.not. g%isMetal(g%wl(w)%i,g%wl(w)%j)) ) then 
+            if (iSigma==0 .and. (.not. g%isMetal(g%wl(w)%iPt)) ) then 
 
                 sigmaIn_cold = spatialSigmaInput_cold( &
-                    g%omgc(g%wl(w)%i,g%wl(w)%j,s), &
-                    g%omgp2(g%wl(w)%i,g%wl(w)%j,s), &
+                    g%omgc(g%wl(w)%iPt,s), &
+                    g%omgp2(g%wl(w)%iPt,s), &
                     omgrf, &
-                    g%nuOmg(g%wl(w)%i,g%wl(w)%j) )
+                    g%nuOmg(g%wl(w)%iPt) )
 
                 !sigmaIn_cold = getSigmaInputHere ( g%r(g%wl(w)%i), g%z(g%wl(w)%j), g, s )
                 !sigmaIn_cold = getSigmaInputHere ( r, z, g, s )
@@ -199,7 +199,7 @@ function get3by3Block( g, w)!, r, z)
        
 #if __noU__==1
         ! Rotate sigma from alp,bet,prl to r,t,z
-        R_ = g%U_RTZ_to_ABb(g%wl(w)%i,g%wl(w)%j,:,:)
+        R_ = g%U_RTZ_to_ABb(g%wl(w)%iPt,:,:)
         sigmaHere = matmul(transpose(R_),matmul(sigmaHere,R_))
 #endif
 
@@ -241,7 +241,7 @@ function get3by3Block( g, w)!, r, z)
         ! Metal
         ! -----
 
-        if (g%isMetal(g%wl(w)%i,g%wl(w)%j)) then 
+        if (g%isMetal(g%wl(w)%iPt)) then 
         !if (biLinearInterp(r,z,g,g%isMetal)>0.5) then 
 
             sigAlpAlp = metal 
@@ -294,17 +294,17 @@ function get3by3Block( g, w)!, r, z)
         Uzt = 0
         Uzz = 1
 #else
-        Urr = g%Urr(g%wl(w)%i,g%wl(w)%j)
-        Urt = g%Urt(g%wl(w)%i,g%wl(w)%j)
-        Urz = g%Urz(g%wl(w)%i,g%wl(w)%j)
+        Urr = g%Urr(g%wl(w)%iPt)
+        Urt = g%Urt(g%wl(w)%iPt)
+        Urz = g%Urz(g%wl(w)%iPt)
         
-        Utr = g%Utr(g%wl(w)%i,g%wl(w)%j)
-        Utt = g%Utt(g%wl(w)%i,g%wl(w)%j)
-        Utz = g%Utz(g%wl(w)%i,g%wl(w)%j)
-                                  
-        Uzr = g%Uzr(g%wl(w)%i,g%wl(w)%j)
-        Uzt = g%Uzt(g%wl(w)%i,g%wl(w)%j)
-        Uzz = g%Uzz(g%wl(w)%i,g%wl(w)%j)
+        Utr = g%Utr(g%wl(w)%iPt)
+        Utt = g%Utt(g%wl(w)%iPt)
+        Utz = g%Utz(g%wl(w)%iPt)
+                    
+        Uzr = g%Uzr(g%wl(w)%iPt)
+        Uzt = g%Uzt(g%wl(w)%iPt)
+        Uzz = g%Uzz(g%wl(w)%iPt)
 #endif
        
         !Urr = biLinearInterp(r,z,g,g%Urr)
@@ -332,17 +332,17 @@ function get3by3Block( g, w)!, r, z)
         drUzt = 0 
         drUzz = 0 
 #else
-        drUrr = g%drUrr(g%wl(w)%i,g%wl(w)%j)
-        drUrt = g%drUrt(g%wl(w)%i,g%wl(w)%j)
-        drUrz = g%drUrz(g%wl(w)%i,g%wl(w)%j)
+        drUrr = g%drUrr(g%wl(w)%iPt)
+        drUrt = g%drUrt(g%wl(w)%iPt)
+        drUrz = g%drUrz(g%wl(w)%iPt)
 
-        drUtr = g%drUtr(g%wl(w)%i,g%wl(w)%j)
-        drUtt = g%drUtt(g%wl(w)%i,g%wl(w)%j)
-        drUtz = g%drUtz(g%wl(w)%i,g%wl(w)%j)
+        drUtr = g%drUtr(g%wl(w)%iPt)
+        drUtt = g%drUtt(g%wl(w)%iPt)
+        drUtz = g%drUtz(g%wl(w)%iPt)
 
-        drUzr = g%drUzr(g%wl(w)%i,g%wl(w)%j)
-        drUzt = g%drUzt(g%wl(w)%i,g%wl(w)%j)
-        drUzz = g%drUzz(g%wl(w)%i,g%wl(w)%j)
+        drUzr = g%drUzr(g%wl(w)%iPt)
+        drUzt = g%drUzt(g%wl(w)%iPt)
+        drUzz = g%drUzz(g%wl(w)%iPt)
 #endif
         !drUrr = biLinearInterp(r,z,g,g%drUrr)
         !drUrt = biLinearInterp(r,z,g,g%drUrt)
@@ -368,17 +368,17 @@ function get3by3Block( g, w)!, r, z)
         dzUzt = 0 
         dzUzz = 0 
 #else
-        dzUrr = g%dzUrr(g%wl(w)%i,g%wl(w)%j)
-        dzUrt = g%dzUrt(g%wl(w)%i,g%wl(w)%j)
-        dzUrz = g%dzUrz(g%wl(w)%i,g%wl(w)%j)
+        dzUrr = g%dzUrr(g%wl(w)%iPt)
+        dzUrt = g%dzUrt(g%wl(w)%iPt)
+        dzUrz = g%dzUrz(g%wl(w)%iPt)
 
-        dzUtr = g%dzUtr(g%wl(w)%i,g%wl(w)%j)
-        dzUtt = g%dzUtt(g%wl(w)%i,g%wl(w)%j)
-        dzUtz = g%dzUtz(g%wl(w)%i,g%wl(w)%j)
+        dzUtr = g%dzUtr(g%wl(w)%iPt)
+        dzUtt = g%dzUtt(g%wl(w)%iPt)
+        dzUtz = g%dzUtz(g%wl(w)%iPt)
 
-        dzUzr = g%dzUzr(g%wl(w)%i,g%wl(w)%j)
-        dzUzt = g%dzUzt(g%wl(w)%i,g%wl(w)%j)
-        dzUzz = g%dzUzz(g%wl(w)%i,g%wl(w)%j)
+        dzUzr = g%dzUzr(g%wl(w)%iPt)
+        dzUzt = g%dzUzt(g%wl(w)%iPt)
+        dzUzz = g%dzUzz(g%wl(w)%iPt)
 #endif
 
         !dzUrr = biLinearInterp(r,z,g,g%dzUrr)
@@ -405,17 +405,17 @@ function get3by3Block( g, w)!, r, z)
         drrUzt = 0 
         drrUzz = 0 
 #else
-        drrUrr = g%drrUrr(g%wl(w)%i,g%wl(w)%j)
-        drrUrt = g%drrUrt(g%wl(w)%i,g%wl(w)%j)
-        drrUrz = g%drrUrz(g%wl(w)%i,g%wl(w)%j)
+        drrUrr = g%drrUrr(g%wl(w)%iPt)
+        drrUrt = g%drrUrt(g%wl(w)%iPt)
+        drrUrz = g%drrUrz(g%wl(w)%iPt)
 
-        drrUtr = g%drrUtr(g%wl(w)%i,g%wl(w)%j)
-        drrUtt = g%drrUtt(g%wl(w)%i,g%wl(w)%j)
-        drrUtz = g%drrUtz(g%wl(w)%i,g%wl(w)%j)
+        drrUtr = g%drrUtr(g%wl(w)%iPt)
+        drrUtt = g%drrUtt(g%wl(w)%iPt)
+        drrUtz = g%drrUtz(g%wl(w)%iPt)
 
-        drrUzr = g%drrUzr(g%wl(w)%i,g%wl(w)%j)
-        drrUzt = g%drrUzt(g%wl(w)%i,g%wl(w)%j)
-        drrUzz = g%drrUzz(g%wl(w)%i,g%wl(w)%j)
+        drrUzr = g%drrUzr(g%wl(w)%iPt)
+        drrUzt = g%drrUzt(g%wl(w)%iPt)
+        drrUzz = g%drrUzz(g%wl(w)%iPt)
 #endif
 
         !drrUrr = biLinearInterp(r,z,g,g%drrUrr)
@@ -442,17 +442,17 @@ function get3by3Block( g, w)!, r, z)
         dzzUzt = 0 
         dzzUzz = 0 
 #else
-        dzzUrr = g%dzzUrr(g%wl(w)%i,g%wl(w)%j)
-        dzzUrt = g%dzzUrt(g%wl(w)%i,g%wl(w)%j)
-        dzzUrz = g%dzzUrz(g%wl(w)%i,g%wl(w)%j)
+        dzzUrr = g%dzzUrr(g%wl(w)%iPt)
+        dzzUrt = g%dzzUrt(g%wl(w)%iPt)
+        dzzUrz = g%dzzUrz(g%wl(w)%iPt)
         
-        dzzUtr = g%dzzUtr(g%wl(w)%i,g%wl(w)%j)
-        dzzUtt = g%dzzUtt(g%wl(w)%i,g%wl(w)%j)
-        dzzUtz = g%dzzUtz(g%wl(w)%i,g%wl(w)%j)
+        dzzUtr = g%dzzUtr(g%wl(w)%iPt)
+        dzzUtt = g%dzzUtt(g%wl(w)%iPt)
+        dzzUtz = g%dzzUtz(g%wl(w)%iPt)
 
-        dzzUzr = g%dzzUzr(g%wl(w)%i,g%wl(w)%j)
-        dzzUzt = g%dzzUzt(g%wl(w)%i,g%wl(w)%j)
-        dzzUzz = g%dzzUzz(g%wl(w)%i,g%wl(w)%j)
+        dzzUzr = g%dzzUzr(g%wl(w)%iPt)
+        dzzUzt = g%dzzUzt(g%wl(w)%iPt)
+        dzzUzz = g%dzzUzz(g%wl(w)%iPt)
 #endif
         !dzzUrr = biLinearInterp(r,z,g,g%dzzUrr)
         !dzzUrt = biLinearInterp(r,z,g,g%dzzUrt)
@@ -478,17 +478,17 @@ function get3by3Block( g, w)!, r, z)
         drzUzt = 0 
         drzUzz = 0 
 #else
-        drzUrr = g%drzUrr(g%wl(w)%i,g%wl(w)%j)
-        drzUrt = g%drzUrt(g%wl(w)%i,g%wl(w)%j)
-        drzUrz = g%drzUrz(g%wl(w)%i,g%wl(w)%j)
+        drzUrr = g%drzUrr(g%wl(w)%iPt)
+        drzUrt = g%drzUrt(g%wl(w)%iPt)
+        drzUrz = g%drzUrz(g%wl(w)%iPt)
         
-        drzUtr = g%drzUtr(g%wl(w)%i,g%wl(w)%j)
-        drzUtt = g%drzUtt(g%wl(w)%i,g%wl(w)%j)
-        drzUtz = g%drzUtz(g%wl(w)%i,g%wl(w)%j)
+        drzUtr = g%drzUtr(g%wl(w)%iPt)
+        drzUtt = g%drzUtt(g%wl(w)%iPt)
+        drzUtz = g%drzUtz(g%wl(w)%iPt)
 
-        drzUzr = g%drzUzr(g%wl(w)%i,g%wl(w)%j)
-        drzUzt = g%drzUzt(g%wl(w)%i,g%wl(w)%j)
-        drzUzz = g%drzUzz(g%wl(w)%i,g%wl(w)%j)
+        drzUzr = g%drzUzr(g%wl(w)%iPt)
+        drzUzt = g%drzUzt(g%wl(w)%iPt)
+        drzUzz = g%drzUzz(g%wl(w)%iPt)
 #endif
 
         !drzUrr = biLinearInterp(r,z,g,g%drzUrr)

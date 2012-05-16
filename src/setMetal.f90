@@ -17,9 +17,11 @@ contains
 
         type(gridBlock), intent(inout) :: g
 
-        integer :: i, j
+        integer :: w, i, j
 
-        allocate (g%isMetal(g%nR,g%nZ))
+        !allocate (g%isMetal(g%nR,g%nZ))
+        allocate (g%isMetal(size(g%pt)))
+
         g%isMetal = .false.
 
         !if(useEqdsk)then
@@ -30,34 +32,42 @@ contains
 
         if(limiter_boundary .and. useEqdsk)then
     
-            do i=1,g%nR
-                do j=1,g%nZ
-                    g%isMetal(i,j) = .not. IsInsideOf ( g%R(i), g%z(j), rLim__, zLim )
-                enddo
-            enddo
+            !do i=1,g%nR
+            !    do j=1,g%nZ
+            !       g%isMetal(i,j) = .not. IsInsideOf ( g%R(i), g%z(j), rLim__, zLim )
+            !    enddo
+            !enddo
+            stop
 
         elseif(limiter_boundary .and. UseAR2Input)then
-            
-             do i=1,g%nR
-                do j=1,g%nZ
-                    
-                    g%isMetal(i,j) = .not. IsInsideOf ( g%R(i), g%z(j), ar2_rLim, ar2_zLim )
-                enddo
-            enddo
+
+             do w=1,size(g%pt)
+                i = g%pt(w)%i
+                j = g%pt(w)%j
+             !do i=1,g%nR
+             !   do j=1,g%nZ
+                    g%isMetal(w) = .not. IsInsideOf ( g%R(i), g%z(j), ar2_rLim, ar2_zLim )
+             !   enddo
+             !enddo
+             enddo
 
         else ! square box defined by metalLeft, metalRight, metalTop, metalBot
 
-            do i=1,g%nR
-                do j=1,g%nZ
+            do w=1,size(g%pt)
+                i = g%pt(w)%i
+                j = g%pt(w)%j
+            !do i=1,g%nR
+            !    do j=1,g%nZ
                     if ( g%R(i) < metalLeft .or. g%R(i) > metalRight &
                             .or. g%Z(j) > metalTop .or. g%Z(j) < metalBot ) &
-                        g%isMetal(i,j) = .true.
-                enddo
+                        g%isMetal(w) = .true.
+            !    enddo
+            !enddo
             enddo
 
         endif
 
-        if(iAM==0)write(*,*) 'No. metal points: ', count(g%isMetal)
+        if(iAM==0)write(*,*) '    No. metal points: ', count(g%isMetal)
 
     end subroutine setMetalRegions
 

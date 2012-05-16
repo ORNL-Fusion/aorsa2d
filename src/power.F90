@@ -102,34 +102,34 @@ subroutine current ( g )
 
 
                         hotPlasma:& 
-                        if (iSigma==1 .and. (.not. g%isMetal(g%wl(w)%i,g%wl(w)%j)) ) then        
+                        if (iSigma==1 .and. (.not. g%isMetal(g%wl(w)%iPt)) ) then        
 
-                            kVec_stix = matMul( g%U_RTZ_to_ABb(g%wl(w)%i,g%wl(w)%j,:,:), &
+                            kVec_stix = matMul( g%U_RTZ_to_ABb(g%wl(w)%iPt,:,:), &
                                 (/ kr, g%kPhi(g%wl(w)%i), kz /) ) 
 
                             thisSigma = sigmaHot_maxwellian &
                                 ( mSpec(s), &
-                                g%ktSpec(g%wl(w)%i,g%wl(w)%j,s), &
-                                g%omgc(g%wl(w)%i,g%wl(w)%j,s), &
-                                g%omgp2(g%wl(w)%i,g%wl(w)%j,s), &
+                                g%ktSpec(g%wl(w)%iPt,s), &
+                                g%omgc(g%wl(w)%iPt,s), &
+                                g%omgp2(g%wl(w)%iPt,s), &
                                 kVec_stix, g%R(g%wl(w)%i), &
                                 omgrf, k0, &
                                 g%k_cutoff, s, &
-                                g%sinTh(g%wl(w)%i,g%wl(w)%j), &
-                                g%bPol(g%wl(w)%i,g%wl(w)%j), g%bMag(g%wl(w)%i,g%wl(w)%j), &
-                                g%gradPrlB(g%wl(w)%i,g%wl(w)%j), &
-                                g%nuOmg(g%wl(w)%i,g%wl(w)%j) )
+                                g%sinTh(g%wl(w)%iPt), &
+                                g%bPol(g%wl(w)%iPt), g%bMag(g%wl(w)%iPt), &
+                                g%gradPrlB(g%wl(w)%iPt), &
+                                g%nuOmg(g%wl(w)%iPt) )
 
                         endif hotPlasma
 
                         coldPlasma: &
-                        if (iSigma==0 .and. (.not. g%isMetal(g%wl(w)%i,g%wl(w)%j)) ) then 
+                        if (iSigma==0 .and. (.not. g%isMetal(g%wl(w)%iPt)) ) then 
 
                             sigmaIn_cold = spatialSigmaInput_cold( &
-                                g%omgc(g%wl(w)%i,g%wl(w)%j,s), &
-                                g%omgp2(g%wl(w)%i,g%wl(w)%j,s), &
+                                g%omgc(g%wl(w)%iPt,s), &
+                                g%omgp2(g%wl(w)%iPt,s), &
                                 omgrf, &
-                                g%nuOmg(g%wl(w)%i,g%wl(w)%j) )
+                                g%nuOmg(g%wl(w)%iPt) )
 
                             !thisSigma = sigmaCold_stix &
                             !    ( g%omgc(g%wl(w)%i,g%wl(w)%j,s), &
@@ -141,14 +141,14 @@ subroutine current ( g )
                         endif coldPlasma
 #if __noU__==1
                         ! Rotate sigma from alp,bet,prl to r,t,z
-                        R_ = g%U_RTZ_to_ABb(g%wl(w)%i,g%wl(w)%j,:,:)
+                        R_ = g%U_RTZ_to_ABb(g%wl(w)%iPt,:,:)
                         thisSigma = matmul(transpose(R_),matmul(thisSigma,R_))
 #endif
 
                         ! Metal
                         ! -----
 
-                        if (g%isMetal(g%wl(w)%i,g%wl(w)%j)) then 
+                        if (g%isMetal(g%wl(w)%iPt)) then 
 
                             thisSigma = 0
                             thisSigma(1,1) = metal 

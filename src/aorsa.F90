@@ -18,7 +18,7 @@ program aorsa2dMain
     use E_to_lab
     use power
     use setMetal
-    use sigmaInputGeneration
+    !use sigmaInputGeneration
     use ar2Input
     use Performance
 
@@ -120,6 +120,26 @@ program aorsa2dMain
         write(*,*) '    Mem Allocated [MBytes]: ', Mem%MBytes
     endif
 
+
+!   Create workLists
+!   ----------------
+
+    call start_timer ( tWorkList )
+
+    do i=1,nGrid
+
+        call createWorkList ( allGrids(i) )
+
+    enddo
+
+    if (iAm==0) then
+        Perf%TimeWorkList = end_timer ( tWorkList )
+        write(*,*) '    Time to create WorkList: ', Perf%TimeWorkList
+    endif
+#ifdef par
+    call blacs_barrier ( iContext, 'All' ) 
+#endif
+
 !   setup magnetic field 
 !   --------------------
 
@@ -127,37 +147,57 @@ program aorsa2dMain
     write(*,*) 'Reading magnetic field data'
 
     if(useEqdsk)then
-        call read_geqdsk ( eqdsk, plot = .false. )
-        call init_interp ()
+        !call read_geqdsk ( eqdsk, plot = .false. )
+        !call init_interp ()
+        stop
     endif
 
     if(useAr2Input)then
+        if(iAm==0) write(*,*) '    Reading ar2 input file ...'
         call ReadAr2Input (AR2InputFileName)
+        if(iAm==0) write(*,*) '    DONE'
+        if(iAm==0) write(*,*) '    Initializing bField interpolations ...'
         call init_interp ()
+        if(iAm==0) write(*,*) '    DONE'
     endif
 
     do i=1,nGrid
 
         if (useEqdsk) then
-            call bFieldEqdsk ( allGrids(i) )
+            !call bFieldEqdsk ( allGrids(i) )
+            stop
         elseif(useAR2Input)then
+            if(iAm==0) write(*,*) '    Interpolating bField to grid ...'
             call bFieldAR2 ( allGrids(i) )
+            if(iAm==0) write(*,*) '    DONE' 
         elseif (useSoloviev) then
-            call soloviev ( allGrids(i) )
+            !call soloviev ( allGrids(i) )
+            stop
         elseif (useCircular) then
-            call bFieldCircular ( allGrids(i) )
+            !call bFieldCircular ( allGrids(i) )
+            stop
         else
-            call bFieldAnalytical ( allGrids(i) )
+            !call bFieldAnalytical ( allGrids(i) )
+            stop
         endif
 
     enddo
+#ifdef par
+    call blacs_barrier ( iContext, 'All' ) 
+#endif
+
 
 !   define the metal regions
 !   ------------------------
 
     do i=1,nGrid
+        if(iAm==0) write(*,*) '    Setting metal regions ...'
         call setMetalRegions( allGrids(i) )
+        if(iAm==0) write(*,*) '    DONE'
     enddo
+#ifdef par
+    call blacs_barrier ( iContext, 'All' ) 
+#endif
 
 
 !   setup profiles
@@ -173,30 +213,34 @@ program aorsa2dMain
         enddo
 
     else 
-        call init_profiles (nSpec)
 
-        do i=1,nGrid
+        !call init_profiles (nSpec)
 
-            if (useFluxProfiles) then
-                call flux_profiles ( allGrids(i) )
-            elseif (useCircularProfiles) then
-                call circular_profiles ( allGrids(i) )
-            else
-                call flat_profiles ( allGrids(i), parabolic = parabolic )
-            endif
+        !do i=1,nGrid
 
-        enddo
+        !    if (useFluxProfiles) then
+        !        call flux_profiles ( allGrids(i) )
+        !    elseif (useCircularProfiles) then
+        !        call circular_profiles ( allGrids(i) )
+        !    else
+        !        call flat_profiles ( allGrids(i), parabolic = parabolic )
+        !    endif
+
+        !enddo
+        stop
     endif
+#ifdef par
+    call blacs_barrier ( iContext, 'All' ) 
+#endif
 
-
-!   Setup the plasma paraemter splines for sigma input
-!   --------------------------------------------------
-
-    do i=1,nGrid
-
-        call setupSigmaParameterSplines ( allGrids(i) )
-
-    enddo
+!!   Setup the plasma paraemter splines for sigma input
+!!   --------------------------------------------------
+!
+!    do i=1,nGrid
+!
+!        call setupSigmaParameterSplines ( allGrids(i) )
+!
+!    enddo
 
 
 !   calculate rotation matrix U
@@ -207,10 +251,18 @@ program aorsa2dMain
 
     do i=1,nGrid
 
+        if(iAm==0)write(*,*) '    Initializing rotation matrix ...'
         call init_rotation ( allGrids(i) )
+        if(iAm==0)write(*,*) '    DONE'
+        if(iAm==0)write(*,*) '    Generating derivatives of the rotation matrix ...'
         call deriv_rotation ( allGrids(i) )
+        if(iAm==0)write(*,*) '    DONE'
 
     enddo
+
+#ifdef par
+    call blacs_barrier ( iContext, 'All' ) 
+#endif
 
 
 !   Calculate aMat index for first pt in each grid block
@@ -251,7 +303,7 @@ program aorsa2dMain
 
         do i=1,nGrid
             write(allGrids(i)%fNumber,'(i3.3)') i
-            call write_runData ( allGrids(i) )
+            !call write_runData ( allGrids(i) )
         enddo
 
     endif
@@ -268,24 +320,6 @@ program aorsa2dMain
 !   --------------------------------------
 
     call labelPts ( allGrids, nPts_tot )
-
-
-!   Create workLists
-!   ----------------
-
-    call start_timer ( tWorkList )
-
-    do i=1,nGrid
-
-        call createWorkList ( allGrids(i) )
-
-    enddo
-
-    if (iAm==0) then
-        Perf%TimeWorkList = end_timer ( tWorkList )
-        write(*,*) '    Time to create WorkList: ', Perf%TimeWorkList
-    endif
-
 
 !   Fill matrix 
 !   -----------

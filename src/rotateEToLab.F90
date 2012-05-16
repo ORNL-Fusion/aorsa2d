@@ -9,6 +9,7 @@ subroutine rotate_E_to_lab ( g )
     use grid
     use aorsaNamelist, &
     only: nSpec
+    use interp, only: dlg_interpB 
 
     implicit none
 
@@ -19,6 +20,7 @@ subroutine rotate_E_to_lab ( g )
 
     real :: mag1, mag2
     real :: R_(3,3)
+    real :: bTmp(3), bRu, bTu, bZu, bMagTmp
 
     allocate ( g%eR(g%nR,g%nZ), &
                 g%eTh(g%nR,g%nZ), &
@@ -33,10 +35,17 @@ subroutine rotate_E_to_lab ( g )
     ! ---------------------------------------------
 
     !isq2 = SQRT(0.5)
+    
     do i = 1, g%nR
         do j = 1, g%nZ
 
-            R_ = g%U_RTZ_to_ABb(i,j,:,:)
+            bTmp = dlg_interpB ( (/g%R(i),0.0,g%z(j)/), bMagHere = bMagTmp )  
+            bRu = bTmp(1)/bMagTmp
+            bTu = bTmp(2)/bMagTmp
+            bZu = bTmp(3)/bMagTmp
+            R_ = RotMatHere(bRu,bTu,bZu)
+            !R_ = g%U_RTZ_to_ABb(i,j,:,:)
+
 #if __noU__==1
             ELab_RTZ = (/ g%eAlpha(i,j), g%eBeta(i,j), g%eb(i,j) /)
 #else
