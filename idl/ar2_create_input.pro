@@ -237,6 +237,9 @@ pro ar2_create_input
 	rlim_id = nCdf_varDef ( nc_id, 'rlim', [nlim_id], /float )
 	zlim_id = nCdf_varDef ( nc_id, 'zlim', [nlim_id], /float )
 
+	LimMask_id = nCdf_varDef ( nc_id, 'LimMask', [nR_id,nz_id], /short )
+	BbbMask_id = nCdf_varDef ( nc_id, 'BbbMask', [nR_id,nz_id], /short )
+
 	nCdf_control, nc_id, /enDef
 
 	nCdf_varPut, nc_id, rMin_id, rMin
@@ -261,6 +264,9 @@ pro ar2_create_input
 
 	nCdf_varPut, nc_id, rlim_id, g.rlim[*]
 	nCdf_varPut, nc_id, zlim_id, g.zlim[*]
+
+	nCdf_varPut, nc_id, LimMask_id, mask_lim 
+	nCdf_varPut, nc_id, BbbMask_id, mask_bbb
 
 	nCdf_close, nc_id
 

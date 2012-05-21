@@ -356,7 +356,7 @@ contains
         allocate(g%wl(workListPosition))
         g%wl = workListTooLong(1:workListPosition)
 
-        if(iAM==0)write(*,*) '    MyWork: ', size(g%wl)
+        if(iAM==0)write(*,*) '    MyWork:  ', size(g%wl)
         if(iAM==0)write(*,*) '    AllWork: ', g%nR*g%nZ*g%nModesR*g%nModesZ
 
 #endif

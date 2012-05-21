@@ -89,17 +89,15 @@ CPP_DIRECTIVES += -D__noU__=0
 # debug flags
 # -----------
 
+CPP_DIRECTIVES += -D__CheckParallelLocation__=0# Double check that myRow==pr_sp .and. myCol==pc_sp
 CPP_DIRECTIVES += -D__debugSigma__=0
-
-# Double check that myRow==pr_sp .and. myCol==pc_sp 
-
-CPP_DIRECTIVES += -D__CheckParallelLocation__=0
+CPP_DIRECTIVES += -D__DebugSetMetal__=0
 
 # compile flags
 # -------------
 
 FORMAT := -ffree-line-length-none
-BOUNDS := -fbounds-check 
+BOUNDS := #-fbounds-check 
 WARN := -Wall
 DEBUG := #-pg -g -fbacktrace -fsignaling-nans -ffpe-trap=zero,invalid#,overflow#,underflow
 OPTIMIZATION := -O3

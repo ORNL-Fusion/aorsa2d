@@ -122,7 +122,7 @@ pro ar2_plot_solution_71, NoRunData = NoRunData
 	g = readgeqdsk('Scen4_bn2.57_129x129.dlgMod',/noTor)
 
 	nLevs = 11
-	scale = 0.05e3 
+	scale = 0.05e4 
 	levels = fIndGen(nLevs)/(nLevs-1)*scale
 	colors = reverse(bytScl(levels, top=253)+1)
 	PlotField = (real_part(eAlpha)<max(levels))>min(-levels)

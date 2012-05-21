@@ -9,7 +9,7 @@ real, allocatable :: rbbbs(:),zbbbs(:),rlim(:),zlim(:)
 real, allocatable :: br(:,:),bt(:,:),bz(:,:),bMag(:,:)
 real, allocatable :: r(:),z(:)
 real :: rMin,rMax,zMin,zMax
-integer, allocatable :: AtomicZ(:), amu(:)
+integer, allocatable :: AtomicZ(:), amu(:),BbbMask(:,:),LimMask(:,:)
 real(kind=dbl), allocatable :: Density_m3(:,:,:), Temp_eV(:,:,:)
 
 contains
@@ -23,11 +23,12 @@ subroutine ReadAr2Input (AR2FileName)
 
     character(len=*), intent(IN) :: AR2FileName
 
+    integer :: stat
     integer :: nc_id,br_id,bt_id,bz_id,nR_id,nZ_id, &
         nbbbs_id,nlim_id,nbbbs,nlim,r_id,z_id, &
         rbbbs_id,zbbbs_id,rLim_id,zLim_id,nS_id, &
         rMin_id,rMax_id,zMin_id,zMax_id,AtomicZ_id, &
-        amu_id,Density_id,Temp_id
+        amu_id,Density_id,Temp_id,BbbMask_id,LimMask_id
 
     call check( nf90_open(path=AR2FileName,mode=nf90_nowrite,ncid=nc_id) )
 
@@ -57,6 +58,9 @@ subroutine ReadAr2Input (AR2FileName)
     call check( nf90_inq_varId(nc_id,'Density_m3',Density_id) )
     call check( nf90_inq_varId(nc_id,'Temp_eV',Temp_id) )
 
+    stat = nf90_inq_varId(nc_id,'BbbMask',BbbMask_id)
+    stat = nf90_inq_varId(nc_id,'LimMask',LimMask_id)
+
     call check( nf90_inq_varId(nc_id,'rbbbs',rbbbs_id) )
     call check( nf90_inq_varId(nc_id,'zbbbs',zbbbs_id) )
     call check( nf90_inq_varId(nc_id,'rlim',rLim_id) )
@@ -67,6 +71,7 @@ subroutine ReadAr2Input (AR2FileName)
     allocate(r(nR),z(nZ))
     allocate(AtomicZ(nS),amu(nS))
     allocate(Density_m3(nR,nZ,nS),Temp_eV(nR,nZ,nS))
+    allocate(BbbMask(nR,nZ),LimMask(nR,nZ))
 
     call check( nf90_get_var(nc_id,AtomicZ_id,AtomicZ) )
     call check( nf90_get_var(nc_id,amu_id,amu) )
@@ -90,6 +95,9 @@ subroutine ReadAr2Input (AR2FileName)
 
     call check( nf90_get_var(nc_id,Density_id,Density_m3) )
     call check( nf90_get_var(nc_id,Temp_id,Temp_eV) )
+
+    stat = nf90_get_var(nc_id,BbbMask_id,BbbMask)
+    stat = nf90_get_var(nc_id,LimMask_id,LimMask)
 
     call check( nf90_close(nc_id) )
 

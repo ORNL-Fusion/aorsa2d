@@ -10,7 +10,9 @@ contains
             limiter_boundary, useEqdsk, UseAR2Input
         use eqdsk_dlg, only: is_inside_lim, rLim__,zLim
         use IsInside, only: IsInsideOf
-        use ar2Input, only: ar2_rLim=>rLim, ar2_zLim=>zLim
+        use ar2Input, only: ar2_rLim=>rLim, ar2_zLim=>zLim, &
+           ar2_BbbMask=>BbbMask, ar2_LimMask=>LimMask, &
+           ar2_nR=>nR, ar2_nZ=>nZ, ar2_r=>r, ar2_z=>z
         use parallel, only: iAm
 
         implicit none
@@ -18,6 +20,7 @@ contains
         type(gridBlock), intent(inout) :: g
 
         integer :: w, i, j
+        real :: iTmp,jTmp
 
         !allocate (g%isMetal(g%nR,g%nZ))
         allocate (g%isMetal(size(g%pt)))
@@ -44,9 +47,43 @@ contains
              do w=1,size(g%pt)
                 i = g%pt(w)%i
                 j = g%pt(w)%j
+
+                iTmp = (g%r(i)-ar2_r(1))/(ar2_r(ar2_nR)-ar2_r(1))*(ar2_nR-1)+1.0
+                jTmp = (g%z(j)-ar2_z(1))/(ar2_z(ar2_nZ)-ar2_z(1))*(ar2_nZ-1)+1.0
+
+#if __DebugSetMetal__ > 0 
+
+                if(iTmp>ar2_nR)then 
+                        write(*,*) 'iTmp error: ', iTmp, jTmp, i, j, g%nR, g%nZ, ar2_nR, ar2_nZ
+                        stop 
+                endif
+                if(iTmp<1)then
+                        write(*,*) 'iTmp error: ',  iTmp, jTmp, i, j, g%nR, g%nZ, ar2_nR, ar2_nZ
+                        stop 
+                endif
+ 
+                if(jTmp>ar2_nZ)then
+                        write(*,*) 'jTmp error: ', iTmp, jTmp, i, j, g%nR, g%nZ, ar2_nR, ar2_nZ
+                        stop 
+                endif
+ 
+                if(jTmp<1)then
+                        write(*,*) 'jTmp error: ', iTmp, jTmp, i, j, g%nR, g%nZ, ar2_nR, ar2_nZ
+                        stop 
+                endif
+#endif 
+
              !do i=1,g%nR
              !   do j=1,g%nZ
-                    g%isMetal(w) = .not. IsInsideOf ( g%R(i), g%z(j), ar2_rLim, ar2_zLim )
+                    if(i>1.and.i<g%nR.and.j>1.and.j<g%nZ)then
+                        if(any( (/  ar2_LimMask(floor(iTmp),floor(jTmp)),&
+                                    ar2_LimMask(ceiling(iTmp),floor(jTmp)),&
+                                    ar2_LimMask(ceiling(iTmp),ceiling(jTmp)),&
+                                    ar2_LimMask(floor(iTmp),ceiling(jTmp)) /)==0 ) ) g%isMetal(w) = .true.
+                    else
+                            g%isMetal(w) = .true.
+                    endif
+                    !g%isMetal(w) = .not. IsInsideOf ( g%R(i), g%z(j), ar2_rLim, ar2_zLim )
              !   enddo
              !enddo
              enddo
