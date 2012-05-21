@@ -31,7 +31,9 @@ program aorsa2dMain
 
     !   Timer variables
 
-    type ( timer ) :: tFill, tSolve, tTotal, tWorkList, tCurrent
+    type ( timer ) :: tFill, tSolve, tTotal, tWorkList, &
+        tCurrent, tRotate, tJDotE, tWriteSolution, tCreateGrids, &
+        tBfield, tSetMetal, tProfiles, tRotMat, tRHS
 
 #ifdef usepapi
 
@@ -99,6 +101,8 @@ program aorsa2dMain
 !   initialise the spatial grid
 !   ---------------------------
 
+   
+    call start_timer ( tCreateGrids )
     if (iAm==0) &
     write(*,*) 'Creating spatial grid'
 
@@ -114,6 +118,7 @@ program aorsa2dMain
         allGrids(i)%gridNumber = i
 
     enddo
+    if(iAm==0) write(*,*) '    Time to create grids: ', end_timer ( tCreateGrids ),  'seconds'
 
     if(iAm==0)then 
         write(*,*) '    nAllocations: ', Mem%nAllocations
@@ -142,6 +147,8 @@ program aorsa2dMain
 
 !   setup magnetic field 
 !   --------------------
+
+    call start_timer ( tBfield )
 
     if (iAm==0) &
     write(*,*) 'Reading magnetic field data'
@@ -182,6 +189,10 @@ program aorsa2dMain
         endif
 
     enddo
+
+    if(iAm==0) write(*,*) '    Time to generate bField: ', end_timer ( tBfield ),  'seconds'
+
+
 #ifdef par
     call blacs_barrier ( iContext, 'All' ) 
 #endif
@@ -189,6 +200,8 @@ program aorsa2dMain
 
 !   define the metal regions
 !   ------------------------
+
+    call start_timer ( tSetMetal )
 
     do i=1,nGrid
         if(iAm==0) write(*,*) '    Setting metal regions ...'
@@ -199,9 +212,12 @@ program aorsa2dMain
     call blacs_barrier ( iContext, 'All' ) 
 #endif
 
+    if(iAm==0) write(*,*) '    Time to set metal regions: ', end_timer ( tSetMetal ),  'seconds'
 
 !   setup profiles
 !   --------------
+
+    call start_timer ( tProfiles )
 
     if (iAm==0) &
     write(*,*) 'Profile setup'
@@ -229,6 +245,10 @@ program aorsa2dMain
         !enddo
         stop
     endif
+
+    if(iAm==0) write(*,*) '    Time to generate profiles: ', end_timer ( tProfiles ),  'seconds'
+
+
 #ifdef par
     call blacs_barrier ( iContext, 'All' ) 
 #endif
@@ -246,6 +266,8 @@ program aorsa2dMain
 !   calculate rotation matrix U
 !   ---------------------------
 
+    call start_timer ( tRotMat )
+
     if (iAm==0) &
     write(*,*) 'Building rotation matrix U'
 
@@ -259,6 +281,8 @@ program aorsa2dMain
         if(iAm==0)write(*,*) '    DONE'
 
     enddo
+
+    if(iAm==0) write(*,*) '    Time to build rotation matrix: ', end_timer ( tRotmat ),  'seconds'
 
 #ifdef par
     call blacs_barrier ( iContext, 'All' ) 
@@ -284,6 +308,8 @@ program aorsa2dMain
 !   Antenna current
 !   ---------------
 
+    call start_timer ( tRHS )
+
     if (iAm==0) &
     write(*,*) 'Building antenna current (brhs)'
 
@@ -291,6 +317,8 @@ program aorsa2dMain
     do i=1,nGrid
         call init_brhs ( allGrids(i) )
     enddo
+
+    if(iAm==0) write(*,*) '    Time to build RHS: ', end_timer ( tRHS ),  'seconds'
 
 
 !   Write the run input data to disk
@@ -536,6 +564,7 @@ program aorsa2dMain
 !   Rotation to Lab frame 
 !   ---------------------
 
+    call start_timer ( tRotate )
     if (iAm==0) &
     write(*,*) 'Rotating E solution to lab frame (R,Th,z)'
 
@@ -546,11 +575,12 @@ program aorsa2dMain
         enddo
 
     endif
-
+    if(iAm==0) write(*,*) '    Time to rotate solution to lab frame: ', end_timer ( tCurrent ),  'seconds'
 
 !   Calculate the Joule Heating 
 !   ---------------------------
 
+    call start_timer ( tJDotE )
     if (iAm==0) &
     write(*,*) 'Calculating Joule heating' 
 
@@ -561,11 +591,13 @@ program aorsa2dMain
         enddo
 
     endif
+    if(iAm==0) write(*,*) '    Time to calculate Joule heating: ', end_timer ( tJDotE ),  'seconds'
 
 
 !   Write soln to file
 !   ------------------
 
+    call start_timer ( tWriteSolution )
     if (iAm==0) &
     write(*,*) 'Writing solution to file'
 
@@ -576,6 +608,7 @@ program aorsa2dMain
         enddo
 
     endif
+    if(iAm==0) write(*,*) '    Time to write solution: ', end_timer ( tWriteSolution ),  'seconds'
 
 #ifdef usepapi
     call PAPIF_flops ( papi_rTime, papi_pTime, papi_flpins, papi_mflops, papi_irc )
@@ -622,5 +655,3 @@ program aorsa2dMain
     endif
 
 end program aorsa2dMain
-
-
