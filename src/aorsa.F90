@@ -33,7 +33,10 @@ program aorsa2dMain
 
     type ( timer ) :: tFill, tSolve, tTotal, tWorkList, &
         tCurrent, tRotate, tJDotE, tWriteSolution, tCreateGrids, &
-        tBfield, tSetMetal, tProfiles, tRotMat, tRHS
+        tBfield, tSetMetal, tProfiles, tRotMat, tRHS, tStartup, &
+        tOffset, tAllocAMat, tLabel, tSumFlops1, tInitDescriptors, &
+        tExtractCoeffs, tInvFourier, tSumFlops2, tSumFlops3, &
+        tReleaseGrid
 
 #ifdef usepapi
 
@@ -65,6 +68,7 @@ program aorsa2dMain
     !stat = gptlStart ( 'total' )
 
     call start_timer ( tTotal )
+    call start_timer ( tStartup )
 
     Mem%nAllocations = 0
     Mem%MBytes = 0
@@ -97,6 +101,12 @@ program aorsa2dMain
     if(iAm==0)write(*,*)'Not using noU ==',__noU__
 #endif
 
+#ifdef par
+    call blacs_barrier ( iContext, 'All' ) 
+#endif
+
+    if(iAm==0) write(*,*) '    Time for startup: ', end_timer ( tStartup ),  'seconds'
+
 
 !   initialise the spatial grid
 !   ---------------------------
@@ -118,6 +128,11 @@ program aorsa2dMain
         allGrids(i)%gridNumber = i
 
     enddo
+
+#ifdef par
+    call blacs_barrier ( iContext, 'All' ) 
+#endif
+
     if(iAm==0) write(*,*) '    Time to create grids: ', end_timer ( tCreateGrids ),  'seconds'
 
     if(iAm==0)then 
@@ -137,13 +152,13 @@ program aorsa2dMain
 
     enddo
 
+#ifdef par
+    call blacs_barrier ( iContext, 'All' ) 
+#endif
     if (iAm==0) then
         Perf%TimeWorkList = end_timer ( tWorkList )
         write(*,*) '    Time to create WorkList: ', Perf%TimeWorkList
     endif
-#ifdef par
-    call blacs_barrier ( iContext, 'All' ) 
-#endif
 
 !   setup magnetic field 
 !   --------------------
@@ -189,13 +204,11 @@ program aorsa2dMain
         endif
 
     enddo
-
-    if(iAm==0) write(*,*) '    Time to generate bField: ', end_timer ( tBfield ),  'seconds'
-
-
 #ifdef par
     call blacs_barrier ( iContext, 'All' ) 
 #endif
+
+    if(iAm==0) write(*,*) '    Time to generate bField: ', end_timer ( tBfield ),  'seconds'
 
 
 !   define the metal regions
@@ -246,12 +259,12 @@ program aorsa2dMain
         stop
     endif
 
-    if(iAm==0) write(*,*) '    Time to generate profiles: ', end_timer ( tProfiles ),  'seconds'
-
-
 #ifdef par
     call blacs_barrier ( iContext, 'All' ) 
 #endif
+
+    if(iAm==0) write(*,*) '    Time to generate profiles: ', end_timer ( tProfiles ),  'seconds'
+
 
 !!   Setup the plasma paraemter splines for sigma input
 !!   --------------------------------------------------
@@ -282,15 +295,17 @@ program aorsa2dMain
 
     enddo
 
-    if(iAm==0) write(*,*) '    Time to build rotation matrix: ', end_timer ( tRotmat ),  'seconds'
-
 #ifdef par
     call blacs_barrier ( iContext, 'All' ) 
 #endif
 
+    if(iAm==0) write(*,*) '    Time to build rotation matrix: ', end_timer ( tRotmat ),  'seconds'
+
 
 !   Calculate aMat index for first pt in each grid block
 !   ----------------------------------------------------
+
+    call start_timer ( tOffset )
 
     do i=1,nGrid
 
@@ -303,6 +318,12 @@ program aorsa2dMain
         endif
 
     enddo
+
+#ifdef par
+    call blacs_barrier ( iContext, 'All' ) 
+#endif
+
+    if(iAm==0) write(*,*) '    Time to generate aMat offsets: ', end_timer ( tOffset ),  'seconds'
 
 
 !   Antenna current
@@ -318,36 +339,50 @@ program aorsa2dMain
         call init_brhs ( allGrids(i) )
     enddo
 
+#ifdef par
+    call blacs_barrier ( iContext, 'All' ) 
+#endif
     if(iAm==0) write(*,*) '    Time to build RHS: ', end_timer ( tRHS ),  'seconds'
 
 
-!   Write the run input data to disk
-!   --------------------------------
-
-    if (iAm==0) &
-    write(*,*) 'Writing run input data to file'
-
-    if (iAm==0) then
-
-        do i=1,nGrid
-            write(allGrids(i)%fNumber,'(i3.3)') i
-            !call write_runData ( allGrids(i) )
-        enddo
-
-    endif
+!!   Write the run input data to disk
+!!   --------------------------------
+!
+!    if (iAm==0) &
+!    write(*,*) 'Writing run input data to file'
+!
+!    if (iAm==0) then
+!
+!        do i=1,nGrid
+!            write(allGrids(i)%fNumber,'(i3.3)') i
+!            !call write_runData ( allGrids(i) )
+!        enddo
+!
+!    endif
 
 
 !   Allocate the matrix
 !   -------------------
 
+    call start_timer ( tAllocAMat )
     call alloc_total_aMat ( nPts_tot )
+#ifdef par
+    call blacs_barrier ( iContext, 'All' ) 
+#endif
+    if(iAm==0) write(*,*) '    Time to allocate aMat: ', end_timer ( tAllocAMat ),  'seconds'
 
 
 
 !   Label each grid blocks boundary points
 !   --------------------------------------
 
+    call start_timer ( tLabel )
     call labelPts ( allGrids, nPts_tot )
+#ifdef par
+    call blacs_barrier ( iContext, 'All' ) 
+#endif
+    if(iAm==0) write(*,*) '    Time to label points: ', end_timer ( tLabel ),  'seconds'
+
 
 !   Fill matrix 
 !   -----------
@@ -389,10 +424,15 @@ program aorsa2dMain
     papi_pTime_fill = papi_pTime - papi_pTime_zero
 #endif
 
+#ifdef par
+    call blacs_barrier ( iContext, 'All' ) 
+#endif
     if (iAm==0) then 
         Perf%TimeFill = end_timer ( tFill )
         write(*,*) '    Time to fill aMat: ', Perf%TimeFill
     endif
+
+
 
 #ifdef usepapi
     !   sum total mflops from all procs
@@ -420,6 +460,12 @@ program aorsa2dMain
 
 #endif
 
+#ifdef par
+    call blacs_barrier ( iContext, 'All' ) 
+#endif
+    if(iAm==0) write(*,*) '    Time to sum flops 1: ', end_timer ( tSumFlops1 ),  'seconds'
+
+
     !if (iAm==0) &
     !call write_amat ( 'amat.nc' )
 
@@ -430,9 +476,16 @@ program aorsa2dMain
     if (iAm==0) &
     write(*,*) 'Solving complex linear system'
 
+    call start_timer ( tInitDescriptors )
+
 #ifdef par
     call init_parallel_aMat ()
 #endif
+
+#ifdef par
+    call blacs_barrier ( iContext, 'All' ) 
+#endif
+    if(iAm==0) write(*,*) '    Time to init descriptors: ', end_timer ( tInitDescriptors ),  'seconds'
 
     call start_timer ( tSolve )
 
@@ -454,10 +507,15 @@ program aorsa2dMain
     papi_pTime_solve = papi_pTime - papi_pTime_zero
 #endif
 
+#ifdef par
+    call blacs_barrier ( iContext, 'All' ) 
+#endif
     if (iAm==0) then 
         Perf%TimeSolve = end_timer ( tSolve )
         write(*,*) '    Time to solve: ', Perf%TimeSolve
     endif
+
+    call start_timer ( tSumFlops2 )
 
 #ifdef usepapi
     !   sum total mflops from all procs
@@ -485,9 +543,19 @@ program aorsa2dMain
 
 #endif
 
+#ifdef par
+    call blacs_barrier ( iContext, 'All' ) 
+#endif
+    if(iAm==0) write(*,*) '    Time to sum flops 2: ', end_timer ( tSumFlops2 ),  'seconds'
+
+    call start_timer ( tExtractCoeffs )
     do i=1,nGrid
         call extract_coeffs ( allGrids(i) )    
     enddo
+#ifdef par
+    call blacs_barrier ( iContext, 'All' ) 
+#endif
+    if(iAm==0) write(*,*) '    Time to extract coeffs: ', end_timer ( tExtractCoeffs ),  'seconds'
 
 
 !   Inverse Fourier transform the k coefficents
@@ -496,10 +564,14 @@ program aorsa2dMain
 
     if (iAm==0) &
     write(*,*) 'Constructin E solution from basis set (alpha,beta,b)'
-   
+    call start_timer ( tInvFourier )   
     do i=1,nGrid 
         call sftInv2d ( allGrids(i) )
     enddo
+#ifdef par
+    call blacs_barrier ( iContext, 'All' ) 
+#endif
+    if(iAm==0) write(*,*) '    Time to inverse Fourier transform the fields: ', end_timer ( tInvFourier ),  'seconds'
 
 
 !   Calculate the plasma current
@@ -523,12 +595,15 @@ program aorsa2dMain
         enddo
 
     !endif
-
+#ifdef par
+    call blacs_barrier ( iContext, 'All' ) 
+#endif
     if (iAm==0) then
         Perf%TimeCurrent = end_timer ( tCurrent )
         write(*,*) 'Total to calculate plasma current: ', Perf%TimeCurrent
     endif
 
+    call start_timer ( tSumFlops3 )
 #ifdef usepapi
     call PAPIF_flops ( papi_rTime, papi_pTime, papi_flpins, papi_mflops, papi_irc )
     papi_rTime_current = papi_rTime - papi_rTime_zero
@@ -559,6 +634,10 @@ program aorsa2dMain
 
     endif
 #endif
+#ifdef par
+    call blacs_barrier ( iContext, 'All' ) 
+#endif
+    if(iAm==0) write(*,*) '    Time to sum flops 3: ', end_timer ( tSumFlops3 ),  'seconds'
 
 
 !   Rotation to Lab frame 
@@ -575,6 +654,9 @@ program aorsa2dMain
         enddo
 
     endif
+#ifdef par
+    call blacs_barrier ( iContext, 'All' ) 
+#endif
     if(iAm==0) write(*,*) '    Time to rotate solution to lab frame: ', end_timer ( tCurrent ),  'seconds'
 
 !   Calculate the Joule Heating 
@@ -591,6 +673,9 @@ program aorsa2dMain
         enddo
 
     endif
+#ifdef par
+    call blacs_barrier ( iContext, 'All' ) 
+#endif
     if(iAm==0) write(*,*) '    Time to calculate Joule heating: ', end_timer ( tJDotE ),  'seconds'
 
 
@@ -608,6 +693,9 @@ program aorsa2dMain
         enddo
 
     endif
+#ifdef par
+    call blacs_barrier ( iContext, 'All' ) 
+#endif
     if(iAm==0) write(*,*) '    Time to write solution: ', end_timer ( tWriteSolution ),  'seconds'
 
 #ifdef usepapi
@@ -627,10 +715,11 @@ program aorsa2dMain
     endif
 #endif
 
-
+    call start_timer(tReleaseGrid)
 #ifdef par
     call release_grid ()
 #endif
+    if(iAm==0) write(*,*) '    Time to release mpi grid: ', end_timer ( tReleaseGrid ),  'seconds'
 
     !stat = gptlStop ('total')
     !stat = gptlpr (0)
