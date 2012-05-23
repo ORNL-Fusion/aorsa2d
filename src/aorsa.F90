@@ -433,6 +433,7 @@ program aorsa2dMain
     endif
 
 
+    call start_timer ( tSumFlops1 )
 
 #ifdef usepapi
     !   sum total mflops from all procs
@@ -568,6 +569,7 @@ program aorsa2dMain
     do i=1,nGrid 
         call sftInv2d ( allGrids(i) )
     enddo
+
 #ifdef par
     call blacs_barrier ( iContext, 'All' ) 
 #endif

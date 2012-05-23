@@ -145,7 +145,8 @@ ${OBJ_DIR}/read_data.o: \
 
 ${OBJ_DIR}/inv_fourier.o: \
 		${OBJ_DIR}/aorsaNamelist.o \
-		${OBJ_DIR}/grid.o
+		${OBJ_DIR}/grid.o \
+		${OBJ_DIR}/parallel.o
 
 # Uncomment the 3 lines here for MAGMA 
 ${OBJ_DIR}/solve.o: \
