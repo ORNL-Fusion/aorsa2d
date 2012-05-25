@@ -7,8 +7,9 @@ OBJ_DIR = obj
 MOD_DIR = mod
 CPP_DIR = cpp
 
-COMPILER := GNU# GNU, PGI
+COMPILER := PGI# GNU, PGI
 PARALLEL := 1# 0, 1
+DDT := 0# 0, 1
 
 # objects
 # -------
@@ -111,11 +112,10 @@ ifeq (${COMPILER},PGI)
     DOUBLE:= -Mr8
     WARN:=
     DEBUG:= #-g -traceback -Ktrap=divz,inv,ovf
-    OPTIMIZATION:= -fast
+    OPTIMIZATION:=# -fast
     BOUNDS:= -Mbounds
     FORMAT:=
 endif
-
 
 
 ifeq (${PARALLEL},1)
@@ -138,6 +138,10 @@ endif
 
 ifeq (${HOME},/Users/dg6)
 	include Makefile.greendl
+endif
+
+ifeq (${DDT},1)
+    LIBS+=-Bddt
 endif
 
 F90FLAGS = ${FORMAT} ${WARN} ${DEBUG} ${BOUNDS} ${MOD_LOC} ${OPTIMIZATION}
