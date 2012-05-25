@@ -23,10 +23,10 @@ pro ar2_plot_rundata
 		nCdf_varGet, cdfId, 'omgc', omgc 
 		nCdf_varGet, cdfId, 'omgp2', omgp2
 	
-		nCdf_varGet, cdfId, 'xx_re', xx_re 
-		nCdf_varGet, cdfId, 'xx_im', xx_im
-		nCdf_varGet, cdfId, 'yy_re', yy_re 
-		nCdf_varGet, cdfId, 'yy_im', yy_im
+		;nCdf_varGet, cdfId, 'xx_re', xx_re 
+		;nCdf_varGet, cdfId, 'xx_im', xx_im
+		;nCdf_varGet, cdfId, 'yy_re', yy_re 
+		;nCdf_varGet, cdfId, 'yy_im', yy_im
 
 		nCdf_varGet, cdfId, 'drUrr', drUrr
 		nCdf_varGet, cdfId, 'drUrt', drUrt
@@ -66,8 +66,8 @@ pro ar2_plot_rundata
 
 	ncdf_close, cdfId
 
-	xx	= complex ( xx_re, xx_im )
-	yy	= complex ( yy_re, yy_im )
+	;xx	= complex ( xx_re, xx_im )
+	;yy	= complex ( yy_re, yy_im )
 
 	bx	= bxn * bmod
 	by	= byn * bmod
@@ -77,19 +77,16 @@ pro ar2_plot_rundata
 	nz	= n_elements ( y )
 	nSpec	= n_elements ( densitySpec[0,0,*] )
 
-	iPlot, x, bMod[*,nz/2.0], $
-			view_grid = [2,2], $
-			title = 'z=0 equil B field'
-	iPlot, x, bx[*,nz/2.0], /over
-	iPlot, x, by[*,nz/2.0], /over
-	iPlot, x, bz[*,nz/2.0], /over
+	p=plot(x, bMod[*,nz/2.0], $
+			title = 'z=0 equil B field')
+	p=plot(x, bx[*,nz/2.0], /over)
+	p=plot(x, by[*,nz/2.0], /over)
+	p=plot(x, bz[*,nz/2.0], /over)
 
-	iPlot, x, densitySpec[*,nz/2.0,0], $
-			/view_next, $
-			title = 'z=0 Density'
-	for i=1,nSpec-1 do $
-		iPlot, x, densitySpec[*,nz/2,i], /over
-
+	range=[0,1e15]
+	p=plot(x, densitySpec[*,nz/2.0,0], title = 'z=0 Density',yrange=range)
+	for i=1,nSpec-1 do p=plot(x, densitySpec[*,nz/2,i], /over)
+stop
 	iPlot, x, tempSpec[*,nz/2,0], $
 			/view_next, $
 			title = 'z=0 Temp'

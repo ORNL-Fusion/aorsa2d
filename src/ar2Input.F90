@@ -5,7 +5,6 @@ use constants, only: dbl
 implicit none
 
 integer :: nR,nZ,nS
-real, allocatable :: rbbbs(:),zbbbs(:),rlim(:),zlim(:)
 real, allocatable :: br(:,:),bt(:,:),bz(:,:),bMag(:,:)
 real, allocatable :: r(:),z(:)
 real :: rMin,rMax,zMin,zMax
@@ -50,28 +49,13 @@ subroutine ReadAr2Input (AR2FileName)
     call check( nf90_inq_dimId(nc_id,'nZ',nZ_id) )
     call check( nf90_inquire_dimension(nc_id,nR_id,len=nR) )
     call check( nf90_inquire_dimension(nc_id,nZ_id,len=nZ) )
-    call check( nf90_inq_dimId(nc_id,'nbbbs',nbbbs_id) )
-    call check( nf90_inquire_dimension(nc_id,nbbbs_id,len=nbbbs) )
-    call check( nf90_inq_dimId(nc_id,'nlim',nlim_id) )
-    call check( nf90_inquire_dimension(nc_id,nlim_id,len=nlim) )
-
     call check( nf90_inq_varId(nc_id,'Density_m3',Density_id) )
     call check( nf90_inq_varId(nc_id,'Temp_eV',Temp_id) )
-
-    stat = nf90_inq_varId(nc_id,'BbbMask',BbbMask_id)
-    stat = nf90_inq_varId(nc_id,'LimMask',LimMask_id)
-
-    call check( nf90_inq_varId(nc_id,'rbbbs',rbbbs_id) )
-    call check( nf90_inq_varId(nc_id,'zbbbs',zbbbs_id) )
-    call check( nf90_inq_varId(nc_id,'rlim',rLim_id) )
-    call check( nf90_inq_varId(nc_id,'zlim',zLim_id) )
-
+ 
     allocate(br(nR,nZ),bt(nR,nZ),bz(nR,nZ))
-    allocate(rbbbs(nbbbs),zbbbs(nbbbs),rlim(nlim),zlim(nlim))
     allocate(r(nR),z(nZ))
     allocate(AtomicZ(nS),amu(nS))
     allocate(Density_m3(nR,nZ,nS),Temp_eV(nR,nZ,nS))
-    allocate(BbbMask(nR,nZ),LimMask(nR,nZ))
 
     call check( nf90_get_var(nc_id,AtomicZ_id,AtomicZ) )
     call check( nf90_get_var(nc_id,amu_id,amu) )
@@ -88,13 +72,12 @@ subroutine ReadAr2Input (AR2FileName)
     call check( nf90_get_var(nc_id,bt_id,bt) )
     call check( nf90_get_var(nc_id,bz_id,bz) )
 
-    call check( nf90_get_var(nc_id,rbbbs_id,rbbbs) )
-    call check( nf90_get_var(nc_id,zbbbs_id,zbbbs) )
-    call check( nf90_get_var(nc_id,rLim_id,rLim) )
-    call check( nf90_get_var(nc_id,zLim_id,zLim) )
-
     call check( nf90_get_var(nc_id,Density_id,Density_m3) )
     call check( nf90_get_var(nc_id,Temp_id,Temp_eV) )
+
+    stat = nf90_inq_varId(nc_id,'BbbMask',BbbMask_id)
+    stat = nf90_inq_varId(nc_id,'LimMask',LimMask_id)
+    allocate(BbbMask(nR,nZ),LimMask(nR,nZ))
 
     stat = nf90_get_var(nc_id,BbbMask_id,BbbMask)
     stat = nf90_get_var(nc_id,LimMask_id,LimMask)

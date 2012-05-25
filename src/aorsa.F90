@@ -126,7 +126,7 @@ program aorsa2dMain
             zMinAll(i), zMaxAll(i) )
 
         allGrids(i)%gridNumber = i
-
+        write(allGrids(i)%fNumber,'(i3.3)') i
     enddo
 
 #ifdef par
@@ -345,20 +345,19 @@ program aorsa2dMain
     if(iAm==0) write(*,*) '    Time to build RHS: ', end_timer ( tRHS ),  'seconds'
 
 
-!!   Write the run input data to disk
-!!   --------------------------------
-!
-!    if (iAm==0) &
-!    write(*,*) 'Writing run input data to file'
-!
-!    if (iAm==0) then
-!
-!        do i=1,nGrid
-!            write(allGrids(i)%fNumber,'(i3.3)') i
-!            !call write_runData ( allGrids(i) )
-!        enddo
-!
-!    endif
+!   Write the run input data to disk
+!   --------------------------------
+
+    if (iAm==0) &
+    write(*,*) 'Writing run input data to file'
+
+    !if (iAm==0) then
+
+        do i=1,nGrid
+            call write_runData ( allGrids(i) )
+        enddo
+
+    !endif
 
 
 !   Allocate the matrix

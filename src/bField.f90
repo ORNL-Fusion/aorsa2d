@@ -16,6 +16,8 @@ contains
         use aorsaNamelist, only: r0, noPoloidalField
         use grid
         use interp
+        use AR2Input, &
+            only:r_ar2=>r,z_ar2=>z
 
         implicit none
 
@@ -46,6 +48,16 @@ contains
                i = g%pt(w)%i
                j = g%pt(w)%j
 
+#if __DebugBField__==1
+                if(g%R(i)<r_ar2(1).or.g%R(i)>r_ar2(size(r_ar2)))then
+                        write(*,*) 'ERROR: r grid point outside of available intperolation data.'
+                        write(*,*) '    r: ',g%R(i), '  rRange: ',r_ar2(1),' to ',r_ar2(size(r_ar2))
+                endif
+                if(g%z(j)<z_ar2(1).or.g%z(j)>z_ar2(size(z_ar2)))then
+                        write(*,*) 'ERROR: z grid point outside of available intperolation data.'
+                        write(*,*) '    x: ',g%z(j), '  zRange: ',z_ar2(1),' to ',z_ar2(size(z_ar2))
+                endif
+#endif
                bHere = dlg_interpB ( (/g%R(i),0.0,g%z(j)/), &
                             bMagHere = g%bMag(w) )  
 

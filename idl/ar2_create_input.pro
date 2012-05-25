@@ -51,25 +51,8 @@ pro ar2_create_input
 
 	@constants
 
-	freq = 56.0d6
-	nphi = -27
-
-	eqdskFileName = 'Scen4_bn2.57_129x129.dlgMod'
-
-	atomicZ	= [-1,1,1]
-	amu = [me/mi,2,3]
-
-	; Flux function is : a[0] + ( a[1] - a[0] ) * ( 1.0 - x^a[3] )^a[2]
-	;	a[0] = limiter, a[1] = center, a[2] = alpha, a[3] = beta
-   	;		limiter,	center,		alp,	bet
-
-	nn = [	[0.0,		0.0,		9.0,	10.0],$ ; electrons are spec 0
-			[0.5d17,	2.0d19,		9.0,	10.0],$
-			[0.5d17,	2.0d19,		9.0,	10.0] ]
-
-	tt = [	[00.2d3,	20.0d3,		6.0,	4.0],$
-			[00.3d3,	20.0d3,		6.0,	4.0],$
-			[00.3d3,	20.0d3,		6.0,	4.0] ]
+	;@gorden_bell
+	@langmuir
 
 	nSpec = n_elements ( amu )
 	wrf	= freq * 2d0 * !dpi
@@ -79,112 +62,123 @@ pro ar2_create_input
 		nn[1,0]	+= atomicZ[n]*nn[1,n] 
 	endfor
 
-	; Grid
-
-	nR = 600
-	nZ = 600
-
-	rMin = 3.5
-	rMax = 9.0
-
-	zMin = -5.0
-	zMax = +5.0
-
 	r = fIndGen(nR)/(nR-1)*(rMax-rMin)+rMin
 	z = fIndGen(nZ)/(nZ-1)*(zMax-zMin)+zMin
 
 	r2d = rebin ( r, nR, nZ )
 	z2d = transpose ( rebin ( z, nZ, nR ) )
 
-	; Load eqdsk file
+	if eqdsk eq 1 then begin
 
-	g = readgeqdsk ( eqdskFileName, /noToroidalFlux, bTorFactor = 1.2)
+		; Load eqdsk file
 
-	; Get b field values on this new grid
+		g = readgeqdsk ( eqdskFileName, /noToroidalFlux, bTorFactor = 1.2)
 
-	br = interpolate ( g.br, ( r2d - min(g.r) ) / (max(g.r)-min(g.r)) * (n_elements(g.r)-1), $
-		( z2d - min ( g.z ) ) / (max(g.z)-min(g.z)) * (n_elements(g.z)-1) )
-	bt = interpolate ( g.bPhi, ( r2d - min(g.r) ) / (max(g.r)-min(g.r)) * (n_elements(g.r)-1), $
-		( z2d - min ( g.z ) ) / (max(g.z)-min(g.z)) * (n_elements(g.z)-1) )
-	bz = interpolate ( g.bz, ( r2d - min(g.r) ) / (max(g.r)-min(g.r)) * (n_elements(g.r)-1), $
-		( z2d - min ( g.z ) ) / (max(g.z)-min(g.z)) * (n_elements(g.z)-1) )
+		; Get b field values on this new grid
 
-	bMag = sqrt ( br^2 + bt^2 + bz^2 )
+		br = interpolate ( g.br, ( r2d - min(g.r) ) / (max(g.r)-min(g.r)) * (n_elements(g.r)-1), $
+			( z2d - min ( g.z ) ) / (max(g.z)-min(g.z)) * (n_elements(g.z)-1) )
+		bt = interpolate ( g.bPhi, ( r2d - min(g.r) ) / (max(g.r)-min(g.r)) * (n_elements(g.r)-1), $
+			( z2d - min ( g.z ) ) / (max(g.z)-min(g.z)) * (n_elements(g.z)-1) )
+		bz = interpolate ( g.bz, ( r2d - min(g.r) ) / (max(g.r)-min(g.r)) * (n_elements(g.r)-1), $
+			( z2d - min ( g.z ) ) / (max(g.z)-min(g.z)) * (n_elements(g.z)-1) )
 
-
-	; Get psi (poloidal flux) for profile generation
-
-	psi = interpolate ( g.psizr, ( r2d - min(g.r) ) / (max(g.r)-min(g.r)) * (n_elements(g.r)-1), $
-		( z2d - min ( g.z ) ) / (max(g.z)-min(g.z)) * (n_elements(g.z)-1) )
-	psiNorm = (psi-g.simag) / (g.siBry - g.siMag)
+		bMag = sqrt ( br^2 + bt^2 + bz^2 )
 
 
-	; Create masks for outside the LCFS and Limiting structure
+		; Get psi (poloidal flux) for profile generation
 
-	print, 'Creating masks (may take a while) ...'
-
-	oversample_boundary, g.rbbbs, g.zbbbs, rbbbs_os, zbbbs_os 
-	oversample_boundary, g.rlim, g.zlim, rlim_os, zlim_os 
-
-	mypoly=obj_new('IDLanROI',rbbbs_os,zbbbs_os,type=2)
-	mask_bbb = mypoly->ContainsPoints(r2d[*],z2d[*])
-	mask_bbb = reform(mask_bbb,nR,nZ)
-	iiMaskIn_bbb = where ( mask_bbb eq 1 )
-	iiMaskOut_bbb = where ( mask_bbb eq 0 )
-
-	mypoly=obj_new('IDLanROI',rlim_os,zlim_os,type=2)
-	mask_lim = mypoly->ContainsPoints(r2d[*],z2d[*])
-	mask_lim = reform(mask_lim,nR,nZ)
-	iiMaskIn_lim = where ( mask_lim eq 1 )
-	iiMaskOut_lim = where ( mask_lim eq 0 )
-
-	print, 'DONE'
+		psi = interpolate ( g.psizr, ( r2d - min(g.r) ) / (max(g.r)-min(g.r)) * (n_elements(g.r)-1), $
+			( z2d - min ( g.z ) ) / (max(g.z)-min(g.z)) * (n_elements(g.z)-1) )
+		psiNorm = (psi-g.simag) / (g.siBry - g.siMag)
 
 
-	; Create a distance from these surfaces
+		; Create masks for outside the LCFS and Limiting structure
 
-	print, 'Creating distances from surfaces ... '
+		print, 'Creating masks (may take a while) ...'
 
-	d_bbb = fltarr ( nR, nZ )
-	d_lim = fltarr ( nR, nZ )
+		oversample_boundary, g.rbbbs, g.zbbbs, rbbbs_os, zbbbs_os 
+		oversample_boundary, g.rlim, g.zlim, rlim_os, zlim_os 
 
-	for i=0, nR-1 do begin
-		for j=0, nZ-1 do begin
+		mypoly=obj_new('IDLanROI',rbbbs_os,zbbbs_os,type=2)
+		mask_bbb = mypoly->ContainsPoints(r2d[*],z2d[*])
+		mask_bbb = reform(mask_bbb,nR,nZ)
+		iiMaskIn_bbb = where ( mask_bbb eq 1 )
+		iiMaskOut_bbb = where ( mask_bbb eq 0 )
 
-			distbbb	= sqrt ( (z2d[i,j] - zbbbs_os)^2 + (r2d[i,j] - rbbbs_os)^2 )
-			tmp	= min ( distbbb, iiMindistbbb )
-			distbbb = sqrt ( (zbbbs_os[iiMindistbbb] - g.zmaxis)^2 $
-				+ (rbbbs_os[iiMindistbbb] - g.rmaxis)^2 )
-			d_bbb[i,j]	= $
-					sqrt ( (z2d[i,j] - g.zmaxis)^2 $
-						+ (r2d[i,j] - g.rmaxis)^2 ) - distbbb
+		mypoly=obj_new('IDLanROI',rlim_os,zlim_os,type=2)
+		mask_lim = mypoly->ContainsPoints(r2d[*],z2d[*])
+		mask_lim = reform(mask_lim,nR,nZ)
+		iiMaskIn_lim = where ( mask_lim eq 1 )
+		iiMaskOut_lim = where ( mask_lim eq 0 )
 
-			distlim	= sqrt ( (z2d[i,j] - zlim_os)^2 + (r2d[i,j] - rlim_os)^2 )
-			tmp	= min ( distlim, iiMindistlim )
-			distlim = sqrt ( (zlim_os[iiMindistlim] - g.zmaxis)^2 $
-				+ (rlim_os[iiMindistlim] - g.rmaxis)^2 )
-			d_lim[i,j]	= $
-					sqrt ( (z2d[i,j] - g.zmaxis)^2 $
-						+ (r2d[i,j] - g.rmaxis)^2 ) - distlim
+		print, 'DONE'
 
+
+		; Create a distance from these surfaces
+
+		print, 'Creating distances from surfaces ... '
+
+		d_bbb = fltarr ( nR, nZ )
+		d_lim = fltarr ( nR, nZ )
+
+		for i=0, nR-1 do begin
+			for j=0, nZ-1 do begin
+
+				distbbb	= sqrt ( (z2d[i,j] - zbbbs_os)^2 + (r2d[i,j] - rbbbs_os)^2 )
+				tmp	= min ( distbbb, iiMindistbbb )
+				distbbb = sqrt ( (zbbbs_os[iiMindistbbb] - g.zmaxis)^2 $
+					+ (rbbbs_os[iiMindistbbb] - g.rmaxis)^2 )
+				d_bbb[i,j]	= $
+						sqrt ( (z2d[i,j] - g.zmaxis)^2 $
+							+ (r2d[i,j] - g.rmaxis)^2 ) - distbbb
+
+				distlim	= sqrt ( (z2d[i,j] - zlim_os)^2 + (r2d[i,j] - rlim_os)^2 )
+				tmp	= min ( distlim, iiMindistlim )
+				distlim = sqrt ( (zlim_os[iiMindistlim] - g.zmaxis)^2 $
+					+ (rlim_os[iiMindistlim] - g.rmaxis)^2 )
+				d_lim[i,j]	= $
+						sqrt ( (z2d[i,j] - g.zmaxis)^2 $
+							+ (r2d[i,j] - g.rmaxis)^2 ) - distlim
+
+			endfor
 		endfor
-	endfor
 
 
-	br = MakePeriodic ( br, mask_lim);, /look )
-	bt = MakePeriodic ( bt, mask_lim);, /look )
-	bz = MakePeriodic ( bz, mask_lim);, /look )
+		br = MakePeriodic ( br, mask_lim);, /look )
+		bt = MakePeriodic ( bt, mask_lim);, /look )
+		bz = MakePeriodic ( bz, mask_lim);, /look )
+
+	endif else begin
+
+		mask_bbb = FltArr(nR,nZ)+1	
+		mask_lim = FltArr(nR,nZ)+1	
+
+		bt = r0 * b0 / r2d
+		br = bt * br_frac
+		bz = bt * bz_frac
+
+	endelse
 
 	bMag = sqrt ( br^2 + bt^2 + bz^2 )
-
 
 	; Create profiles
 
-	density_m3	= fltArr ( nR, nZ, nSpec )
-	temp_eV	= fltArr ( nR, nZ, nSpec )
+	Density_m3	= fltArr ( nR, nZ, nSpec )
+	Temp_eV	= fltArr ( nR, nZ, nSpec )
 
-	ar2_create_profiles, nSpec, nn, tt, nR, nZ, PsiNorm, Mask_bbb, d_bbb, $
+	if flux_profiles eq 1 then begin
+
+		ar2_create_flux_profiles, nSpec, nn, tt, nR, nZ, PsiNorm, Mask_bbb, d_bbb, $
 			Density_m3, Temp_eV
+	endif else begin
+
+		for s=0,nSpec-1 do begin
+			Density_m3[*,*,s] = nn[0,s]
+			Temp_ev[*,*,s] = tt[0,s]
+		endfor
+
+	endelse
 
 	; Look at the dispersion relation for these data
 
@@ -193,12 +187,18 @@ pro ar2_create_input
 
 	; Plot up resonance locations too.
 
-	p = plot(g.rbbbs,g.zbbbs,thick=2,aspect=1.0)
-	p = plot(g.rlim,g.zlim,thick=2,aspect=1.0,/over)
+	if eqdsk eq 1 and nZ gt 1 then begin
+		p = plot(g.rbbbs,g.zbbbs,thick=2,aspect=1.0)
+		p = plot(g.rlim,g.zlim,thick=2,aspect=1.0,/over)
 
-	for s=1,nSpec-1 do begin
-		c=contour(resonances[*,*,s],r,z,c_value=fIndGen(5)/4.0*0.01,/over)
-	endfor
+		for s=1,nSpec-1 do begin
+			c=contour(resonances[*,*,s],r,z,c_value=fIndGen(5)/4.0*0.01,/over)
+		endfor
+	endif else if eqdsk eq 0 and nZ eq 0 then begin
+		for s=1,nSpec-1 do begin
+			p = plot(r,resonances[*,0,s],/over)
+		endfor
+	endif
 
 	; Write netCdf file
 
@@ -209,8 +209,8 @@ pro ar2_create_input
 	nR_id	= nCdf_dimDef ( nc_id, 'nR', nR )
 	nz_id	= nCdf_dimDef ( nc_id, 'nZ', nZ )
 	nSpec_id	= nCdf_dimDef ( nc_id, 'nSpec', nSpec )
-	nbbbs_id	= nCdf_dimDef ( nc_id, 'nbbbs', n_elements(g.rbbbs) )
-	nlim_id	= nCdf_dimDef ( nc_id, 'nlim', n_elements(g.rlim) )
+	if eqdsk eq 1 then nbbbs_id	= nCdf_dimDef ( nc_id, 'nbbbs', n_elements(g.rbbbs) )
+	if eqdsk eq 1 then nlim_id	= nCdf_dimDef ( nc_id, 'nlim', n_elements(g.rlim) )
 
 	scalar_id	= nCdf_dimDef ( nc_id, 'scalar', 1 )
 
@@ -230,12 +230,6 @@ pro ar2_create_input
 
 	Density_id = nCdf_varDef ( nc_id, 'Density_m3', [nR_id, nz_id, nSpec_id], /float )
 	Temp_id = nCdf_varDef ( nc_id, 'Temp_eV', [nR_id, nz_id, nSpec_id], /float )
-
-	rbbbs_id = nCdf_varDef ( nc_id, 'rbbbs', [nbbbs_id], /float )
-	zbbbs_id = nCdf_varDef ( nc_id, 'zbbbs', [nbbbs_id], /float )
-
-	rlim_id = nCdf_varDef ( nc_id, 'rlim', [nlim_id], /float )
-	zlim_id = nCdf_varDef ( nc_id, 'zlim', [nlim_id], /float )
 
 	LimMask_id = nCdf_varDef ( nc_id, 'LimMask', [nR_id,nz_id], /short )
 	BbbMask_id = nCdf_varDef ( nc_id, 'BbbMask', [nR_id,nz_id], /short )
@@ -258,12 +252,6 @@ pro ar2_create_input
 
 	nCdf_varPut, nc_id, Density_id, Density_m3
 	nCdf_varPut, nc_id, Temp_id, Temp_eV
-
-	nCdf_varPut, nc_id, rbbbs_id, g.rbbbs[*]
-	nCdf_varPut, nc_id, zbbbs_id, g.zbbbs[*]
-
-	nCdf_varPut, nc_id, rlim_id, g.rlim[*]
-	nCdf_varPut, nc_id, zlim_id, g.zlim[*]
 
 	nCdf_varPut, nc_id, LimMask_id, mask_lim 
 	nCdf_varPut, nc_id, BbbMask_id, mask_bbb

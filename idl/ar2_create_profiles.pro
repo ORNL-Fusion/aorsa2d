@@ -2,7 +2,7 @@ function prof1, x, a
 	return, a[0] + ( a[1] - a[0] ) * ( 1.0 - x^a[3] )^a[2]
 end
 
-pro ar2_create_profiles, nSpec, nn, tt, nR, nZ, PsiNorm, Mask_bbb, d_bbb, Density_m3, Temp_eV
+pro ar2_create_flux_profiles, nSpec, nn, tt, nR, nZ, PsiNorm, Mask_bbb, d_bbb, Density_m3, Temp_eV
 
 	@constants
 

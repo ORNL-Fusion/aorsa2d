@@ -68,12 +68,14 @@ contains
 
         !   note curden is in Amps per meter of toroidal length (2.*pi*rt).
 
+        g%jR = 0
+        g%jT = 0
+        g%jZ = 0
+ 
         do i = 1, g%nR
             do j = 1, g%nZ
 
-                g%jR(i,j) = 0.0
-                g%jT(i,j) = 0.0
-                if(useEqdsk) then
+               if(useEqdsk) then
                     !TmpAntJ = exp ( &
                     !-( (g%rho(i,j)-rhoAnt)**2/antSigRho**2 + (g%Z(j)-zAnt)**2/antSigY**2 ) &
                     !      )

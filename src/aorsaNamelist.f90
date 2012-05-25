@@ -71,7 +71,7 @@ implicit none
       CHARACTER*128 :: eqdsk = 'g1080408021.txt'               ! eqdsk name
       logical :: useEqdsk = .false.
       logical :: useAr2Input = .false.
-      character(len=100) :: AR2InputFileName = 'AR2Input.nc'
+      character(len=100) :: AR2InputFileName = 'ar2Input.nc'
       CHARACTER*128 :: netCDF_file1 = 'phillips_nstx3.5.2.nc'  !cql3d distribution file name 1
       CHARACTER*128 :: netCDF_file2 = 'phillips_nstx3.5.2.nc'  !cql3d distribution file name 2
 

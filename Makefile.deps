@@ -72,7 +72,8 @@ ${OBJ_DIR}/Zfun.o: \
 ${OBJ_DIR}/bField.o: \
 		${OBJ_DIR}/interp.o \
 		${OBJ_DIR}/aorsaNamelist.o \
-		${OBJ_DIR}/grid.o
+		${OBJ_DIR}/grid.o \
+		${OBJ_DIR}/ar2Input.o
 
 ${OBJ_DIR}/profiles.o: \
 		${OBJ_DIR}/bField.o \
@@ -138,7 +139,8 @@ ${OBJ_DIR}/write_data.o: \
 		${OBJ_DIR}/check_mod.o \
 		${OBJ_DIR}/bField.o \
 		${OBJ_DIR}/rotation.o \
-		${OBJ_DIR}/Performance.o
+		${OBJ_DIR}/Performance.o \
+		${OBJ_DIR}/parallel.o
 
 ${OBJ_DIR}/read_data.o: \
 		${OBJ_DIR}/check_mod.o
@@ -173,3 +175,8 @@ ${OBJ_DIR}/power.o: \
 ${OBJ_DIR}/scalapack_mod.o: \
 		${OBJ_DIR}/t4_mod_tprof.o \
 		${OBJ_DIR}/assert_mod.o
+
+${OBJ_DIR}/interp.o: \
+		${OBJ_DIR}/eqdsk_dlg.o
+
+

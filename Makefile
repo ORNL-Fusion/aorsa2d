@@ -5,6 +5,7 @@ AORSA1D = xaorsa1d
 SRC_DIR = src
 OBJ_DIR = obj
 MOD_DIR = mod
+CPP_DIR = cpp
 
 COMPILER := GNU# GNU, PGI
 PARALLEL := 1# 0, 1
@@ -92,6 +93,7 @@ CPP_DIRECTIVES += -D__noU__=0
 CPP_DIRECTIVES += -D__CheckParallelLocation__=0# Double check that myRow==pr_sp .and. myCol==pc_sp
 CPP_DIRECTIVES += -D__debugSigma__=0
 CPP_DIRECTIVES += -D__DebugSetMetal__=0
+CPP_DIRECTIVES += -D__DebugBField__=0
 
 # compile flags
 # -------------
@@ -153,7 +155,7 @@ ${AORSA2D}: ${SRC_DIR}/aorsa.F90
 			${INC_DIR}
 
 # SRC files
-
+#
 ${OBJ_DIR}/%.o: ${SRC_DIR}/%.f90
 	${F90} -c ${F90FLAGS} $< -o $@ ${BOUNDS} ${NETCDF} ${CPP_DIRECTIVES} ${INC_DIR}
 

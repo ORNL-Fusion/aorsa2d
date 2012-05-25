@@ -75,7 +75,7 @@ end
 
 pro ar2_plot_solution, full = full, $
 		scale1 = scale1, scale2 = scale2, scale3_ = scale3_, $
-		sav = sav
+		sav = sav, NoRunData=NoRunData
 
 	@constants
 
@@ -83,7 +83,7 @@ pro ar2_plot_solution, full = full, $
 	; ------------------------
 
 	fileList = file_search ( 'solution*.nc' )
-	fileListData = file_search ( 'runData*.nc' )
+	if not (keyword_set(NoRunData)) then fileListData = file_search ( 'runData*.nc' )
 
 	xAll = 0.0
 	yAll = 0.0
@@ -92,8 +92,10 @@ pro ar2_plot_solution, full = full, $
 	eBetaAll = complex (0,0)
 	eBAll = complex (0,0)
 
+	
 	for iii=0,n_elements(fileList)-1 do begin
 
+	if not (keyword_set(NoRunData)) then begin
 		cdfId = ncdf_open ( fileListData[iii], /noWrite ) 
 			nCdf_varGet, cdfId, 'nPhi', nPhi 
 			nCdf_varGet, cdfId, 'freq', freq 
@@ -131,21 +133,20 @@ pro ar2_plot_solution, full = full, $
 		dRbFn_bFn	= complex ( dRbFn_bFn_re, dRbFn_bFn_im )
 		dZbFn_bFn	= complex ( dZbFn_bFn_re, dZbFn_bFn_im )
 
-		nX	= n_elements ( xx[0,*] )
-		nY	= n_elements ( yy[0,*] )
+		;nX	= n_elements ( xx[0,*] )
+		;nY	= n_elements ( yy[0,*] )
 		nN	= n_elements ( xx[*,0] )
 		nM	= n_elements ( yy[*,0] )
 
-		x2D	= rebin ( x, nX, nY )
-		if nY gt 1 then begin
-			y2D = transpose(rebin ( y, nY, nX ))
-		endif else begin
-			y2D = fltArr(1)+y
-		endelse
 
-	
+	endif
 		cdfId = ncdf_open ( fileList[iii], /noWrite ) 
 
+			nCdf_varGet, cdfId, 'r', r
+			nCdf_varGet, cdfId, 'z', z
+			nCdf_varGet, cdfId, 'nPhi', nPhi 
+			nCdf_varGet, cdfId, 'freqcy', freq 
+	
 			nCdf_varGet, cdfId, 'ealpha_re', ealpha_re 
 			nCdf_varGet, cdfId, 'ebeta_re', ebeta_re 
 			nCdf_varGet, cdfId, 'eB_re', eB_re 
@@ -204,6 +205,17 @@ pro ar2_plot_solution, full = full, $
 			jPB = complex ( jB_re, jB_im )
 
 		ncdf_close, cdfId
+
+		x = r
+		y = z
+		nx = n_elements(r)
+		ny = n_elements(z)
+		x2D	= rebin ( r, nX, nY )
+		if nY gt 1 then begin
+			y2D = transpose(rebin ( z, nY, nX ))
+		endif else begin
+			y2D = fltArr(1)+z
+		endelse
 
 		; 1D catch
 		; --------
@@ -391,31 +403,31 @@ pro ar2_plot_solution, full = full, $
 
 		iix = n_elements(x)/2
 		wrf = freq * 2 * !pi
-		wpe = sqrt ( densitySpec[iix,0,0] * e^2 / (me * e0 ) )
-		vThe = sqrt ( 2 * tempSpec[iix,0,0]*e / me )
-		lambda_de =  sqrt(e0 * tempSpec[iix,0,0]*e/(e^2*densitySpec[iix,0,0]))
-		print, 'w/wpe: ', wrf / wpe
-		brambillaNumber = 0.25
-		print, 'kPar: [1/m]', brambillaNumber * wpe / vThe
-		print, 'lambda: [m]', 2*!pi/(brambillaNumber* wpe / vThe)
-		print, 'lambda_de: [m]', lambda_de
+		;wpe = sqrt ( densitySpec[iix,0,0] * e^2 / (me * e0 ) )
+		;vThe = sqrt ( 2 * tempSpec[iix,0,0]*e / me )
+		;lambda_de =  sqrt(e0 * tempSpec[iix,0,0]*e/(e^2*densitySpec[iix,0,0]))
+		;print, 'w/wpe: ', wrf / wpe
+		;brambillaNumber = 0.25
+		;print, 'kPar: [1/m]', brambillaNumber * wpe / vThe
+		;print, 'lambda: [m]', 2*!pi/(brambillaNumber* wpe / vThe)
+		;print, 'lambda_de: [m]', lambda_de
 
-		; Check with cold plasma theory
+		;; Check with cold plasma theory
 
-		iiMaxE	= where(abs(e_r)^2 eq max(abs(e_r)^2))
+		;iiMaxE	= where(abs(e_r)^2 eq max(abs(e_r)^2))
 
-		print, 'Er[iiMaxE]: ', e_r[iiMaxE]
-		print, 'Jp[iiMaxE]: ', jP_r[iiMaxE]
-		print, 'Ja[iiMaxE]: ', jA_r[iiMaxE]
+		;print, 'Er[iiMaxE]: ', e_r[iiMaxE]
+		;print, 'Jp[iiMaxE]: ', jP_r[iiMaxE]
+		;print, 'Ja[iiMaxE]: ', jA_r[iiMaxE]
 
-		print, 'Jp/Ja theory: ', (wpe^2/wrf^2)/(1-wpe^2/wrf^2)
-		print, 'Jp/Ja actual: ', jP_r[iiMaxE]/jA_r[iiMaxE]
+		;print, 'Jp/Ja theory: ', (wpe^2/wrf^2)/(1-wpe^2/wrf^2)
+		;print, 'Jp/Ja actual: ', jP_r[iiMaxE]/jA_r[iiMaxE]
 
-		print, 'Jp/E theory: ', II*wrf*e0*wpe^2/wrf^2
-		print, 'Jp/E actual: ', jP_r[iiMaxE]/e_r[iiMaxE]
+		;print, 'Jp/E theory: ', II*wrf*e0*wpe^2/wrf^2
+		;print, 'Jp/E actual: ', jP_r[iiMaxE]/e_r[iiMaxE]
 
-		print, 'Ja/E theory: ', II*wrf*e0*(1-wpe^2/wrf^2)
-		print, 'Ja/E actual: ', jA_r[iiMaxE]/e_r[iiMaxE]
+		;print, 'Ja/E theory: ', II*wrf*e0*(1-wpe^2/wrf^2)
+		;print, 'Ja/E actual: ', jA_r[iiMaxE]/e_r[iiMaxE]
 
 
 		eRange = max(abs([e_r,e_t,e_z]))

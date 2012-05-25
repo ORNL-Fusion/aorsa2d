@@ -8,10 +8,7 @@ contains
         use aorsaNamelist, only : &
             metalLeft, metalRight, metalTop, metalBot, &
             limiter_boundary, useEqdsk, UseAR2Input
-        use eqdsk_dlg, only: is_inside_lim, rLim__,zLim
-        use IsInside, only: IsInsideOf
-        use ar2Input, only: ar2_rLim=>rLim, ar2_zLim=>zLim, &
-           ar2_BbbMask=>BbbMask, ar2_LimMask=>LimMask, &
+        use ar2Input, only: ar2_BbbMask=>BbbMask, ar2_LimMask=>LimMask, &
            ar2_nR=>nR, ar2_nZ=>nZ, ar2_r=>r, ar2_z=>z
         use parallel, only: iAm
 

@@ -1,4 +1,4 @@
-pro ar2_plot_solution_71, NoRunData = NoRunData
+pro ar2_plot_solution_71
 
 	@constants
 
@@ -15,39 +15,13 @@ pro ar2_plot_solution_71, NoRunData = NoRunData
 	eBetaAll = complex (0,0)
 	eBAll = complex (0,0)
 
-	if not keyword_set(NoRunData) then begin
-
-		cdfId = ncdf_open ( fileListData[0], /noWrite ) 
-			nCdf_varGet, cdfId, 'nPhi', nPhi 
-			nCdf_varGet, cdfId, 'freq', freq 
-			nCdf_varGet, cdfId, 'capR', x 
-			nCdf_varGet, cdfId, 'y', y 
-			nCdf_varGet, cdfId, 'jr_re', jr_re 
-			nCdf_varGet, cdfId, 'jr_im', jr_im 
-			nCdf_varGet, cdfId, 'jt_re', jt_re 
-			nCdf_varGet, cdfId, 'jt_im', jt_im 
-			nCdf_varGet, cdfId, 'jz_re', jz_re 
-			nCdf_varGet, cdfId, 'jz_im', jz_im 
-			nCdf_varGet, cdfId, 'bmod', bmod
-			nCdf_varGet, cdfId, 'brU', brU
-			nCdf_varGet, cdfId, 'btU', btU
-			nCdf_varGet, cdfId, 'bzU', bzU
-			nCdf_varGet, cdfId, 'densitySpec', densitySpec
-			nCdf_varGet, cdfId, 'tempSpec', tempSpec
-			nCdf_varGet, cdfId, 'xx_re', xx_re 
-			nCdf_varGet, cdfId, 'xx_im', xx_im
-			nCdf_varGet, cdfId, 'yy_re', yy_re 
-			nCdf_varGet, cdfId, 'yy_im', yy_im
-			nCdf_varGet, cdfId, 'drBfn_re', dRbFn_bFn_re
-			nCdf_varGet, cdfId, 'drBfn_im', dRbFn_bFn_im
-			nCdf_varGet, cdfId, 'dzBfn_re', dzbFn_bFn_re
-			nCdf_varGet, cdfId, 'dzBfn_im', dzbFn_bFn_im
-		ncdf_close, cdfId
-
-	endif
-
 		cdfId = ncdf_open ( fileList[0], /noWrite ) 
 
+			nCdf_varGet, cdfId, 'r', r
+			nCdf_varGet, cdfId, 'z', z
+			nCdf_varGet, cdfId, 'nPhi', nPhi 
+			nCdf_varGet, cdfId, 'freqcy', freq 
+	
 			nCdf_varGet, cdfId, 'ealpha_re', ealpha_re 
 			nCdf_varGet, cdfId, 'ebeta_re', ebeta_re 
 			nCdf_varGet, cdfId, 'eB_re', eB_re 
@@ -107,54 +81,84 @@ pro ar2_plot_solution_71, NoRunData = NoRunData
 
 		ncdf_close, cdfId
 
-	
 	nR = n_elements ( e_r[*,0] )
 	nZ = n_elements ( e_r[0,*] )
 
-	rMin = 3.5
-	rMax = 9.0
-	zMin = -5.0
-	zMax = 5.0
+	if nZ gt 1 then begin
 
-	r = fIndGen(nR)/(nR-1)*(rMax-rMin)+rMin
-	z = fIndGen(nZ)/(nZ-1)*(zMax-zMin)+zMin
+		rMin = r[0]
+		rMax = r[nR-1]
+		zMin = z[0]
+		zMax = z[nZ-1]
 
-	g = readgeqdsk('Scen4_bn2.57_129x129.dlgMod',/noTor)
+		r = fIndGen(nR)/(nR-1)*(rMax-rMin)+rMin
+		z = fIndGen(nZ)/(nZ-1)*(zMax-zMin)+zMin
 
-	nLevs = 11
-	scale = 0.05e4 
-	levels = fIndGen(nLevs)/(nLevs-1)*scale
-	colors = reverse(bytScl(levels, top=253)+1)
-	PlotField = (real_part(eAlpha)<max(levels))>min(-levels)
-	device, decomposed = 0
-	window, 0, xSize=400, ySize=700
-	!p.background = 255
-	loadct, 3
-	contour, PlotField, r, z, levels=levels,c_colors=colors,/fill,/iso,color=0
-	loadct, 1
-	contour, -PlotField, r, z, levels=levels,c_colors=colors,/fill,/iso,/over,color=0
-	loadct, 0
-	oplot, g.rlim, g.zlim, color=0,thick=2
-	oplot, g.rbbbs, g.zbbbs, color=0,thick=1
+		g = readgeqdsk('Scen4_bn2.57_129x129.dlgMod',/noTor)
 
-	outfname = 'ar2_solution.eps'
-	old_dev = !D.name
-	set_plot, 'ps'
-	device, filename=outfname, preview=0, /color, bits_per_pixel=8, $
-		xsize=9, ysize=16,xoffset=.1, yoffset=.1, /encapsul
-	loadct, 3
-	contour, PlotField, r, z, levels=levels,c_colors=colors,/fill,/iso,color=0
-	loadct, 1
-	contour, -PlotField, r, z, levels=levels,c_colors=colors,/fill,/iso,/over,color=0
-	loadct, 0
-	oplot, g.rlim, g.zlim, color=0,thick=2
-	oplot, g.rbbbs, g.zbbbs, color=0,thick=1
-	device, /close
-	set_plot, old_dev
+		nLevs = 11
+		scale = 0.05e4 
+		levels = fIndGen(nLevs)/(nLevs-1)*scale
+		colors = reverse(bytScl(levels, top=253)+1)
+		PlotField = (real_part(eAlpha)<max(levels))>min(-levels)
+		device, decomposed = 0
+		window, 0, xSize=400, ySize=700
+		!p.background = 255
+		loadct, 3
+		contour, PlotField, r, z, levels=levels,c_colors=colors,/fill,/iso,color=0
+		loadct, 1
+		contour, -PlotField, r, z, levels=levels,c_colors=colors,/fill,/iso,/over,color=0
+		loadct, 0
+		oplot, g.rlim, g.zlim, color=0,thick=2
+		oplot, g.rbbbs, g.zbbbs, color=0,thick=1
 
-	;c = contour ( PlotField, x, y, c_value=levels, rgb_indices=colors, rgb_table=3, /fill, aspect_ratio=1.0 )
-	;c = contour ( -PlotField, x, y, c_value=levels, rgb_indices=colors, rgb_table=1, /fill,/over )
-	;p = plot ( g.rlim, g.zlim, /over )
-	;p = plot ( g.rbbbs, g.zbbbs, /over )
+		outfname = 'ar2_solution.eps'
+		old_dev = !D.name
+		set_plot, 'ps'
+		device, filename=outfname, preview=0, /color, bits_per_pixel=8, $
+			xsize=9, ysize=16,xoffset=.1, yoffset=.1, /encapsul
+		loadct, 3
+		contour, PlotField, r, z, levels=levels,c_colors=colors,/fill,/iso,color=0
+		loadct, 1
+		contour, -PlotField, r, z, levels=levels,c_colors=colors,/fill,/iso,/over,color=0
+		loadct, 0
+		oplot, g.rlim, g.zlim, color=0,thick=2
+		oplot, g.rbbbs, g.zbbbs, color=0,thick=1
+		device, /close
+		set_plot, old_dev
+
+		;c = contour ( PlotField, x, y, c_value=levels, rgb_indices=colors, rgb_table=3, /fill, aspect_ratio=1.0 )
+		;c = contour ( -PlotField, x, y, c_value=levels, rgb_indices=colors, rgb_table=1, /fill,/over )
+		;p = plot ( g.rlim, g.zlim, /over )
+		;p = plot ( g.rbbbs, g.zbbbs, /over )
+
+	endif else begin
+
+		range = [-25,25]*1e3
+		!p.multi=[0,1,3]
+		!p.charsize = 2
+		device, decomposed = 0
+		!p.background = 255
+		window, 1,xsize=800,ysize=800
+		loadct, 1
+		plot, r, e_r, color=0,yrange=range
+		oplot, r, imaginary(e_r), color=100
+		plot, r, e_t, color=0,yrange=range
+		oplot, r, imaginary(e_t), color=100
+		plot, r, e_z, color=0,yrange=range
+		oplot, r, imaginary(e_z), color=100
+
+		range = [-1,1]*1e2
+		window, 2,xsize=800,ysize=800
+		plot, r, jp_r, color=0,yrange=range
+		oplot, r, imaginary(jp_r), color=100
+		plot, r, jp_t, color=0,yrange=range
+		oplot, r, imaginary(jp_t), color=100
+		plot, r, jp_z, color=0,yrange=range
+		oplot, r, imaginary(jp_z), color=100
+
+		!p.multi=0
+
+	endelse
 stop
 end 
