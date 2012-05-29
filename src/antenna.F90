@@ -44,9 +44,9 @@ contains
             AntennaJ_R, AntennaJ_T, AntennaJ_Z
         use grid
         use parallel
-        use profiles, &
-        only: omgrf
+        use profiles, only: omgrf
         use constants
+        use scalapack_mod, only: IndxL2G
 
         implicit none
 
@@ -125,53 +125,65 @@ contains
                 iRow = (j-1) * 3 + (i-1) * g%nZ * 3 + 1
                 iRow = iRow + ( g%startRow-1 )
 
-                !if(i==1 .or. i==g%nR)then
                 do ii = 0, 2
 
 #ifdef par
-                    !   2D (with only 1 col) block cyclic storage, see:
-                    !   http://www.netlib.org/scalapack/slug/node76.html
-                    !       and
-                    !   http://acts.nersc.gov/scalapack/hands-on/example4.html
-                    !
-                    !   note that brhs is distributed only in col 0 of the 
-                    !   process grid. All other columns possess an empty
-                    !   local portion of brhs
-
-                    !iCol    = 1 
-                    !jj      = 0
-                    l_sp    = ( iRow-1+ii ) / ( npRow * rowBlockSize )
-                    !m_sp    = ( iCol-1+jj ) / ( npCol * colBlockSize )
-
-                    pr_sp   = mod ( rowStartProc + (iRow-1+ii)/rowBlockSize, npRow )
-                    !pc_sp   = mod ( colStartProc + (iCol-1+jj)/colBlockSize, npCol )
-
-                    x_sp    = mod ( iRow-1+ii, rowBlockSize ) + 1
-                    !y_sp    = mod ( iCol-1+jj, colBlockSize ) + 1
-
-                    localRow    = l_sp*rowBlockSize+x_sp
-                    !localCol    = m_sp*colBlockSize+y_sp
-
-                    if (myRow==pr_sp .and. myCol==pc_sp) then
-
-                        if (ii==0) brhs(localRow)    = -zi*omgrf*mu0*g%jR(i,j)
-                        if (ii==1) brhs(localRow)    = -zi*omgrf*mu0*g%jT(i,j)
-                        if (ii==2) brhs(localRow)    = -zi*omgrf*mu0*g%jZ(i,j)
-
-                    endif
+!                    !   2D (with only 1 col) block cyclic storage, see:
+!                    !   http://www.netlib.org/scalapack/slug/node76.html
+!                    !       and
+!                    !   http://acts.nersc.gov/scalapack/hands-on/example4.html
+!                    !
+!                    !   note that brhs is distributed only in col 0 of the 
+!                    !   process grid. All other columns possess an empty
+!                    !   local portion of brhs
+!
+!                    !iCol    = 1 
+!                    !jj      = 0
+!                    l_sp    = ( iRow-1+ii ) / ( npRow * rowBlockSize )
+!                    !m_sp    = ( iCol-1+jj ) / ( npCol * colBlockSize )
+!
+!                    pr_sp   = mod ( rowStartProc + (iRow-1+ii)/rowBlockSize, npRow )
+!                    !pc_sp   = mod ( colStartProc + (iCol-1+jj)/colBlockSize, npCol )
+!
+!                    x_sp    = mod ( iRow-1+ii, rowBlockSize ) + 1
+!                    !y_sp    = mod ( iCol-1+jj, colBlockSize ) + 1
+!
+!                    localRow    = l_sp*rowBlockSize+x_sp
+!                    !localCol    = m_sp*colBlockSize+y_sp
+!
+!                    if (myRow==pr_sp .and. myCol==pc_sp) then
+!
+!                        if (ii==0) brhs(localRow)    = -zi*omgrf*mu0*g%jR(i,j)
+!                        if (ii==1) brhs(localRow)    = -zi*omgrf*mu0*g%jT(i,j)
+!                        if (ii==2) brhs(localRow)    = -zi*omgrf*mu0*g%jZ(i,j)
+!
+!                    endif
 #else
                     if (ii==0) brhs(iRow+0)    = -zi*omgrf*mu0*g%jR(i,j)
                     if (ii==1) brhs(iRow+1)    = -zi*omgrf*mu0*g%jT(i,j)
                     if (ii==2) brhs(iRow+2)    = -zi*omgrf*mu0*g%jZ(i,j)
-                    !if (ii==0) brhs(iRow+0)    = 0
-                    !if (ii==1) brhs(iRow+1)    = 0
-                    !if (ii==2) brhs(iRow+2)    = 1e3
 #endif
                 enddo
-                !endif
             enddo
         enddo
-        
+       
+#ifdef par
+        if(MyCol==0)then
+            do ii=1,nRowLocal,3
+       
+                iRow = IndxL2G ( ii, RowBlockSize, MyRow, 0, NpRow )
+
+                i = (iRow-1)/(3*g%nZ)+1
+                j = (mod(iRow-1,3*g%nZ)+1-1)/3+1
+          
+                brhs(ii+0) =  -zi*omgrf*mu0*g%jR(i,j)
+                brhs(ii+1) =  -zi*omgrf*mu0*g%jT(i,j)
+                brhs(ii+2) =  -zi*omgrf*mu0*g%jZ(i,j)
+
+            enddo
+        endif
+#endif
+
     end subroutine
 
 end module antenna
