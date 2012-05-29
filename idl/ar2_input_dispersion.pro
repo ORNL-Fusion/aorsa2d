@@ -1,5 +1,8 @@
 pro ar2_input_dispersion, wrf, amu, AtomicZ, nn, nPhi, nSpec, nR, nZ, Density_m3, bMag, $
-		r2D, resonances = resonances
+		r2D, resonances = resonances, $
+		IonIonHybrid_res_freq=IonIonHybrid_res_freq, $
+		IonIonHybrid_cut_freq=IonIonHybrid_cut_freq, $
+		Spec1=Spec1,Spec2=Spec2
 
 	@constants
 
@@ -29,6 +32,20 @@ pro ar2_input_dispersion, wrf, amu, AtomicZ, nn, nPhi, nSpec, nR, nZ, Density_m3
 		StixR	= StixR + ( 1d0 - ( wp^2 / ( wrf * ( wrf + wc ) ) ) )
 
 	endfor
+
+	if keyword_set(Spec1) and keyword_set(Spec2) then begin
+		print, 'Calculating Ion-Ion Hybrid Resonance Freq.'
+		; Ion-Ion Hybrid Freq (pg. 248 Brambilla)
+		nuSpec1 	= Density_m3[*,*,Spec1] / Density_m3[*,*,0]
+		nuSpec2 	= Density_m3[*,*,Spec2] / Density_m3[*,*,0]
+		IonIonHybrid_res = $
+				(nuSpec1*AtomicZ[Spec1]*(AtomicZ[Spec2]/amu[Spec2])+nuSpec2*AtomicZ[Spec2]*(AtomicZ[Spec1]/amu[Spec1])) $
+				/ (nuSpec1*AtomicZ[Spec1]*(amu[Spec2]/AtomicZ[Spec2])+nuSpec2*AtomicZ[Spec2]*(amu[Spec1]/AtomicZ[Spec1]))
+		IonIonHybrid_cut = nuSpec1*AtomicZ[Spec1]*(AtomicZ[Spec2]/amu[Spec2])+nuSpec2*AtomicZ[Spec2]*(AtomicZ[Spec1]/amu[Spec1])
+		wc_H2 = (e*bMag/mi)^2
+		IonIonHybrid_res_freq = sqrt(IonIonHybrid_res * wc_H2)
+		IonIonHybrid_cut_freq = IonIonHybrid_cut * sqrt(wc_H2)
+	endif
 
 	StixS	= 0.5d0 * ( StixR + StixL )
 

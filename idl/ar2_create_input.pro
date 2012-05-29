@@ -51,8 +51,8 @@ pro ar2_create_input
 
 	@constants
 
-	;@gorden_bell
-	@langmuir
+	@gorden_bell
+	;@langmuir
 
 	nSpec = n_elements ( amu )
 	wrf	= freq * 2d0 * !dpi
@@ -183,7 +183,8 @@ pro ar2_create_input
 	; Look at the dispersion relation for these data
 
 	ar2_input_dispersion, wrf, amu, atomicZ, nn, nPhi, nSpec, nR, nZ, $
-			Density_m3, bMag, r2D, resonances = resonances
+			Density_m3, bMag, r2D, resonances = resonances, $
+			IonIonHybrid_res_freq=IonIonHybrid_res_freq, Spec1=1.0,Spec2=2.0
 
 	; Plot up resonance locations too.
 
@@ -194,6 +195,7 @@ pro ar2_create_input
 		for s=1,nSpec-1 do begin
 			c=contour(resonances[*,*,s],r,z,c_value=fIndGen(5)/4.0*0.01,/over)
 		endfor
+		c=contour(1/(abs(IonIonHybrid_res_freq mod wrf)/wrf),r,z,c_value=fIndGen(25)*10,/over)
 	endif else if eqdsk eq 0 and nZ eq 0 then begin
 		for s=1,nSpec-1 do begin
 			p = plot(r,resonances[*,0,s],/over)
@@ -201,6 +203,9 @@ pro ar2_create_input
 	endif
 
 	; Write netCdf file
+
+	save, freq, nphi, eqdsk, eqdskFileName, flux_profiles, atomicZ, amu, $
+			nn, tt, nR, nZ, rMin, rMax, zMin, zMax, fileName = 'ar2RunCreationParameters.sav'
 
 	outFileName	= 'ar2Input.nc'
 	nc_id	= nCdf_create ( outFileName, /clobber )
@@ -258,4 +263,5 @@ pro ar2_create_input
 
 	nCdf_close, nc_id
 
+	stop
 end
