@@ -488,6 +488,7 @@ program aorsa2dMain
     if(iAm==0) write(*,*) '    Time to init descriptors: ', end_timer ( tInitDescriptors ),  'seconds'
 
     call start_timer ( tSolve )
+    if(iAm==0)write(*,*) '  tSolve (post init): ', tSolve%time
 
 #ifdef usepapi
     call PAPIF_flops ( papi_rTime, papi_pTime, papi_flpins, papi_mflops, papi_irc )

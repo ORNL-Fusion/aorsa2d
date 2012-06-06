@@ -51,7 +51,8 @@ pro ar2_create_input
 
 	@constants
 
-	@gorden_bell
+	;@gorden_bell
+	@gorden_bell_b
 	;@langmuir
 
 	nSpec = n_elements ( amu )
@@ -72,7 +73,7 @@ pro ar2_create_input
 
 		; Load eqdsk file
 
-		g = readgeqdsk ( eqdskFileName, /noToroidalFlux, bTorFactor = 1.2)
+		g = readgeqdsk ( eqdskFileName, /noToroidalFlux, bTorFactor = bTorFactor)
 
 		; Get b field values on this new grid
 
