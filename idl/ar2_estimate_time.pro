@@ -1,17 +1,28 @@
 pro ar2_estimate_time
 
-nR = 513d0
-nZ = 513d0 
+nR = 65d0
+nZ = 129d0 
 
-npRow = 96d0
-npCol = 96d0
+npRow = 4d0
+npCol = 8d0
 
-; Hopper parameters
-MemPerCPUAvail_GB = 32.0/24.0*0.8
-Scalapack_GFlops = 5.0
+;; Hopper parameters
+;; -----------------
+;print, 'HOPPER'
+;CoresPerNode = 24
+;MemPerNode_GB = 32.0
+;Scalapack_GFlops = 5.0
+
+; Jaguarpf parameters
+; -------------------
+print, 'JAGUARPF'
+CoresPerNode = 16
+MemPerNode_GB = 32.0
+Scalapack_GFlops = 5.5
 
 ; Memory required
 
+MemPerCPUAvail_GB = MemPerNode_GB/CoresPerNode*0.8
 N = 3d0 * nR * nZ
 
 DoubleComplexBytes = 16.0
