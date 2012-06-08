@@ -1,10 +1,10 @@
 pro ar2_estimate_time
 
 nR = 513d0
-nZ = 257d0 
+nZ = 513d0 
 
 npRow = 96d0
-npCol = 48d0
+npCol = 96d0
 
 ; Hopper parameters
 MemPerCPUAvail_GB = 32.0/24.0*0.8
@@ -78,7 +78,7 @@ print, 'Estimated workList time: ', WorkListTime_s, ' seconds'
 print, 'Estimated total time: ', TotalTime_s, ' seconds' 
 print, 'Estimated total time: ', TotalTime_m, ' minutes' 
 print, 'Estimated total time: ', TotalTime_h, ' hours' 
-
+print, 'Estimated CPU hours: ', TotalTime_h*TotalNProcs
 
 stop
 
