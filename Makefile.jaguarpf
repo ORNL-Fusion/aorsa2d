@@ -1,15 +1,20 @@
 # Overwrite variables for jaguar-pf XT5 @ NCCS
 
-BLAS = 
-LAPACK =  
-SCALAPACK = 
-PAPI_INC = ${PAPI_INCLUDE_OPTS}  
-PAPI = ${PAPI_POST_LINK_OPTS} 
-BLACS = 
-NETCDF = ${NETCDF_FLIB} 
-BOUNDS = 
-WARN = 
-DEBUG = 
-DOUBLE = -Mr8
-F90 = ftn -fast #-gopt -Mbounds -Mchkfpstk -Mchkptr
-MOD_LOC = -module mod
+BLAS := 
+LAPACK :=  
+SCALAPACK := 
+PAPI_INC := ${PAPI_INCLUDE_OPTS}  
+PAPI := ${PAPI_POST_LINK_OPTS} 
+BLACS := 
+NETCDF := ${NETCDF_FLIB} 
+HDF :=
+BOUNDS := 
+WARN := 
+DEBUG := 
+DOUBLE := -Mr8
+F90 := ftn -fast #-gopt -Mbounds -Mchkfpstk -Mchkptr
+MOD_LOC := -module mod
+LIBS := ${HDF} ${NETCDF} ${BLAS} ${LAPACK} ${PAPI}
+LIBS := ${SCALAPACK} ${BLACS} ${LIBS}
+INC_DIR := ${PAPI_INC}
+

@@ -7,7 +7,7 @@ OBJ_DIR = obj
 MOD_DIR = mod
 CPP_DIR = cpp
 
-COMPILER := GNU# GNU, PGI
+COMPILER := PGI# GNU, PGI
 PARALLEL := 1# 0, 1
 DDT := 0# 0, 1
 
@@ -132,7 +132,7 @@ ifeq (${HOME},/global/homes/g/greendl1)
 	include Makefile.nersc
 endif
 
-ifeq (${HOME},/ccs/home/dg6)
+ifeq ($(shell hostname),jaguarpf-ext1)
 	include Makefile.jaguarpf
 endif
 
@@ -161,16 +161,16 @@ ${AORSA2D}: ${SRC_DIR}/aorsa.F90
 # SRC files
 #
 ${OBJ_DIR}/%.o: ${SRC_DIR}/%.f90
-	${F90} -c ${F90FLAGS} $< -o $@ ${BOUNDS} ${NETCDF} ${CPP_DIRECTIVES} ${INC_DIR}
+	${F90} -c ${F90FLAGS} $< -o $@ ${BOUNDS} ${CPP_DIRECTIVES} ${INC_DIR}
 
 ${OBJ_DIR}/%.o: ${SRC_DIR}/%.F90
-	${F90} -c ${F90FLAGS} $< -o $@ ${BOUNDS} ${NETCDF} ${CPP_DIRECTIVES} ${INC_DIR}
+	${F90} -c ${F90FLAGS} $< -o $@ ${BOUNDS} ${CPP_DIRECTIVES} ${INC_DIR}
 
 ${OBJ_DIR}/%.o: ${SRC_DIR}/%.f
-	${F90} -c ${F90FLAGS} $< -o $@ ${BOUNDS} ${NETCDF} ${CPP_DIRECTIVES} ${INC_DIR}
+	${F90} -c ${F90FLAGS} $< -o $@ ${BOUNDS} ${CPP_DIRECTIVES} ${INC_DIR}
 
 ${OBJ_DIR}/%.o: ${SRC_DIR}/%.F
-	${F90} -c ${F90FLAGS} $< -o $@ ${BOUNDS} ${NETCDF} ${CPP_DIRECTIVES} ${INC_DIR}
+	${F90} -c ${F90FLAGS} $< -o $@ ${BOUNDS} ${CPP_DIRECTIVES} ${INC_DIR}
 
 ${OBJ_DIR}/z_erf.o: ${SRC_DIR}/z_erf.f90
 	${F90} -c ${F90FLAGS} $< -o $@ ${BOUNDS} ${INC_DIR} ${DOUBLE}

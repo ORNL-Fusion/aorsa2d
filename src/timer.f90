@@ -6,7 +6,6 @@ integer, parameter :: dbl = selected_real_kind ( p = 14 )
 
 type, public :: timer
     
-    private
     real ( kind = dbl ) :: time
 
 end type timer
