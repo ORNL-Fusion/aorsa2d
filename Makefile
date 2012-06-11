@@ -7,7 +7,7 @@ OBJ_DIR = obj
 MOD_DIR = mod
 CPP_DIR = cpp
 
-COMPILER := PGI# GNU, PGI
+COMPILER := GNU# GNU, PGI
 PARALLEL := 1# 0, 1
 DDT := 0# 0, 1
 
@@ -18,27 +18,10 @@ OBJ_FILES = $(wildcard obj/*.o)
 
 # libraries 
 # ---------
-
-BLAS := ${HOME}/code/goto_blas/libgoto2_gnu_4.3.2_64.a -pthread
-LAPACK := ${HOME}/code/lapack/lapack-3.1.1/lapack_LINUX.a 
-HDF_DIR := ${HOME}/code/hdf/gnu_4.3.2
-HDF := -I ${HDF_DIR}/include -L ${HDF_DIR}/lib -lhdf5 -lhdf5_hl
-NETCDF_DIR := ${HOME}/code/netcdf/gnu_4.3.2
-NETCDF := -I ${NETCDF_DIR}/include -L ${NETCDF_DIR}/lib -lnetcdf -lnetcdff
-
-LIBS := ${HDF} ${NETCDF} ${BLAS} ${LAPACK}
+#
+LIBS := 
 INC_DIR := 
 CPP_DIRECTIVES :=
-
-ifeq (${PARALLEL},1)
-    CPP_DIRECTIVES += -Dpar
-	BLACS = \
-		${HOME}/code/blacs/blacs_gnu64/LIB/blacs_MPI-LINUX-0.a \
-		${HOME}/code/blacs/blacs_gnu64/LIB/blacsF77init_MPI-LINUX-0.a \
-		${HOME}/code/blacs/blacs_gnu64/LIB/blacs_MPI-LINUX-0.a
-	SCALAPACK = ${HOME}/code/scalapack/scalapack_gnu64/libscalapack.a
-	LIBS := ${SCALAPACK} ${BLACS} ${LIBS}
-endif
 
 # set solve precision to double 
 # -----------------------------
@@ -57,25 +40,6 @@ CPP_DIRECTIVES += -DzFunHammett
 # use papi, set to "-Dusepapi"
 # ----------------------------
 CPP_DIRECTIVES += -Dusepapi 
-PAPI_DIR := /home/dg6/code/papi/gnu_4.3.2
-PAPI_INC := -I${PAPI_DIR}/include/
-PAPI_LINK := -L${PAPI_DIR}/lib -lpapi
-LIBS += ${PAPI_LINK}
-INC_DIR += ${PAPI_INC}
-
-# use CUDA
-# --------
-#LIBS += #${MAGMA} ${CUDA} -lstdc++
-#CUDA_DIR = ${HOME}/code/cuda/4.0/cuda
-#CUDA = -L ${CUDA_DIR}/lib64 -lcublas -lcudart -lcuda -L /usr/lib64
-#MAGMA_DIR = ${HOME}/code/magma/magma_0.2
-#MAGMA = -L ${MAGMA_DIR}/lib -lmagma -lmagmablas ${MAGMA_DIR}/lib/libmagma_64.a
-
-# GPTL
-# ----
-#GPTL_DIR = #${HOME}/code/gptl
-#GPTL = #-I ${GPTL_DIR}/include -L ${GPTL_DIR} -lgptl
-
 
 # caculate sigma as part of the fill (=2) or standalone with file write (=1)
 # --------------------------------------------------------------------------
@@ -117,7 +81,6 @@ ifeq (${COMPILER},PGI)
     FORMAT:=
 endif
 
-
 ifeq (${PARALLEL},1)
 	F90 = mpif90
 else
@@ -128,15 +91,19 @@ endif
 # other machines
 # --------------
 
-ifeq (${HOME},/global/homes/g/greendl1)
+ifneq (,$(findstring dlg-hp,$(shell uname -n)))
+	include Makefile.dlg-hp
+endif
+
+ifneq (,$(findstring hopper,$(shell uname -n)))
 	include Makefile.nersc
 endif
 
-ifeq ($(shell hostname),jaguarpf-ext1)
+ifneq (,$(findstring jaguarpf,$(shell uname -n)))
 	include Makefile.jaguarpf
 endif
 
-ifeq (${HOME},/Users/dg6)
+ifneq (,$(findstring greendl,$(shell uname -n)))
 	include Makefile.greendl
 endif
 

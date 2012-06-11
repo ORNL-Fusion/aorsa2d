@@ -33,7 +33,7 @@ pro ar2_input_dispersion, wrf, amu, AtomicZ, nn, nPhi, nSpec, nR, nZ, Density_m3
 
 	endfor
 
-	if keyword_set(Spec1) and keyword_set(Spec2) then begin
+	if keyword_set(Spec1) and keyword_set(Spec2) and nSpec gt 2 then begin
 		print, 'Calculating Ion-Ion Hybrid Resonance Freq.'
 		; Ion-Ion Hybrid Freq (pg. 248 Brambilla)
 		nuSpec1 	= Density_m3[*,*,Spec1] / Density_m3[*,*,0]

@@ -302,23 +302,23 @@ contains
         deallocate ( expBesselI, expBesselIPrime, expBesselIOverGam )
 
 
-        !! Add numerical damping for Bernstein wave (delta0 ~ 1e-4)
-        !! --------------------------------------------------------
+        ! Add numerical damping for Bernstein wave (delta0 ~ 1e-4)
+        ! --------------------------------------------------------
 
-        !sig1 = sig1 + delta0 * eps0 * omgrfc * kPerp**2 / k0**2
-        !sig3 = sig3 + delta0 * eps0 * omgrfc * kPerp**2 / k0**2
+        sig1 = sig1 + delta0 * eps0 * omgrfc * kPerp**2 / k0**2
+        sig3 = sig3 + delta0 * eps0 * omgrfc * kPerp**2 / k0**2
 
 
-        !! electron damping
-        !! ----------------
+        ! electron damping
+        ! ----------------
 
-        !if (specNo==1) then
+        if (specNo==1) then
 
-        !    kr = kPerp / k_cutOff
-        !    step = damping * kr**16 / (1. + kr**16)
-        !    sig3 = sig3 * (1.0 + step)
+            kr = kPerp / k_cutOff
+            step = damping * kr**16 / (1. + kr**16)
+            sig3 = sig3 * (1.0 + step)
 
-        !endif
+        endif
 
         
         ! Swanson's sigma tensor in the 

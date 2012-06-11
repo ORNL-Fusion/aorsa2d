@@ -1,0 +1,29 @@
+BLAS := ${HOME}/code/goto_blas/libgoto2_gnu_4.3.2_64.a -pthread
+LIBS += ${BLAS}
+
+LAPACK := ${HOME}/code/lapack/lapack-3.1.1/lapack_LINUX.a 
+LIBS += ${LAPACK}
+
+HDF_DIR := ${HOME}/code/hdf/gnu_4.3.2
+LIBS += -L ${HDF_DIR}/lib -lhdf5 -lhdf5_hl
+INC_DIR += -I ${HDF_DIR}/include
+
+NETCDF_DIR := ${HOME}/code/netcdf/gnu_4.3.2
+LIBS +=-L ${NETCDF_DIR}/lib -lnetcdf -lnetcdff
+INC_DIR += -I ${NETCDF_DIR}/include 
+
+ifeq (${PARALLEL},1)
+    CPP_DIRECTIVES += -Dpar
+	BLACS = \
+		${HOME}/code/blacs/blacs_gnu64/LIB/blacs_MPI-LINUX-0.a \
+		${HOME}/code/blacs/blacs_gnu64/LIB/blacsF77init_MPI-LINUX-0.a \
+		${HOME}/code/blacs/blacs_gnu64/LIB/blacs_MPI-LINUX-0.a
+	SCALAPACK = ${HOME}/code/scalapack/scalapack_gnu64/libscalapack.a
+	LIBS := ${SCALAPACK} ${BLACS} ${LIBS}
+endif
+
+PAPI_DIR := /home/dg6/code/papi/gnu_4.3.2
+PAPI_INC := -I${PAPI_DIR}/include/
+PAPI_LINK := -L${PAPI_DIR}/lib -lpapi
+LIBS += ${PAPI_LINK}
+INC_DIR += ${PAPI_INC}

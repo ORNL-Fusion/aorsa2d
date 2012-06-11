@@ -52,8 +52,9 @@ pro ar2_create_input
 	@constants
 
 	;@gorden_bell
-	@gorden_bell_b
+	;@gorden_bell_b
 	;@langmuir
+	@ar2_run_nstxslow
 
 	nSpec = n_elements ( amu )
 	wrf	= freq * 2d0 * !dpi
@@ -171,7 +172,7 @@ pro ar2_create_input
 	if flux_profiles eq 1 then begin
 
 		ar2_create_flux_profiles, nSpec, nn, tt, nR, nZ, PsiNorm, Mask_bbb, d_bbb, $
-			Density_m3, Temp_eV
+			Density_m3, Temp_eV, DensityMin = DensityMin, TempMin = TempMin
 	endif else begin
 
 		for s=0,nSpec-1 do begin
@@ -196,6 +197,7 @@ pro ar2_create_input
 		for s=1,nSpec-1 do begin
 			c=contour(resonances[*,*,s],r,z,c_value=fIndGen(5)/4.0*0.01,/over)
 		endfor
+		if nSpec gt 2 then $
 		c=contour(1/(abs(IonIonHybrid_res_freq mod wrf)/wrf),r,z,c_value=fIndGen(25)*10,/over)
 	endif else if eqdsk eq 0 and nZ eq 0 then begin
 		for s=1,nSpec-1 do begin
