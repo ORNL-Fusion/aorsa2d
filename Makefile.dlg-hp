@@ -26,3 +26,11 @@ PAPI_INC := -I${PAPI_DIR}/include/
 PAPI_LINK := -L${PAPI_DIR}/lib -lpapi
 LIBS += ${PAPI_LINK}
 INC_DIR += ${PAPI_INC}
+
+ifeq (${PARALLEL},1)
+		F90 := mpif90
+else
+		F90 := gfortran
+endif
+
+

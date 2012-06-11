@@ -2,11 +2,11 @@ module timer_mod
 
 implicit none
 
-integer, parameter :: dbl = selected_real_kind ( p = 14 )
+integer, parameter :: t_dbl = selected_real_kind ( p = 14 )
 
 type, public :: timer
     
-    real ( kind = dbl ) :: time
+    real ( kind = t_dbl ) :: time
 
 end type timer
 

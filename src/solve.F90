@@ -1,8 +1,13 @@
 module solve
 
 use constants
+#ifdef USE_PGESVR
+use pgesvr_mod
+#endif
 
+use timer_mod
 implicit none
+
 
 contains
 
@@ -160,6 +165,42 @@ contains
 
         integer :: ii, gg
 
+#ifdef USE_GPU
+        integer :: memsize,ivalue,istatus
+        character(len=127) :: memsize_str
+
+
+        character, parameter :: norm = '1'
+        integer :: lzwork,lrwork
+        real*8, allocatable,dimension(:) :: rwork
+        complex*16, allocatable, dimension(:) :: zwork
+        complex*16 :: zwork1(1024*1024)
+        real*8 :: rwork1(1024*1024)
+        real*8 :: anorm, rcond
+
+        logical, parameter :: use_row_scaling = .true.
+        real*8 :: rnorm,rnorm_inv
+        integer :: iia, i, incx
+        type(timer) :: tRowScale
+
+        logical, parameter :: use_column_scaling = .false.
+        integer :: j,jja,iib
+        real*8 :: cnorm, cnorm_inv
+        real*8, dimension(:), allocatable :: cnorm_inv_array
+
+
+        interface
+          double precision function pzlange(norm,m,n,A,ia,ja,descA,work)
+          character norm
+          integer ia,ja,m,n
+          integer descA(*)
+          double precision work(*)
+          complex*16 A(*)
+          end function pzlange
+        end interface
+
+
+#endif
         trans   = 'N'
 
         mb_a    = rowBlockSize
@@ -215,21 +256,169 @@ contains
 
             allocate ( ipiv ( numroc ( m, mb_a, myRow, rsrc_a, npRow ) + mb_a ) )
             ipiv = 0
+
+#ifndef USE_GPU
+
 #ifndef dblprec
             call pcgesv ( n, nrhs, aMat, ia, ja, descriptor_aMat, ipiv, &
+                    brhs, ib, jb, descriptor_brhs, info ) 
+#else
+#ifdef ED_SCALAPACK
+            call pzgesvr ( n, nrhs, aMat, ia, ja, descriptor_aMat, ipiv, &
                     brhs, ib, jb, descriptor_brhs, info ) 
 #else
             call pzgesv ( n, nrhs, aMat, ia, ja, descriptor_aMat, ipiv, &
                     brhs, ib, jb, descriptor_brhs, info ) 
 #endif
+#endif
+
+#else
+! use GPU version
+! 4 GBytes on  1 MPI task, memsize = 256*1024*1024
+! 4 GBytes on  4 MPI tasks, memsize = 64*1024*1024
+! 4 GBytes on  8 MPI tasks, memsize = 32*1024*1024
+! 4 GBytes on 16 MPI tasks, memsize = 16*1024*1024
+!
+
+             memsize = 64*1024*1024
+             call getenv("MEMSIZE",memsize_str)
+             if (len(trim(memsize_str)).ge.1) then
+               ivalue = 32
+               read(memsize_str,*,iostat=istatus) ivalue
+               if ((istatus.eq.0).and.(ivalue.ge.1)) then
+                 memsize = ivalue*1024*1024
+               endif
+             endif
+             if (iAm == 0) then
+               write(*,*) 'memsize = ', memsize
+             endif
+
+             if (use_row_scaling) then
+               call start_timer( tRowScale )
+
+               do i=1,n
+                 iia = (ia-1) + i
+                 incx = descriptor_aMat(M_)
+                 call pdznrm2( n,rnorm,aMat,iia,ja,descriptor_aMat, incx )
+
+                 rnorm_inv = 1.0
+                 if (abs(rnorm) .gt. epsilon(rnorm)) then
+                     rnorm_inv = 1.0/rnorm
+                 endif
+                 call pzdscal(n, rnorm_inv, aMat,iia,ja,descriptor_aMat,incx)
+
+                 incx = descriptor_brhs(M_)
+                 iib = (ib-1) + i
+                 call pzdscal(nrhs,rnorm_inv, brhs,iib,jb,descriptor_brhs,incx)
+                enddo
+
+                if (iAm == 0) then
+                  write(*,*) 'Row Scaling took ', end_timer( tRowScale )
+                endif
+               endif
+
+               if (use_column_scaling) then
+                 allocate( cnorm_inv_array(n) )
+                 do j=1,n
+                   jja = (ja-1) + j
+                   incx = 1
+                   call pdznrm2(n,cnorm,aMat,ia,jja,descriptor_aMat,incx)
+
+                   cnorm_inv = 1.0
+                   if (abs(cnorm) .gt. epsilon(cnorm)) then
+                       cnorm_inv = 1.0/cnorm
+                   endif
+                   cnorm_inv_array(j) = cnorm_inv
+
+                   incx = 1
+                   call pzdscal(n,cnorm_inv, aMat,ia,jja,descriptor_aMat,incx)
+                  enddo
+                 endif
+
+#ifdef USE_RCOND
+! -------------------------------------------
+! compute norm(A) needed later in estimating
+! condition number
+! -------------------------------------------
+
+             lrwork = 2*n
+             allocate(rwork(lrwork))
+             anorm = pzlange(norm,n,n,aMat,ia,ja,descriptor_aMat,rwork)
+             deallocate(rwork)
+#endif
+
+
+#ifdef USE_PGESVR
+             call pzgesvr ( n, nrhs, aMat, ia, ja, descriptor_aMat, ipiv, &
+                    brhs, ib, jb, descriptor_brhs, info ) 
+#else
+
+!debug       call pzgetrf(n,n,aMat, ia,ja,descriptor_aMat,ipiv,  info)
+             call pzgetrf_ooc2(n,n,aMat, ia,ja,descriptor_aMat,ipiv,  &
+                     memsize, info )
+             if ((info.ne.0) .and. (iAm == 0)) then
+               write(*,*) 'pzgetrf_ooc status: ',info
+             endif
+
+             call pzgetrs( 'N',n,nrhs,aMat,ia,ja,descriptor_aMat,ipiv, &
+                    brhs, ib, jb, descriptor_brhs, info)
+
+             if ((info.ne.0) .and. (iAm == 0)) then
+               write(*,*) 'pzgetrs status: ',info
+             endif
+#endif
+
+
+
+             if (use_column_scaling) then
+               do i=1,n
+                  iib = (ib-1) + i
+                  cnorm_inv = cnorm_inv_array(i)
+                  incx = descriptor_brhs(M_)
+                  call pzdscal( nrhs, cnorm_inv, &
+                         brhs,iib,jb,descriptor_brhs,incx)
+                enddo
+                deallocate( cnorm_inv_array )
+              endif
+
+
+#ifndef USE_PGESVR
+
+#ifdef USE_RCOND
+             lzwork = -1
+             lrwork = -1
+             call pzgecon( norm,n, aMat,ia,ja,descriptor_aMat,  &
+                  anorm,rcond, zwork1,lzwork,rwork1,lrwork,info)
+
+             lzwork = int(abs(zwork1(1))) + 1
+             lrwork = int( abs(rwork1(1)) ) + 1
+             allocate( zwork(lzwork), rwork(lrwork) )
+             call pzgecon( '1',n, aMat,ia,ja,descriptor_aMat,  &
+                  anorm,rcond, zwork,lzwork,rwork,lrwork,info)
+             deallocate( zwork, rwork )
+
+             if ((info.ne.0) .and. (iAm == 0)) then
+               write(*,*) 'pzgecon status ',info
+             endif
+             if (iAm == 0) then
+               write(*,*) 'estimated rcond = ',rcond
+             endif
+#endif
+
+
+#endif
+
+
+#endif
+
             if (iAm==0) then 
                 write(*,*) '    pcgesv status: ', info
             endif
 
             deallocate ( ipiv )
 
-        else 
 
+          else ! if (square)
             if(iAm==0) write(*,*) &
             "   using least squares for n x m system"
 
@@ -250,7 +439,7 @@ contains
 
             deallocate ( work )
 
-        endif 
+          endif  ! if (square)
      
         if  (info/=0) then
 

@@ -7,9 +7,14 @@ OBJ_DIR = obj
 MOD_DIR = mod
 CPP_DIR = cpp
 
-COMPILER := PGI# GNU, PGI
+COMPILER := GNU# GNU, PGI
 PARALLEL := 1# 0, 1
+GPU := 0# 0, 1
 DDT := 0# 0, 1
+
+ifeq (${GPU},1)
+	COMPILER := GNU
+endif
 
 # objects
 # -------
@@ -63,14 +68,6 @@ CPP_DIRECTIVES += -D__DebugBField__=0
 # compile flags
 # -------------
 
-FORMAT := -ffree-line-length-none
-BOUNDS := #-fbounds-check 
-WARN := -Wall
-DEBUG := #-pg -g -fbacktrace -fsignaling-nans -ffpe-trap=zero,invalid#,overflow#,underflow
-OPTIMIZATION := -O3
-DOUBLE := -fdefault-real-8
-MOD_LOC := -Jmod
-
 ifeq (${COMPILER},PGI)
     MOD_LOC:= -module mod
     DOUBLE:= -Mr8
@@ -79,13 +76,18 @@ ifeq (${COMPILER},PGI)
     OPTIMIZATION:=# -fast
     BOUNDS:= -Mbounds
     FORMAT:=
+else
+	FORMAT := -ffree-line-length-none
+	BOUNDS := #-fbounds-check 
+	WARN := -Wall
+	DEBUG := #-pg -g -fbacktrace -fsignaling-nans -ffpe-trap=zero,invalid#,overflow#,underflow
+	OPTIMIZATION := -O3
+	DOUBLE := -fdefault-real-8
+	MOD_LOC := -Jmod
 endif
 
 ifeq (${PARALLEL},1)
     CPP_DIRECTIVES += -Dpar
-	F90 = mpif90
-else
-	F90 = gfortran
 endif
 
 
