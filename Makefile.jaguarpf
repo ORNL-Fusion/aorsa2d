@@ -1,6 +1,6 @@
 # Overwrite variables for jaguar-pf XT5 @ NCCS
 
-F90: = ftn
+F90 := ftn
 SCALAPACK :=  /ccs/home/efdazedo/public/OOCLU/lib.a /ccs/home/efdazedo/public/OOCLU/liblin.a
 CPP_DIRECTIVES += -DUSE_PGESVR
 
