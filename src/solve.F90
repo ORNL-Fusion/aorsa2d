@@ -263,7 +263,7 @@ contains
             call pcgesv ( n, nrhs, aMat, ia, ja, descriptor_aMat, ipiv, &
                     brhs, ib, jb, descriptor_brhs, info ) 
 #else
-#ifdef ED_SCALAPACK
+#ifdef USE_PGESVR
             call pzgesvr ( n, nrhs, aMat, ia, ja, descriptor_aMat, ipiv, &
                     brhs, ib, jb, descriptor_brhs, info ) 
 #else
