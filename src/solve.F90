@@ -1,7 +1,9 @@
 module solve
 
 use constants
+#ifdef par
 use scalapack_mod
+#endif
 #ifdef USE_PGESVR
 use pgesvr_mod
 #endif

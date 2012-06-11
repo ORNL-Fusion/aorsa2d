@@ -7,8 +7,8 @@ OBJ_DIR = obj
 MOD_DIR = mod
 CPP_DIR = cpp
 
-COMPILER := PGI# GNU, PGI
-PARALLEL := 1# 0, 1
+COMPILER := GNU# GNU, PGI
+PARALLEL := 0# 0, 1
 GPU := 0# 0, 1
 DDT := 0# 0, 1
 

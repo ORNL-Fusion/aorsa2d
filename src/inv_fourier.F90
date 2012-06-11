@@ -104,12 +104,13 @@ contains
 
         enddo
 
+#ifdef par
         call cGSUM2D ( iContext, 'All', ' ', g%nR, g%nZ, g%eAlpha, g%nR, -1, -1 )
         call cGSUM2D ( iContext, 'All', ' ', g%nR, g%nZ, g%eBeta, g%nR, -1, -1 )
         call cGSUM2D ( iContext, 'All', ' ', g%nR, g%nZ, g%eB, g%nR, -1, -1 )
 
         call blacs_barrier ( iContext, 'All' ) 
-
+#endif
     end subroutine sftinv2d
 
 end module inv_fourier

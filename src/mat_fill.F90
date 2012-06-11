@@ -323,7 +323,7 @@ contains
                     do m=g%mMin,g%mMax
 
                         workListPosition = workListPosition + 1
-                        g%wl(workListPosition) = workListEntry(i,j,m,n)
+                        g%wl(workListPosition) = workListEntry(i,j,m,n,0)
 
                     enddo m_workList
                 enddo n_workList

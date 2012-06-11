@@ -181,8 +181,10 @@ contains
             RealTmp(i,j) = g%bR_unit(p)
             Cnt(i,j) = Cnt(i,j)+1
         enddo
+#ifdef par
         call sGSUM2D ( iContext, 'All', ' ', g%nR, g%nZ, RealTmp, g%nR, -1, -1 )
         call sGSUM2D ( iContext, 'All', ' ', g%nR, g%nZ, Cnt, g%nR, -1, -1 )
+#endif
         if(iAm==0)nc_stat = nf90_put_var ( nc_id, brU_id, RealTmp/Cnt )
         RealTmp = 0
         Cnt = 0
@@ -196,8 +198,10 @@ contains
             RealTmp(i,j) = g%bT_unit(p)
             Cnt(i,j) = Cnt(i,j)+1
         enddo
+#ifdef par
         call sGSUM2D ( iContext, 'All', ' ', g%nR, g%nZ, RealTmp, g%nR, -1, -1 )
         call sGSUM2D ( iContext, 'All', ' ', g%nR, g%nZ, Cnt, g%nR, -1, -1 )
+#endif
         if(iAm==0)nc_stat = nf90_put_var ( nc_id, btU_id, RealTmp/Cnt )
         RealTmp = 0
         Cnt = 0
@@ -211,8 +215,10 @@ contains
             RealTmp(i,j) = g%bZ_unit(p)
             Cnt(i,j) = Cnt(i,j)+1
         enddo
+#ifdef par
         call sGSUM2D ( iContext, 'All', ' ', g%nR, g%nZ, RealTmp, g%nR, -1, -1 )
         call sGSUM2D ( iContext, 'All', ' ', g%nR, g%nZ, Cnt, g%nR, -1, -1 )
+#endif
         if(iAm==0)nc_stat = nf90_put_var ( nc_id, bzU_id, RealTmp/Cnt )
         RealTmp = 0
         Cnt = 0
@@ -226,8 +232,10 @@ contains
             RealTmp(i,j) = g%bMag(p)
             Cnt(i,j) = Cnt(i,j)+1
         enddo
+#ifdef par
         call sGSUM2D ( iContext, 'All', ' ', g%nR, g%nZ, RealTmp, g%nR, -1, -1 )
         call sGSUM2D ( iContext, 'All', ' ', g%nR, g%nZ, Cnt, g%nR, -1, -1 )
+#endif
         if(iAm==0)nc_stat = nf90_put_var ( nc_id, bmod_id, RealTmp/Cnt )
         RealTmp = 0
         Cnt = 0
@@ -245,8 +253,10 @@ contains
                 RealTmp(i,j) = g%DensitySpec(p,s)
                 Cnt(i,j) = Cnt(i,j)+1
             enddo
+#ifdef par
             call sGSUM2D ( iContext, 'All', ' ', g%nR, g%nZ, RealTmp, g%nR, -1, -1 )
             call sGSUM2D ( iContext, 'All', ' ', g%nR, g%nZ, Cnt, g%nR, -1, -1 )
+#endif
             RealTmp3(:,:,s) = RealTmp/Cnt
             RealTmp = 0
             Cnt = 0
