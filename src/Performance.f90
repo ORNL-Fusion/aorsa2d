@@ -1,15 +1,17 @@
 module Performance
 
+use constants
+
 implicit none
 
 type, public :: RunPerfData 
 
-        integer :: nProcs
-        integer :: nSpatialPoints
-        integer :: nRowLocal
-        integer :: nColLocal
-        integer :: nRowGlobal
-        integer :: nColGlobal
+        integer(kind=long) :: nProcs
+        integer(kind=long) :: nSpatialPoints
+        integer(kind=long) :: nRowLocal
+        integer(kind=long) :: nColLocal
+        integer(kind=long) :: nRowGlobal
+        integer(kind=long) :: nColGlobal
         real :: MatSizeLocal_GB
         real :: MatSizeGlobal_GB
         real :: TimeWorkList

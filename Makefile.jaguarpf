@@ -1,10 +1,11 @@
 # Overwrite variables for jaguar-pf XT5 @ NCCS
 
 F90 := ftn
-SCALAPACK :=  /ccs/home/efdazedo/public/OOCLU/lib.a /ccs/home/efdazedo/public/OOCLU/liblin.a
-CPP_DIRECTIVES += -DUSE_PGESVR
+SCALAPACK := 
 
 ifeq (${GPU},1)
+	SCALAPACK :=  /ccs/home/efdazedo/public/OOCLU/lib.a /ccs/home/efdazedo/public/OOCLU/liblin.a
+	CPP_DIRECTIVES += -DUSE_PGESVR
 	CUDA_HOME := $(CUDAROOT)
 	LIBS += -L${CUDA_HOME}/lib64  -lcuda -lcudart -lcublas -lcudart 
 	LIBS += -lpthread -lm
@@ -19,7 +20,6 @@ ifeq (${GPU},1)
 	INC_DIR += -I /ccs/home/efdazedo/pubic/OOCLU	
 	CPP_DIRECTIVES += -DUSE_GPU=1
 endif
-
 
 LIBS := ${SCALAPACK} ${LIBS}
 
