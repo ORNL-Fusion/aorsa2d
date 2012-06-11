@@ -13,7 +13,6 @@ LIBS +=-L ${NETCDF_DIR}/lib -lnetcdf -lnetcdff
 INC_DIR += -I ${NETCDF_DIR}/include 
 
 ifeq (${PARALLEL},1)
-    CPP_DIRECTIVES += -Dpar
 	BLACS = \
 		${HOME}/code/blacs/blacs_gnu64/LIB/blacs_MPI-LINUX-0.a \
 		${HOME}/code/blacs/blacs_gnu64/LIB/blacsF77init_MPI-LINUX-0.a \
