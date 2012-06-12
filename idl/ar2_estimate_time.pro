@@ -1,10 +1,13 @@
 pro ar2_estimate_time
 
-nR = 65d0
-nZ = 129d0 
+nR = 257d0
+nZ = 257d0 
 
-npRow = 4d0
-npCol = 8d0
+npRow = 32d0
+npCol = 64d0
+
+nSpec = 2
+lMax = 2 
 
 ;; Hopper parameters
 ;; -----------------
@@ -16,14 +19,17 @@ npCol = 8d0
 ; Jaguarpf parameters
 ; -------------------
 print, 'JAGUARPF'
-CoresPerNode = 16
+CoresPerNode = 16 
 MemPerNode_GB = 32.0
 Scalapack_GFlops = 5.5
+GPU_GFlops = 170.0
+
 
 ; Memory required
 
 MemPerCPUAvail_GB = MemPerNode_GB/CoresPerNode*0.8
 N = 3d0 * nR * nZ
+nNodes = npRow*npCol/CoresPerNode
 
 DoubleComplexBytes = 16.0
 
@@ -65,12 +71,20 @@ Time_s = NFOperations / ( Scalapack_GFlops * 1024d0^3 * TotalNProcs )
 Time_m = Time_s / 60d0
 Time_h = Time_m / 60d0
 
+Time_s_GPU = NFOperations / ( GPU_GFlops * 1024d0^3 * nNodes )
+Time_m_GPU = Time_s_GPU / 60d0
+Time_h_GPU = Time_m_GPU / 60d0
+
 print, '-----------------------------------------------'
 print, 'For a ',string(nR,format='(i3.3)'),'x',string(nZ,format='(i3.3)'),$
 		' grid with ',string(npRow,format='(i3.3)'),'x',string(npCol,format='(i3.3)'),' procs: '
 print, 'Estimates solve time: ', string(Time_s,format='(i)'), ' seconds'
 print, 'Estimates solve time: ', string(Time_m,format='(i)'), ' minutes'
 print, 'Estimates solve time: ', Time_h, ' hours'
+
+print, 'Estimates solve time (GPU): ', string(Time_s_GPU,format='(i)'), ' seconds'
+print, 'Estimates solve time (GPU): ', string(Time_m_GPU,format='(i)'), ' minutes'
+print, 'Estimates solve time (GPU): ', Time_h_GPU, ' hours'
 
 FillTime_s =  MemPerCPU_MB*0.1*1.3
 CurrentTime_s = MemPerCPU_MB*0.1*1.15
@@ -90,6 +104,7 @@ print, 'Estimated total time: ', TotalTime_s, ' seconds'
 print, 'Estimated total time: ', TotalTime_m, ' minutes' 
 print, 'Estimated total time: ', TotalTime_h, ' hours' 
 print, 'Estimated CPU hours: ', TotalTime_h*TotalNProcs
+print, 'nNodes: ', nNodes
 
 stop
 

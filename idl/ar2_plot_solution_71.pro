@@ -94,10 +94,11 @@ pro ar2_plot_solution_71
 		r = fIndGen(nR)/(nR-1)*(rMax-rMin)+rMin
 		z = fIndGen(nZ)/(nZ-1)*(zMax-zMin)+zMin
 
-		g = readgeqdsk('Scen4_bn2.57_129x129.dlgMod',/noTor)
+		;g = readgeqdsk('Scen4_bn2.57_129x129.dlgMod',/noTor)
+		g = readgeqdsk('eqdsk')
 
 		nLevs = 11
-		scale = 0.05e4 
+		scale = 0.01e3 
 		levels = fIndGen(nLevs)/(nLevs-1)*scale
 		colors = reverse(bytScl(levels, top=253)+1)
 		PlotField = (real_part(eAlpha)<max(levels))>min(-levels)
