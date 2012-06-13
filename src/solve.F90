@@ -283,7 +283,7 @@ contains
 ! 4 GBytes on 16 MPI tasks, memsize = 16*1024*1024
 !
 
-             memsize = 64*1024*1024
+             memsize = 16*1024*1024
              call getenv("MEMSIZE",memsize_str)
              if (len(trim(memsize_str)).ge.1) then
                ivalue = 32

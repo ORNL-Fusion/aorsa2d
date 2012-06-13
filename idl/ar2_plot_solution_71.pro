@@ -95,7 +95,7 @@ pro ar2_plot_solution_71
 		z = fIndGen(nZ)/(nZ-1)*(zMax-zMin)+zMin
 
 		;g = readgeqdsk('Scen4_bn2.57_129x129.dlgMod',/noTor)
-		g = readgeqdsk('eqdsk')
+		g = readgeqdsk('eqdsk',/noTor)
 
 		nLevs = 11
 		scale = 0.01e3 

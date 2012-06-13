@@ -79,6 +79,11 @@ program aorsa2dMain
     papi_pTime_ProgramZero = papi_pTime
 #endif
 
+#ifdef USE_GPU
+    call cublasinit()
+    call profinit()
+#endif
+
     
 !   read namelist input data
 !   ------------------------

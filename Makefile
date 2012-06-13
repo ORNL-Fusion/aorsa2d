@@ -7,9 +7,9 @@ OBJ_DIR = obj
 MOD_DIR = mod
 CPP_DIR = cpp
 
-COMPILER := GNU# GNU, PGI
-PARALLEL := 0# 0, 1
-GPU := 0# 0, 1
+COMPILER := PGI# GNU, PGI
+PARALLEL := 1# 0, 1
+GPU := 1# 0, 1
 DDT := 0# 0, 1
 
 ifeq (${GPU},1)
@@ -73,8 +73,8 @@ ifeq (${COMPILER},PGI)
     DOUBLE:= -Mr8
     WARN:=
     DEBUG:= #-g -traceback -Ktrap=divz,inv,ovf
-    OPTIMIZATION:=# -fast
-    BOUNDS:= -Mbounds
+    OPTIMIZATION:= -fast
+    BOUNDS:= #-Mbounds
     FORMAT:=
 else
 	FORMAT := -ffree-line-length-none
