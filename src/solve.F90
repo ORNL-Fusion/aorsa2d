@@ -171,16 +171,8 @@ contains
 #ifdef USE_GPU
         integer :: memsize,ivalue,istatus
         character(len=127) :: memsize_str
-
-
-        character, parameter :: norm = '1'
-        integer :: lzwork,lrwork
-        real*8, allocatable,dimension(:) :: rwork
-        complex*16, allocatable, dimension(:) :: zwork
-        complex*16 :: zwork1(1024*1024)
-        real*8 :: rwork1(1024*1024)
-        real*8 :: anorm, rcond
-
+#endif
+#ifdef USE_PGESVR
         logical, parameter :: use_row_scaling = .true.
         real*8 :: rnorm,rnorm_inv
         integer :: iia, i, incx
@@ -190,7 +182,15 @@ contains
         integer :: j,jja,iib
         real*8 :: cnorm, cnorm_inv
         real*8, dimension(:), allocatable :: cnorm_inv_array
-
+#endif
+#ifdef USE_RCOND
+        character, parameter :: norm = '1'
+        integer :: lzwork,lrwork
+        real*8, allocatable,dimension(:) :: rwork
+        complex*16, allocatable, dimension(:) :: zwork
+        complex*16 :: zwork1(1024*1024)
+        real*8 :: rwork1(1024*1024)
+        real*8 :: anorm, rcond
 
         interface
           double precision function pzlange(norm,m,n,A,ia,ja,descA,work)
@@ -201,9 +201,8 @@ contains
           complex*16 A(*)
           end function pzlange
         end interface
-
-
 #endif
+
         trans   = 'N'
 
         mb_a    = rowBlockSize
@@ -260,42 +259,7 @@ contains
             allocate ( ipiv ( numroc ( m, mb_a, myRow, rsrc_a, npRow ) + mb_a ) )
             ipiv = 0
 
-#ifndef USE_GPU
-
-#ifndef dblprec
-            call pcgesv ( n, nrhs, aMat, ia, ja, descriptor_aMat, ipiv, &
-                    brhs, ib, jb, descriptor_brhs, info ) 
-#else
 #ifdef USE_PGESVR
-            call pzgesvr ( n, nrhs, aMat, ia, ja, descriptor_aMat, ipiv, &
-                    brhs, ib, jb, descriptor_brhs, info ) 
-#else
-            call pzgesv ( n, nrhs, aMat, ia, ja, descriptor_aMat, ipiv, &
-                    brhs, ib, jb, descriptor_brhs, info ) 
-#endif
-#endif
-
-#else
-! use GPU version
-! 4 GBytes on  1 MPI task, memsize = 256*1024*1024
-! 4 GBytes on  4 MPI tasks, memsize = 64*1024*1024
-! 4 GBytes on  8 MPI tasks, memsize = 32*1024*1024
-! 4 GBytes on 16 MPI tasks, memsize = 16*1024*1024
-!
-
-             memsize = 16*1024*1024
-             call getenv("MEMSIZE",memsize_str)
-             if (len(trim(memsize_str)).ge.1) then
-               ivalue = 32
-               read(memsize_str,*,iostat=istatus) ivalue
-               if ((istatus.eq.0).and.(ivalue.ge.1)) then
-                 memsize = ivalue*1024*1024
-               endif
-             endif
-             if (iAm == 0) then
-               write(*,*) 'memsize = ', memsize
-             endif
-
              if (use_row_scaling) then
                call start_timer( tRowScale )
 
@@ -337,6 +301,43 @@ contains
                    call pzdscal(n,cnorm_inv, aMat,ia,jja,descriptor_aMat,incx)
                   enddo
                  endif
+#endif
+
+#ifndef USE_GPU
+
+#ifndef dblprec
+            call pcgesv ( n, nrhs, aMat, ia, ja, descriptor_aMat, ipiv, &
+                    brhs, ib, jb, descriptor_brhs, info ) 
+#else
+#ifdef USE_PGESVR
+            call pzgesvr ( n, nrhs, aMat, ia, ja, descriptor_aMat, ipiv, &
+                    brhs, ib, jb, descriptor_brhs, info ) 
+#else
+            call pzgesv ( n, nrhs, aMat, ia, ja, descriptor_aMat, ipiv, &
+                    brhs, ib, jb, descriptor_brhs, info ) 
+#endif
+#endif
+
+#else
+! use GPU version
+! 4 GBytes on  1 MPI task, memsize = 256*1024*1024
+! 4 GBytes on  4 MPI tasks, memsize = 64*1024*1024
+! 4 GBytes on  8 MPI tasks, memsize = 32*1024*1024
+! 4 GBytes on 16 MPI tasks, memsize = 16*1024*1024
+!
+
+             memsize = 16*1024*1024
+             call getenv("MEMSIZE",memsize_str)
+             if (len(trim(memsize_str)).ge.1) then
+               ivalue = 32
+               read(memsize_str,*,iostat=istatus) ivalue
+               if ((istatus.eq.0).and.(ivalue.ge.1)) then
+                 memsize = ivalue*1024*1024
+               endif
+             endif
+             if (iAm == 0) then
+               write(*,*) 'memsize = ', memsize
+             endif
 
 #ifdef USE_RCOND
 ! -------------------------------------------
@@ -372,21 +373,7 @@ contains
 #endif
 
 
-
-             if (use_column_scaling) then
-               do i=1,n
-                  iib = (ib-1) + i
-                  cnorm_inv = cnorm_inv_array(i)
-                  incx = descriptor_brhs(M_)
-                  call pzdscal( nrhs, cnorm_inv, &
-                         brhs,iib,jb,descriptor_brhs,incx)
-                enddo
-                deallocate( cnorm_inv_array )
-              endif
-
-
 #ifndef USE_PGESVR
-
 #ifdef USE_RCOND
              lzwork = -1
              lrwork = -1
@@ -407,12 +394,24 @@ contains
                write(*,*) 'estimated rcond = ',rcond
              endif
 #endif
-
-
 #endif
 
 
 #endif
+
+#ifdef USE_PGESVR
+             if (use_column_scaling) then
+               do i=1,n
+                  iib = (ib-1) + i
+                  cnorm_inv = cnorm_inv_array(i)
+                  incx = descriptor_brhs(M_)
+                  call pzdscal( nrhs, cnorm_inv, &
+                         brhs,iib,jb,descriptor_brhs,incx)
+                enddo
+                deallocate( cnorm_inv_array )
+              endif
+#endif
+
 
             if (iAm==0) then 
                 write(*,*) '    pcgesv status: ', info

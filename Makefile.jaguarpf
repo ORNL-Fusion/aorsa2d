@@ -2,10 +2,10 @@
 
 F90 := ftn
 SCALAPACK := 
+CPP_DIRECTIVES += -DUSE_PGESVR
 
 ifeq (${GPU},1)
 	SCALAPACK :=  /ccs/home/efdazedo/public/OOCLU/lib.a /ccs/home/efdazedo/public/OOCLU/liblin.a
-	CPP_DIRECTIVES += -DUSE_PGESVR
 	CUDA_HOME := $(CUDAROOT)
 	LIBS += -L${CUDA_HOME}/lib64  -lcuda -lcudart -lcublas -lcudart 
 	LIBS += -lpthread -lm
@@ -18,7 +18,7 @@ ifeq (${GPU},1)
 		 -fopenmp  -I /ccs/home/efdazedo/pubic/OOCLU
 	F90 := $(F90_O) -I /ccs/home/efdazedo/pubic/OOCLU
 	INC_DIR += -I /ccs/home/efdazedo/pubic/OOCLU	
-	CPP_DIRECTIVES += -DUSE_GPU=1
+	CPP_DIRECTIVES += -DUSE_GPU=1 -DUSE_PGESVR=1 -DUSE_RCOND=1
 endif
 
 LIBS := ${SCALAPACK} ${LIBS}

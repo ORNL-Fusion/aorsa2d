@@ -112,19 +112,19 @@ contains
 
             g%U_RTZ_to_ABb(w,1:3,1:3)  = RotQ
 
-            g%Urr = g%U_RTZ_to_ABb(w,1,1) 
-            g%Urt = g%U_RTZ_to_ABb(w,1,2) 
-            g%Urz = g%U_RTZ_to_ABb(w,1,3) 
-
-            g%Utr = g%U_RTZ_to_ABb(w,2,1) 
-            g%Utt = g%U_RTZ_to_ABb(w,2,2) 
-            g%Utz = g%U_RTZ_to_ABb(w,2,3) 
-
-            g%Uzr = g%U_RTZ_to_ABb(w,3,1) 
-            g%Uzt = g%U_RTZ_to_ABb(w,3,2) 
-            g%Uzz = g%U_RTZ_to_ABb(w,3,3) 
-
         enddo
+
+        g%Urr = g%U_RTZ_to_ABb(:,1,1) 
+        g%Urt = g%U_RTZ_to_ABb(:,1,2) 
+        g%Urz = g%U_RTZ_to_ABb(:,1,3) 
+
+        g%Utr = g%U_RTZ_to_ABb(:,2,1) 
+        g%Utt = g%U_RTZ_to_ABb(:,2,2) 
+        g%Utz = g%U_RTZ_to_ABb(:,2,3) 
+
+        g%Uzr = g%U_RTZ_to_ABb(:,3,1) 
+        g%Uzt = g%U_RTZ_to_ABb(:,3,2) 
+        g%Uzz = g%U_RTZ_to_ABb(:,3,3)
 
     end sUbroUtine init_rotation
 
