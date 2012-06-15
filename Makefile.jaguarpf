@@ -2,7 +2,7 @@
 
 F90 := ftn
 SCALAPACK := 
-CPP_DIRECTIVES += -DUSE_PGESVR
+CPP_DIRECTIVES += #-DUSE_PGESVR -DUSE_ROW_SCALING
 
 ifeq (${GPU},1)
 	SCALAPACK :=  /ccs/home/efdazedo/public/OOCLU/lib.a /ccs/home/efdazedo/public/OOCLU/liblin.a
@@ -18,7 +18,7 @@ ifeq (${GPU},1)
 		 -fopenmp  -I /ccs/home/efdazedo/pubic/OOCLU
 	F90 := $(F90_O) -I /ccs/home/efdazedo/pubic/OOCLU
 	INC_DIR += -I /ccs/home/efdazedo/pubic/OOCLU	
-	CPP_DIRECTIVES += -DUSE_GPU=1 -DUSE_PGESVR=1 -DUSE_RCOND=1
+	CPP_DIRECTIVES += -DUSE_GPU=1 -DUSE_ROW_SCALING #-DUSE_PGESVR #-DUSE_RCOND 
 endif
 
 LIBS := ${SCALAPACK} ${LIBS}

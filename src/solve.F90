@@ -172,7 +172,7 @@ contains
         integer :: memsize,ivalue,istatus
         character(len=127) :: memsize_str
 #endif
-#ifdef USE_PGESVR
+#ifdef USE_ROW_SCALING
         logical, parameter :: use_row_scaling = .true.
         real*8 :: rnorm,rnorm_inv
         integer :: iia, i, incx
@@ -259,8 +259,43 @@ contains
             allocate ( ipiv ( numroc ( m, mb_a, myRow, rsrc_a, npRow ) + mb_a ) )
             ipiv = 0
 
-#ifdef USE_PGESVR
+#ifdef USE_RCOND
+! -------------------------------------------
+! compute norm(A) needed later in estimating
+! condition number
+! -------------------------------------------
+
+             lrwork = 2*n
+             allocate(rwork(lrwork))
+             anorm = pzlange(norm,n,n,aMat,ia,ja,descriptor_aMat,rwork)
+             deallocate(rwork)
+#endif
+#ifdef USE_RCOND
+             if(iAm==0)write(*,*) '        Estimating rCond'
+             lzwork = -1
+             lrwork = -1
+             call pzgecon( norm,n, aMat,ia,ja,descriptor_aMat,  &
+                  anorm,rcond, zwork1,lzwork,rwork1,lrwork,info)
+
+             lzwork = int(abs(zwork1(1))) + 1
+             lrwork = int( abs(rwork1(1)) ) + 1
+             allocate( zwork(lzwork), rwork(lrwork) )
+             call pzgecon( '1',n, aMat,ia,ja,descriptor_aMat,  &
+                  anorm,rcond, zwork,lzwork,rwork,lrwork,info)
+             deallocate( zwork, rwork )
+
+             if ((info.ne.0) .and. (iAm == 0)) then
+               write(*,*) 'pzgecon status ',info
+             endif
+             if (iAm == 0) then
+               write(*,*) 'estimated rcond = ',rcond
+             endif
+#endif
+
+
+#ifdef USE_ROW_SCALING
              if (use_row_scaling) then
+               if(iAm==0)write(*,*) '		Using row scaling'
                call start_timer( tRowScale )
 
                do i=1,n
@@ -285,6 +320,7 @@ contains
                endif
 
                if (use_column_scaling) then
+                 if(iAm==0)write(*,*) '		Using col scaling'
                  allocate( cnorm_inv_array(n) )
                  do j=1,n
                    jja = (ja-1) + j
@@ -310,9 +346,11 @@ contains
                     brhs, ib, jb, descriptor_brhs, info ) 
 #else
 #ifdef USE_PGESVR
+            if(iAm==0)write(*,*) '		Using iterative refinement PZGESVR'
             call pzgesvr ( n, nrhs, aMat, ia, ja, descriptor_aMat, ipiv, &
                     brhs, ib, jb, descriptor_brhs, info ) 
 #else
+            if(iAm==0)write(*,*) '		Using regular PZGESV complex*16'
             call pzgesv ( n, nrhs, aMat, ia, ja, descriptor_aMat, ipiv, &
                     brhs, ib, jb, descriptor_brhs, info ) 
 #endif
@@ -339,25 +377,15 @@ contains
                write(*,*) 'memsize = ', memsize
              endif
 
-#ifdef USE_RCOND
-! -------------------------------------------
-! compute norm(A) needed later in estimating
-! condition number
-! -------------------------------------------
-
-             lrwork = 2*n
-             allocate(rwork(lrwork))
-             anorm = pzlange(norm,n,n,aMat,ia,ja,descriptor_aMat,rwork)
-             deallocate(rwork)
-#endif
-
 
 #ifdef USE_PGESVR
+            if(iAm==0)write(*,*) '		Using iterative refinement PZGESVR on GPU'
              call pzgesvr ( n, nrhs, aMat, ia, ja, descriptor_aMat, ipiv, &
                     brhs, ib, jb, descriptor_brhs, info ) 
 #else
 
 !debug       call pzgetrf(n,n,aMat, ia,ja,descriptor_aMat,ipiv,  info)
+            if(iAm==0)write(*,*) '		Using OOC PZGESV complex*16 on GPU'
              call pzgetrf_ooc2(n,n,aMat, ia,ja,descriptor_aMat,ipiv,  &
                      memsize, info )
              if ((info.ne.0) .and. (iAm == 0)) then
@@ -373,33 +401,10 @@ contains
 #endif
 
 
-#ifndef USE_PGESVR
-#ifdef USE_RCOND
-             lzwork = -1
-             lrwork = -1
-             call pzgecon( norm,n, aMat,ia,ja,descriptor_aMat,  &
-                  anorm,rcond, zwork1,lzwork,rwork1,lrwork,info)
-
-             lzwork = int(abs(zwork1(1))) + 1
-             lrwork = int( abs(rwork1(1)) ) + 1
-             allocate( zwork(lzwork), rwork(lrwork) )
-             call pzgecon( '1',n, aMat,ia,ja,descriptor_aMat,  &
-                  anorm,rcond, zwork,lzwork,rwork,lrwork,info)
-             deallocate( zwork, rwork )
-
-             if ((info.ne.0) .and. (iAm == 0)) then
-               write(*,*) 'pzgecon status ',info
-             endif
-             if (iAm == 0) then
-               write(*,*) 'estimated rcond = ',rcond
-             endif
-#endif
-#endif
-
 
 #endif
 
-#ifdef USE_PGESVR
+#ifdef USE_ROW_SCALING
              if (use_column_scaling) then
                do i=1,n
                   iib = (ib-1) + i
