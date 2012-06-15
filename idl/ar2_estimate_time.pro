@@ -14,16 +14,17 @@ lMax = 2
 ;print, 'HOPPER'
 ;CoresPerNode = 24
 ;MemPerNode_GB = 32.0
-;Scalapack_GFlops = 5.0
+;CPU_GFlops = 5.0
 
 ; Jaguarpf parameters
 ; -------------------
 print, 'JAGUARPF'
 CoresPerNode = 16 
 MemPerNode_GB = 32.0
-Scalapack_GFlops = 5.5
+CPU_GFlops = 5.5
+CPU_PGESVR_GFlops = 9.8
 GPU_GFlops = 170.0
-
+GPU_PGESVR_GFlops = 
 
 ; Memory required
 
@@ -48,7 +49,6 @@ MinNProcs = Mem_GB / MemPerCPUAvail_GB
 
 print, 'Minimum number of procs: ', string(MinNProcs,format='(i)')
 
-
 TotalNProcs = npRow*npCol*1.0
 
 print, 'Actual number of procs: ', TotalNProcs
@@ -67,24 +67,43 @@ NFOperations = 2.67d0 * N^3
 
 print, 'Number of Scalapack operations: ', NFOperations
 
-Time_s = NFOperations / ( Scalapack_GFlops * 1024d0^3 * TotalNProcs )
-Time_m = Time_s / 60d0
-Time_h = Time_m / 60d0
+Time_s_CPU = NFOperations / ( CPU_GFlops * 1024d0^3 * TotalNProcs )
+Time_m_CPU = Time_s / 60d0
+Time_h_CPU = Time_m / 60d0
+
+Time_s_CPU_PGESVR = NFOperations / ( CPU_PGESVR_GFlops * 1024d0^3 * TotalNProcs )
+Time_m_CPU_PGESVR = Time_s / 60d0
+Time_h_CPU_PGESVR = Time_m / 60d0
 
 Time_s_GPU = NFOperations / ( GPU_GFlops * 1024d0^3 * nNodes )
 Time_m_GPU = Time_s_GPU / 60d0
 Time_h_GPU = Time_m_GPU / 60d0
 
+Time_s_GPU_PGESVR = NFOperations / ( GPU_PGESVR_GFlops * 1024d0^3 * nNodes )
+Time_m_GPU_PGESVR = Time_s_GPU / 60d0
+Time_h_GPU_PGESVR = Time_m_GPU / 60d0
+
+
 print, '-----------------------------------------------'
 print, 'For a ',string(nR,format='(i3.3)'),'x',string(nZ,format='(i3.3)'),$
 		' grid with ',string(npRow,format='(i3.3)'),'x',string(npCol,format='(i3.3)'),' procs: '
-print, 'Estimates solve time: ', string(Time_s,format='(i)'), ' seconds'
-print, 'Estimates solve time: ', string(Time_m,format='(i)'), ' minutes'
-print, 'Estimates solve time: ', Time_h, ' hours'
+
+print, 'Estimates solve time (CPU): ', string(Time_s_CPU,format='(i)'), ' seconds'
+print, 'Estimates solve time (CPU): ', string(Time_m_CPU,format='(i)'), ' minutes'
+print, 'Estimates solve time (CPU): ', Time_h_CPU, ' hours'
 
 print, 'Estimates solve time (GPU): ', string(Time_s_GPU,format='(i)'), ' seconds'
 print, 'Estimates solve time (GPU): ', string(Time_m_GPU,format='(i)'), ' minutes'
 print, 'Estimates solve time (GPU): ', Time_h_GPU, ' hours'
+
+print, 'Estimates solve time (CPU PGESVR): ', string(Time_s_CPU_PGESVR,format='(i)'), ' seconds'
+print, 'Estimates solve time (CPU PGESVR): ', string(Time_m_CPU_PGESVR,format='(i)'), ' minutes'
+print, 'Estimates solve time (CPU PGESVR): ', Time_h_CPU_PGESVR, ' hours'
+
+print, 'Estimates solve time (GPU PGESVR): ', string(Time_s_GPU_PGESVR,format='(i)'), ' seconds'
+print, 'Estimates solve time (GPU PGESVR): ', string(Time_m_GPU_PGESVR,format='(i)'), ' minutes'
+print, 'Estimates solve time (GPU PGESVR): ', Time_h_GPU_PGESVR, ' hours'
+
 
 FillTime_s =  MemPerCPU_MB*0.1*1.3
 CurrentTime_s = MemPerCPU_MB*0.1*1.15
