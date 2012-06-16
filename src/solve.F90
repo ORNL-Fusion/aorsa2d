@@ -270,28 +270,6 @@ contains
              anorm = pzlange(norm,n,n,aMat,ia,ja,descriptor_aMat,rwork)
              deallocate(rwork)
 #endif
-#ifdef USE_RCOND
-             if(iAm==0)write(*,*) '        Estimating rCond'
-             lzwork = -1
-             lrwork = -1
-             call pzgecon( norm,n, aMat,ia,ja,descriptor_aMat,  &
-                  anorm,rcond, zwork1,lzwork,rwork1,lrwork,info)
-
-             lzwork = int(abs(zwork1(1))) + 1
-             lrwork = int( abs(rwork1(1)) ) + 1
-             allocate( zwork(lzwork), rwork(lrwork) )
-             call pzgecon( '1',n, aMat,ia,ja,descriptor_aMat,  &
-                  anorm,rcond, zwork,lzwork,rwork,lrwork,info)
-             deallocate( zwork, rwork )
-
-             if ((info.ne.0) .and. (iAm == 0)) then
-               write(*,*) 'pzgecon status ',info
-             endif
-             if (iAm == 0) then
-               write(*,*) 'estimated rcond = ',rcond
-             endif
-#endif
-
 
 #ifdef USE_ROW_SCALING
              if (use_row_scaling) then
@@ -404,6 +382,28 @@ contains
 
 #endif
 
+#ifdef USE_RCOND
+             if(iAm==0)write(*,*) '        Estimating rCond'
+             lzwork = -1
+             lrwork = -1
+             call pzgecon( norm,n, aMat,ia,ja,descriptor_aMat,  &
+                  anorm,rcond, zwork1,lzwork,rwork1,lrwork,info)
+
+             lzwork = int(abs(zwork1(1))) + 1
+             lrwork = int( abs(rwork1(1)) ) + 1
+             allocate( zwork(lzwork), rwork(lrwork) )
+             call pzgecon( '1',n, aMat,ia,ja,descriptor_aMat,  &
+                  anorm,rcond, zwork,lzwork,rwork,lrwork,info)
+             deallocate( zwork, rwork )
+
+             if ((info.ne.0) .and. (iAm == 0)) then
+               write(*,*) 'pzgecon status ',info
+             endif
+             if (iAm == 0) then
+               write(*,*) 'estimated rcond = ',rcond
+             endif
+#endif
+
 #ifdef USE_ROW_SCALING
              if (use_column_scaling) then
                do i=1,n
@@ -416,7 +416,6 @@ contains
                 deallocate( cnorm_inv_array )
               endif
 #endif
-
 
             if (iAm==0) then 
                 write(*,*) '    pcgesv status: ', info
