@@ -259,18 +259,6 @@ contains
             allocate ( ipiv ( numroc ( m, mb_a, myRow, rsrc_a, npRow ) + mb_a ) )
             ipiv = 0
 
-#ifdef USE_RCOND
-! -------------------------------------------
-! compute norm(A) needed later in estimating
-! condition number
-! -------------------------------------------
-
-             lrwork = 2*n
-             allocate(rwork(lrwork))
-             anorm = pzlange(norm,n,n,aMat,ia,ja,descriptor_aMat,rwork)
-             deallocate(rwork)
-#endif
-
 #ifdef USE_ROW_SCALING
              if (use_row_scaling) then
                if(iAm==0)write(*,*) '		Using row scaling'
@@ -315,6 +303,18 @@ contains
                    call pzdscal(n,cnorm_inv, aMat,ia,jja,descriptor_aMat,incx)
                   enddo
                  endif
+#endif
+
+#ifdef USE_RCOND
+! -------------------------------------------
+! compute norm(A) needed later in estimating
+! condition number
+! -------------------------------------------
+
+             lrwork = 2*n
+             allocate(rwork(lrwork))
+             anorm = pzlange(norm,n,n,aMat,ia,ja,descriptor_aMat,rwork)
+             deallocate(rwork)
 #endif
 
 #ifndef USE_GPU
@@ -382,6 +382,19 @@ contains
 
 #endif
 
+#ifdef USE_ROW_SCALING
+             if (use_column_scaling) then
+               do i=1,n
+                  iib = (ib-1) + i
+                  cnorm_inv = cnorm_inv_array(i)
+                  incx = descriptor_brhs(M_)
+                  call pzdscal( nrhs, cnorm_inv, &
+                         brhs,iib,jb,descriptor_brhs,incx)
+                enddo
+                deallocate( cnorm_inv_array )
+              endif
+#endif
+
 #ifdef USE_RCOND
              if(iAm==0)write(*,*) '        Estimating rCond'
              lzwork = -1
@@ -404,18 +417,6 @@ contains
              endif
 #endif
 
-#ifdef USE_ROW_SCALING
-             if (use_column_scaling) then
-               do i=1,n
-                  iib = (ib-1) + i
-                  cnorm_inv = cnorm_inv_array(i)
-                  incx = descriptor_brhs(M_)
-                  call pzdscal( nrhs, cnorm_inv, &
-                         brhs,iib,jb,descriptor_brhs,incx)
-                enddo
-                deallocate( cnorm_inv_array )
-              endif
-#endif
 
             if (iAm==0) then 
                 write(*,*) '    pcgesv status: ', info
