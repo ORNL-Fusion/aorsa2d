@@ -191,6 +191,8 @@ contains
         complex*16 :: zwork1(1024*1024)
         real*8 :: rwork1(1024*1024)
         real*8 :: anorm, rcond
+        type(timer) :: tRCond
+        real :: TimeRCond
 
         interface
           double precision function pzlange(norm,m,n,A,ia,ja,descA,work)
@@ -310,11 +312,13 @@ contains
 ! compute norm(A) needed later in estimating
 ! condition number
 ! -------------------------------------------
-
+             TimeRCond = 0
+             call start_timer(tRCond)
              lrwork = 2*n
              allocate(rwork(lrwork))
              anorm = pzlange(norm,n,n,aMat,ia,ja,descriptor_aMat,rwork)
              deallocate(rwork)
+             TimeRCond = end_timer(tRCond)
 #endif
 
 #ifndef USE_GPU
@@ -397,6 +401,7 @@ contains
 
 #ifdef USE_RCOND
              if(iAm==0)write(*,*) '        Estimating rCond'
+             call start_timer(tRCond)
              lzwork = -1
              lrwork = -1
              call pzgecon( norm,n, aMat,ia,ja,descriptor_aMat,  &
@@ -415,6 +420,9 @@ contains
              if (iAm == 0) then
                write(*,*) 'estimated rcond = ',rcond
              endif
+             TimeRCond = TimeRCond + end_timer(tRCond)
+             if(iAm==0)write(*,*) '    Time to estimate RCond: ', TimeRCond
+
 #endif
 
 
