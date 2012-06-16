@@ -167,6 +167,7 @@ contains
         integer, allocatable :: ipiv(:)
 
         integer :: ii, gg
+        type(timer) :: tSolve0,tSolve0_onlyfactor
 
 #ifdef USE_GPU
         integer :: memsize,ivalue,istatus
@@ -329,12 +330,16 @@ contains
 #else
 #ifdef USE_PGESVR
             if(iAm==0)write(*,*) '		Using iterative refinement PZGESVR'
+            call start_timer(tSolve0)
             call pzgesvr ( n, nrhs, aMat, ia, ja, descriptor_aMat, ipiv, &
                     brhs, ib, jb, descriptor_brhs, info ) 
+            if(iAm==0)write(*,*) '    Time to solve (0): ', end_timer(tSolve0)
 #else
             if(iAm==0)write(*,*) '		Using regular PZGESV complex*16'
+            call start_timer(tSolve0)
             call pzgesv ( n, nrhs, aMat, ia, ja, descriptor_aMat, ipiv, &
                     brhs, ib, jb, descriptor_brhs, info ) 
+            if(iAm==0)write(*,*) '    Time to solve (0): ', end_timer(tSolve0)
 #endif
 #endif
 
@@ -362,20 +367,29 @@ contains
 
 #ifdef USE_PGESVR
             if(iAm==0)write(*,*) '		Using iterative refinement PZGESVR on GPU'
-             call pzgesvr ( n, nrhs, aMat, ia, ja, descriptor_aMat, ipiv, &
+            call start_timer(tSolve0)
+            call pzgesvr ( n, nrhs, aMat, ia, ja, descriptor_aMat, ipiv, &
                     brhs, ib, jb, descriptor_brhs, info ) 
+            if(iAm==0)write(*,*) '    Time to solve (0): ', end_timer(tSolve0)
 #else
 
 !debug       call pzgetrf(n,n,aMat, ia,ja,descriptor_aMat,ipiv,  info)
             if(iAm==0)write(*,*) '		Using OOC PZGESV complex*16 on GPU'
-             call pzgetrf_ooc2(n,n,aMat, ia,ja,descriptor_aMat,ipiv,  &
+            call start_timer(tSolve0)
+            call start_timer(tSolve0_onlyfactor)
+            call pzgetrf_ooc2(n,n,aMat, ia,ja,descriptor_aMat,ipiv,  &
                      memsize, info )
+            if(iAm==0)write(*,*) '    Time to solve (0 - onlyfactor): ', &
+                end_timer(tSolve0_onlyfactor)
+
+
              if ((info.ne.0) .and. (iAm == 0)) then
                write(*,*) 'pzgetrf_ooc status: ',info
              endif
 
-             call pzgetrs( 'N',n,nrhs,aMat,ia,ja,descriptor_aMat,ipiv, &
+            call pzgetrs( 'N',n,nrhs,aMat,ia,ja,descriptor_aMat,ipiv, &
                     brhs, ib, jb, descriptor_brhs, info)
+            if(iAm==0)write(*,*) '    Time to solve (0): ', end_timer(tSolve0)
 
              if ((info.ne.0) .and. (iAm == 0)) then
                write(*,*) 'pzgetrs status: ',info
