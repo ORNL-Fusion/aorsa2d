@@ -36,8 +36,8 @@ contains
         ! Keep this a multiple of 3 such that each 3 rows of a spatial point
         ! is confined to a single processor
 
-        if ( rowBlockSize >= 66 ) rowBlockSize = 66 
-        if ( colBlockSize >= 66 ) colBlockSize = 66 
+        if ( rowBlockSize >= 3*32 ) rowBlockSize = 3*32 
+        if ( colBlockSize >= 3*32 ) colBlockSize = 3*32 
 
         ! proc grid starting locations
 
