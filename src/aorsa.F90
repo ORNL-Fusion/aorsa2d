@@ -58,6 +58,10 @@ program aorsa2dMain
     integer :: i
     integer(kind=long) :: nModesR_tot, nModesZ_tot
 
+    integer :: length_rid, status_rid
+    character(len=20) :: rid
+    character(len=80) :: InputFileName
+
     !! GPTL vars
 
     !integer :: stat
@@ -84,11 +88,21 @@ program aorsa2dMain
     call profinit()
 #endif
 
-    
+!   Get the run id from an env variable
+!   -----------------------------------
+
+    call get_environment_variable('AORSA_RID',rid,length_rid,status_rid)
+
+    if(status_rid /= 0)then
+        !if(iAm==0)write(*,*) 'AORSA_RID not found with status: ', status_rid
+        rid = ''
+    endif
+
 !   read namelist input data
 !   ------------------------
 
-    call read_nameList ()
+    InputFileName = 'aorsa2d.in'
+    call read_nameList (trim(rid)//trim(InputFileName))
 
 
 !   initialise the parallel env
@@ -99,6 +113,8 @@ program aorsa2dMain
 #ifdef par
     call init_procGrid ( nPts_tot )
 #endif
+
+    if(iAm==0)write(*,*) 'AORSA_RID: ', rid
 
 #if __noU__==1
     if(iAm==0)write(*,*)'Am using noU ==',__noU__
@@ -359,7 +375,7 @@ program aorsa2dMain
     !if (iAm==0) then
 
         do i=1,nGrid
-            call write_runData ( allGrids(i) )
+            call write_runData ( allGrids(i), rid )
         enddo
 
     !endif
@@ -696,7 +712,7 @@ program aorsa2dMain
     if ( iAm == 0 ) then
 
         do i=1,nGrid
-            call write_solution ( allGrids(i) )
+            call write_solution ( allGrids(i), rid )
         enddo
 
     endif
@@ -746,7 +762,7 @@ program aorsa2dMain
 
         write(*,*) '    Total time: ', Perf%TimeTotal
 
-        call WritePerformanceData ( Perf )
+        call WritePerformanceData ( Perf, rid )
 
     endif
 

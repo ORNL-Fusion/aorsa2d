@@ -6,7 +6,7 @@ use check_mod
 
 contains
 
-    subroutine write_runData ( g )
+    subroutine write_runData ( g, rid )
  
         use aorsaNamelist, &
         only: nSpec, nPhi, freqcy
@@ -20,6 +20,7 @@ contains
 
         type(gridBlock), intent(in) :: g
         character(len=100) :: fName 
+        character(len=20) :: rid
 
         integer :: nc_id, nX_id, nY_id, nc_stat
         integer :: nModesX_id, nModesY_id, nSpec_id
@@ -51,7 +52,7 @@ contains
         integer :: p,i,j,s
         integer, allocatable :: Cnt(:,:)
 
-        fName = 'runData'//g%fNumber//'.nc'
+        fName = trim(rid)//'runData'//g%fNumber//'.nc'
 
         if(iAm==0)then
             call check ( nf90_create ( fName, nf90_clobber, nc_id ) )
@@ -334,7 +335,7 @@ contains
     end subroutine write_runData
 
 
-    subroutine write_solution ( g )
+    subroutine write_solution ( g, rid )
 
         use grid
         use aorsaNamelist, &
@@ -344,6 +345,7 @@ contains
 
         type(gridBlock), intent(in) :: g
         character(len=100) :: fName 
+        character(len=20) :: rid
 
         integer :: nc_id, nX_id, nY_id, nModesX_id, nModesY_id, nSpec_id
         integer :: &
@@ -371,7 +373,7 @@ contains
 
         integer :: jouleHeating_id
 
-        fName = 'solution'//g%fNumber//'.nc'
+        fName = trim(rid)//'solution'//g%fNumber//'.nc'
 
         call check ( nf90_create ( fName, nf90_clobber, nc_id ) )
         stat=nf90_def_dim(nc_id,"scalar",1,scalar_id)
@@ -647,7 +649,7 @@ contains
 
     end subroutine close_sigma_file
 
-    subroutine WritePerformanceData ( P )
+    subroutine WritePerformanceData ( P, rid )
 
         use Performance
 
@@ -657,6 +659,7 @@ contains
 
         integer :: stat
         character(len=100) :: fName 
+        character(len=20) :: rid
 
         integer :: nc_id, scalar_id
         integer :: &
@@ -680,7 +683,7 @@ contains
             GflopsCurrentLocal_id, &
             GflopsCurrentGlobal_id
 
-        fName = 'PerfData.nc'
+        fName = trim(rid)//'PerfData.nc'
 
         stat = nf90_create ( fName, nf90_clobber, nc_id ) 
         stat = nf90_def_dim ( nc_id, "scalar", 1, scalar_id ) 
