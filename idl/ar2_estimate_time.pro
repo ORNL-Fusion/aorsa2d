@@ -1,10 +1,10 @@
 pro ar2_estimate_time
 
-nR = 257d0
-nZ = 257d0 
+nR = 513d0
+nZ = 513d0 
 
-npRow = 32d0
-npCol = 64d0
+npRow = 256d0
+npCol = 128d0
 
 nSpec = 2
 lMax = 2 
@@ -12,23 +12,30 @@ lMax = 2
 ;; Hopper parameters
 ;; -----------------
 ;print, 'HOPPER'
-;CoresPerNode = 24
+;CoresPerNode =16 
 ;MemPerNode_GB = 32.0
-;CPU_GFlops = 5.0
+;CPU_GFlops_PerCore = 5.0
+;CPU_PGESVR_GFlops_PerCore = 9.8
+;GPU_GFlops_PerNode = 170.0
+;GPU_PGESVR_GFlops_PerNode = 300.0
 
 ; Jaguarpf parameters
 ; -------------------
 print, 'JAGUARPF'
 CoresPerNode = 16 
 MemPerNode_GB = 32.0
-CPU_GFlops = 5.5
-CPU_PGESVR_GFlops = 9.8
-GPU_GFlops = 170.0
-GPU_PGESVR_GFlops = 
+CPU_GFlops_PerCore = 4.6
+CPU_PGESVR_GFlops_PerCore = 8.0
+GPU_GFlops_PerNode = 155.0;
+GPU_PGESVR_GFlops_PerNode = 250.0
+GPU_to_CPU_hours = 14
+
+GPU_PGESVR_ActualSolveTime = 3031.0
+GPU_ActualSolveTime = 2331.0
 
 ; Memory required
 
-MemPerCPUAvail_GB = MemPerNode_GB/CoresPerNode*0.8
+MemPerCPUAvail_GB = MemPerNode_GB/CoresPerNode*0.9
 N = 3d0 * nR * nZ
 nNodes = npRow*npCol/CoresPerNode
 
@@ -55,34 +62,36 @@ print, 'Actual number of procs: ', TotalNProcs
 
 if(MinNProcs gt TotalNProcs ) then begin
 		print, 'PROBLEM: Not enough memory, use more procs.'
-		stop
 endif
 
 MemPerCPU_MB = Mem_MB / TotalNProcs
 
 print, 'Mem Per CPU [MBytes]: ', MemPerCPU_MB
+print, 'Mem Per CPU for PGESVR[MBytes]: ', MemPerCPU_MB*1.5
 print, 'Mem Per CPU Avail [MBytes]: ', MemPerCPUAvail_GB*1024.0
 
 NFOperations = 2.67d0 * N^3
 
 print, 'Number of Scalapack operations: ', NFOperations
 
-Time_s_CPU = NFOperations / ( CPU_GFlops * 1024d0^3 * TotalNProcs )
-Time_m_CPU = Time_s / 60d0
-Time_h_CPU = Time_m / 60d0
+Time_s_CPU = NFOperations / ( CPU_GFlops_PerCore * 1024d0^3 * TotalNProcs )
+Time_m_CPU = Time_s_CPU / 60d0
+Time_h_CPU = Time_m_CPU / 60d0
 
-Time_s_CPU_PGESVR = NFOperations / ( CPU_PGESVR_GFlops * 1024d0^3 * TotalNProcs )
-Time_m_CPU_PGESVR = Time_s / 60d0
-Time_h_CPU_PGESVR = Time_m / 60d0
+Time_s_CPU_PGESVR = NFOperations / ( CPU_PGESVR_GFlops_PerCore * 1024d0^3 * TotalNProcs )
+Time_m_CPU_PGESVR = Time_s_CPU_PGESVR / 60d0
+Time_h_CPU_PGESVR = Time_m_CPU_PGESVR / 60d0
 
-Time_s_GPU = NFOperations / ( GPU_GFlops * 1024d0^3 * nNodes )
+Time_s_GPU = NFOperations / ( GPU_GFlops_PerNode * 1024d0^3 * nNodes )
 Time_m_GPU = Time_s_GPU / 60d0
 Time_h_GPU = Time_m_GPU / 60d0
 
-Time_s_GPU_PGESVR = NFOperations / ( GPU_PGESVR_GFlops * 1024d0^3 * nNodes )
-Time_m_GPU_PGESVR = Time_s_GPU / 60d0
-Time_h_GPU_PGESVR = Time_m_GPU / 60d0
+Time_s_GPU_PGESVR = NFOperations / ( GPU_PGESVR_GFlops_PerNode * 1024d0^3 * nNodes )
+Time_m_GPU_PGESVR = Time_s_GPU_PGESVR / 60d0
+Time_h_GPU_PGESVR = Time_m_GPU_PGESVR / 60d0
 
+GPU_PGESVR_ActualGFlops = 1d0 / (GPU_PGESVR_ActualSolveTime * nNodes * 1024d0^3 / NFOperations)
+GPU_ActualGFlops = 1d0 / (GPU_ActualSolveTime * nNodes * 1024d0^3 / NFOperations)
 
 print, '-----------------------------------------------'
 print, 'For a ',string(nR,format='(i3.3)'),'x',string(nZ,format='(i3.3)'),$
@@ -112,7 +121,7 @@ TotalTime_s = WorkListTime_s+$
 		FillTime_s+$
 		CurrentTime_s+$
 		WorkListTime_s+$
-		Time_s
+		Time_s_CPU
 TotalTime_m = TotalTime_s / 60.0
 TotalTime_h = TotalTime_m / 60.0
 
@@ -122,7 +131,11 @@ print, 'Estimated workList time: ', WorkListTime_s, ' seconds'
 print, 'Estimated total time: ', TotalTime_s, ' seconds' 
 print, 'Estimated total time: ', TotalTime_m, ' minutes' 
 print, 'Estimated total time: ', TotalTime_h, ' hours' 
-print, 'Estimated CPU hours: ', TotalTime_h*TotalNProcs
+print, 'Estimated CPU hours: ', TotalTime_h*nNodes*coresPerNode
+print, 'Estimated CPU PGESVR hours: ', Time_h_CPU_PGESVR*nNodes*coresPerNode
+print, 'Estimated GPU hours: ', Time_h_GPU*nNodes*GPU_to_CPU_hours
+print, 'Estimated GPU PGESVR hours: ', Time_h_GPU_PGESVR*nNodes*GPU_to_CPU_hours
+
 print, 'nNodes: ', nNodes
 
 stop
