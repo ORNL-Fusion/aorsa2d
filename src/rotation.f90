@@ -6,6 +6,26 @@ real :: sqx
 
 contains
 
+    function Cross (v1,v2)
+
+        real, intent(in) :: v1(:), v2(:)
+        real :: Cross(0:2)
+
+        Cross(0) = +(v1(1)*v2(2)-v1(2)*v2(1))
+        Cross(1) = -(v1(0)*v2(2)-v1(2)*v2(0))
+        Cross(2) = +(v1(0)*v2(1)-v1(1)*v2(0)) 
+
+    end function Cross
+    
+    function Dot (v1,v2)
+
+        real, intent(in) :: v1(:), v2(:)
+        real :: Dot
+
+        Dot = v1(0)*v2(0)+v1(1)*v2(1)+v1(2)*v2(2)
+
+    end function Dot
+
     function RotMatHere (bR_unit,bT_unit,bZ_unit)
 
         use constants
@@ -17,41 +37,40 @@ contains
         real :: RotMatHere(3,3)
 
         ! Alternate approach
-        real :: zAxis(0:2),perp(0:2),PerpUnit(0:2),bUnitCar(0:2)
-        real :: PerpDotB,PerpMag,bUnitMag,CheckTh,Theta
+        real :: theta
         real :: q0,q1,q2,q3,InvRotQ(3,3)
+
+        real :: zu_rtz(0:2), au_rtz(0:2), bu_rtz(0:2), pu_rtz(0:2)
+
+        ! Vectors are:
+        !
+        ! a,b,p: alpha, beta, parallel
+        ! r,t,z: cylindical, right handed
+        !
+        ! z cross b = a 
+        !
+        ! u are unit vectors
 
         ! Get vector perp to both z axis and b
 
-        zAxis = 0.0
-        zAxis(2) = 1.0
+        zu_rtz = 0
+        zu_rtz(2) = 1
 
-        !bUnitCar = (/ g%bR_unit(w),g%bT_unit(w),g%bZ_unit(w) /)
-        bUnitCar = (/ bR_unit,bT_unit,bZ_unit /)
+        pu_rtz = (/ bR_unit, bT_unit, bZ_unit /)
 
-        Perp(0) = +(zAxis(1)*bUnitCar(2)-zAxis(2)*bUnitCar(1))
-        Perp(1) = -(zAxis(0)*bUnitCar(2)-zAxis(2)*bUnitCar(0))
-        Perp(2) = +(zAxis(0)*bUnitCar(1)-zAxis(1)*bUnitCar(0)) 
-
-        ! Check angle between Perp and b
-
-        PerpDotB    = Perp(0)*bUnitCar(0)+Perp(1)*bUnitCar(1)+Perp(2)*bUnitCar(2)
-        PerpMag = sqrt ( sum( Perp**2 ) )
-        bUnitMag    = sqrt ( sum( bUnitCar**2 ) )
-        CheckTh = aCos ( PerpDotB / ( PerpMag * bUnitMag ) ) * 180.0/pi
-
-        PerpUnit    = Perp / PerpMag
+        au_rtz = Cross(zu_rtz,pu_rtz)
+        bu_rtz = Cross(pu_rtz,au_rtz)
 
         ! Get angle between z axis and b
 
-        theta   = aCos ( bUnitCar(2) )
+        theta = aCos ( Dot(zu_rtz,pu_rtz) )
 
         ! Calculate the quaternions
 
         q0  = cos ( theta / 2.0 )
-        q1  = sin ( theta / 2.0 ) * PerpUnit(0)
-        q2  = sin ( theta / 2.0 ) * PerpUnit(1) 
-        q3  = sin ( theta / 2.0 ) * PerpUnit(2)
+        q1  = sin ( theta / 2.0 ) * bu_rtz(0)
+        q2  = sin ( theta / 2.0 ) * bu_rtz(1) 
+        q3  = sin ( theta / 2.0 ) * bu_rtz(2)
 
         ! Construct the rotation matrix
 
