@@ -7,9 +7,9 @@ contains
         use grid
         use aorsaNamelist, only : &
             metalLeft, metalRight, metalTop, metalBot, &
-            limiter_boundary, useEqdsk, UseAR2Input
+            limiter_boundary, useEqdsk, UseAR2Input, lcfs_boundary
         use ar2Input, only: ar2_BbbMask=>BbbMask, ar2_LimMask=>LimMask, &
-           ar2_nR=>nR, ar2_nZ=>nZ, ar2_r=>r, ar2_z=>z
+           ar2_nR=>nR, ar2_nZ=>nZ, ar2_r=>r, ar2_z=>z, ar2_LCFSMask=>bbbMask
         use parallel, only: iAm
 
         implicit none
@@ -83,6 +83,25 @@ contains
                     !g%isMetal(w) = .not. IsInsideOf ( g%R(i), g%z(j), ar2_rLim, ar2_zLim )
              !   enddo
              !enddo
+             enddo
+
+        elseif(lcfs_boundary .and. UseAR2Input)then
+
+             do w=1,size(g%pt)
+                i = g%pt(w)%i
+                j = g%pt(w)%j
+
+                iTmp = (g%r(i)-ar2_r(1))/(ar2_r(ar2_nR)-ar2_r(1))*(ar2_nR-1)+1.0
+                jTmp = (g%z(j)-ar2_z(1))/(ar2_z(ar2_nZ)-ar2_z(1))*(ar2_nZ-1)+1.0
+
+                    if(i>1.and.i<g%nR.and.j>1.and.j<g%nZ)then
+                        if(any( (/  ar2_LCFSMask(floor(iTmp),floor(jTmp)),&
+                                    ar2_LCFSMask(ceiling(iTmp),floor(jTmp)),&
+                                    ar2_LCFSMask(ceiling(iTmp),ceiling(jTmp)),&
+                                    ar2_LCFSMask(floor(iTmp),ceiling(jTmp)) /)==0 ) ) g%isMetal(w) = .true.
+                    else
+                            g%isMetal(w) = .true.
+                    endif
              enddo
 
         else ! square box defined by metalLeft, metalRight, metalTop, metalBot

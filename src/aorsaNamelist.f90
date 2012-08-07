@@ -125,6 +125,7 @@ implicit none
       real :: antlen = 1.0
       real :: antlc = .0001            !-----antlc = propagation constant along the antenna = c / vphase
       logical :: limiter_boundary = .false. ! use the rLim/zLim boundary from the eqdsk file
+      logical :: lcfs_boundary = .false.
       logical :: use_dlg_bField = .false.
       real :: edgeCollisions = 0.0
       logical :: bbbsMask = .false. ! use rbbbs/zbbbs as boundary instead of rlim/zlim
@@ -465,7 +466,7 @@ implicit none
      &    enorm_factor_i1, enorm_factor_i2, enorm_factor_i3, &
      &    enorm_factor_i4, enorm_factor_i5, enorm_factor_i6, &
      &    write_f_file, particleDensity, ana_maxwellian, &
-     &    limiter_boundary, xn_rho2lim, xn2_rho2lim, &
+     &    limiter_boundary, lcfs_boundary, xn_rho2lim, xn2_rho2lim, &
      &    xn3_rho2lim, xn4_rho2lim, xn5_rho2lim, xn6_rho2lim, &
      &    te_rho2lim, ti_rho2lim, ti2_rho2lim, ti3_rho2lim, &
      &    ti4_rho2lim, ti5_rho2lim, ti6_rho2lim, eqdsk_zRange, &
