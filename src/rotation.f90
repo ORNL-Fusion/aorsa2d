@@ -159,6 +159,9 @@ contains
         RotMatHere = MatMul(Rot1,Rot2)
         InvRotQ    = transpose ( RotMatHere )
 
+        RotMatHere = InvRotQ
+        InvRotQ    = transpose ( RotMatHere )
+
         !write(*,*) RotMatHere(1,1), RotMatHere(1,2), RotMatHere(1,3)
         !write(*,*) RotMatHere(2,1), RotMatHere(2,2), RotMatHere(2,3)
         !write(*,*) RotMatHere(3,1), RotMatHere(3,2), RotMatHere(3,3)
