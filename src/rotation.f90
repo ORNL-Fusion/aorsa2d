@@ -1,5 +1,7 @@
 modUle rotation
 
+use constants
+
 implicit none
 
 real :: sqx
@@ -8,8 +10,8 @@ contains
 
     function Cross (v1,v2)
 
-        real, intent(in) :: v1(:), v2(:)
-        real :: Cross(0:2)
+        real(kind=dbl), intent(in) :: v1(0:2), v2(0:2)
+        real(kind=dbl) :: Cross(0:2)
 
         Cross(0) = +(v1(1)*v2(2)-v1(2)*v2(1))
         Cross(1) = -(v1(0)*v2(2)-v1(2)*v2(0))
@@ -19,12 +21,21 @@ contains
     
     function Dot (v1,v2)
 
-        real, intent(in) :: v1(:), v2(:)
-        real :: Dot
+        real(kind=dbl), intent(in) :: v1(0:2), v2(0:2)
+        real(kind=dbl) :: Dot
 
-        Dot = v1(0)*v2(0)+v1(1)*v2(1)+v1(2)*v2(2)
+        Dot = v1(0)*v2(0) + v1(1)*v2(1) + v1(2)*v2(2)
 
     end function Dot
+
+    function Mag (v)
+
+        real(kind=dbl), intent(in) :: v(0:2)
+        real(kind=dbl) :: Mag
+
+        Mag = sqrt(v(0)**2+v(1)**2+v(2)**2)
+
+    end function Mag
 
     function RotMatHere (bR_unit,bT_unit,bZ_unit)
 
@@ -34,13 +45,16 @@ contains
 
         real, intent(in) :: bR_unit, bT_unit, bZ_unit
 
-        real :: RotMatHere(3,3)
+        real :: RotMatHere(3,3), Rot1(3,3), Rot2(3,3)
 
         ! Alternate approach
-        real :: theta
-        real :: q0,q1,q2,q3,InvRotQ(3,3)
+        real(kind=dbl) :: theta
+        real(kind=dbl) :: q0,q1,q2,q3,InvRotQ(3,3)
 
-        real :: zu_rtz(0:2), au_rtz(0:2), bu_rtz(0:2), pu_rtz(0:2)
+        real(kind=dbl) :: ru_rtz(0:2), tu_rtz(0:2), zu_rtz(0:2)
+        real(kind=dbl) :: au_rtz(0:2), bu_rtz(0:2), pu_rtz(0:2)
+        real(kind=dbl) :: a_rtz(0:2), b_rtz(0:2), p_rtz(0:2)
+        real(kind=dbl) :: rotDir_rtz(0:2), testVec(0:2)
 
         ! Vectors are:
         !
@@ -53,33 +67,105 @@ contains
 
         ! Get vector perp to both z axis and b
 
-        zu_rtz = 0
-        zu_rtz(2) = 1
+        ru_rtz = 0d0
+        ru_rtz(0) = 1d0
+
+        tu_rtz = 0d0
+        tu_rtz(1) = 1d0
+
+        zu_rtz = 0d0
+        zu_rtz(2) = 1d0
 
         pu_rtz = (/ bR_unit, bT_unit, bZ_unit /)
+        !write(*,*) 'pu_rtz: ', pu_rtz(0), pu_rtz(1), pu_rtz(2)
 
-        au_rtz = Cross(zu_rtz,pu_rtz)
-        bu_rtz = Cross(pu_rtz,au_rtz)
+        a_rtz = Cross(zu_rtz,pu_rtz)
+        au_rtz = a_rtz/Mag(a_rtz)
 
-        ! Get angle between z axis and b
+        b_rtz = Cross(pu_rtz,au_rtz)
+        bu_rtz = b_rtz/Mag(b_rtz)
 
-        theta = aCos ( Dot(zu_rtz,pu_rtz) )
+        ! Now the desired rotation matrix from a,b,p to r,t,z
+        ! is that rotation that takes the abp axes and rotates 
+        ! them to lie on the rtz axes. Here we accomplish that
+        ! with a combination of two successive rotations.
+
+        ! The first is around the r cross a axis to make a dot r = 0
+        ! ----------------------------------------------------------
+
+        rotDir_rtz = Cross(au_rtz,ru_rtz)
+        rotDir_rtz = rotDir_rtz/Mag(rotDir_rtz)
+
+        ! Get angle between r axis and a
+
+        theta = aCos ( Dot(ru_rtz,au_rtz) )
+        !write(*,*) 'theta: ', theta*180/pi
 
         ! Calculate the quaternions
 
         q0  = cos ( theta / 2.0 )
-        q1  = sin ( theta / 2.0 ) * bu_rtz(0)
-        q2  = sin ( theta / 2.0 ) * bu_rtz(1) 
-        q3  = sin ( theta / 2.0 ) * bu_rtz(2)
+        q1  = sin ( theta / 2.0 ) * rotDir_rtz(0)
+        q2  = sin ( theta / 2.0 ) * rotDir_rtz(1) 
+        q3  = sin ( theta / 2.0 ) * rotDir_rtz(2)
+
+        ! Construct the rotation matrix for COUNTER_CLOCKWISE rotation
+        ! around the unit vector rotDir_rtz
+
+        Rot1(1,1:3) = (/ q0**2+q1**2-q2**2-q3**2, 2*(q1*q2-q0*q3), 2*(q1*q3+q0*q2) /)
+        Rot1(2,1:3) = (/ 2*(q2*q1+q0*q3), q0**2-q1**2+q2**2-q3**2, 2*(q2*q3-q0*q1) /)
+        Rot1(3,1:3) = (/ 2*(q3*q1-q0*q2), 2*(q3*q2+q0*q1), q0**2-q1**2-q2**2+q3**2 /)
+
+        !write(*,*) Rot1(1,1), Rot1(1,2), Rot1(1,3)
+        !write(*,*) Rot1(2,1), Rot1(2,2), Rot1(2,3)
+        !write(*,*) Rot1(3,1), Rot1(3,2), Rot1(3,3)
+
+        ! Test by rotating the au_rtz 
+
+        au_rtz = matmul(Rot1,au_rtz)
+        bu_rtz = matmul(Rot1,bu_rtz)
+        pu_rtz = matmul(Rot1,pu_rtz)
+
+        ! Now rotate arount the r-axis  
+        ! ----------------------------
+
+        ! Get angle between new pu and zu
+
+        theta = aCos ( Dot(zu_rtz,pu_rtz) )
+        !write(*,*) 'theta: ', theta*180/pi
+
+        ! Calculate the quaternions
+
+        q0  = cos ( theta / 2.0 )
+        q1  = sin ( theta / 2.0 ) * (-ru_rtz(0))
+        q2  = sin ( theta / 2.0 ) * (-ru_rtz(1)) 
+        q3  = sin ( theta / 2.0 ) * (-ru_rtz(2))
 
         ! Construct the rotation matrix
 
-        RotMatHere(1,1:3) = (/ q0**2+q1**2-q2**2-q3**2, 2*(q1*q2-q0*q3), 2*(q1*q3+q0*q2) /)
-        RotMatHere(2,1:3) = (/ 2*(q2*q1+q0*q3), q0**2-q1**2+q2**2-q3**2, 2*(q2*q3-q0*q1) /)
-        RotMatHere(3,1:3) = (/ 2*(q3*q1-q0*q2), 2*(q3*q2+q0*q1), q0**2-q1**2-q2**2+q3**2 /)
+        Rot2(1,1:3) = (/ q0**2+q1**2-q2**2-q3**2, 2*(q1*q2-q0*q3), 2*(q1*q3+q0*q2) /)
+        Rot2(2,1:3) = (/ 2*(q2*q1+q0*q3), q0**2-q1**2+q2**2-q3**2, 2*(q2*q3-q0*q1) /)
+        Rot2(3,1:3) = (/ 2*(q3*q1-q0*q2), 2*(q3*q2+q0*q1), q0**2-q1**2-q2**2+q3**2 /)
 
+        !write(*,*) Rot2(1,1), Rot2(1,2), Rot2(1,3)
+        !write(*,*) Rot2(2,1), Rot2(2,2), Rot2(2,3)
+        !write(*,*) Rot2(3,1), Rot2(3,2), Rot2(3,3)
+
+        au_rtz = matmul(Rot2,au_rtz)
+        bu_rtz = matmul(Rot2,bu_rtz)
+        pu_rtz = matmul(Rot2,pu_rtz)
+
+        !write(*,*) pu_rtz(0),pu_rtz(1),pu_rtz(2)
+
+        RotMatHere = MatMul(Rot1,Rot2)
         InvRotQ    = transpose ( RotMatHere )
 
+        !write(*,*) RotMatHere(1,1), RotMatHere(1,2), RotMatHere(1,3)
+        !write(*,*) RotMatHere(2,1), RotMatHere(2,2), RotMatHere(2,3)
+        !write(*,*) RotMatHere(3,1), RotMatHere(3,2), RotMatHere(3,3)
+
+        !write(*,*) 'ru_abp: ', MatMul(RotMatHere,(/1d0,0d0,0d0/))
+
+!stop
     end function RotMatHere
 
     subroutine init_rotation ( g )
