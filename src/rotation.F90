@@ -39,6 +39,9 @@ contains
 
     function RotMatHere (bR_unit,bT_unit,bZ_unit)
 
+        ! Create the rotation matrix that shifts from
+        ! r,t,z to a,b,p
+
         use constants
 
         implicit none
@@ -57,15 +60,15 @@ contains
         real(kind=dbl) :: rotDir_rtz(0:2), testVec(0:2)
 
         ! Vectors are:
-        !
+        ! ------------
         ! a,b,p: alpha, beta, parallel
         ! r,t,z: cylindical, right handed
         !
-        ! z cross b = a 
+        ! z cross p = a 
         !
         ! u are unit vectors
 
-        ! Get vector perp to both z axis and b
+        ! Get vector perp to both z and p
 
         ru_rtz = 0d0
         ru_rtz(0) = 1d0
@@ -77,36 +80,39 @@ contains
         zu_rtz(2) = 1d0
 
         pu_rtz = (/ bR_unit, bT_unit, bZ_unit /)
-        !write(*,*) 'pu_rtz: ', pu_rtz(0), pu_rtz(1), pu_rtz(2)
 
         a_rtz = Cross(zu_rtz,pu_rtz)
         au_rtz = a_rtz/Mag(a_rtz)
 
         b_rtz = Cross(pu_rtz,au_rtz)
         bu_rtz = b_rtz/Mag(b_rtz)
-
+#if _DEBUG_ROTATION > 0
+        write(*,*) 'au_rtz: ', au_rtz(0), au_rtz(1), au_rtz(2)
+        write(*,*) 'bu_rtz: ', bu_rtz(0), bu_rtz(1), bu_rtz(2)
+        write(*,*) 'pu_rtz: ', pu_rtz(0), pu_rtz(1), pu_rtz(2)
+#endif
         ! Now the desired rotation matrix from a,b,p to r,t,z
         ! is that rotation that takes the abp axes and rotates 
         ! them to lie on the rtz axes. Here we accomplish that
         ! with a combination of two successive rotations.
 
-        ! The first is around the r cross a axis to make a dot r = 0
-        ! ----------------------------------------------------------
+        ! Remember, since a = z cross p, a is in the r-t plane.
 
-        rotDir_rtz = Cross(au_rtz,ru_rtz)
-        rotDir_rtz = rotDir_rtz/Mag(rotDir_rtz)
+        ! The first is around the -z axis to make a dot r = 0
+        ! ----------------------------------------------------------
 
         ! Get angle between r axis and a
 
         theta = aCos ( Dot(ru_rtz,au_rtz) )
-        !write(*,*) 'theta: ', theta*180/pi
-
+#if _DEBUG_ROTATION > 0
+        write(*,*) 'theta: ', theta*180/pi
+#endif
         ! Calculate the quaternions
 
         q0  = cos ( theta / 2.0 )
-        q1  = sin ( theta / 2.0 ) * rotDir_rtz(0)
-        q2  = sin ( theta / 2.0 ) * rotDir_rtz(1) 
-        q3  = sin ( theta / 2.0 ) * rotDir_rtz(2)
+        q1  = sin ( theta / 2.0 ) * (-zu_rtz(0))
+        q2  = sin ( theta / 2.0 ) * (-zu_rtz(1)) 
+        q3  = sin ( theta / 2.0 ) * (-zu_rtz(2))
 
         ! Construct the rotation matrix for COUNTER_CLOCKWISE rotation
         ! around the unit vector rotDir_rtz
@@ -114,16 +120,21 @@ contains
         Rot1(1,1:3) = (/ q0**2+q1**2-q2**2-q3**2, 2*(q1*q2-q0*q3), 2*(q1*q3+q0*q2) /)
         Rot1(2,1:3) = (/ 2*(q2*q1+q0*q3), q0**2-q1**2+q2**2-q3**2, 2*(q2*q3-q0*q1) /)
         Rot1(3,1:3) = (/ 2*(q3*q1-q0*q2), 2*(q3*q2+q0*q1), q0**2-q1**2-q2**2+q3**2 /)
-
-        !write(*,*) Rot1(1,1), Rot1(1,2), Rot1(1,3)
-        !write(*,*) Rot1(2,1), Rot1(2,2), Rot1(2,3)
-        !write(*,*) Rot1(3,1), Rot1(3,2), Rot1(3,3)
-
+#if _DEBUG_ROTATION > 0
+        write(*,*) Rot1(1,1), Rot1(1,2), Rot1(1,3)
+        write(*,*) Rot1(2,1), Rot1(2,2), Rot1(2,3)
+        write(*,*) Rot1(3,1), Rot1(3,2), Rot1(3,3)
+#endif
         ! Test by rotating the au_rtz 
 
         au_rtz = matmul(Rot1,au_rtz)
         bu_rtz = matmul(Rot1,bu_rtz)
         pu_rtz = matmul(Rot1,pu_rtz)
+#if _DEBUG_ROTATION > 0
+        write(*,*) 'au_rtz after Rot1: ', au_rtz(0),au_rtz(1),au_rtz(2)
+        write(*,*) 'bu_rtz after Rot1: ', bu_rtz(0),bu_rtz(1),bu_rtz(2)
+        write(*,*) 'pu_rtz after Rot1: ', pu_rtz(0),pu_rtz(1),pu_rtz(2)
+#endif
 
         ! Now rotate arount the r-axis  
         ! ----------------------------
@@ -131,8 +142,9 @@ contains
         ! Get angle between new pu and zu
 
         theta = aCos ( Dot(zu_rtz,pu_rtz) )
-        !write(*,*) 'theta: ', theta*180/pi
-
+#if _DEBUG_ROTATION > 0
+        write(*,*) 'theta: ', theta*180/pi
+#endif
         ! Calculate the quaternions
 
         q0  = cos ( theta / 2.0 )
@@ -145,30 +157,34 @@ contains
         Rot2(1,1:3) = (/ q0**2+q1**2-q2**2-q3**2, 2*(q1*q2-q0*q3), 2*(q1*q3+q0*q2) /)
         Rot2(2,1:3) = (/ 2*(q2*q1+q0*q3), q0**2-q1**2+q2**2-q3**2, 2*(q2*q3-q0*q1) /)
         Rot2(3,1:3) = (/ 2*(q3*q1-q0*q2), 2*(q3*q2+q0*q1), q0**2-q1**2-q2**2+q3**2 /)
-
-        !write(*,*) Rot2(1,1), Rot2(1,2), Rot2(1,3)
-        !write(*,*) Rot2(2,1), Rot2(2,2), Rot2(2,3)
-        !write(*,*) Rot2(3,1), Rot2(3,2), Rot2(3,3)
-
+#if _DEBUG_ROTATION > 0
+        write(*,*) Rot2(1,1), Rot2(1,2), Rot2(1,3)
+        write(*,*) Rot2(2,1), Rot2(2,2), Rot2(2,3)
+        write(*,*) Rot2(3,1), Rot2(3,2), Rot2(3,3)
+#endif
         au_rtz = matmul(Rot2,au_rtz)
         bu_rtz = matmul(Rot2,bu_rtz)
         pu_rtz = matmul(Rot2,pu_rtz)
 
-        !write(*,*) pu_rtz(0),pu_rtz(1),pu_rtz(2)
-
-        RotMatHere = MatMul(Rot1,Rot2)
+#if _DEBUG_ROTATION > 0
+        write(*,*) 'au_rtz after Rot2: ', au_rtz(0),au_rtz(1),au_rtz(2)
+        write(*,*) 'bu_rtz after Rot2: ', bu_rtz(0),bu_rtz(1),bu_rtz(2)
+        write(*,*) 'pu_rtz after Rot2: ', pu_rtz(0),pu_rtz(1),pu_rtz(2)
+#endif
+        ! the order here is important
+        RotMatHere = MatMul(Rot2,Rot1)
         InvRotQ    = transpose ( RotMatHere )
 
-        RotMatHere = InvRotQ
-        InvRotQ    = transpose ( RotMatHere )
+#if _DEBUG_ROTATION > 0
+        write(*,*) RotMatHere(1,1), RotMatHere(1,2), RotMatHere(1,3)
+        write(*,*) RotMatHere(2,1), RotMatHere(2,2), RotMatHere(2,3)
+        write(*,*) RotMatHere(3,1), RotMatHere(3,2), RotMatHere(3,3)
 
-        !write(*,*) RotMatHere(1,1), RotMatHere(1,2), RotMatHere(1,3)
-        !write(*,*) RotMatHere(2,1), RotMatHere(2,2), RotMatHere(2,3)
-        !write(*,*) RotMatHere(3,1), RotMatHere(3,2), RotMatHere(3,3)
+        write(*,*) 'ru_abp: ', MatMul(RotMatHere,(/1d0,0d0,0d0/))
+        write(*,*) 'tu_abp: ', MatMul(RotMatHere,(/0d0,1d0,0d0/))
+        write(*,*) 'zu_abp: ', MatMul(RotMatHere,(/0d0,0d0,1d0/))
+#endif
 
-        !write(*,*) 'ru_abp: ', MatMul(RotMatHere,(/1d0,0d0,0d0/))
-
-!stop
     end function RotMatHere
 
     subroutine init_rotation ( g )

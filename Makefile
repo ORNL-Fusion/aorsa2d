@@ -64,6 +64,7 @@ CPP_DIRECTIVES += -D__CheckParallelLocation__=0# Double check that myRow==pr_sp 
 CPP_DIRECTIVES += -D__debugSigma__=0
 CPP_DIRECTIVES += -D__DebugSetMetal__=0
 CPP_DIRECTIVES += -D__DebugBField__=0
+CPP_DIRECTIVES += -D_DEBUG_ROTATION=0
 
 # compile flags
 # -------------
