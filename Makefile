@@ -8,8 +8,8 @@ MOD_DIR = mod
 CPP_DIR = cpp
 
 COMPILER := GNU# GNU, PGI
-PARALLEL := 1# 0, 1
-GPU := 1# 0, 1
+PARALLEL := 0# 0, 1
+GPU := 0# 0, 1
 DDT := 0# 0, 1
 
 ifeq (${GPU},1)
@@ -94,6 +94,9 @@ endif
 
 # other machines
 # --------------
+ifneq (,$(findstring dlg-air,$(shell uname -n)))
+	include Makefile.dlg-air
+endif
 
 ifneq (,$(findstring dlg-hp,$(shell uname -n)))
 	include Makefile.dlg-hp
