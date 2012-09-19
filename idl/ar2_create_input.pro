@@ -49,12 +49,17 @@ end
 
 pro ar2_create_input
 
+	flat_profiles = 1
+	br_flat = 0.0
+	bt_flat = 1.0
+	bz_flat = 0.0
+
 	@constants
 
 	;@gorden_bell
 	;@gorden_bell_b
-	;@langmuir
-	@ar2_run_nstxslow
+	@ar2_run_langmuir
+	;@ar2_run_nstxslow
 
 	nSpec = n_elements ( amu )
 	wrf	= freq * 2d0 * !dpi
@@ -150,6 +155,15 @@ pro ar2_create_input
 		br = MakePeriodic ( br, mask_lim);, /look )
 		bt = MakePeriodic ( bt, mask_lim);, /look )
 		bz = MakePeriodic ( bz, mask_lim);, /look )
+
+	endif else if flat_profiles eq 1 then begin
+
+		mask_bbb = FltArr(nR,nZ)+1	
+		mask_lim = FltArr(nR,nZ)+1	
+
+		br = fltArr(nR,nZ)+br_flat
+		bt = fltArr(nR,nZ)+bt_flat
+		bz = fltArr(nR,nZ)+bz_flat
 
 	endif else begin
 

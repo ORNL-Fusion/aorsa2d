@@ -8,9 +8,9 @@ HDF_DIR := ${HOME}/code/hdf/gnu_4.3.2
 LIBS += -L ${HDF_DIR}/lib -lhdf5 -lhdf5_hl
 INC_DIR += -I ${HDF_DIR}/include
 
-NETCDF_DIR := ${HOME}/code/netcdf/gnu_4.3.2
-LIBS +=-L ${NETCDF_DIR}/lib -lnetcdf -lnetcdff
-INC_DIR += -I ${NETCDF_DIR}/include 
+NETCDF_DIR := /usr/lib64/gfortran
+LIBS += -lnetcdf -lnetcdff
+INC_DIR += -I ${NETCDF_DIR}/include -I${NETCDF_DIR}/modules
 
 ifeq (${PARALLEL},1)
 	BLACS = \
@@ -21,9 +21,9 @@ ifeq (${PARALLEL},1)
 	LIBS := ${SCALAPACK} ${BLACS} ${LIBS}
 endif
 
-PAPI_DIR := /home/dg6/code/papi/gnu_4.3.2
+PAPI_DIR := /usr
 PAPI_INC := -I${PAPI_DIR}/include/
-PAPI_LINK := -L${PAPI_DIR}/lib -lpapi
+PAPI_LINK := -lpapi
 LIBS += ${PAPI_LINK}
 INC_DIR += ${PAPI_INC}
 

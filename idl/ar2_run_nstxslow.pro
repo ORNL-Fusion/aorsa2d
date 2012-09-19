@@ -7,6 +7,8 @@
 	bTorFactor = 1.0
 
 	flux_profiles = 1
+	flat_profiles = 0
+
 	atomicZ	= [-1,1]
 	amu = [me/mi,2]
 
@@ -20,15 +22,15 @@
 	tt = [	[00.1d3,	1.0d3,		0.5,	2.0],$
 			[00.2d3,	8.0d3,		2.0,	2.0] ]
 
-	DensityMin = 1e18
+	DensityMin = 0.2e18
 	TempMin = 1e-3
 
 	; Grid
 	nR = 600
 	nZ = 600
-	rMin = 0.1
-	rMax = 1.75
-	zMin = -1.5
-	zMax = +1.5
+	rMin = 0.05
+	rMax = 1.8
+	zMin = -1.8
+	zMax = +1.8
 
 	

@@ -1,10 +1,10 @@
 pro ar2_estimate_time
 
-nR = 513d0
-nZ = 513d0 
+nR = 257d0
+nZ = 257d0 
 
-npRow = 256d0
-npCol = 128d0
+npRow = 18d0
+npCol = 32d0
 
 nSpec = 2
 lMax = 2 
@@ -24,19 +24,20 @@ lMax = 2
 print, 'JAGUARPF'
 CoresPerNode = 16 
 MemPerNode_GB = 32.0
-CPU_GFlops_PerCore = 4.6
+CPU_GFlops_PerCore = 6.6
 CPU_PGESVR_GFlops_PerCore = 8.0
-GPU_GFlops_PerNode = 155.0;
+GPU_GFlops_PerNode = 115.0;
 GPU_PGESVR_GFlops_PerNode = 250.0
 GPU_to_CPU_hours = 14
 
-GPU_PGESVR_ActualSolveTime = 3031.0
-GPU_ActualSolveTime = 2331.0
+GPU_ActualSolveTime = 3690.0 
+GPU_PGESVR_ActualSolveTime = 6647.0
 
 ; Memory required
 
 MemPerCPUAvail_GB = MemPerNode_GB/CoresPerNode*0.9
 N = 3d0 * nR * nZ
+print, 'N: ', N
 nNodes = npRow*npCol/CoresPerNode
 
 DoubleComplexBytes = 16.0
@@ -73,6 +74,7 @@ print, 'Mem Per CPU Avail [MBytes]: ', MemPerCPUAvail_GB*1024.0
 NFOperations = 2.67d0 * N^3
 
 print, 'Number of Scalapack operations: ', NFOperations
+print, 'Number of operations per procesor: ', NFOperations / TotalNProcs
 
 Time_s_CPU = NFOperations / ( CPU_GFlops_PerCore * 1024d0^3 * TotalNProcs )
 Time_m_CPU = Time_s_CPU / 60d0
@@ -92,6 +94,11 @@ Time_h_GPU_PGESVR = Time_m_GPU_PGESVR / 60d0
 
 GPU_PGESVR_ActualGFlops = 1d0 / (GPU_PGESVR_ActualSolveTime * nNodes * 1024d0^3 / NFOperations)
 GPU_ActualGFlops = 1d0 / (GPU_ActualSolveTime * nNodes * 1024d0^3 / NFOperations)
+
+print, 'Actual GPU GFlops per node: ', GPU_ActualGFlops
+print, 'Actual GPU GFlops total: ', GPU_ActualGFlops * nNodes
+print, 'Actual GPU PGESVR GFlops per node: ', GPU_PGESVR_ActualGFlops
+print, 'Actual GPU PGESVR GFlops total: ', GPU_PGESVR_ActualGFlops * nNodes
 
 print, '-----------------------------------------------'
 print, 'For a ',string(nR,format='(i3.3)'),'x',string(nZ,format='(i3.3)'),$
