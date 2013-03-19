@@ -5,12 +5,14 @@ use constants
 implicit none
 
 real :: antSigX, antSigY
+integer, parameter :: NRHS = 3
+
 #ifndef dblprec
-    complex, allocatable :: brhs(:)
+    complex, allocatable :: brhs(:,:)
 #else
-    complex(kind=dbl), allocatable :: brhs(:)
+    complex(kind=dbl), allocatable :: brhs(:,:)
 #endif
-complex, allocatable :: brhs_global(:)
+complex, allocatable :: brhs_global(:,:)
 
 contains
 
@@ -22,11 +24,11 @@ contains
 
         integer(kind=long), intent(in) :: nPts_tot
 
-        allocate ( brhs_global(nPts_tot*3) )
+        allocate ( brhs_global(nPts_tot*3,NRHS) )
 #ifdef par
-        allocate ( brhs(nRowLocal) )
+        allocate ( brhs(nRowLocal,NRHS) )
 #else
-        allocate ( brhs(nPts_tot*3) )
+        allocate ( brhs(nPts_tot*3,NRHS) )
 #endif
         brhs        = 0
         brhs_global = 0
@@ -52,7 +54,7 @@ contains
 
         type(gridBlock), intent(inout) :: g
 
-        integer :: i, j, iRow, iCol
+        integer :: i, j, iRow, iCol, rhs
         complex :: TmpAntJ
 
         ! scalapack index variables
@@ -119,6 +121,10 @@ contains
            enddo
         enddo
 
+
+    rhs_fill_loop: &
+    do rhs = 1,NRHS
+
         do i = 1, g%nR
             do j = 1, g%nZ
 
@@ -159,9 +165,9 @@ contains
 !
 !                    endif
 #else
-                    if (ii==0) brhs(iRow+0)    = -zi*omgrf*mu0*g%jR(i,j)
-                    if (ii==1) brhs(iRow+1)    = -zi*omgrf*mu0*g%jT(i,j)
-                    if (ii==2) brhs(iRow+2)    = -zi*omgrf*mu0*g%jZ(i,j)
+                    if (ii==0) brhs(iRow+0,rhs)    = -zi*omgrf*mu0*g%jR(i,j)
+                    if (ii==1) brhs(iRow+1,rhs)    = -zi*omgrf*mu0*g%jT(i,j)
+                    if (ii==2) brhs(iRow+2,rhs)    = -zi*omgrf*mu0*g%jZ(i,j)
 #endif
                 enddo
             enddo
@@ -176,13 +182,15 @@ contains
                 i = (iRow-1)/(3*g%nZ)+1
                 j = (mod(iRow-1,3*g%nZ)+1-1)/3+1
           
-                brhs(ii+0) =  -zi*omgrf*mu0*g%jR(i,j)
-                brhs(ii+1) =  -zi*omgrf*mu0*g%jT(i,j)
-                brhs(ii+2) =  -zi*omgrf*mu0*g%jZ(i,j)
+                brhs(ii+0,rhs) =  -zi*omgrf*mu0*g%jR(i,j)
+                brhs(ii+1,rhs) =  -zi*omgrf*mu0*g%jT(i,j)
+                brhs(ii+2,rhs) =  -zi*omgrf*mu0*g%jZ(i,j)
 
             enddo
         endif
 #endif
+
+    enddo rhs_fill_loop
 
     end subroutine
 

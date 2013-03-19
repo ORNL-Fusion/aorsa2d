@@ -149,7 +149,8 @@ ${OBJ_DIR}/read_data.o: \
 ${OBJ_DIR}/inv_fourier.o: \
 		${OBJ_DIR}/aorsaNamelist.o \
 		${OBJ_DIR}/grid.o \
-		${OBJ_DIR}/parallel.o
+		${OBJ_DIR}/parallel.o \
+		${OBJ_DIR}/antenna.o
 
 ifeq (${PARALLEL},1)
 

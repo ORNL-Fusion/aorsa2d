@@ -92,7 +92,7 @@ contains
         use grid
         use antenna
         use aorsaNamelist, &
-        only: overlap
+            only: overlap
         use spline_dlg
 
         implicit none
@@ -101,7 +101,7 @@ contains
         integer(kind=long), intent(in) :: nPts_tot
 
         type(gridBlock) :: me, nbr
-        integer :: i, j, n, m, iRow, iCol 
+        integer :: i, j, n, m, iRow, iCol, rhs
         integer(kind=long) :: ii 
         complex(kind=dbl) :: aMatBlock(3,3)
         real :: r, kt
@@ -264,8 +264,9 @@ contains
                         iCol = iCol + ( me%startCol-1 )
 
                         aMat(iRow:iRow+2,iCol:iCol+2) = aMatBlock
-                        brhs(iRow:iRow+2) = 0
-
+                        do rhs=1,NRHS
+                            brhs(iRow:iRow+2,rhs) = 0
+                        enddo
 
                     enddo
                 enddo

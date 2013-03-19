@@ -102,13 +102,14 @@ contains
     end subroutine init_procGrid
 
 
-    subroutine init_parallel_aMat ()
+    subroutine init_parallel_aMat (NRHS)
 
         use aorsaNamelist, &
-        only: npRow, npCol
+            only: npRow, npCol
 
         implicit none
 
+        integer, intent(in) :: NRHS
         integer :: info, lld
 
         lld = nRowLocal 
@@ -120,7 +121,7 @@ contains
         !write(*,*) 'init desc amat status: ', info
 
         call descInit ( descriptor_brhs, &
-            nRow, 1, rowBlockSize, colBlockSize, rowStartProc, colStartProc, &
+            nRow, NRHS, rowBlockSize, colBlockSize, rowStartProc, colStartProc, &
             iContext, lld, info )
 
         !write(*,*) 'init desc brhs status: ', info

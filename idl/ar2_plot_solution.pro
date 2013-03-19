@@ -212,7 +212,7 @@ pro ar2_plot_solution, full = full, $
 		ny = n_elements(z)
 		x2D	= rebin ( r, nX, nY )
 		if nY gt 1 then begin
-			y2D = transparencyose(rebin ( z, nY, nX ))
+			y2D = transpose(rebin ( z, nY, nX ))
 		endif else begin
 			y2D = fltArr(1)+z
 		endelse

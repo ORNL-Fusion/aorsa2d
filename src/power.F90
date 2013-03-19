@@ -13,6 +13,7 @@ subroutine current ( g )
     use profiles, &
         only: k0, omgrf, mSpec
     use constants
+    use antenna, only: NRHS
 
     implicit none
    
@@ -22,7 +23,7 @@ subroutine current ( g )
     complex :: ek_nm(3), jVec(3), thisSigma(3,3)
     complex :: bFn
 
-    integer :: i, j, n, m, iStat, s, w
+    integer :: i, j, n, m, iStat, s, w, rhs
     real :: kr, kz, kVec_stix(3)
     complex, allocatable :: jAlphaTmp(:,:), jBetaTmp(:,:), jBTmp(:,:)
 
@@ -32,9 +33,9 @@ subroutine current ( g )
 #endif
 
     allocate ( &
-        g%jAlpha(g%nR,g%nZ,nSpec), &
-        g%jBeta(g%nR,g%nZ,nSpec), &
-        g%jB(g%nR,g%nZ,nSpec) )
+        g%jAlpha(g%nR,g%nZ,nSpec,NRHS), &
+        g%jBeta(g%nR,g%nZ,nSpec,NRHS), &
+        g%jB(g%nR,g%nZ,nSpec,NRHS) )
 
     allocate ( jAlphaTmp(g%nR,g%nZ), jBetaTmp(g%nR,g%nZ), jBTmp(g%nR,g%nZ) )
 
@@ -54,6 +55,7 @@ subroutine current ( g )
     call read_sigma ( 'sigma'//g%fNumber//'.nc', sigma = sigmaAll ) 
 #endif
 
+    do rhs=1,NRHS
     species: &
     do s=1,nSpec
 
@@ -73,9 +75,9 @@ subroutine current ( g )
                         bFn = g%xx(g%wl(w)%n,g%wl(w)%i) * g%yy(g%wl(w)%m,g%wl(w)%j)
                         !bFn = xBasis(n,g%rNorm(i)) * yBasis(m,g%zNorm(j))
 
-                        ek_nm(1) = g%eAlphak(g%wl(w)%n,g%wl(w)%m)
-                        ek_nm(2) = g%eBetak(g%wl(w)%n,g%wl(w)%m)
-                        ek_nm(3) = g%eBk(g%wl(w)%n,g%wl(w)%m) 
+                        ek_nm(1) = g%eAlphak(g%wl(w)%n,g%wl(w)%m,rhs)
+                        ek_nm(2) = g%eBetak(g%wl(w)%n,g%wl(w)%m,rhs)
+                        ek_nm(3) = g%eBk(g%wl(w)%n,g%wl(w)%m,rhs) 
 
 #if __sigma__ != 2
                         thisSigma = sigmaAll(g%wl(w)%i,g%wl(w)%j,g%wl(w)%n,g%wl(w)%m,:,:,s)
@@ -160,9 +162,9 @@ subroutine current ( g )
 #endif
                         jVec = matMul ( thisSigma, ek_nm ) 
 
-                        g%jAlpha(g%wl(w)%i,g%wl(w)%j,s) = g%jAlpha(g%wl(w)%i,g%wl(w)%j,s) + jVec(1) * bFn
-                        g%jBeta(g%wl(w)%i,g%wl(w)%j,s) = g%jBeta(g%wl(w)%i,g%wl(w)%j,s) + jVec(2) * bFn
-                        g%jB(g%wl(w)%i,g%wl(w)%j,s) = g%jB(g%wl(w)%i,g%wl(w)%j,s) + jVec(3) * bFn
+                        g%jAlpha(g%wl(w)%i,g%wl(w)%j,s,rhs) = g%jAlpha(g%wl(w)%i,g%wl(w)%j,s,rhs) + jVec(1) * bFn
+                        g%jBeta(g%wl(w)%i,g%wl(w)%j,s,rhs) = g%jBeta(g%wl(w)%i,g%wl(w)%j,s,rhs) + jVec(2) * bFn
+                        g%jB(g%wl(w)%i,g%wl(w)%j,s,rhs) = g%jB(g%wl(w)%i,g%wl(w)%j,s,rhs) + jVec(3) * bFn
 
                         !g%jAlpha(i,j,s) = g%jAlpha(i,j,s) &
                         !    + ( sigma(i,j,n,m,1,1,s) * g%eAlphak(n,m) &
@@ -189,6 +191,8 @@ subroutine current ( g )
         enddo workList
 
     enddo species
+    enddo ! rhs loop
+
 #if __sigma__ != 2
     deallocate ( sigmaAll )
 #else
@@ -196,11 +200,12 @@ subroutine current ( g )
 
     ! Switch to individual 2D arrays for the sum over processors
 
+    do rhs=1,NRHS
     do s=1,nSpec
 
-        jAlphaTmp = g%jAlpha(:,:,s)
-        jBetaTmp = g%jBeta(:,:,s)
-        jBTmp = g%jB(:,:,s)
+        jAlphaTmp = g%jAlpha(:,:,s,rhs)
+        jBetaTmp = g%jBeta(:,:,s,rhs)
+        jBTmp = g%jB(:,:,s,rhs)
 
         call cGSUM2D ( iContext, 'All', ' ', g%nR, g%nZ, jAlphaTmp, g%nR, -1, -1 )
         call cGSUM2D ( iContext, 'All', ' ', g%nR, g%nZ, jBetaTmp, g%nR, -1, -1 )
@@ -208,11 +213,12 @@ subroutine current ( g )
 
         call blacs_barrier ( iContext, 'All' ) 
 
-        g%jAlpha(:,:,s) = jAlphaTmp
-        g%jBeta(:,:,s) = jBetaTmp
-        g%jB(:,:,s) = jBTmp
+        g%jAlpha(:,:,s,rhs) = jAlphaTmp
+        g%jBeta(:,:,s,rhs) = jBetaTmp
+        g%jB(:,:,s,rhs) = jBTmp
 
     enddo
+    enddo ! rhs loop
 #endif
 #endif
 
@@ -223,18 +229,21 @@ subroutine jDotE ( g )
 
     use grid
     use aorsaNamelist, &
-    only: nSpec
+        only: nSpec
+    use antenna, only: NRHS
 
     implicit none
    
     type(gridBlock), intent(inout) :: g 
 
-    integer :: i, j, s
+    integer :: i, j, s, rhs
     complex :: eHere(3), jHere(3)
 
     allocate ( &
-        g%jouleHeating(g%nR,g%nZ,nSpec) )
+        g%jouleHeating(g%nR,g%nZ,nSpec,NRHS) )
 
+
+    do rhs=1,NRHS
     species: &
     do s=1,nSpec
 
@@ -247,15 +256,16 @@ subroutine jDotE ( g )
                 !g%jouleHeating(i,j,s) = &
                 !    0.5 * realpart ( dot_product ( eHere, jHere ) )
 
-                g%jouleHeating(i,j,s) = &
-                    0.5 * real(real( conjg(g%eAlpha(i,j)) * g%jAlpha(i,j,s) &
-                                    + conjg(g%eBeta(i,j)) * g%jBeta(i,j,s) &
-                                    + conjg(g%eB(i,j)) * g%jB(i,j,s)  ))
+                g%jouleHeating(i,j,s,rhs) = &
+                    0.5 * real(real( conjg(g%eAlpha(i,j,rhs)) * g%jAlpha(i,j,s,rhs) &
+                                    + conjg(g%eBeta(i,j,rhs)) * g%jBeta(i,j,s,rhs) &
+                                    + conjg(g%eB(i,j,rhs)) * g%jB(i,j,s,rhs)  ))
 
             enddo
         enddo  
 
     enddo species
+    enddo ! rhs loop
 
 end subroutine jDotE
 

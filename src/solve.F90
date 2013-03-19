@@ -21,16 +21,16 @@ contains
         use mat_fill, &
         only: aMat!, aMat_
         use antenna, &
-        only: brhs, brhs_global
+        only: brhs, brhs_global, NRHS
 
         implicit none
 
         integer :: info, nRow, nCol
         integer, allocatable, dimension(:) :: ipiv
 
-        !   lapack lsq solve variables
+        !   lapack variables
         
-        integer :: M_, N_, NRHS, LDA, LDB, MN_, LWORK, RANK
+        integer :: M_, N_, LDA, LDB, MN_, LWORK, RANK
         real :: RCOND
 #ifndef dblprec   
         real, allocatable :: rWork(:)
@@ -55,7 +55,7 @@ contains
             allocate ( ipiv(nRow) )
             ipiv = 0
 #ifndef dblprec
-            call cgesv ( nRow, 1, aMat, nRow, ipiv, brhs, nRow, info )
+            call cgesv ( nRow, NRHS, aMat, nRow, ipiv, brhs, nRow, info )
 #else            
             if(magma)then
 
@@ -81,7 +81,7 @@ contains
                 ! CPU LAPACK
                 ! ----------
 
-                call zgesv ( nRow, 1, aMat, nRow, ipiv, brhs, nRow, info )
+                call zgesv ( nRow, NRHS, aMat, nRow, ipiv, brhs, nRow, info )
 
             endif
 
@@ -91,7 +91,6 @@ contains
 
             M_  = nRow
             N_  = nCol
-            NRHS   = 1
             LDA = maxVal ( (/ 1, M_ /) )
             LDB = maxVal ( (/ 1, M_, N_ /) )
             MN_ = minVal ( (/ M_, N_ /) )
@@ -138,17 +137,17 @@ contains
     subroutine solve_lsq_parallel ()
 
         use aorsaNamelist, &
-        only: npRow, npCol, square
+            only: npRow, npCol, square
         use mat_fill, &
-        only: aMat
+            only: aMat
         use antenna, &
-        only: brhs, brhs_global
+            only: brhs, brhs_global, NRHS
         use parallel
 
         implicit none
 
         character :: trans
-        integer :: m, n, nrhs
+        integer :: m, n
         integer :: ia, ja
         complex :: b
         integer :: ib, jb
@@ -222,7 +221,7 @@ contains
 
         m   = nRow
         n   = nCol
-        nrhs    = 1
+        !NRHS    = 1
         ia  = 1!myRow * rowBlockSize + 1
         ja  = 1!myCol * colBlockSize + 1 
         ib  = 1!myRow * rowBlockSize + 1
@@ -241,11 +240,11 @@ contains
         ibcol   = indxg2p( jb, nb_b, myCol, csrc_b, npCol )
         Mpb0    = numroc( m+iroffb, mb_b, myRow, ibrow, npRow )
         Npb0    = numroc( n+iroffb, mb_b, myRow, ibrow, npRow )
-        nrhsqb0 = numroc( nrhs+icoffb, nb_b, myCol, ibcol, npCol )
+        NRHSqb0 = numroc( NRHS+icoffb, nb_b, myCol, ibcol, npCol )
 
         ltau    = numroc( ja+min(m,n)-1, nb_a, myCol, csrc_a, npCol )
         lwf     = nb_a * ( Mpa0 + Nqa0 + nb_a )
-        lws     = max( (nb_a*(nb_a-1))/2, (nrhsqb0 + Mpb0)*nb_a ) + &
+        lws     = max( (nb_a*(nb_a-1))/2, (NRHSqb0 + Mpb0)*nb_a ) + &
                     nb_a * nb_a
 
         lWork   = ltau + max ( lwf, lws )
@@ -280,7 +279,7 @@ contains
 
                  incx = descriptor_brhs(M_)
                  iib = (ib-1) + i
-                 call pzdscal(nrhs,rnorm_inv, brhs,iib,jb,descriptor_brhs,incx)
+                 call pzdscal(NRHS,rnorm_inv, brhs,iib,jb,descriptor_brhs,incx)
                 enddo
 
                 if (iAm == 0) then
@@ -325,19 +324,19 @@ contains
 #ifndef USE_GPU
 
 #ifndef dblprec
-            call pcgesv ( n, nrhs, aMat, ia, ja, descriptor_aMat, ipiv, &
+            call pcgesv ( n, NRHS, aMat, ia, ja, descriptor_aMat, ipiv, &
                     brhs, ib, jb, descriptor_brhs, info ) 
 #else
 #ifdef USE_PGESVR
             if(iAm==0)write(*,*) '		Using iterative refinement PZGESVR'
             call start_timer(tSolve0)
-            call pzgesvr ( n, nrhs, aMat, ia, ja, descriptor_aMat, ipiv, &
+            call pzgesvr ( n, NRHS, aMat, ia, ja, descriptor_aMat, ipiv, &
                     brhs, ib, jb, descriptor_brhs, info ) 
             if(iAm==0)write(*,*) '    Time to solve (0): ', end_timer(tSolve0)
 #else
             if(iAm==0)write(*,*) '		Using regular PZGESV complex*16'
             call start_timer(tSolve0)
-            call pzgesv ( n, nrhs, aMat, ia, ja, descriptor_aMat, ipiv, &
+            call pzgesv ( n, NRHS, aMat, ia, ja, descriptor_aMat, ipiv, &
                     brhs, ib, jb, descriptor_brhs, info ) 
             if(iAm==0)write(*,*) '    Time to solve (0): ', end_timer(tSolve0)
 #endif
@@ -368,7 +367,7 @@ contains
 #ifdef USE_PGESVR
             if(iAm==0)write(*,*) '		Using iterative refinement PZGESVR on GPU'
             call start_timer(tSolve0)
-            call pzgesvr ( n, nrhs, aMat, ia, ja, descriptor_aMat, ipiv, &
+            call pzgesvr ( n, NRHS, aMat, ia, ja, descriptor_aMat, ipiv, &
                     brhs, ib, jb, descriptor_brhs, info ) 
             if(iAm==0)write(*,*) '    Time to solve (0): ', end_timer(tSolve0)
 #else
@@ -387,7 +386,7 @@ contains
                write(*,*) 'pzgetrf_ooc status: ',info
              endif
 
-            call pzgetrs( 'N',n,nrhs,aMat,ia,ja,descriptor_aMat,ipiv, &
+            call pzgetrs( 'N',n,NRHS,aMat,ia,ja,descriptor_aMat,ipiv, &
                     brhs, ib, jb, descriptor_brhs, info)
             if(iAm==0)write(*,*) '    Time to solve (0): ', end_timer(tSolve0)
 
@@ -406,7 +405,7 @@ contains
                   iib = (ib-1) + i
                   cnorm_inv = cnorm_inv_array(i)
                   incx = descriptor_brhs(M_)
-                  call pzdscal( nrhs, cnorm_inv, &
+                  call pzdscal( NRHS, cnorm_inv, &
                          brhs,iib,jb,descriptor_brhs,incx)
                 enddo
                 deallocate( cnorm_inv_array )
@@ -455,10 +454,10 @@ contains
             work = 0
 
 #ifndef dblprec
-            call pcgels ( trans, m, n, nrhs, aMat, ia, ja, descriptor_aMat, &
+            call pcgels ( trans, m, n, NRHS, aMat, ia, ja, descriptor_aMat, &
                         brhs, ib, jb, descriptor_brhs, work, lWork, info ) 
 #else
-            call pzgels ( trans, m, n, nrhs, aMat, ia, ja, descriptor_aMat, &
+            call pzgels ( trans, m, n, NRHS, aMat, ia, ja, descriptor_aMat, &
                         brhs, ib, jb, descriptor_brhs, work, lWork, info ) 
 #endif
             if (iAm==0) then 
@@ -485,14 +484,14 @@ contains
     subroutine gather_coeffs ()
 
         use aorsaNamelist, &
-        only: npRow, npCol
+            only: npRow, npCol
         use antenna, &
-        only: brhs, brhs_global
+            only: brhs, brhs_global, NRHS
         use parallel
 
         implicit none
 
-        integer :: ii, gg
+        integer :: ii, gg, rhs
 
         !   Gather the solution vector from all processors by
         !   creating a global solution vector of the full, not
@@ -501,20 +500,22 @@ contains
         !   will have a complete copy of the solution.
         !   NOT SURE IF THIS WILL WORK FOR A NON 2x2 grid yet.
 
+        do rhs=1,NRHS
         if (myCol==0) then 
             do ii=1,nRowLocal
 
                 gg   =  myRow*rowBlockSize+1 &
                         +mod(ii-1,rowBlockSize) &
                         +(ii-1)/rowBlockSize * npRow*rowBlockSize
-                brhs_global(gg) = brhs(ii)
+                brhs_global(gg,rhs) = brhs(ii,rhs)
 
                 !write(*,*) iAm, brhs(ii), brhs_global(gg)
 
             enddo
         endif
+        enddo
 
-        call cgSum2D ( iContext, 'All', ' ', nRow, 1, &
+        call cgSum2D ( iContext, 'All', ' ', nRow, NRHS, &
                 brhs_global, nRow, -1, -1 )
 
     end subroutine gather_coeffs
@@ -525,35 +526,37 @@ contains
 
         use grid
         use antenna, &
-        only: brhs_global
+            only: brhs_global, NRHS
  
         implicit none
 
         type(gridBlock), intent(inout) :: g
 
-        integer :: m, n, iCol
+        integer :: m, n, iCol,rhs
 
         !   Extract the k coefficents from the solution
         !   for each field component
         !   -------------------------------------------
 
         allocate ( &
-            g%ealphak(g%nMin:g%nMax,g%mMin:g%mMax), &
-            g%ebetak(g%nMin:g%nMax,g%mMin:g%mMax), &
-            g%eBk(g%nMin:g%nMax,g%mMin:g%mMax) )
+            g%ealphak(g%nMin:g%nMax,g%mMin:g%mMax,NRHS), &
+            g%ebetak(g%nMin:g%nMax,g%mMin:g%mMax,NRHS), &
+            g%eBk(g%nMin:g%nMax,g%mMin:g%mMax,NRHS) )
 
+        do rhs=1,NRHS
         do n=g%nMin,g%nMax
             do m=g%mMin,g%mMax
 
                 iCol = (m-g%mMin) * 3 + (n-g%nMin) * g%nModesZ * 3 + 1
                 iCol = iCol + ( g%StartCol-1 )
        
-                g%ealphak(n,m)    = brhs_global(iCol+0)
-                g%ebetak(n,m)     = brhs_global(iCol+1)
-                g%eBk(n,m)        = brhs_global(iCol+2)
+                g%ealphak(n,m,rhs)    = brhs_global(iCol+0,rhs)
+                g%ebetak(n,m,rhs)     = brhs_global(iCol+1,rhs)
+                g%eBk(n,m,rhs)        = brhs_global(iCol+2,rhs)
 
             enddo
         enddo
+        enddo ! rhs loop
 
     end subroutine extract_coeffs
 

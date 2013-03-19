@@ -8,34 +8,37 @@ subroutine rotate_E_to_lab ( g )
     use rotation
     use grid
     use aorsaNamelist, &
-    only: nSpec
+        only: nSpec
     use interp, only: dlg_interpB 
+    use antenna, only: NRHS
 
     implicit none
 
     type(gridBlock), intent(inout) :: g
 
     complex :: ELab_RTZ(3), jPLab_RTZ(3)
-    integer :: i, j, s
+    integer :: i, j, s, rhs
 
     real :: mag1, mag2
     real :: R_(3,3)
     real :: bTmp(3), bRu, bTu, bZu, bMagTmp
 
-    allocate ( g%eR(g%nR,g%nZ), &
-                g%eTh(g%nR,g%nZ), &
-                g%eZ(g%nR,g%nZ) )
+    allocate ( g%eR(g%nR,g%nZ,NRHS), &
+                g%eTh(g%nR,g%nZ,NRHS), &
+                g%eZ(g%nR,g%nZ,NRHS) )
 
-    allocate ( g%jP_r(g%nR,g%nZ,nSpec), &
-                g%jP_t(g%nR,g%nZ,nSpec), &
-                g%jP_z(g%nR,g%nZ,nSpec) )
+    allocate ( g%jP_r(g%nR,g%nZ,nSpec,NRHS), &
+                g%jP_t(g%nR,g%nZ,nSpec,NRHS), &
+                g%jP_z(g%nR,g%nZ,nSpec,NRHS) )
 
 
     ! Rotate fields to the Lab frame and plus/minus
     ! ---------------------------------------------
 
     !isq2 = SQRT(0.5)
-    
+   
+    do rhs=1,NRHS
+
     do i = 1, g%nR
         do j = 1, g%nZ
 
@@ -47,15 +50,15 @@ subroutine rotate_E_to_lab ( g )
             !R_ = g%U_RTZ_to_ABb(i,j,:,:)
 
 #if __noU__==1
-            ELab_RTZ = (/ g%eAlpha(i,j), g%eBeta(i,j), g%eb(i,j) /)
+            ELab_RTZ = (/ g%eAlpha(i,j,rhs), g%eBeta(i,j,rhs), g%eb(i,j,rhs) /)
 #else
             ELab_RTZ = &
                 matMul ( transpose ( R_ ), &
-                    (/ g%eAlpha(i,j), g%eBeta(i,j), g%eb(i,j) /) )
+                    (/ g%eAlpha(i,j,rhs), g%eBeta(i,j,rhs), g%eb(i,j,rhs) /) )
 #endif
-            g%eR(i,j) = ELab_RTZ(1)
-            g%eTh(i,j) = ELab_RTZ(2)
-            g%eZ(i,j) = ELab_RTZ(3)
+            g%eR(i,j,rhs) = ELab_RTZ(1)
+            g%eTh(i,j,rhs) = ELab_RTZ(2)
+            g%eZ(i,j,rhs) = ELab_RTZ(3)
 
             !! Check rotated field is equal in magnitude
 
@@ -72,15 +75,15 @@ subroutine rotate_E_to_lab ( g )
             do s=1,nSpec
 
 #if __noU__==1
-                jPLab_RTZ = (/ g%jAlpha(i,j,s), g%jBeta(i,j,s), g%jb(i,j,s) /)
+                jPLab_RTZ = (/ g%jAlpha(i,j,s,rhs), g%jBeta(i,j,s,rhs), g%jb(i,j,s,rhs) /)
 #else
                 jPLab_RTZ = &
                     matMul ( transpose ( R_ ), &
-                        (/ g%jAlpha(i,j,s), g%jBeta(i,j,s), g%jb(i,j,s) /) )
+                        (/ g%jAlpha(i,j,s,rhs), g%jBeta(i,j,s,rhs), g%jb(i,j,s,rhs) /) )
 #endif 
-                g%jP_r(i,j,s) = jPLab_RTZ(1)
-                g%jP_t(i,j,s) = jPLab_RTZ(2)
-                g%jP_z(i,j,s) = jPLab_RTZ(3)
+                g%jP_r(i,j,s,rhs) = jPLab_RTZ(1)
+                g%jP_t(i,j,s,rhs) = jPLab_RTZ(2)
+                g%jP_z(i,j,s,rhs) = jPLab_RTZ(3)
 
                 !! Check rotation
 
@@ -100,6 +103,8 @@ subroutine rotate_E_to_lab ( g )
 
         enddo
      enddo
+
+     enddo ! rhs loop
 
 end subroutine rotate_E_to_lab
 
