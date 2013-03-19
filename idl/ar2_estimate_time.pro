@@ -9,26 +9,26 @@ npCol = 32d0
 nSpec = 2
 lMax = 2 
 
-;; Hopper parameters
-;; -----------------
-;print, 'HOPPER'
-;CoresPerNode =16 
-;MemPerNode_GB = 32.0
-;CPU_GFlops_PerCore = 5.0
-;CPU_PGESVR_GFlops_PerCore = 9.8
-;GPU_GFlops_PerNode = 170.0
-;GPU_PGESVR_GFlops_PerNode = 300.0
-
-; Jaguarpf parameters
-; -------------------
-print, 'JAGUARPF'
-CoresPerNode = 16 
+; Hopper parameters
+; -----------------
+print, 'HOPPER'
+CoresPerNode =16 
 MemPerNode_GB = 32.0
-CPU_GFlops_PerCore = 6.6
-CPU_PGESVR_GFlops_PerCore = 8.0
-GPU_GFlops_PerNode = 115.0;
-GPU_PGESVR_GFlops_PerNode = 250.0
-GPU_to_CPU_hours = 14
+CPU_GFlops_PerCore = 5.0
+CPU_PGESVR_GFlops_PerCore = 9.8
+GPU_GFlops_PerNode = 170.0
+GPU_PGESVR_GFlops_PerNode = 300.0
+
+;; Jaguarpf parameters
+;; -------------------
+;print, 'JAGUARPF'
+;CoresPerNode = 16 
+;MemPerNode_GB = 32.0
+;CPU_GFlops_PerCore = 6.6
+;CPU_PGESVR_GFlops_PerCore = 8.0
+;GPU_GFlops_PerNode = 115.0;
+;GPU_PGESVR_GFlops_PerNode = 250.0
+;GPU_to_CPU_hours = 14
 
 GPU_ActualSolveTime = 3690.0 
 GPU_PGESVR_ActualSolveTime = 6647.0
