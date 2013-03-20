@@ -71,7 +71,9 @@ implicit none
       CHARACTER*128 :: eqdsk = 'g1080408021.txt'               ! eqdsk name
       logical :: useEqdsk = .false.
       logical :: useAr2Input = .false.
+      logical :: useAR2SourceLocationsFile = .false.
       character(len=100) :: AR2InputFileName = 'ar2Input.nc'
+      character(len=100) :: AR2SourceLocationsFileName = 'AR2SourceLocations.nc'
       CHARACTER*128 :: netCDF_file1 = 'phillips_nstx3.5.2.nc'  !cql3d distribution file name 1
       CHARACTER*128 :: netCDF_file2 = 'phillips_nstx3.5.2.nc'  !cql3d distribution file name 2
 
@@ -482,7 +484,8 @@ implicit none
      &    kPrlEffLimit, nGrid, useAr2Input, AR2InputFileName, &
      &    nRAll, nZAll, rMinAll, rMaxAll, zMinAll, zMaxAll, &
      &    overlap, parabolic, cosX, cosY, nZ_1D, fracOfModesInSolution, &
-     &    AntennaJ_R, AntennaJ_T, AntennaJ_Z
+     &    AntennaJ_R, AntennaJ_T, AntennaJ_Z, AR2SourceLocationsFileName, &
+     &    useAR2SourceLocationsFile
 
                 
 contains

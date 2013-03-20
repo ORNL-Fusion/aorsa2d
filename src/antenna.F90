@@ -5,7 +5,7 @@ use constants
 implicit none
 
 real :: antSigX, antSigY
-integer, parameter :: NRHS = 3
+integer :: NRHS = 3
 
 #ifndef dblprec
     complex, allocatable :: brhs(:,:)
@@ -19,10 +19,16 @@ contains
     subroutine alloc_total_brhs ( nPts_tot )
 
         use parallel
+        use AR2SourceLocationsInput,  
 
         implicit none
 
         integer(kind=long), intent(in) :: nPts_tot
+
+        if(NRHS<1)then
+                write(*,*) 'ERROR: NRHS<1'
+                stop
+        endif
 
         allocate ( brhs_global(nPts_tot*3,NRHS) )
 #ifdef par

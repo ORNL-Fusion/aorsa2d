@@ -55,7 +55,6 @@ subroutine current ( g )
     call read_sigma ( 'sigma'//g%fNumber//'.nc', sigma = sigmaAll ) 
 #endif
 
-    do rhs=1,NRHS
     species: &
     do s=1,nSpec
 
@@ -74,10 +73,6 @@ subroutine current ( g )
             
                         bFn = g%xx(g%wl(w)%n,g%wl(w)%i) * g%yy(g%wl(w)%m,g%wl(w)%j)
                         !bFn = xBasis(n,g%rNorm(i)) * yBasis(m,g%zNorm(j))
-
-                        ek_nm(1) = g%eAlphak(g%wl(w)%n,g%wl(w)%m,rhs)
-                        ek_nm(2) = g%eBetak(g%wl(w)%n,g%wl(w)%m,rhs)
-                        ek_nm(3) = g%eBk(g%wl(w)%n,g%wl(w)%m,rhs) 
 
 #if __sigma__ != 2
                         thisSigma = sigmaAll(g%wl(w)%i,g%wl(w)%j,g%wl(w)%n,g%wl(w)%m,:,:,s)
@@ -158,13 +153,20 @@ subroutine current ( g )
                             thisSigma(3,3) = metal
 
                         endif
-
 #endif
-                        jVec = matMul ( thisSigma, ek_nm ) 
+                        do rhs=1,NRHS
+    
+                            ek_nm(1) = g%eAlphak(g%wl(w)%n,g%wl(w)%m,rhs)
+                            ek_nm(2) = g%eBetak(g%wl(w)%n,g%wl(w)%m,rhs)
+                            ek_nm(3) = g%eBk(g%wl(w)%n,g%wl(w)%m,rhs) 
 
-                        g%jAlpha(g%wl(w)%i,g%wl(w)%j,s,rhs) = g%jAlpha(g%wl(w)%i,g%wl(w)%j,s,rhs) + jVec(1) * bFn
-                        g%jBeta(g%wl(w)%i,g%wl(w)%j,s,rhs) = g%jBeta(g%wl(w)%i,g%wl(w)%j,s,rhs) + jVec(2) * bFn
-                        g%jB(g%wl(w)%i,g%wl(w)%j,s,rhs) = g%jB(g%wl(w)%i,g%wl(w)%j,s,rhs) + jVec(3) * bFn
+                            jVec = matMul ( thisSigma, ek_nm ) 
+
+                            g%jAlpha(g%wl(w)%i,g%wl(w)%j,s,rhs) = g%jAlpha(g%wl(w)%i,g%wl(w)%j,s,rhs) + jVec(1) * bFn
+                            g%jBeta(g%wl(w)%i,g%wl(w)%j,s,rhs) = g%jBeta(g%wl(w)%i,g%wl(w)%j,s,rhs) + jVec(2) * bFn
+                            g%jB(g%wl(w)%i,g%wl(w)%j,s,rhs) = g%jB(g%wl(w)%i,g%wl(w)%j,s,rhs) + jVec(3) * bFn
+
+                        enddo ! rhs loop
 
                         !g%jAlpha(i,j,s) = g%jAlpha(i,j,s) &
                         !    + ( sigma(i,j,n,m,1,1,s) * g%eAlphak(n,m) &
@@ -191,7 +193,6 @@ subroutine current ( g )
         enddo workList
 
     enddo species
-    enddo ! rhs loop
 
 #if __sigma__ != 2
     deallocate ( sigmaAll )

@@ -20,6 +20,7 @@ program aorsa2dMain
     use setMetal
     !use sigmaInputGeneration
     use ar2Input
+    use AR2SourceLocationsInput, NRHS_FromInputFile=>NRHS
     use Performance
 
     implicit none
@@ -355,6 +356,15 @@ program aorsa2dMain
     if (iAm==0) &
     write(*,*) 'Building antenna current (brhs)'
 
+    if(useAR2SourceLocationsFile)then
+        call ReadAR2SourceLocations(AR2SourceLocationsFileName) 
+        NRHS = NRHS_FromInputFile
+    else 
+        NRHS = 1
+    endif
+
+    if(iAm==0) write(*,*) 'NRHS: ', NRHS
+
     call alloc_total_brhs ( nPts_tot )
     do i=1,nGrid
         call init_brhs ( allGrids(i) )
@@ -500,7 +510,7 @@ program aorsa2dMain
     call start_timer ( tInitDescriptors )
 
 #ifdef par
-    call init_parallel_aMat ()
+    call init_parallel_aMat ( NRHS )
 #endif
 
 #ifdef par
