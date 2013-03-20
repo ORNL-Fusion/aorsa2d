@@ -5,8 +5,8 @@ pro ar2_create_current_source_location_file
 	; location means 3 RHS vectors as we need to account
 	; for each component of the source vector. 
 
-	nSources = 10 ; x 3 for all components
-	NRHS = nSources * 3
+	nSources = 10 ; x 3 x 2 for all components, real & imag
+	NRHS = nSources * 6
 
 	cs_r = fltArr(NRHS)
 	cs_z = fltArr(NRHS)
@@ -14,7 +14,7 @@ pro ar2_create_current_source_location_file
 
 	j=0
 	for i=0,nSources-1 do begin
-		for c=0,2 do begin
+		for c=0,5 do begin
 			cs_r[j] = 7.0
 			cs_z[j] = -1.0+2.0/(nSources-1)*i
 			component_ident[j] = c

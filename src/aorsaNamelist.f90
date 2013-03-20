@@ -121,6 +121,7 @@ implicit none
       real :: zAnt = 0.0               !-----zAnt = location of antenna center in Z (m)
       real :: antSigX = 0.1
       real :: antSigY = 0.3
+      real :: antSigUnit = 0.1
 
       real :: dthetant0 = 40.
       real :: dpsiant0 = .05
@@ -423,7 +424,7 @@ implicit none
                    
       namelist/aorsa2din/ nwdot, lmax, ibessel, &
      &    ti01, xnuead, xnu1ad, xnu2ad, rant, te0, zAnt,  &
-     &    antSigX, antSigY, &
+     &    antSigX, antSigY, antSigUnit, &
      &    ti02, ti03, ti2lim, ti3lim, nuper, nupar, &
      &    ti04, ti05, ti06, ti4lim, ti5lim, ti6lim,  &
      &    inu, iprint, iexact, delta0, xwall, xnwall,  &

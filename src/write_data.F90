@@ -15,6 +15,7 @@ contains
         use constants
         use rotation
         use parallel
+        use antenna, only: NRHS
 
         implicit none
 
@@ -22,7 +23,7 @@ contains
         character(len=100) :: fName 
         character(len=20) :: rid
 
-        integer :: nc_id, nX_id, nY_id, nc_stat
+        integer :: nc_id, nX_id, nY_id, nc_stat, NRHS_id
         integer :: nModesX_id, nModesY_id, nSpec_id
         integer :: &
             x_id, y_id, &
@@ -62,6 +63,7 @@ contains
             call check ( nf90_def_dim ( nc_id, "nModesY", g%nModesZ, nModesY_id ) )
             call check ( nf90_def_dim ( nc_id, "nSpec", nSpec, nSpec_id ) )
             call check ( nf90_def_dim ( nc_id, "scalar", 1, scalar_id ) )
+            call check ( nf90_def_dim ( nc_id, "NRHS", NRHS, NRHS_id ) )
 
             call check ( nf90_def_var ( nc_id, "nPhi", NF90_INT, &
                 scalar_id, nPhi_id ) )
@@ -83,17 +85,17 @@ contains
                 (/nX_id,nY_id/), bmod_id ) ) 
 
             call check ( nf90_def_var ( nc_id, "jr_re", NF90_REAL, &
-                (/nX_id,nY_id/), jr_re_id ) ) 
+                (/nX_id,nY_id,NRHS_id/), jr_re_id ) ) 
             call check ( nf90_def_var ( nc_id, "jr_im", NF90_REAL, &
-                (/nX_id,nY_id/), jr_im_id ) ) 
+                (/nX_id,nY_id,NRHS_id/), jr_im_id ) ) 
             call check ( nf90_def_var ( nc_id, "jt_re", NF90_REAL, &
-                (/nX_id,nY_id/), jt_re_id ) ) 
+                (/nX_id,nY_id,NRHS_id/), jt_re_id ) ) 
             call check ( nf90_def_var ( nc_id, "jt_im", NF90_REAL, &
-                (/nX_id,nY_id/), jt_im_id ) ) 
+                (/nX_id,nY_id,NRHS_id/), jt_im_id ) ) 
             call check ( nf90_def_var ( nc_id, "jz_re", NF90_REAL, &
-                (/nX_id,nY_id/), jz_re_id ) ) 
+                (/nX_id,nY_id,NRHS_id/), jz_re_id ) ) 
             call check ( nf90_def_var ( nc_id, "jz_im", NF90_REAL, &
-                (/nX_id,nY_id/), jz_im_id ) ) 
+                (/nX_id,nY_id,NRHS_id/), jz_im_id ) ) 
 
 
             !call check ( nf90_def_var ( nc_id, "kxsav", NF90_REAL, &

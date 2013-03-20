@@ -49,12 +49,16 @@ contains
             antSigX, antSigY, &
             metalLeft, metalRight, metalTop, metalBot, &
             useEqdsk, r0, rhoAnt, antSigRho, &
-            AntennaJ_R, AntennaJ_T, AntennaJ_Z
+            AntennaJ_R, AntennaJ_T, AntennaJ_Z, &
+            antSigUnit, useAR2SourceLocationsFile
         use grid
         use parallel
         use profiles, only: omgrf
         use constants
         use scalapack_mod, only: IndxL2G
+        use ar2SourceLocationsInput, &
+            only: CurrentSource_r, CurrentSource_z, &
+            CurrentSource_ComponentID
 
         implicit none
 
@@ -70,48 +74,75 @@ contains
 
 
         allocate ( &
-            g%jR(g%nR,g%nZ), &
-            g%jT(g%nR,g%nZ), &
-            g%jZ(g%nR,g%nZ) )
-
-        !   note curden is in Amps per meter of toroidal length (2.*pi*rt).
+            g%jR(g%nR,g%nZ,NRHS), &
+            g%jT(g%nR,g%nZ,NRHS), &
+            g%jZ(g%nR,g%nZ,NRHS) )
 
         g%jR = 0
         g%jT = 0
         g%jZ = 0
  
+        !   note curden is in Amps per meter of toroidal length (2.*pi*rt).
+
+    rhs_fill_loop: &
+    do rhs = 1,NRHS
+
         do i = 1, g%nR
             do j = 1, g%nZ
 
-               if(useEqdsk) then
-                    !TmpAntJ = exp ( &
-                    !-( (g%rho(i,j)-rhoAnt)**2/antSigRho**2 + (g%Z(j)-zAnt)**2/antSigY**2 ) &
-                    !      )
-                    TmpAntJ = 50*exp ( -( (g%R(i)-rAnt)**2/antSigX**2 + (g%Z(j)-zAnt)**2/antSigY**2 ) )
-                else
-                    TmpAntJ = 50*exp ( -( (g%R(i)-rAnt)**2/antSigX**2 + (g%Z(j)-zAnt)**2/antSigY**2 ) )
-                endif
+                if(useAR2SourceLocationsFile)then
 
-                if (AntennaJ_R) g%jR(i,j) = TmpAntJ
-                if (AntennaJ_T) g%jT(i,j) = TmpAntJ
-                if (AntennaJ_Z) g%jZ(i,j) = TmpAntJ
+                    TmpAntJ = 1*exp ( -( &
+                        (g%R(i)-CurrentSource_r(rhs))**2/antSigUnit**2 &
+                            + (g%Z(j)-CurrentSource_z(rhs))**2/antSigUnit**2 ) )
+
+                    ! ID mapping to components:
+                    !   0 -> r_re
+                    !   1 -> t_re
+                    !   2 -> z_re
+                    !   3 -> r_im
+                    !   4 -> t_im
+                    !   5 -> z_im
+
+                    if(CurrentSource_ComponentID(rhs).eq.0) g%jR(i,j,rhs) = TmpAntJ
+                    if(CurrentSource_ComponentID(rhs).eq.1) g%jT(i,j,rhs) = TmpAntJ
+                    if(CurrentSource_ComponentID(rhs).eq.2) g%jZ(i,j,rhs) = TmpAntJ
+
+                    if(CurrentSource_ComponentID(rhs).eq.3) g%jR(i,j,rhs) = zi*TmpAntJ
+                    if(CurrentSource_ComponentID(rhs).eq.4) g%jT(i,j,rhs) = zi*TmpAntJ
+                    if(CurrentSource_ComponentID(rhs).eq.5) g%jZ(i,j,rhs) = zi*TmpAntJ
+ 
+                else
+                    if(useEqdsk) then
+                        !TmpAntJ = exp ( &
+                        !-( (g%rho(i,j)-rhoAnt)**2/antSigRho**2 + (g%Z(j)-zAnt)**2/antSigY**2 ) &
+                        !      )
+                        TmpAntJ = 50*exp ( -( (g%R(i)-rAnt)**2/antSigX**2 + (g%Z(j)-zAnt)**2/antSigY**2 ) )
+                    else
+                        TmpAntJ = 50*exp ( -( (g%R(i)-rAnt)**2/antSigX**2 + (g%Z(j)-zAnt)**2/antSigY**2 ) )
+                    endif
+
+                    if (AntennaJ_R) g%jR(i,j,rhs) = TmpAntJ
+                    if (AntennaJ_T) g%jT(i,j,rhs) = TmpAntJ
+                    if (AntennaJ_Z) g%jZ(i,j,rhs) = TmpAntJ
+                endif
  
                 !   boundary conditions
                 !   -------------------
 
                 if(g%nR/=1) then
                 if ( i==1 .or. i==g%nR ) then
-                    g%jR(i,j)    = 0
-                    g%jT(i,j)    = 0
-                    g%jZ(i,j)    = 0
+                    g%jR(i,j,rhs)    = 0
+                    g%jT(i,j,rhs)    = 0
+                    g%jZ(i,j,rhs)    = 0
                 endif
                 endif
 
                 if(g%nZ/=1) then
                 if ( j==1 .or. j==g%nZ ) then
-                    g%jR(i,j)    = 0
-                    g%jT(i,j)    = 0
-                    g%jZ(i,j)    = 0
+                    g%jR(i,j,rhs)    = 0
+                    g%jT(i,j,rhs)    = 0
+                    g%jZ(i,j,rhs)    = 0
                 endif
                 endif
 
@@ -127,9 +158,6 @@ contains
            enddo
         enddo
 
-
-    rhs_fill_loop: &
-    do rhs = 1,NRHS
 
         do i = 1, g%nR
             do j = 1, g%nZ
@@ -171,9 +199,9 @@ contains
 !
 !                    endif
 #else
-                    if (ii==0) brhs(iRow+0,rhs)    = -zi*omgrf*mu0*g%jR(i,j)
-                    if (ii==1) brhs(iRow+1,rhs)    = -zi*omgrf*mu0*g%jT(i,j)
-                    if (ii==2) brhs(iRow+2,rhs)    = -zi*omgrf*mu0*g%jZ(i,j)
+                    if (ii==0) brhs(iRow+0,rhs)    = -zi*omgrf*mu0*g%jR(i,j,rhs)
+                    if (ii==1) brhs(iRow+1,rhs)    = -zi*omgrf*mu0*g%jT(i,j,rhs)
+                    if (ii==2) brhs(iRow+2,rhs)    = -zi*omgrf*mu0*g%jZ(i,j,rhs)
 #endif
                 enddo
             enddo
@@ -188,9 +216,9 @@ contains
                 i = (iRow-1)/(3*g%nZ)+1
                 j = (mod(iRow-1,3*g%nZ)+1-1)/3+1
           
-                brhs(ii+0,rhs) =  -zi*omgrf*mu0*g%jR(i,j)
-                brhs(ii+1,rhs) =  -zi*omgrf*mu0*g%jT(i,j)
-                brhs(ii+2,rhs) =  -zi*omgrf*mu0*g%jZ(i,j)
+                brhs(ii+0,rhs) =  -zi*omgrf*mu0*g%jR(i,j,rhs)
+                brhs(ii+1,rhs) =  -zi*omgrf*mu0*g%jT(i,j,rhs)
+                brhs(ii+2,rhs) =  -zi*omgrf*mu0*g%jZ(i,j,rhs)
 
             enddo
         endif

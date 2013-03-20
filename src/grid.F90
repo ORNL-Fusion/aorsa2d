@@ -85,7 +85,7 @@ type :: gridBlock
 
     ! Antenna Currents
     ! ----------------
-    complex, allocatable, dimension(:,:) :: &
+    complex, allocatable, dimension(:,:,:) :: &
         jR, jT, jZ
 
     ! E field solution
