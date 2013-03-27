@@ -50,6 +50,7 @@ end
 pro ar2_create_input
 
 	flat_profiles = 1
+	gaussian_profiles = 0
 	br_flat = 0.0
 	bt_flat = 1.0
 	bz_flat = 0.0
@@ -58,8 +59,9 @@ pro ar2_create_input
 
 	;@gorden_bell
 	;@gorden_bell_b
-	@ar2_run_langmuir
+	;@ar2_run_langmuir
 	;@ar2_run_nstxslow
+	@ar2_run_ar_vo_bench
 
 	nSpec = n_elements ( amu )
 	wrf	= freq * 2d0 * !dpi
@@ -74,6 +76,10 @@ pro ar2_create_input
 
 	r2d = rebin ( r, nR, nZ )
 	z2d = transpose ( rebin ( z, nZ, nR ) )
+
+	x2d = r2d
+	y2d = z2d
+
 
 	if eqdsk eq 1 then begin
 
@@ -165,6 +171,42 @@ pro ar2_create_input
 		bt = fltArr(nR,nZ)+bt_flat
 		bz = fltArr(nR,nZ)+bz_flat
 
+	endif else if gaussian_profiles eq 1 then begin
+
+		oversample_boundary, rlim, zlim, rlim_os, zlim_os 
+
+		mypoly=obj_new('IDLanROI',rlim_os,zlim_os,type=2)
+		mask_lim = mypoly->ContainsPoints(r2d[*],z2d[*])
+		mask_lim = reform(mask_lim,nR,nZ)
+		iiMaskIn_lim = where ( mask_lim eq 1 )
+		iiMaskOut_lim = where ( mask_lim eq 0 )
+
+		bt = r0 * b0 / r2d
+
+		psi = 1 - exp(-( (x2d-x0)^2/psi_xsig^2+(y2d-y0)^2/psi_ysig^2 ))
+
+		bx2d = fltArr(nR,nZ)
+		by2d = fltArr(nR,nZ)
+
+		for j=0,nZ-1 do begin
+			bx2d[*,j] = deriv(psi[*,j])
+		endfor
+		for i=0,nR-1 do begin
+			by2d[i,*] = deriv(psi[i,*])
+		endfor
+
+		bp_mag = sqrt(bx2d^2+by2d^2)
+
+		bx2d = bx2d/max(bp_mag)*b0*bpmax_b0
+		by2d = by2d/max(bp_mag)*b0*bpmax_b0
+
+		br = bx2d
+		bz = by2d
+
+		p=plot(r,bt[*,nZ/2])
+		p=plot(r,br[*,nZ/2],/over)
+		p=plot(r,bz[*,nZ/2],/over)
+
 	endif else begin
 
 		mask_bbb = FltArr(nR,nZ)+1	
@@ -187,6 +229,33 @@ pro ar2_create_input
 
 		ar2_create_flux_profiles, nSpec, nn, tt, nR, nZ, PsiNorm, Mask_bbb, d_bbb, $
 			Density_m3, Temp_eV, DensityMin = DensityMin, TempMin = TempMin
+
+	endif else if gaussian_profiles eq 1 then begin
+
+		Density_m3[*] = 0
+
+		for s=1,nSpec-1 do begin
+
+			Density_m3[*,*,s] = nn[1,s]*exp(-((x2d-x0)^2/Density_xsig^2+(y2d-y0)^2/Density_ysig^2 ))
+			Density_m3[*,*,s] = Density_m3[*,*,s]>DensityMin
+			Density_m3[*,*,s] = Smooth(Density_m3[*,*,s],20,/edge_mirror)
+
+			Density_m3[*,*,0] = Density_m3+Density_m3[*,*,s]*atomicZ[s]
+
+
+		endfor
+
+		for s=0,nSpec-1 do begin
+
+			Temp_eV[*,*,s] = tt[1,s]*exp(-((x2d-x0)^2/Temp_xsig^2+(y2d-y0)^2/Temp_ysig^2 ))
+
+		endfor
+
+			Temp_eV=Temp_eV>TempMin
+
+		p=plot(r,Density_m3[*,nZ/2,0],title='Density [1/m3]',/ylog)
+		p=plot(r,Temp_eV[*,nZ/2,0],title='Temp [eV]')
+
 	endif else begin
 
 		for s=0,nSpec-1 do begin
@@ -198,21 +267,104 @@ pro ar2_create_input
 
 	; Look at the dispersion relation for these data
 
-	ar2_input_dispersion, wrf, amu, atomicZ, nn, nPhi, nSpec, nR, nZ, $
-			Density_m3, bMag, r2D, resonances = resonances, $
-			IonIonHybrid_res_freq=IonIonHybrid_res_freq, Spec1=1.0,Spec2=2.0
+	n_nPhi = 101 
+	nPhiMin = -n_nPhi/2
+	nPhiArray = IndGen(n_nPhi)+nPhiMin
 
+	kPerp_F = complexArr(nR,n_nPhi)
+	kPerp_S = complexArr(nR,n_nPhi)
+
+	kPerp_F2D_avg = complexArr(nR,nZ)
+	kPerp_S2D_avg = complexArr(nR,nZ)
+
+	StixP_nPhi = FltArr(nR,n_nPhi)
+	StixS_nPhi = FltArr(nR,n_nPhi)
+	StixR_nPhi = FltArr(nR,n_nPhi)
+	StixL_nPhi = FltArr(nR,n_nPhi)
+
+	for nphi_i=0,n_nPhi-1 do begin
+
+	ar2_input_dispersion, wrf, amu, atomicZ, nn, nPhiArray[nphi_i], nSpec, nR, nZ, $
+			Density_m3, bMag, r2D, resonances = resonances, $
+			IonIonHybrid_res_freq=IonIonHybrid_res_freq, Spec1=1.0,Spec2=2.0, $
+			kPerSq_F=kPerpSq_F,kPerSq_S=kPerpSq_S, $
+			StixP=StixP,StixL=StixL,StixR=StixR,StixS=StixS
+		
+		slice = nZ/4
+		kPerp_F[*,nphi_i] = sqrt(kPerpSq_F[*,slice])
+		kPerp_S[*,nphi_i] = sqrt(kPerpSq_S[*,slice])
+
+		kPerp_F2D_avg = kPerp_F2D_avg + sqrt(kPerpSq_F)
+		kPerp_S2D_avg = kPerp_S2D_avg + sqrt(kPerpSq_S)
+
+	endfor
+
+	kPerp_F2D_avg = kPerp_F2D_avg/n_nPhi
+	kPerp_S2D_avg = kPerp_S2D_avg/n_nPhi
+
+	nLevs=21
+	range=20
+	levels = (findGen(nLevs)+1)/nLevs*range
+	colors = 256-(bytScl(levels,top=254)+1)
+	c = contour(kPerp_F,r,nPhiArray,c_value=levels,rgb_indices=colors,rgb_table='1',/fill)
+
+	nLevs=31
+	range=500
+	levels = (findGen(nLevs)+1)/nLevs*range
+	levels = [1,2,3,10,20,30,100,200,300,1e3,2e3,4e3]
+	levels_map = findgen(n_elements(levels))
+	colors = 256-(bytScl(levels_map,top=254)+1)
+	c = contour(kPerp_S,r,nPhiArray,c_value=levels,rgb_indices=colors,rgb_table='3',/fill)
+
+	c = contour(stixp,r,z,layout=[2,2,1],n_levels=21)
+	c = contour(stixs,r,z,layout=[2,2,2],n_levels=21,/current)
+	c = contour(stixr,r,z,layout=[2,2,3],n_levels=21,/current)
+	c = contour(stixl,r,z,layout=[2,2,4],n_levels=21,/current)
+
+	nLevs=31
+	range=20
+	levels = (findGen(nLevs)+1)/nLevs*range
+	levels = [1,2,3,10,20,30,100,200,300,1e3,2e3,4e3]
+	levels_map = findgen(n_elements(levels))
+	colors = 256-(bytScl(levels_map,top=254)+1)
+	c = contour(kPerp_F2D_avg,r,z,layout=[2,1,1],$
+			c_value=levels,rgb_indices=colors,rgb_table='1',/fill,aspect_ratio=1.0)
+	p=plot(rlim,zlim,/over,thick=2)
+	p=plot(VorpalBox_r,VorpalBox_z,/over,thick=2,color='b')
+	
+	nLevs=31
+	range=500
+	levels = (findGen(nLevs)+1)/nLevs*range
+	levels = [1,2,3,10,20,30,100,200,300,1e3,2e3,4e3]
+	levels_map = findgen(n_elements(levels))
+	colors = 256-(bytScl(levels_map,top=254)+1)
+	c = contour(kPerp_S2D_avg,r,z,layout=[2,1,2],/current,$
+			c_value=levels,rgb_indices=colors,rgb_table='3',/fill,aspect_ratio=1.0)
+	p=plot(rlim,zlim,/over,thick=2)
+	p=plot(VorpalBox_r,VorpalBox_z,/over,thick=2,color='b')
+	
 	; Plot up resonance locations too.
 
 	if eqdsk eq 1 and nZ gt 1 then begin
-		p = plot(g.rbbbs,g.zbbbs,thick=2,aspect=1.0)
-		p = plot(g.rlim,g.zlim,thick=2,aspect=1.0,/over)
+		p = plot(g.rbbbs,g.zbbbs,thick=2,aspect_ratio=1.0)
+		p = plot(g.rlim,g.zlim,thick=2,/over)
 
 		for s=1,nSpec-1 do begin
 			c=contour(resonances[*,*,s],r,z,c_value=fIndGen(5)/4.0*0.01,/over)
 		endfor
 		if nSpec gt 2 then $
 		c=contour(1/(abs(IonIonHybrid_res_freq mod wrf)/wrf),r,z,c_value=fIndGen(25)*10,/over)
+	endif else if eqdsk eq 0 and nZ gt 1 then begin
+
+		c=contour(psi,r,z,aspect_ratio=1.0)	
+		p=plot(rlim,zlim,/over,thick=2)
+		p=plot(VorpalBox_r,VorpalBox_z,/over,thick=2,color='b')
+		for s=1,nSpec-1 do begin
+			c=contour(resonances[*,*,s],r,z,c_value=fIndGen(5)/4.0*0.01,/over)
+		endfor
+		if nSpec gt 2 then $
+		c=contour(1/(abs(IonIonHybrid_res_freq mod wrf)/wrf),r,z,c_value=fIndGen(25)*10,/over)
+
 	endif else if eqdsk eq 0 and nZ eq 0 then begin
 		for s=1,nSpec-1 do begin
 			p = plot(r,resonances[*,0,s],/over)
@@ -231,8 +383,7 @@ pro ar2_create_input
 	nR_id	= nCdf_dimDef ( nc_id, 'nR', nR )
 	nz_id	= nCdf_dimDef ( nc_id, 'nZ', nZ )
 	nSpec_id	= nCdf_dimDef ( nc_id, 'nSpec', nSpec )
-	if eqdsk eq 1 then nbbbs_id	= nCdf_dimDef ( nc_id, 'nbbbs', n_elements(g.rbbbs) )
-	if eqdsk eq 1 then nlim_id	= nCdf_dimDef ( nc_id, 'nlim', n_elements(g.rlim) )
+	nlim_id	= nCdf_dimDef ( nc_id, 'nlim', n_elements(rlim) )
 
 	scalar_id	= nCdf_dimDef ( nc_id, 'scalar', 1 )
 
@@ -254,7 +405,10 @@ pro ar2_create_input
 	Temp_id = nCdf_varDef ( nc_id, 'Temp_eV', [nR_id, nz_id, nSpec_id], /float )
 
 	LimMask_id = nCdf_varDef ( nc_id, 'LimMask', [nR_id,nz_id], /short )
-	BbbMask_id = nCdf_varDef ( nc_id, 'BbbMask', [nR_id,nz_id], /short )
+	;BbbMask_id = nCdf_varDef ( nc_id, 'BbbMask', [nR_id,nz_id], /short )
+
+	Lim_r_id = nCdf_varDef ( nc_id, 'Lim_r', [nlim_id], /float )
+	Lim_z_id = nCdf_varDef ( nc_id, 'Lim_z', [nlim_id], /float )
 
 	nCdf_control, nc_id, /enDef
 
@@ -276,7 +430,10 @@ pro ar2_create_input
 	nCdf_varPut, nc_id, Temp_id, Temp_eV
 
 	nCdf_varPut, nc_id, LimMask_id, mask_lim 
-	nCdf_varPut, nc_id, BbbMask_id, mask_bbb
+	;nCdf_varPut, nc_id, BbbMask_id, mask_bbb
+
+	nCdf_varPut, nc_id, Lim_r_id, rlim
+	nCdf_varPut, nc_id, Lim_z_id, zlim
 
 	nCdf_close, nc_id
 

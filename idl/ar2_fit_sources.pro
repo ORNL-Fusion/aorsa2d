@@ -1,4 +1,12 @@
-pro ar2_fit_sources
+pro ar2_fit_sources, $
+	ThisComponentID=ThisComponentID, $
+	CoeffsOut2D = CoeffsOut2D
+
+	; 0 = r
+	; 1 = t
+	; 2 = z
+
+	if not keyword_set(ThisComponentID) then ThisComponentID=0
 
 	SourceLocationsFile = 'AR2SourceLocations.nc'
 	RunDataFile = 'runData001.nc'
@@ -109,7 +117,7 @@ pro ar2_fit_sources
 	c = 0
 	for p=0,n_nPhi-1 do begin
 		for rhs=0,NRHS-1 do begin
-			if CurrentSource_ComponentID[rhs] eq 0 then begin
+			if CurrentSource_ComponentID[rhs] eq ThisComponentID then begin
 				for i=0,n_Fit-1 do begin
 					; interpolate 2D
 					r_index = (r_Fit[i]-min(r))/(max(r)-min(r))*nr
@@ -172,6 +180,6 @@ pro ar2_fit_sources
 
 	c5=contour(coeffs_2D,nPhi,CurrentSource_z[IndGen(nSources)*3],n_levels=21,/fill)
 
-stop
+	CoeffsOut2D = CoeffsOut2D ; (n_nPhi,nSources)
 
-end
+stop

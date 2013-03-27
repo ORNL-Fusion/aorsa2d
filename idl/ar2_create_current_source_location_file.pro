@@ -13,10 +13,15 @@ pro ar2_create_current_source_location_file
 	component_ident = intArr(NRHS)
 
 	j=0
+
+	rLoc = 2.075
+	zMin = -0.2
+	zMax = 0.2
+
 	for i=0,nSources-1 do begin
 		for c=0,2 do begin
-			cs_r[j] = 7.0
-			cs_z[j] = -1.3+2.6/(nSources-1)*i
+			cs_r[j] = rLoc
+			cs_z[j] = zMin+(zMax-zMin)/(nSources-1)*i
 			component_ident[j] = c
 			j++
 		endfor

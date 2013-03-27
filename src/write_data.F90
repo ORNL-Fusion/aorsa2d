@@ -34,7 +34,8 @@ contains
             scalar_id, nPhi_id, freq_id
         integer :: &
             xx_re_id, yy_re_id, xx_im_id, yy_im_id, &
-            drBfn_re_id, dzBfn_re_id, drbFn_im_id, dzbFn_im_id
+            drBfn_re_id, dzBfn_re_id, drbFn_im_id, dzbFn_im_id, &
+            LimMask_id
 
         integer :: drUrrid, drUrtid, drUrzid
         integer :: drUtrid, drUttid, drUtzid
@@ -49,6 +50,7 @@ contains
             Uzrid, Uztid, Uzzid
 
         real, allocatable :: RealTmp(:,:),RealTmp3(:,:,:)
+        integer, allocatable :: IntTmp(:,:)
         complex, allocatable :: ComplexTmp2(:,:)
         integer :: p,i,j,s
         integer, allocatable :: Cnt(:,:)
@@ -162,16 +164,28 @@ contains
             nc_stat = nf90_def_var ( nc_id, "Uzt", NF90_REAL, (/nX_id,nY_id/), Uztid ) 
             nc_stat = nf90_def_var ( nc_id, "Uzz", NF90_REAL, (/nX_id,nY_id/), Uzzid ) 
 
+            nc_stat = nf90_def_var ( nc_id, "LimMask", NF90_INT, (/nX_id,nY_id/), LimMask_id ) 
+
             call check ( nf90_enddef ( nc_id ) )
         endif
-       
+      
+        allocate(IntTmp(g%nR,g%nZ)) 
+        do p=1,size(g%pt)
+            i = g%pt(p)%i
+            j = g%pt(p)%j
+            IntTmp(i,j) = g%isMetal(p)
+            IntTmp(i,j) = abs(IntTmp(i,j)-1)
+        enddo
 
         if(iAm==0)then
             nc_stat = nf90_put_var ( nc_id, nPhi_id, nPhi ) 
             nc_stat = nf90_put_var ( nc_id, freq_id, freqcy ) 
             nc_stat = nf90_put_var ( nc_id, x_id, g%R ) 
             nc_stat = nf90_put_var ( nc_id, y_id, g%Z )
+            nc_stat = nf90_put_var ( nc_id, LimMask_id, IntTmp )
         endif   
+
+        deallocate(IntTmp)
 
         allocate(RealTmp(g%nR,g%nZ),Cnt(g%nR,g%nZ))
 
@@ -376,7 +390,9 @@ contains
 
         integer :: jouleHeating_id
 
-        fName = trim(rid)//'solution'//g%fNumber//'.nc'
+        character(len=4) :: nPhi_string
+        write(nPhi_string,'(sp,i4.3)'), int(nPhi)
+        fName = trim(rid)//'solution'//g%fNumber//nPhi_string//'.nc'
 
         call check ( nf90_create ( fName, nf90_clobber, nc_id ) )
         stat=nf90_def_dim(nc_id,"scalar",1,scalar_id)

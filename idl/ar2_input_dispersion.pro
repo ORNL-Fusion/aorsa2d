@@ -2,7 +2,9 @@ pro ar2_input_dispersion, wrf, amu, AtomicZ, nn, nPhi, nSpec, nR, nZ, Density_m3
 		r2D, resonances = resonances, $
 		IonIonHybrid_res_freq=IonIonHybrid_res_freq, $
 		IonIonHybrid_cut_freq=IonIonHybrid_cut_freq, $
-		Spec1=Spec1,Spec2=Spec2
+		Spec1=Spec1,Spec2=Spec2, $
+		kPerSq_F=kPerSq_F, kPerSq_S=kPerSq_S, $
+		StixP=StixP,StixL=StixL,StixR=StixR,StixS=StixS
 
 	@constants
 
@@ -59,7 +61,7 @@ pro ar2_input_dispersion, wrf, amu, AtomicZ, nn, nPhi, nSpec, nR, nZ, Density_m3
 	kPerSq_1 = kPerSq_F[*,zSlice]
 	kPerSq_2 = kPerSq_S[*,zSlice]
 
-	p=plot(r2D[*,zSlice],sqrt(kPerSq_F[*,zSlice]),color='b')
-	p=plot(r2D[*,zSlice],sqrt(kPerSq_S[*,zSlice]),/over,color='r')
+	;p=plot(r2D[*,zSlice],sqrt(kPerSq_F[*,zSlice]),color='b',/ylog)
+	;p=plot(r2D[*,zSlice],sqrt(kPerSq_S[*,zSlice]),/over,color='r',/ylog)
 
 end

@@ -81,8 +81,8 @@ else
 	FORMAT := -ffree-line-length-none
 	BOUNDS := #-fbounds-check 
 	WARN := -Wall
-	DEBUG := -pg -g -fbacktrace -fsignaling-nans -ffpe-trap=zero,invalid#,overflow#,underflow
-	OPTIMIZATION := #-O3
+	DEBUG := #-pg -g -fbacktrace -fsignaling-nans -ffpe-trap=zero,invalid#,overflow#,underflow
+	OPTIMIZATION := -O3
 	DOUBLE := -fdefault-real-8
 	MOD_LOC := -Jmod
 endif
