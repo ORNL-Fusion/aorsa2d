@@ -170,12 +170,22 @@ contains
         endif
       
         allocate(IntTmp(g%nR,g%nZ)) 
+        allocate(Cnt(g%nR,g%nZ))
+        IntTmp = 0
+        Cnt = 0
+
         do p=1,size(g%pt)
             i = g%pt(p)%i
             j = g%pt(p)%j
             IntTmp(i,j) = g%isMetal(p)
-            IntTmp(i,j) = abs(IntTmp(i,j)-1)
+            Cnt(i,j) = Cnt(i,j)+1
         enddo
+#ifdef par
+        call iGSUM2D ( iContext, 'All', ' ', g%nR, g%nZ, IntTmp, g%nR, -1, -1 )
+        call iGSUM2D ( iContext, 'All', ' ', g%nR, g%nZ, Cnt, g%nR, -1, -1 )
+#endif
+        IntTmp = IntTmp/Cnt
+        IntTmp = abs(IntTmp-1)
 
         if(iAm==0)then
             nc_stat = nf90_put_var ( nc_id, nPhi_id, nPhi ) 
