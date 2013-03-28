@@ -57,7 +57,7 @@ contains
         character(len=4) :: nPhi_string
 
         write(nPhi_string,'(sp,i4.3)'), int(nPhi)
-        fName = trim(rid)//'solution'//g%fNumber//nPhi_string//'.nc'
+        fName = trim(rid)//'runData'//g%fNumber//nPhi_string//'.nc'
 
         if(iAm==0)then
             call check ( nf90_create ( fName, nf90_clobber, nc_id ) )
