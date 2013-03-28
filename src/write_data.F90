@@ -197,7 +197,7 @@ contains
 
         deallocate(IntTmp)
 
-        allocate(RealTmp(g%nR,g%nZ),Cnt(g%nR,g%nZ))
+        allocate(RealTmp(g%nR,g%nZ))
 
         !bR_unit 
         RealTmp = 0 
