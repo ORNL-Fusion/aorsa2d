@@ -110,6 +110,10 @@ ifneq (,$(findstring jaguarpf,$(shell uname -n)))
 	include Makefile.jaguarpf
 endif
 
+ifneq (,$(findstring titan,$(shell uname -n)))
+	include Makefile.titan
+endif
+
 ifneq (,$(findstring greendl,$(shell uname -n)))
 	include Makefile.greendl
 endif

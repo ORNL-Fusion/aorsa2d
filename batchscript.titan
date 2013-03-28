@@ -1,0 +1,13 @@
+
+#PBS -N aorsa_mrhs
+#PBS -A FUS047
+#PBS -m e
+#PBS -j oe
+#PBS -q debug
+#PBS -l walltime=0:30:00,size=256
+#PBS -V
+
+cd $PBS_O_WORKDIR
+
+aprun -n 256 $HOME/aorsa2d/xaorsa2d
+

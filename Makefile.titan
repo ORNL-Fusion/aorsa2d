@@ -1,0 +1,31 @@
+# Overwrite variables for jaguar-pf XT5 @ NCCS
+
+F90 := ftn
+SCALAPACK := 
+CPP_DIRECTIVES += #-DUSE_PGESVR -DUSE_ROW_SCALING
+
+ifeq (${GPU},1)
+	SCALAPACK :=  /ccs/home/efdazedo/public/OOCLU/lib.a /ccs/home/efdazedo/public/OOCLU/liblin.a
+	CUDA_HOME := $(CUDAROOT)
+	LIBS += -L${CUDA_HOME}/lib64  -lcuda -lcudart -lcublas -lcudart 
+	LIBS += -lpthread -lm
+	F90_g := ftn -g -fdump-core -fstack-check \
+		-finit-real=inf -finit-logical=false   \
+		-finit-integer=2147483647 -finit-character=35 \
+		-I /ccs/home/efdazedo/pubic/OOCLU
+	F90_O := ftn -malign-double -O3 -ffast-math -funroll-loops \
+		 -mavx -mprefer-avx128 -mfma4 \
+		 -fopenmp  -I /ccs/home/efdazedo/pubic/OOCLU
+	F90 := $(F90_O) -I /ccs/home/efdazedo/pubic/OOCLU
+	INC_DIR += -I /ccs/home/efdazedo/pubic/OOCLU	
+	CPP_DIRECTIVES += -DUSE_GPU=1 -DUSE_ROW_SCALING #-DUSE_PGESVR #-DUSE_RCOND 
+endif
+
+LIBS := ${SCALAPACK} ${LIBS}
+
+INC_DIR += ${PAPI_INCLUDE_OPTS}  
+LIBS += ${PAPI_POST_LINK_OPTS}
+
+LIBS += ${NETCDF_FLIB} 
+
+
