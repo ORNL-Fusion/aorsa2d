@@ -54,8 +54,10 @@ contains
         complex, allocatable :: ComplexTmp2(:,:)
         integer :: p,i,j,s
         integer, allocatable :: Cnt(:,:)
+        character(len=4) :: nPhi_string
 
-        fName = trim(rid)//'runData'//g%fNumber//'.nc'
+        write(nPhi_string,'(sp,i4.3)'), int(nPhi)
+        fName = trim(rid)//'solution'//g%fNumber//nPhi_string//'.nc'
 
         if(iAm==0)then
             call check ( nf90_create ( fName, nf90_clobber, nc_id ) )
