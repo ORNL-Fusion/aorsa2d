@@ -1,5 +1,7 @@
-pro ar2_read_ar2input, fileName, rLim=rLim, zLim=zLim, LimMask=LimMask
+pro ar2_read_ar2input, fileName, $
+		nPhi=nPhi,rLim=rLim, zLim=zLim, LimMask=LimMask
 
+	nPhiStr = string(nPhi,format='(i+4.3)')
 	cdfId = ncdf_open ( fileName, /noWrite ) 
 	nCdf_varGet, cdfid, 'rMin', rMin
 	nCdf_varGet, cdfid, 'rMax', rMax
@@ -23,7 +25,7 @@ pro ar2_read_ar2input, fileName, rLim=rLim, zLim=zLim, LimMask=LimMask
 	nCdf_varGet, cdfid, 'Lim_z', zlim 
 	ncdf_close, cdfId
 
-	cdfId = ncdf_open ( 'runData001.nc', /noWrite ) 
+	cdfId = ncdf_open ( 'runData001'+nPhiStr+'.nc', /noWrite ) 
 		nCdf_varGet, cdfid, 'LimMask', LimMask
 	ncdf_close, cdfId
 

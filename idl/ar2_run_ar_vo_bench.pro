@@ -51,6 +51,8 @@
 	nZ = 401
 	rMin = 4.0*ShrinkFac
 	rMax = 8.4*ShrinkFac
+	rMax = 12*ShrinkFac
+
 	zMin = -4.7*ShrinkFac
 	zMax = 4.7*ShrinkFac
 
