@@ -234,11 +234,12 @@ pro ar2_create_input
 
 		Density_m3[*] = 0
 
+		SmoothWidth=min([nR,nZ])*0.2
 		for s=1,nSpec-1 do begin
 
 			Density_m3[*,*,s] = nn[1,s]*exp(-((x2d-x0)^2/Density_xsig^2+(y2d-y0)^2/Density_ysig^2 ))
 			Density_m3[*,*,s] = Density_m3[*,*,s]>DensityMin
-			Density_m3[*,*,s] = Smooth(Density_m3[*,*,s],20,/edge_mirror)
+			Density_m3[*,*,s] = Smooth(Density_m3[*,*,s],SmoothWidth,/edge_mirror)
 
 			Density_m3[*,*,0] = Density_m3+Density_m3[*,*,s]*atomicZ[s]
 
@@ -248,10 +249,11 @@ pro ar2_create_input
 		for s=0,nSpec-1 do begin
 
 			Temp_eV[*,*,s] = tt[1,s]*exp(-((x2d-x0)^2/Temp_xsig^2+(y2d-y0)^2/Temp_ysig^2 ))
+			Temp_eV[*,*,s] = Temp_eV[*,*,s]>TempMin
+			Temp_eV[*,*,s] = Smooth(Temp_eV[*,*,s],SmoothWidth,/edge_mirror)
 
 		endfor
 
-			Temp_eV=Temp_eV>TempMin
 
 		p=plot(r,Density_m3[*,nZ/2,0],title='Density [1/m3]',/ylog)
 		p=plot(r,Temp_eV[*,nZ/2,0],title='Temp [eV]')
