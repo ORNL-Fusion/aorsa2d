@@ -47,11 +47,14 @@ subroutine setupSigmaParameterSplines ( g )
 
     enddo
 
-    allocate( g%spline_nuOmg(3*g%nR*g%nZ) )
-    call surf1 ( g%nR, g%nZ, g%r, g%z, g%nuOmg, g%nR, zx1, zxm, &
-        zy1, zyn, zxy11, zxym1, zxy1n, zxymn, islpsw, &
-        g%spline_nuOmg, interpTemp, g%interpSigma, iErr)
+    allocate( g%spline_nuOmg(3*g%nR*g%nZ,nSpec) )
+    do s=1,nSpec
 
+        tmpReal = g%nuOmg(:,:,s)
+        call surf1 ( g%nR, g%nZ, g%r, g%z, tmpReal, g%nR, zx1, zxm, &
+            zy1, zyn, zxy11, zxym1, zxy1n, zxymn, islpsw, &
+            g%spline_nuOmg(:,s), interpTemp, g%interpSigma, iErr)
+    enddo
 
 end subroutine setupSigmaParameterSplines
 

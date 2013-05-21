@@ -61,7 +61,8 @@ pro ar2_create_input
 	;@gorden_bell_b
 	;@ar2_run_langmuir
 	;@ar2_run_nstxslow
-	@ar2_run_ar_vo_bench
+	;@ar2_run_ar_vo_bench
+	@ar2_run_coupling_right
 
 	nSpec = n_elements ( amu )
 	wrf	= freq * 2d0 * !dpi
@@ -189,10 +190,10 @@ pro ar2_create_input
 		by2d = fltArr(nR,nZ)
 
 		for j=0,nZ-1 do begin
-			bx2d[*,j] = deriv(psi[*,j])
+			by2d[*,j] = deriv(psi[*,j])
 		endfor
 		for i=0,nR-1 do begin
-			by2d[i,*] = deriv(psi[i,*])
+			bx2d[i,*] = deriv(psi[i,*])
 		endfor
 
 		bp_mag = sqrt(bx2d^2+by2d^2)
@@ -204,8 +205,8 @@ pro ar2_create_input
 		bz = by2d
 
 		p=plot(r,bt[*,nZ/2])
-		p=plot(r,br[*,nZ/2],/over)
-		p=plot(r,bz[*,nZ/2],/over)
+		p=plot(r,br[*,nZ/2],/over,color='b')
+		p=plot(r,bz[*,nZ/2],/over,color='r')
 
 	endif else begin
 
@@ -224,6 +225,7 @@ pro ar2_create_input
 
 	Density_m3	= fltArr ( nR, nZ, nSpec )
 	Temp_eV	= fltArr ( nR, nZ, nSpec )
+    nuOmg = fltArr ( nR, nZ, nSpec )
 
 	if flux_profiles eq 1 then begin
 
@@ -266,6 +268,15 @@ pro ar2_create_input
 		endfor
 
 	endelse
+
+    ; Create nuOmg profiles
+
+    global_nuOmg = r2D*0
+    iiNuOmgSet = where(r2D lt 2.0,iiNuOmgSetCnt) 
+    global_nuOmg[iiNuOmgSet] = 1.0
+    for s=0,nSpec-1 do begin
+        nuOmg[*,*,s] = global_nuOmg
+    endfor
 
 	; Look at the dispersion relation for these data
 
@@ -405,6 +416,7 @@ pro ar2_create_input
 
 	Density_id = nCdf_varDef ( nc_id, 'Density_m3', [nR_id, nz_id, nSpec_id], /float )
 	Temp_id = nCdf_varDef ( nc_id, 'Temp_eV', [nR_id, nz_id, nSpec_id], /float )
+	nuOmg_id = nCdf_varDef ( nc_id, 'nuOmg', [nR_id, nz_id, nSpec_id], /float )
 
 	LimMask_id = nCdf_varDef ( nc_id, 'LimMask', [nR_id,nz_id], /short )
 	;BbbMask_id = nCdf_varDef ( nc_id, 'BbbMask', [nR_id,nz_id], /short )
@@ -430,6 +442,7 @@ pro ar2_create_input
 
 	nCdf_varPut, nc_id, Density_id, Density_m3
 	nCdf_varPut, nc_id, Temp_id, Temp_eV
+	nCdf_varPut, nc_id, nuOmg_id, nuOmg
 
 	nCdf_varPut, nc_id, LimMask_id, mask_lim 
 	;nCdf_varPut, nc_id, BbbMask_id, mask_bbb
@@ -438,6 +451,78 @@ pro ar2_create_input
 	nCdf_varPut, nc_id, Lim_z_id, zlim
 
 	nCdf_close, nc_id
+
+	; Write VORPAL-AORSA Coupling text file
+
+	for s=0,nSpec-1 do begin
+
+		VorpalFileName = 'VorpalProfiles_'+string(s,format='(i1)')+'.txt'
+
+		Vorpal_nX = 64
+		Vorpal_nY = 32
+		Vorpal_nZ = 16
+
+		Vorpal_xDim = 0.8
+		Vorpal_yDim = 0.4
+		Vorpal_zDim = 0.36
+
+		Vorpal_xMin = min(VorpalBox_r)
+		Vorpal_xMax = max(VorpalBox_r)
+		Vorpal_x_grid = fIndGen(Vorpal_nX)*(Vorpal_xMax-Vorpal_xMin)/(Vorpal_nX-1)+Vorpal_xMin
+
+		Vorpal_yMin = -Vorpal_yDim/2.0
+		Vorpal_yMax = +Vorpal_yDim/2.0
+		Vorpal_y_grid = fIndGen(Vorpal_nY)*(Vorpal_yMax-Vorpal_yMin)/(Vorpal_nY-1)+Vorpal_yMin
+
+		Vorpal_zMin = min(VorpalBox_z)
+		Vorpal_zMax = max(VorpalBox_z)
+		Vorpal_z_grid = fIndGen(Vorpal_nZ)*(Vorpal_zMax-Vorpal_zMin)/(Vorpal_nz-1)+Vorpal_zMin
+
+		Vx3D = rebin(Vorpal_x_grid, Vorpal_nX, Vorpal_nY, Vorpal_nZ)
+		Vy3D = transpose(rebin(Vorpal_y_grid, Vorpal_nY, Vorpal_nZ, Vorpal_nX),[2,0,1])
+		Vz3D = transpose(rebin(Vorpal_z_grid, Vorpal_nZ, Vorpal_nX, Vorpal_nY),[1,2,0])
+
+		Vr3D = sqrt(Vx3D^2+Vy3D^2)
+		Vt3D = atan(Vy3D,Vx3D)
+
+		openw, lun, VorpalFileName, /get_lun
+
+		printf, lun, 'nX: '+string(Vorpal_nX, format='(i4.4)')
+		printf, lun, 'nY: '+string(Vorpal_nY, format='(i4.4)')
+		printf, lun, 'nZ: '+string(Vorpal_nZ, format='(i4.4)')
+		printf, lun, 'amu: '+string(amu[s],format='(f12.10)')
+		printf, lun, 'AtomicZ: ',+string(AtomicZ[s],format='(f+6.2)')
+
+		i3D = (Vr3D - min(r))/(max(r)-min(r))*(nR-1)
+		j3D = (Vz3D - min(z))/(max(z)-min(z))*(nZ-1)
+
+		V_Br = reform(interpolate(br,i3D[*],j3D[*],cubic=-0.5),Vorpal_nX,Vorpal_nY,Vorpal_nZ)
+		V_Bt = reform(interpolate(bt,i3D[*],j3D[*],cubic=-0.5),Vorpal_nX,Vorpal_nY,Vorpal_nZ)
+		V_Bz = reform(interpolate(bz,i3D[*],j3D[*],cubic=-0.5),Vorpal_nX,Vorpal_nY,Vorpal_nZ)
+
+		V_Bx = cos(Vt3D)*V_Br-sin(Vt3D)*V_Bt
+		V_By = sin(Vt3D)*V_Br+cos(Vt3D)*V_Bt
+
+		V_T = reform(interpolate(Temp_eV[*,*,s],i3D[*],j3D[*],cubic=-0.5),Vorpal_nX,Vorpal_nY,Vorpal_nZ)
+		V_n = reform(interpolate(Density_m3[*,*,s],i3D[*],j3D[*],cubic=-0.5),Vorpal_nX,Vorpal_nY,Vorpal_nZ)
+
+		printf, lun, 'X, Y, Z, Bx[T], By[T], Bz[T], T[eV], n[m^-3]'
+
+		for i=0,Vorpal_nX-1 do begin
+			for j=0,Vorpal_nY-1 do begin
+				for k=0,Vorpal_nZ-1 do begin
+
+					printf, lun, Vx3D[i,j,k], Vy3D[i,j,k], Vz3D[i,j,k], $
+						V_Bx[i,j,k], V_By[i,j,k], V_Bz[i,j,k], $
+						V_T[i,j,k], V_n[i,j,k], format='(7(f10.3,1x),e12.3)'
+
+				endfor
+			endfor
+		endfor
+
+		close, lun
+
+	endfor
 
 	stop
 end

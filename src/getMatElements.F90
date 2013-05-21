@@ -166,7 +166,7 @@ function get3by3Block( g, w)!, r, z)
                     g%sinTh(g%wl(w)%iPt), &
                     g%bPol(g%wl(w)%iPt), g%bMag(g%wl(w)%iPt), &
                     g%gradPrlB(g%wl(w)%iPt), &
-                    g%nuOmg(g%wl(w)%iPt) )
+                    g%nuOmg(g%wl(w)%iPt,s) )
 
             endif hotPlasma
 
@@ -179,7 +179,7 @@ function get3by3Block( g, w)!, r, z)
                     g%omgc(g%wl(w)%iPt,s), &
                     g%omgp2(g%wl(w)%iPt,s), &
                     omgrf, &
-                    g%nuOmg(g%wl(w)%iPt) )
+                    g%nuOmg(g%wl(w)%iPt,s) )
 
                 !sigmaIn_cold = getSigmaInputHere ( g%r(g%wl(w)%i), g%z(g%wl(w)%j), g, s )
                 !sigmaIn_cold = getSigmaInputHere ( r, z, g, s )

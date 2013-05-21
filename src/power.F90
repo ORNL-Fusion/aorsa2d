@@ -115,7 +115,7 @@ subroutine current ( g )
                                 g%sinTh(g%wl(w)%iPt), &
                                 g%bPol(g%wl(w)%iPt), g%bMag(g%wl(w)%iPt), &
                                 g%gradPrlB(g%wl(w)%iPt), &
-                                g%nuOmg(g%wl(w)%iPt) )
+                                g%nuOmg(g%wl(w)%iPt,s) )
 
                         endif hotPlasma
 
@@ -126,7 +126,7 @@ subroutine current ( g )
                                 g%omgc(g%wl(w)%iPt,s), &
                                 g%omgp2(g%wl(w)%iPt,s), &
                                 omgrf, &
-                                g%nuOmg(g%wl(w)%iPt) )
+                                g%nuOmg(g%wl(w)%iPt,s) )
 
                             !thisSigma = sigmaCold_stix &
                             !    ( g%omgc(g%wl(w)%i,g%wl(w)%j,s), &

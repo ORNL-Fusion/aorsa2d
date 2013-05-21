@@ -72,7 +72,7 @@ type :: gridBlock
     ! -----------------------------------
     real, allocatable, dimension(:) :: bR_unit, bT_unit, bZ_unit, bMag, rho
     logical, allocatable, dimension(:) :: mask
-    real, allocatable :: nuOmg(:)
+    real, allocatable :: nuOmg(:,:)
     real(kind=dbl), allocatable, dimension(:,:) :: densitySpec, ktSpec
     real(kind=dbl), allocatable, dimension(:,:) :: omgc, omgp2
 
@@ -156,7 +156,7 @@ type :: gridBlock
     real, allocatable :: &
         spline_omgC(:,:), &
         spline_omgP2(:,:), &
-        spline_nuOmg(:)
+        spline_nuOmg(:,:)
 
 end type gridBlock
 

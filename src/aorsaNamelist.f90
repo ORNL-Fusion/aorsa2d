@@ -111,8 +111,8 @@ implicit none
       real :: amu_slo = 4.0
       real :: z_slo = 2.0
       real :: eta_slo = 0.0
-      real :: xnuomg = 0.0             !-----xnuomg is the collison rate used in hot and cold plasma dielectrics
-      real :: xnuOmgOutside = 0.0
+      !real :: xnuomg = 0.0             !-----xnuomg is the collison rate used in hot and cold plasma dielectrics
+      !real :: xnuOmgOutside = 0.0
       real :: xnuead = 0.0000E+00      !-----xnuead = ad hoc collision frequency for electron in sec-1
       real :: xnu1ad = 0.0000E+00      !-----nu1ad=ad hoc collision frequency for majority ions in sec-1                                      
       real :: xnu2ad = 0.0000E+00      !-----nu2ad=ad hoc collision frequency for minority ions in sec-1
@@ -454,7 +454,7 @@ implicit none
      &    alphan4, alphan5, alphan6,  &
      &    alphate,  alphati, alphati2, alphati3,  &
      &    alphati4, alphati5, alphati6,  &
-     &    ekappa, rwleft, rwright, xnuomg, xNuOmgOutside, &
+     &    ekappa, rwleft, rwright, & !xnuomg, xNuOmgOutside, &
      &    nboundary, eta_slo, amu_slo, z_slo, eslowev, nnode_local,  &
      &    nnode_overlap, iprofile, ftrap, isolve, &
      &    betan, betan2, betan3, betan_slo, betate, betati, betati2,  &
