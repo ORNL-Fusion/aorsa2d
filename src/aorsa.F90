@@ -57,7 +57,6 @@ program aorsa2dMain
 
     integer(kind=long) :: nPts_tot
     integer :: i
-    integer(kind=long) :: nModesR_tot, nModesZ_tot
 
     integer :: length_rid, status_rid
     character(len=20) :: rid

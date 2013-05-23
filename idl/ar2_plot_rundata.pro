@@ -1,10 +1,9 @@
 pro ar2_plot_rundata
 
 	fileList = file_search ( 'runData*.nc' )
+    FileListIndex = 0
 
-	for jj=0,n_elements(fileList)-1 do begin
-
-	cdfId = ncdf_open ( fileList[jj], /noWrite ) 
+	cdfId = ncdf_open ( fileList[FileListIndex], /noWrite ) 
 		nCdf_varGet, cdfId, 'capR', x 
 		nCdf_varGet, cdfId, 'y', y 
 		nCdf_varGet, cdfId, 'jr_re', jr_re 
@@ -20,6 +19,7 @@ pro ar2_plot_rundata
 
 		nCdf_varGet, cdfId, 'densitySpec', densitySpec
 		nCdf_varGet, cdfId, 'tempSpec', tempSpec
+		nCdf_varGet, cdfId, 'nuOmg', nuOmgSpec
 		nCdf_varGet, cdfId, 'omgc', omgc 
 		nCdf_varGet, cdfId, 'omgp2', omgp2
 	
@@ -83,33 +83,15 @@ pro ar2_plot_rundata
 	p=plot(x, by[*,nz/2.0], /over)
 	p=plot(x, bz[*,nz/2.0], /over)
 
-	range=[0,1e15]
-	p=plot(x, densitySpec[*,nz/2.0,0], title = 'z=0 Density',yrange=range)
+	p=plot(x, densitySpec[*,nz/2.0,0], title = 'z=0 Density',yrange=range,/ylog)
 	for i=1,nSpec-1 do p=plot(x, densitySpec[*,nz/2,i], /over)
-stop
-	iPlot, x, tempSpec[*,nz/2,0], $
-			/view_next, $
-			title = 'z=0 Temp'
-	for i=1,nSpec-1 do $
-		iPlot, x, tempSpec[*,nz/2,i], /over
+    
+	p=plot(x, tempSpec[*,nz/2,0], title = 'z=0 Temp')
+	for i=1,nSpec-1 do p=plot(x, tempSpec[*,nz/2,i], /over)
 
-	if (nR gt 1) and (nZ gt 1) then begin
+	p=plot(x, nuOmgSpec[*,nz/2,0], title = 'z=0 nuOmg')
+	for i=1,nSpec-1 do p=plot(x, nuOmgSpec[*,nz/2,i], /over)
 
-		bxn_	= conGrid ( bxn, 20, 20, /center )
-		byn_	= conGrid ( byn, 20, 20, /center )
-		x_		= conGrid ( x, 20, 20, /center )
-		y_		= conGrid ( y, 20, 20, /center )
 
-		colors	= 256 - ( bytScl ( sqrt ( bxn_^2+byn_^2 ), top = 253 ) + 1 )
-
-		iVector, bxn_, byn_, x_, y_, $
-				vector_colors = colors, $
-				rgb_table = 1, $
-				scale_isotropic = 1, $
-				/view_next
-
-	endif
-
-	endfor
 stop
 end

@@ -14,9 +14,13 @@ pro ar2_create_current_source_location_file
 
 	j=0
 
-	rLoc = 2.075
-	zMin = -0.2
-	zMax = 0.2
+	;rLoc = 2.075
+	;zMin = -0.2
+	;zMax = 0.2
+
+	rLoc = 2.7
+	zMin = -0.15
+	zMax = 0.15
 
 	for i=0,nSources-1 do begin
 		for c=0,2 do begin

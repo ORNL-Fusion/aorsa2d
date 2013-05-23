@@ -47,8 +47,8 @@
 
 	; Grid
 
-	nR = 512
-	nZ = 1024
+	nR = 64
+	nZ = 128
 	rMin = 4.0*ShrinkFac
 	rMax = 8.4*ShrinkFac
 	rMax = 12*ShrinkFac

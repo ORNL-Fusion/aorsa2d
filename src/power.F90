@@ -19,11 +19,10 @@ subroutine current ( g )
    
     type(gridBlock), intent(inout) :: g 
 
-    complex, allocatable :: sigmaAll(:,:,:,:,:,:,:)
     complex :: ek_nm(3), jVec(3), thisSigma(3,3)
     complex :: bFn
 
-    integer :: i, j, n, m, iStat, s, w, rhs
+    integer :: s, w, rhs
     real :: kr, kz, kVec_stix(3)
     complex, allocatable :: jAlphaTmp(:,:), jBetaTmp(:,:), jBTmp(:,:)
 
@@ -238,7 +237,6 @@ subroutine jDotE ( g )
     type(gridBlock), intent(inout) :: g 
 
     integer :: i, j, s, rhs
-    complex :: eHere(3), jHere(3)
 
     allocate ( &
         g%jouleHeating(g%nR,g%nZ,nSpec,NRHS) )

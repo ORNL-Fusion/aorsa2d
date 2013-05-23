@@ -19,7 +19,7 @@ contains
     subroutine alloc_total_brhs ( nPts_tot )
 
         use parallel
-        use AR2SourceLocationsInput,  
+        use AR2SourceLocationsInput
 
         implicit none
 
