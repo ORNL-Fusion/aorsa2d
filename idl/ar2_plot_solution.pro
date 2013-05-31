@@ -1,9 +1,10 @@
 pro ar2_plot_solution, full = full, $
 		scale1 = scale1, scale2 = scale2, scale3_ = scale3_, $
 		sav = sav, NoRunData=NoRunData, $
-		nPhi = _nPhi, RHS=_RHS
+		nPhi = _nPhi, RHS=_RHS, spec = _ThisSPEC
 
-	if keyword_set(RHS) then ThisRHS = _RHS else ThisRHS = 0
+	if keyword_set(_RHS) then ThisRHS = _RHS else ThisRHS = 0
+	if keyword_set(_ThisSPEC) then ThisSPEC = _ThisSPEC else ThisSPEC = 0
 
 	ar2_read_namelist, ar2Input = ar2Input
 
@@ -12,7 +13,7 @@ pro ar2_plot_solution, full = full, $
 	ThisGridNo = 1
 	GridNoStr = string(ThisGridNo,format='(i3.3)')
 
-	if keyword_set(nPhi) then ThisNPhi = _nPhi else ThisNPhi = ar2Input['nPhi']
+	if keyword_set(_nPhi) then ThisNPhi = _nPhi else ThisNPhi = ar2Input['nPhi']
 
 	nPhiStr = string(ThisNPhi,format='(i+4.3)')
 
@@ -60,14 +61,17 @@ pro ar2_plot_solution, full = full, $
 		nCdf_varGet, cdfId, 'drBfn_im', dRbFn_bFn_im
 		nCdf_varGet, cdfId, 'dzBfn_re', dzbFn_bFn_re
 		nCdf_varGet, cdfId, 'dzBfn_im', dzbFn_bFn_im
+		nCdf_varGet, cdfId, 'nuOmg', nuOmg
 	ncdf_close, cdfId
 
 	xx	= complex ( xx_re, xx_im )
 	yy	= complex ( yy_re, yy_im )
 
-	jA_r = complex ( jr_re, jr_im )
-	jA_t = complex ( jt_re, jt_im )
-	jA_z = complex ( jz_re, jz_im )
+    nuOmg = nuOmg[*,*,ThisSpec]
+
+	jA_r = complex ( jr_re[*,*,ThisRHS], jr_im[*,*,ThisRHS] )
+	jA_t = complex ( jt_re[*,*,ThisRHS], jt_im[*,*,ThisRHS] )
+	jA_z = complex ( jz_re[*,*,ThisRHS], jz_im[*,*,ThisRHS] )
 
 	dRbFn_bFn	= complex ( dRbFn_bFn_re, dRbFn_bFn_im )
 	dZbFn_bFn	= complex ( dZbFn_bFn_re, dZbFn_bFn_im )
@@ -125,32 +129,32 @@ pro ar2_plot_solution, full = full, $
 		ez_im = temporary(ez_im[*,*,ThisRHS])
 
 		nCdf_varGet, cdfId, 'jalpha_re', jalpha_re 
-		jalpha_re = temporary(jalpha_re[*,*,ThisRHS])
+		jalpha_re = temporary(jalpha_re[*,*,ThisSPEC,ThisRHS])
 		nCdf_varGet, cdfId, 'jbeta_re', jbeta_re 
-		jbeta_re = temporary(jbeta_re[*,*,ThisRHS])
+		jbeta_re = temporary(jbeta_re[*,*,ThisSPEC,ThisRHS])
 		nCdf_varGet, cdfId, 'jB_re', jB_re 
-		jb_re = temporary(jb_re[*,*,ThisRHS])
+		jb_re = temporary(jb_re[*,*,ThisSPEC,ThisRHS])
 
 		nCdf_varGet, cdfId, 'jalpha_im', jalpha_im 
-		jalpha_im = temporary(jalpha_im[*,*,ThisRHS])
+		jalpha_im = temporary(jalpha_im[*,*,ThisSPEC,ThisRHS])
 		nCdf_varGet, cdfId, 'jbeta_im', jbeta_im 
-		jbeta_im = temporary(jbeta_im[*,*,ThisRHS])
+		jbeta_im = temporary(jbeta_im[*,*,ThisSPEC,ThisRHS])
 		nCdf_varGet, cdfId, 'jB_im', jB_im 
-		jb_im = temporary(jb_im[*,*,ThisRHS])
+		jb_im = temporary(jb_im[*,*,ThisSPEC,ThisRHS])
 
 		nCdf_varGet, cdfId, 'jP_r_re', jPr_re 
-		jpr_re = temporary(jpr_re[*,*,ThisRHS])
+		jpr_re = temporary(jpr_re[*,*,ThisSpec,ThisRHS])
 		nCdf_varGet, cdfId, 'jP_t_re', jPt_re 
-		jpt_re = temporary(jpt_re[*,*,ThisRHS])
+		jpt_re = temporary(jpt_re[*,*,ThisSpec,ThisRHS])
 		nCdf_varGet, cdfId, 'jP_z_re', jPz_re 
-		jpz_re = temporary(jpz_re[*,*,ThisRHS])
+		jpz_re = temporary(jpz_re[*,*,ThisSpec,ThisRHS])
 
 		nCdf_varGet, cdfId, 'jP_r_im', jPr_im 
-		jpr_im = temporary(jpr_im[*,*,ThisRHS])
+		jpr_im = temporary(jpr_im[*,*,ThisSpec,ThisRHS])
 		nCdf_varGet, cdfId, 'jP_t_im', jPt_im 
-		jpt_im = temporary(jpt_im[*,*,ThisRHS])
+		jpt_im = temporary(jpt_im[*,*,ThisSPEC,ThisRHS])
 		nCdf_varGet, cdfId, 'jP_z_im', jPz_im 
-		jpz_im = temporary(jpz_im[*,*,ThisRHS])
+		jpz_im = temporary(jpz_im[*,*,ThisSPEC,ThisRHS])
 
 		nCdf_varGet, cdfId, 'jouleHeating', jouleHeating 
 
@@ -298,35 +302,118 @@ pro ar2_plot_solution, full = full, $
 
 	endif else begin ; Now 2D plotting
 
+        dimensions = [500,600]
+        scaleFac = 0.3
+
+		scale = max(abs([jP_r,jP_t,jP_z]))*scaleFac
+
 		nLevs = 11
-		thisField = jPAlpha[*,*,0]*LimMask
-		scale = max(abs(thisField))*0.1
+		thisField = jP_r[*,*]*LimMask
+        title = 'jP_r'
 		levels = fIndGen(nLevs)/(nLevs-1)*scale
 		colors = reverse(bytScl(levels, top=253)+1)
-		c = contour ( thisField, x, y, c_value=levels, rgb_indices=colors, rgb_table=3, /fill, aspect_ratio=1.0 )
+		c = contour ( thisField, x, y, c_value=levels, rgb_indices=colors, rgb_table=3, /fill, $
+                aspect_ratio=1.0, title=title, layout=[1,3,1], dimensions=dimensions )
 		c = contour ( -thisField, x, y, c_value=levels, rgb_indices=colors, rgb_table=1, /fill,/over )
 		p = plot ( rLim, zLim, /over )
 
-		nLevs = 11
-		thisField = eAlpha[*,*]
-		scale = max(abs(thisField))*0.1
+		thisField = jP_t[*,*]*LimMask
+        title = 'jP_t'
+		levels = fIndGen(nLevs)/(nLevs-1)*scale
+		colors = reverse(bytScl(levels, top=253)+1)
+		c = contour ( thisField, x, y, c_value=levels, rgb_indices=colors, rgb_table=3, /fill, $
+                aspect_ratio=1.0, title=title, layout=[1,3,2], /current )
+		c = contour ( -thisField, x, y, c_value=levels, rgb_indices=colors, rgb_table=1, /fill,/over )
+		p = plot ( rLim, zLim, /over )
+
+		thisField = jP_z[*,*]*LimMask
+        title = 'jP_z'
+		levels = fIndGen(nLevs)/(nLevs-1)*scale
+		colors = reverse(bytScl(levels, top=253)+1)
+		c = contour ( thisField, x, y, c_value=levels, rgb_indices=colors, rgb_table=3, /fill, $
+                aspect_ratio=1.0, title=title, layout=[1,3,3], /current )
+		c = contour ( -thisField, x, y, c_value=levels, rgb_indices=colors, rgb_table=1, /fill,/over )
+		p = plot ( rLim, zLim, /over )
+
+
+		scale = max(abs([e_r,e_t,e_z]))*scaleFac 
+
+		thisField = e_r[*,*]
+        title = 'E_r'
 		levels = fIndGen(nLevs)/(nLevs-1)*scale
 		colors = reverse(bytScl(levels, top=253)+1)
 		PlotField = (real_part(thisField)<max(levels))>min(-levels)
-		c = contour ( PlotField, x, y, c_value=levels, rgb_indices=colors, rgb_table=3, /fill, aspect_ratio=1.0 )
+		c = contour ( PlotField, x, y, c_value=levels, rgb_indices=colors, rgb_table=3, /fill, $
+            aspect_ratio=1.0, layout=[1,3,1], dimensions=dimensions, title=title )
 		c = contour ( -PlotField, x, y, c_value=levels, rgb_indices=colors, rgb_table=1, /fill,/over )
 		p = plot ( rlim, zlim, /over )
 
-		nLevs = 11
-		thisField = eb[*,*]
-		scale = max(abs(thisField))*0.01
+		thisField = e_t[*,*]
+        title = 'E_t'
 		levels = fIndGen(nLevs)/(nLevs-1)*scale
 		colors = reverse(bytScl(levels, top=253)+1)
 		PlotField = (real_part(thisField)<max(levels))>min(-levels)
-		c = contour ( PlotField, x, y, c_value=levels, rgb_indices=colors, rgb_table=3, /fill, aspect_ratio=1.0 )
+		c = contour ( PlotField, x, y, c_value=levels, rgb_indices=colors, rgb_table=3, /fill, $
+                aspect_ratio=1.0, layout=[1,3,2], /current, title=title )
 		c = contour ( -PlotField, x, y, c_value=levels, rgb_indices=colors, rgb_table=1, /fill,/over )
 		p = plot ( rlim, zlim, /over )
-	
+
+		thisField = e_z[*,*]
+        title = 'E_z'
+		levels = fIndGen(nLevs)/(nLevs-1)*scale
+		colors = reverse(bytScl(levels, top=253)+1)
+		PlotField = (real_part(thisField)<max(levels))>min(-levels)
+		c = contour ( PlotField, x, y, c_value=levels, rgb_indices=colors, rgb_table=3, /fill, $
+                aspect_ratio=1.0, layout=[1,3,3], /current, title=title )
+		c = contour ( -PlotField, x, y, c_value=levels, rgb_indices=colors, rgb_table=1, /fill,/over )
+		p = plot ( rlim, zlim, /over )
+
+
+		scale = max(abs([jA_r,jA_t,jA_z]))*scaleFac
+
+		thisField = jA_r[*,*]
+        title = 'jA_r'
+		levels = fIndGen(nLevs)/(nLevs-1)*scale
+		colors = reverse(bytScl(levels, top=253)+1)
+		PlotField = (real_part(thisField)<max(levels))>min(-levels)
+		c = contour ( PlotField, x, y, c_value=levels, rgb_indices=colors, rgb_table=3, /fill, $
+                aspect_ratio=1.0, title=title, layout=[1,3,1], dimensions=dimensions )
+		c = contour ( -PlotField, x, y, c_value=levels, rgb_indices=colors, rgb_table=1, /fill,/over )
+		p = plot ( rlim, zlim, /over )
+
+		thisField = jA_t[*,*]
+        title = 'jA_t'
+		levels = fIndGen(nLevs)/(nLevs-1)*scale
+		colors = reverse(bytScl(levels, top=253)+1)
+		PlotField = (real_part(thisField)<max(levels))>min(-levels)
+		c = contour ( PlotField, x, y, c_value=levels, rgb_indices=colors, rgb_table=3, /fill, $
+                aspect_ratio=1.0, title=title, layout=[1,3,2], /current )
+		c = contour ( -PlotField, x, y, c_value=levels, rgb_indices=colors, rgb_table=1, /fill,/over )
+		p = plot ( rlim, zlim, /over )
+
+		thisField = jA_z[*,*]
+        title = 'jA_z'
+		levels = fIndGen(nLevs)/(nLevs-1)*scale
+		colors = reverse(bytScl(levels, top=253)+1)
+		PlotField = (real_part(thisField)<max(levels))>min(-levels)
+		c = contour ( PlotField, x, y, c_value=levels, rgb_indices=colors, rgb_table=3, /fill, $
+                aspect_ratio=1.0, title=title, layout=[1,3,3], /current )
+		c = contour ( -PlotField, x, y, c_value=levels, rgb_indices=colors, rgb_table=1, /fill,/over )
+		p = plot ( rlim, zlim, /over )
+
+		scale = max(abs([nuOmg]))*scaleFac
+
+		thisField = nuOmg[*,*]
+        title = 'nuOmg'
+		levels = fIndGen(nLevs)/(nLevs-1)*scale
+		colors = reverse(bytScl(levels, top=253)+1)
+		PlotField = (real_part(thisField)<max(levels))>min(-levels)
+		c = contour ( PlotField, x, y, c_value=levels, rgb_indices=colors, rgb_table=3, /fill, $
+                aspect_ratio=1.0, title=title, layout=[1,3,1], dimensions=dimensions )
+		c = contour ( -PlotField, x, y, c_value=levels, rgb_indices=colors, rgb_table=1, /fill,/over )
+		p = plot ( rlim, zlim, /over )
+
+
 	endelse
 
 	if keyword_set(sav) then begin

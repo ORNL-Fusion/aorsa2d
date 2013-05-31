@@ -18,7 +18,7 @@ pro ar2_create_current_source_location_file
 	;zMin = -0.2
 	;zMax = 0.2
 
-	rLoc = 2.7
+	rLoc = 2.2
 	zMin = -0.15
 	zMax = 0.15
 

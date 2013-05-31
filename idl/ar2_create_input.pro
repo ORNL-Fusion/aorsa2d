@@ -62,7 +62,7 @@ pro ar2_create_input
 	;@ar2_run_langmuir
 	;@ar2_run_nstxslow
 	;@ar2_run_ar_vo_bench
-	@ar2_run_coupling_right
+    @ar2_run_coupling_right
 
 	nSpec = n_elements ( amu )
 	wrf	= freq * 2d0 * !dpi
@@ -274,8 +274,15 @@ pro ar2_create_input
     global_nuOmg = r2D*0
     iiNuOmgSet = where(r2D lt 2.0,iiNuOmgSetCnt) 
     global_nuOmg[iiNuOmgSet] = 1.0
+    MinNuOmg = 0.02
     for s=0,nSpec-1 do begin
         nuOmg[*,*,s] = global_nuOmg
+    endfor
+    nSmooth = 5 
+    for s=0,nSpec-1 do begin
+        for n=0,nSmooth-1 do begin
+            nuOmg[*,*,s] = smooth(nuOmg[*,*,s]>MinNuOmg,min([nR,nZ])*0.05,/edge_truncate)
+        endfor
     endfor
 
 	; Look at the dispersion relation for these data
