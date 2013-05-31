@@ -95,7 +95,7 @@ endif
 # Machine specific stuff
 # ----------------------
 MACHINE_NAME := $(shell uname -n)
-include Makefile.${MACHINE_NAME}
+include machine_makefiles/Makefile.${MACHINE_NAME}
 
 ifeq (${DDT},1)
     LIBS+=-Bddt
