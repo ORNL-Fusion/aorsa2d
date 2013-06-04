@@ -70,19 +70,11 @@ contains
                 endif
 #endif 
 
-             !do i=1,g%nR
-             !   do j=1,g%nZ
-                    !if(i>=1.and.i=<g%nR.and.j>=1.and.j<=g%nZ)then
-                        if(any( (/  ar2_LimMask(floor(iTmp),floor(jTmp)),&
-                                    ar2_LimMask(ceiling(iTmp),floor(jTmp)),&
-                                    ar2_LimMask(ceiling(iTmp),ceiling(jTmp)),&
-                                    ar2_LimMask(floor(iTmp),ceiling(jTmp)) /)==0 ) ) g%isMetal(w) = .true.
-                    !else
-                    !        g%isMetal(w) = .true.
-                    !endif
-                    !g%isMetal(w) = .not. IsInsideOf ( g%R(i), g%z(j), ar2_rLim, ar2_zLim )
-             !   enddo
-             !enddo
+                if(any( (/  ar2_LimMask(floor(iTmp),floor(jTmp)),&
+                            ar2_LimMask(ceiling(iTmp),floor(jTmp)),&
+                            ar2_LimMask(ceiling(iTmp),ceiling(jTmp)),&
+                            ar2_LimMask(floor(iTmp),ceiling(jTmp)) /)==0 ) ) g%isMetal(w) = .true.
+
              enddo
 
         elseif(lcfs_boundary .and. UseAR2Input)then

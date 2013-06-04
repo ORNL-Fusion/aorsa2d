@@ -57,11 +57,6 @@ subroutine current ( g )
     species: &
     do s=1,nSpec
 
-        !do i=1,g%nR
-        !    do j=1,g%nZ
-        !        do n=g%nS,g%nF
-        !            do m=g%mS,g%mF
-
         workList: &
         do w=1,size(g%wl)
 
@@ -71,7 +66,6 @@ subroutine current ( g )
 
             
                         bFn = g%xx(g%wl(w)%n,g%wl(w)%i) * g%yy(g%wl(w)%m,g%wl(w)%j)
-                        !bFn = xBasis(n,g%rNorm(i)) * yBasis(m,g%zNorm(j))
 
 #if __sigma__ != 2
                         thisSigma = sigmaAll(g%wl(w)%i,g%wl(w)%j,g%wl(w)%n,g%wl(w)%m,:,:,s)
@@ -127,10 +121,6 @@ subroutine current ( g )
                                 omgrf, &
                                 g%nuOmg(g%wl(w)%iPt,s) )
 
-                            !thisSigma = sigmaCold_stix &
-                            !    ( g%omgc(g%wl(w)%i,g%wl(w)%j,s), &
-                            !    g%omgp2(g%wl(w)%i,g%wl(w)%j,s), omgrf, &
-                            !    g%nuOmg(g%wl(w)%i,g%wl(w)%j) )
                             thisSigma = sigmaCold_stix ( sigmaIn_cold )
 
 
@@ -167,27 +157,24 @@ subroutine current ( g )
 
                         enddo ! rhs loop
 
-                        !g%jAlpha(i,j,s) = g%jAlpha(i,j,s) &
-                        !    + ( sigma(i,j,n,m,1,1,s) * g%eAlphak(n,m) &
-                        !    + sigma(i,j,n,m,1,2,s) * g%eBetak(n,m) &
-                        !    + sigma(i,j,n,m,1,3,s) * g%eBk(n,m) ) * bFn 
-
-                        !g%jBeta(i,j,s) = g%jBeta(i,j,s) &
-                        !    + ( sigma(i,j,n,m,2,1,s) * g%eAlphak(n,m) &
-                        !    + sigma(i,j,n,m,2,2,s) * g%eBetak(n,m) &
-                        !    + sigma(i,j,n,m,2,3,s) * g%eBk(n,m) ) * bFn 
-
-                        !g%jB(i,j,s) = g%jB(i,j,s) &
-                        !    + ( sigma(i,j,n,m,3,1,s) * g%eAlphak(n,m) &
-                        !    + sigma(i,j,n,m,3,2,s) * g%eBetak(n,m) &
-                        !    + sigma(i,j,n,m,3,3,s) * g%eBk(n,m) ) * bFn 
-
-        !            enddo
-        !        enddo
-        !    enddo
-        !enddo
-
             endif twoThirdsRule
+
+
+            ! Where E=0 at the boundary, also set J=0 to avoid
+            ! tiny E values combining with sigma to give anomolous
+            ! J values in the output.
+
+            if (g%label(g%wl(w)%iPt)==888) then
+
+                do rhs=1,NRHS
+
+                    g%jAlpha(g%wl(w)%i,g%wl(w)%j,s,rhs) = 0
+                    g%jBeta(g%wl(w)%i,g%wl(w)%j,s,rhs) = 0
+                    g%jB(g%wl(w)%i,g%wl(w)%j,s,rhs) = 0
+
+                enddo
+
+            endif
 
         enddo workList
 
