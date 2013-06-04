@@ -50,7 +50,8 @@ contains
             metalLeft, metalRight, metalTop, metalBot, &
             useEqdsk, r0, rhoAnt, antSigRho, &
             AntennaJ_R, AntennaJ_T, AntennaJ_Z, &
-            antSigUnit, useAR2SourceLocationsFile
+            antSigUnit, useAR2SourceLocationsFile, &
+            useAllRHSsSource
         use grid
         use parallel
         use profiles, only: omgrf
