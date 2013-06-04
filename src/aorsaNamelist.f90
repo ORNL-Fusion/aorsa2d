@@ -72,6 +72,7 @@ implicit none
       logical :: useEqdsk = .false.
       logical :: useAr2Input = .false.
       logical :: useAR2SourceLocationsFile = .false.
+      logical :: useAllRHSsSource = .true.
       character(len=100) :: AR2InputFileName = 'ar2Input.nc'
       character(len=100) :: AR2SourceLocationsFileName = 'AR2SourceLocations.nc'
       CHARACTER*128 :: netCDF_file1 = 'phillips_nstx3.5.2.nc'  !cql3d distribution file name 1
@@ -486,7 +487,7 @@ implicit none
      &    nRAll, nZAll, rMinAll, rMaxAll, zMinAll, zMaxAll, &
      &    overlap, parabolic, cosX, cosY, nZ_1D, fracOfModesInSolution, &
      &    AntennaJ_R, AntennaJ_T, AntennaJ_Z, AR2SourceLocationsFileName, &
-     &    useAR2SourceLocationsFile
+     &    useAR2SourceLocationsFile, useAllRHSsSource
 
                 
 contains

@@ -111,8 +111,10 @@ contains
                     if(CurrentSource_ComponentID(rhs).eq.3) g%jR(i,j,rhs) = zi*TmpAntJ
                     if(CurrentSource_ComponentID(rhs).eq.4) g%jT(i,j,rhs) = zi*TmpAntJ
                     if(CurrentSource_ComponentID(rhs).eq.5) g%jZ(i,j,rhs) = zi*TmpAntJ
- 
-                else
+
+                endif 
+
+                if(useAllRHSsSource)then
                     if(useEqdsk) then
                         !TmpAntJ = exp ( &
                         !-( (g%rho(i,j)-rhoAnt)**2/antSigRho**2 + (g%Z(j)-zAnt)**2/antSigY**2 ) &

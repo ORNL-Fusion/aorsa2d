@@ -272,18 +272,25 @@ pro ar2_create_input
     ; Create nuOmg profiles
 
     global_nuOmg = r2D*0
-    iiNuOmgSet = where(r2D lt 2.0,iiNuOmgSetCnt) 
-    global_nuOmg[iiNuOmgSet] = 1.0
-    MinNuOmg = 0.02
+    absorbingNuOmg = 0.1
+    iiNuOmgSet = where(r2D lt 1.8,iiNuOmgSetCnt) 
+    global_nuOmg[iiNuOmgSet] = absorbingNuOmg
+    iiNuOmgSet = where(r2D lt 2.1 and z2d lt -0.18,iiNuOmgSetCnt) 
+    global_nuOmg[iiNuOmgSet] = absorbingNuOmg
+    iiNuOmgSet = where(r2D lt 2.1 and z2d gt 0.18,iiNuOmgSetCnt) 
+    global_nuOmg[iiNuOmgSet] = absorbingNuOmg
+    global_nuOmg = global_nuOmg + ((r2D-2.2)>0)*0.5
+
+    MinNuOmg = 0.005
     for s=0,nSpec-1 do begin
-        nuOmg[*,*,s] = global_nuOmg
+        nuOmg[*,*,s] = global_nuOmg>MinNuOmg
     endfor
-    nSmooth = 5 
-    for s=0,nSpec-1 do begin
-        for n=0,nSmooth-1 do begin
-            nuOmg[*,*,s] = smooth(nuOmg[*,*,s]>MinNuOmg,min([nR,nZ])*0.05,/edge_truncate)
-        endfor
-    endfor
+    ;nSmooth = 5 
+    ;for s=0,nSpec-1 do begin
+    ;    for n=0,nSmooth-1 do begin
+    ;        nuOmg[*,*,s] = smooth(nuOmg[*,*,s]>MinNuOmg,min([nR,nZ])*0.05,/edge_truncate)
+    ;    endfor
+    ;endfor
 
 	; Look at the dispersion relation for these data
 
@@ -350,6 +357,10 @@ pro ar2_create_input
 	c = contour(kPerp_F2D_avg,r,z,layout=[2,1,1],$
 			c_value=levels,rgb_indices=colors,rgb_table='1',/fill,aspect_ratio=1.0)
 	p=plot(rlim,zlim,/over,thick=2)
+
+	p=plot(RightSide_rlim,RightSide_zlim,/over,thick=2)
+	p=plot(LeftSide_rlim,LeftSide_zlim,/over,thick=2)
+
 	p=plot(VorpalBox_r,VorpalBox_z,/over,thick=2,color='b')
 	
 	nLevs=31
