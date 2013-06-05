@@ -56,7 +56,7 @@ program aorsa2dMain
 #endif
 
     integer(kind=long) :: nPts_tot
-    integer :: i
+    integer :: i, rhs
 
     integer :: length_rid, status_rid
     character(len=20) :: rid
@@ -365,30 +365,35 @@ program aorsa2dMain
     if(iAm==0) write(*,*) 'NRHS: ', NRHS
 
     call alloc_total_brhs ( nPts_tot )
-    do i=1,nGrid
-        call init_brhs ( allGrids(i) )
-    enddo
 
-#ifdef par
-    call blacs_barrier ( iContext, 'All' ) 
-#endif
-    if(iAm==0) write(*,*) '    Time to build RHS: ', end_timer ( tRHS ),  'seconds'
-
-
-!   Write the run input data to disk
-!   --------------------------------
-
-    if (iAm==0) &
-    write(*,*) 'Writing run input data to file'
-
-    !if (iAm==0) then
+    RHS_PreProcessing_loop: &
+    do rhs=1,NRHS
 
         do i=1,nGrid
-            call write_runData ( allGrids(i), rid )
+            call init_brhs ( allGrids(i), rhs )
+        enddo
+    
+#ifdef par
+        call blacs_barrier ( iContext, 'All' ) 
+#endif
+        if(iAm==0) write(*,*) '    Time to build RHS: ', end_timer ( tRHS ),  'seconds'
+    
+    
+    !   Write the run input data to disk
+    !   --------------------------------
+    
+        if (iAm==0) &
+        write(*,*) 'Writing run input data to file'
+    
+        do i=1,nGrid
+            call write_runData ( allGrids(i), rid, rhs )
         enddo
 
-    !endif
-
+#ifdef par
+        call blacs_barrier ( iContext, 'All' ) 
+#endif
+    
+    enddo RHS_PreProcessing_loop
 
 !   Allocate the matrix
 !   -------------------
@@ -588,164 +593,170 @@ program aorsa2dMain
 #endif
     if(iAm==0) write(*,*) '    Time to extract coeffs: ', end_timer ( tExtractCoeffs ),  'seconds'
 
-
-!   Inverse Fourier transform the k coefficents
-!   to real space
-!   -------------------------------------------
-
-    if (iAm==0) &
-    write(*,*) 'Constructin E solution from basis set (alpha,beta,b)'
-    call start_timer ( tInvFourier )   
-    do i=1,nGrid 
-        call sftInv2d ( allGrids(i) )
-    enddo
-
-#ifdef par
-    call blacs_barrier ( iContext, 'All' ) 
-#endif
-    if(iAm==0) write(*,*) '    Time to inverse Fourier transform the fields: ', end_timer ( tInvFourier ),  'seconds'
+    RHS_PostProcessing_loop: &
+    do rhs=1,NRHS  
 
 
-!   Calculate the plasma current
-!   ----------------------------
-
-#ifdef usepapi
-    call PAPIF_flops ( papi_rTime, papi_pTime, papi_flpins, papi_mflops, papi_irc )
-    papi_rTime_zero = papi_rTime
-    papi_pTime_zero = papi_pTime
-#endif
-
-    call start_timer ( tCurrent )
-
-    if (iAm==0) &
-    write(*,*) 'Calculating plasma current'
-
-    !if ( iAm == 0 ) then
-
-        do i=1,nGrid
-            call current ( allGrids(i) )
-        enddo
-
-    !endif
-#ifdef par
-    call blacs_barrier ( iContext, 'All' ) 
-#endif
-    if (iAm==0) then
-        Perf%TimeCurrent = end_timer ( tCurrent )
-        write(*,*) 'Total to calculate plasma current: ', Perf%TimeCurrent
-    endif
-
-    call start_timer ( tSumFlops3 )
-#ifdef usepapi
-    call PAPIF_flops ( papi_rTime, papi_pTime, papi_flpins, papi_mflops, papi_irc )
-    papi_rTime_current = papi_rTime - papi_rTime_zero
-    papi_pTime_current = papi_pTime - papi_pTime_zero
-#endif
-
-#ifdef usepapi
-    !   sum total mflops from all procs
-
-    papi_mflops_global  = papi_mflops
-
-#ifdef par
-    call sgSum2D ( iContext, 'All', ' ', 1, 1, &
-                papi_mflops_global, 1, -1, -1 )
-#endif
-
-    if (iAm==0) then
-
-        write(*,*) '    PAPI data for plasma current'
-        write(*,'(a30,f12.1)') 'real time: ', papi_rTime_current
-        write(*,'(a30,f12.1)') 'proc time: ', papi_pTime_current
-        write(*,'(a30,f12.2)') 'iAm Gflops/s: ', papi_mflops / 1e3
-        write(*,'(a30,f12.2)') 'global Gflops/s: ', papi_mflops_global / 1e3
-        write(*,'(a30,i1)') 'status: ', papi_irc
-
-        Perf%GflopsCurrentLocal = papi_mflops / 1e3
-        Perf%GflopsCurrentGlobal = papi_mflops_global / 1e3
-
-    endif
-#endif
-#ifdef par
-    call blacs_barrier ( iContext, 'All' ) 
-#endif
-    if(iAm==0) write(*,*) '    Time to sum flops 3: ', end_timer ( tSumFlops3 ),  'seconds'
-
-
-!   Rotation to Lab frame 
-!   ---------------------
-
-    call start_timer ( tRotate )
-    if (iAm==0) &
-    write(*,*) 'Rotating E solution to lab frame (R,Th,z)'
-
-    if ( iAm == 0 ) then
-
+    !   Inverse Fourier transform the k coefficents
+    !   to real space
+    !   -------------------------------------------
+    
+        if (iAm==0) &
+        write(*,*) 'Constructin E solution from basis set (alpha,beta,b)'
+        call start_timer ( tInvFourier )   
         do i=1,nGrid 
-            call rotate_E_to_lab ( allGrids(i) )
+            call sftInv2d ( allGrids(i), rhs )
         enddo
 
-    endif
 #ifdef par
-    call blacs_barrier ( iContext, 'All' ) 
+        call blacs_barrier ( iContext, 'All' ) 
 #endif
-    if(iAm==0) write(*,*) '    Time to rotate solution to lab frame: ', end_timer ( tCurrent ),  'seconds'
-
-!   Calculate the Joule Heating 
-!   ---------------------------
-
-    call start_timer ( tJDotE )
-    if (iAm==0) &
-    write(*,*) 'Calculating Joule heating' 
-
-    if ( iAm == 0 ) then
-
-        do i=1,nGrid
-            call jDotE ( allGrids(i) )
-        enddo
-
-    endif
-#ifdef par
-    call blacs_barrier ( iContext, 'All' ) 
-#endif
-    if(iAm==0) write(*,*) '    Time to calculate Joule heating: ', end_timer ( tJDotE ),  'seconds'
+        if(iAm==0) write(*,*) '    Time to inverse Fourier transform the fields: ', end_timer ( tInvFourier ),  'seconds'
 
 
-!   Write soln to file
-!   ------------------
-
-    call start_timer ( tWriteSolution )
-    if (iAm==0) &
-    write(*,*) 'Writing solution to file'
-
-    if ( iAm == 0 ) then
-
-        do i=1,nGrid
-            call write_solution ( allGrids(i), rid )
-        enddo
-
-    endif
-#ifdef par
-    call blacs_barrier ( iContext, 'All' ) 
-#endif
-    if(iAm==0) write(*,*) '    Time to write solution: ', end_timer ( tWriteSolution ),  'seconds'
-
+    !   Calculate the plasma current
+    !   ----------------------------
+    
 #ifdef usepapi
-    call PAPIF_flops ( papi_rTime, papi_pTime, papi_flpins, papi_mflops, papi_irc )
-    papi_rTime_Total = papi_rTime - papi_rTime_ProgramZero
-    papi_pTime_Total = papi_pTime - papi_pTime_ProgramZero
+        call PAPIF_flops ( papi_rTime, papi_pTime, papi_flpins, papi_mflops, papi_irc )
+        papi_rTime_zero = papi_rTime
+        papi_pTime_zero = papi_pTime
+#endif
+    
+        call start_timer ( tCurrent )
+    
+        if (iAm==0) &
+        write(*,*) 'Calculating plasma current'
+    
+        !if ( iAm == 0 ) then
+    
+            do i=1,nGrid
+                call current ( allGrids(i), rhs )
+            enddo
+    
+        !endif
+#ifdef par
+        call blacs_barrier ( iContext, 'All' ) 
+#endif
+        if (iAm==0) then
+            Perf%TimeCurrent = end_timer ( tCurrent )
+            write(*,*) 'Total to calculate plasma current: ', Perf%TimeCurrent
+        endif
+    
+        call start_timer ( tSumFlops3 )
+#ifdef usepapi
+        call PAPIF_flops ( papi_rTime, papi_pTime, papi_flpins, papi_mflops, papi_irc )
+        papi_rTime_current = papi_rTime - papi_rTime_zero
+        papi_pTime_current = papi_pTime - papi_pTime_zero
+#endif
+    
+#ifdef usepapi
+        !   sum total mflops from all procs
+    
+        papi_mflops_global  = papi_mflops
+    
+#ifdef par
+        call sgSum2D ( iContext, 'All', ' ', 1, 1, &
+                    papi_mflops_global, 1, -1, -1 )
+#endif
+    
+        if (iAm==0) then
+    
+            write(*,*) '    PAPI data for plasma current'
+            write(*,'(a30,f12.1)') 'real time: ', papi_rTime_current
+            write(*,'(a30,f12.1)') 'proc time: ', papi_pTime_current
+            write(*,'(a30,f12.2)') 'iAm Gflops/s: ', papi_mflops / 1e3
+            write(*,'(a30,f12.2)') 'global Gflops/s: ', papi_mflops_global / 1e3
+            write(*,'(a30,i1)') 'status: ', papi_irc
+    
+            Perf%GflopsCurrentLocal = papi_mflops / 1e3
+            Perf%GflopsCurrentGlobal = papi_mflops_global / 1e3
+    
+        endif
+#endif
+#ifdef par
+        call blacs_barrier ( iContext, 'All' ) 
+#endif
+        if(iAm==0) write(*,*) '    Time to sum flops 3: ', end_timer ( tSumFlops3 ),  'seconds'
+    
+    
+    !   Rotation to Lab frame 
+    !   ---------------------
+    
+        call start_timer ( tRotate )
+        if (iAm==0) &
+        write(*,*) 'Rotating E solution to lab frame (R,Th,z)'
+    
+        if ( iAm == 0 ) then
+    
+            do i=1,nGrid 
+                call rotate_E_to_lab ( allGrids(i), rhs )
+            enddo
+    
+        endif
+#ifdef par
+        call blacs_barrier ( iContext, 'All' ) 
+#endif
+        if(iAm==0) write(*,*) '    Time to rotate solution to lab frame: ', end_timer ( tCurrent ),  'seconds'
+    
+    !   Calculate the Joule Heating 
+    !   ---------------------------
+    
+        call start_timer ( tJDotE )
+        if (iAm==0) &
+        write(*,*) 'Calculating Joule heating' 
+    
+        if ( iAm == 0 ) then
+    
+            do i=1,nGrid
+                call jDotE ( allGrids(i), rhs )
+            enddo
+    
+        endif
+#ifdef par
+        call blacs_barrier ( iContext, 'All' ) 
+#endif
+        if(iAm==0) write(*,*) '    Time to calculate Joule heating: ', end_timer ( tJDotE ),  'seconds'
+    
+    
+    !   Write soln to file
+    !   ------------------
+    
+        call start_timer ( tWriteSolution )
+        if (iAm==0) &
+        write(*,*) 'Writing solution to file'
+    
+        if ( iAm == 0 ) then
+    
+            do i=1,nGrid
+                call write_solution ( allGrids(i), rid, rhs )
+            enddo
+    
+        endif
+#ifdef par
+        call blacs_barrier ( iContext, 'All' ) 
+#endif
+        if(iAm==0) write(*,*) '    Time to write solution: ', end_timer ( tWriteSolution ),  'seconds'
+    
+#ifdef usepapi
+        call PAPIF_flops ( papi_rTime, papi_pTime, papi_flpins, papi_mflops, papi_irc )
+        papi_rTime_Total = papi_rTime - papi_rTime_ProgramZero
+        papi_pTime_Total = papi_pTime - papi_pTime_ProgramZero
 #endif
 #ifdef usepapi
-
-    if (iAm==0) then
-
-        write(*,*) '    PAPI data for program'
-        write(*,'(a30,f12.1)') 'real time: ', papi_rTime_total
-        write(*,'(a30,f12.1)') 'proc time: ', papi_pTime_total
-        write(*,'(a30,i1)') 'status: ', papi_irc
-
-    endif
+    
+        if (iAm==0) then
+    
+            write(*,*) '    PAPI data for program'
+            write(*,'(a30,f12.1)') 'real time: ', papi_rTime_total
+            write(*,'(a30,f12.1)') 'proc time: ', papi_pTime_total
+            write(*,'(a30,i1)') 'status: ', papi_irc
+    
+        endif
 #endif
+
+
+    enddo RHS_PostProcessing_loop
 
     call start_timer(tReleaseGrid)
 #ifdef par

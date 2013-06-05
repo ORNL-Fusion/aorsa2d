@@ -16,15 +16,16 @@ pro ar2_plot_solution, full = full, $
 	if keyword_set(_nPhi) then ThisNPhi = _nPhi else ThisNPhi = ar2Input['nPhi']
 
 	nPhiStr = string(ThisNPhi,format='(i+4.3)')
+	rhsStr = string(ThisRHS,format='(i6.6)')
 
-	SolutionFile = 'solution'+GridNoStr+nPhiStr+'.nc'
-	RunDataFile = 'runData'+GridNoStr+nPhiStr+'.nc'
+	SolutionFile = 'output/solution_'+GridNoStr+'_'+nPhiStr+'_'+rhsStr+'.nc'
+	RunDataFile = 'output/runData_'+GridNoStr+'_'+nPhiStr+'_'+rhsStr+'.nc'
 
 	print, 'AR2InputFile: ', AR2InputFile
 	print, 'SolutionFile: ', SolutionFile
 	print, 'RunDataFile: ', RunDataFile
 
-	ar2_read_ar2input, AR2InputFile, $
+	ar2_read_ar2input, AR2InputFile, RunDataFile, $
 			rLim=rLim,zLim=zLim,LimMask=LimMask,nPhi=ThisNPhi
 
 	@constants
@@ -69,9 +70,9 @@ pro ar2_plot_solution, full = full, $
 
     nuOmg = nuOmg[*,*,ThisSpec]
 
-	jA_r = complex ( jr_re[*,*,ThisRHS], jr_im[*,*,ThisRHS] )
-	jA_t = complex ( jt_re[*,*,ThisRHS], jt_im[*,*,ThisRHS] )
-	jA_z = complex ( jz_re[*,*,ThisRHS], jz_im[*,*,ThisRHS] )
+	jA_r = complex ( jr_re[*,*], jr_im[*,*] )
+	jA_t = complex ( jt_re[*,*], jt_im[*,*] )
+	jA_z = complex ( jz_re[*,*], jz_im[*,*] )
 
 	dRbFn_bFn	= complex ( dRbFn_bFn_re, dRbFn_bFn_im )
 	dZbFn_bFn	= complex ( dZbFn_bFn_re, dZbFn_bFn_im )
@@ -87,74 +88,74 @@ pro ar2_plot_solution, full = full, $
 		nCdf_varGet, cdfId, 'freqcy', freq 
 	
 		nCdf_varGet, cdfId, 'ealpha_re', ealpha_re 
-		ealpha_re = temporary(ealpha_re[*,*,ThisRHS])
+		ealpha_re = temporary(ealpha_re[*,*])
 		nCdf_varGet, cdfId, 'ebeta_re', ebeta_re 
-		ebeta_re = temporary(ebeta_re[*,*,ThisRHS])
+		ebeta_re = temporary(ebeta_re[*,*])
 		nCdf_varGet, cdfId, 'eB_re', eB_re 
-		eb_re = temporary(eb_re[*,*,ThisRHS])
+		eb_re = temporary(eb_re[*,*])
 
 		nCdf_varGet, cdfId, 'ealpha_im', ealpha_im 
-		ealpha_im = temporary(ealpha_im[*,*,ThisRHS])
+		ealpha_im = temporary(ealpha_im[*,*])
 		nCdf_varGet, cdfId, 'ebeta_im', ebeta_im 
-		ebeta_im = temporary(ebeta_im[*,*,ThisRHS])
+		ebeta_im = temporary(ebeta_im[*,*])
 		nCdf_varGet, cdfId, 'eB_im', eB_im 
-		eb_im = temporary(eb_im[*,*,ThisRHS])
+		eb_im = temporary(eb_im[*,*])
 
 		nCdf_varGet, cdfId, 'ealphak_re', ealphak_re 
-		ealphak_re = temporary(ealphak_re[*,*,ThisRHS])
+		ealphak_re = temporary(ealphak_re[*,*])
 		nCdf_varGet, cdfId, 'ebetak_re', ebetak_re 
-		ebetak_re = temporary(ebetak_re[*,*,ThisRHS])
+		ebetak_re = temporary(ebetak_re[*,*])
 		nCdf_varGet, cdfId, 'eBk_re', eBk_re 
-		ebk_re = temporary(ebk_re[*,*,ThisRHS])
+		ebk_re = temporary(ebk_re[*,*])
 
 		nCdf_varGet, cdfId, 'ealphak_im', ealphak_im 
-		ealphak_im = temporary(ealphak_im[*,*,ThisRHS])
+		ealphak_im = temporary(ealphak_im[*,*])
 		nCdf_varGet, cdfId, 'ebetak_im', ebetak_im 
-		ebetak_im = temporary(ebetak_im[*,*,ThisRHS])
+		ebetak_im = temporary(ebetak_im[*,*])
 		nCdf_varGet, cdfId, 'eBk_im', eBk_im 
-		ebk_im = temporary(ebk_im[*,*,ThisRHS])
+		ebk_im = temporary(ebk_im[*,*])
 
 		nCdf_varGet, cdfId, 'er_re', er_re 
-		er_re = temporary(er_re[*,*,ThisRHS])
+		er_re = temporary(er_re[*,*])
 		nCdf_varGet, cdfId, 'et_re', et_re 
-		et_re = temporary(et_re[*,*,ThisRHS])
+		et_re = temporary(et_re[*,*])
 		nCdf_varGet, cdfId, 'ez_re', ez_re 
-		ez_re = temporary(ez_re[*,*,ThisRHS])
+		ez_re = temporary(ez_re[*,*])
 
 		nCdf_varGet, cdfId, 'er_im', er_im 
-		er_im = temporary(er_im[*,*,ThisRHS])
+		er_im = temporary(er_im[*,*])
 		nCdf_varGet, cdfId, 'et_im', et_im 
-		et_im = temporary(et_im[*,*,ThisRHS])
+		et_im = temporary(et_im[*,*])
 		nCdf_varGet, cdfId, 'ez_im', ez_im 
-		ez_im = temporary(ez_im[*,*,ThisRHS])
+		ez_im = temporary(ez_im[*,*])
 
 		nCdf_varGet, cdfId, 'jalpha_re', jalpha_re 
-		jalpha_re = temporary(jalpha_re[*,*,ThisSPEC,ThisRHS])
+		jalpha_re = temporary(jalpha_re[*,*,ThisSPEC])
 		nCdf_varGet, cdfId, 'jbeta_re', jbeta_re 
-		jbeta_re = temporary(jbeta_re[*,*,ThisSPEC,ThisRHS])
+		jbeta_re = temporary(jbeta_re[*,*,ThisSPEC])
 		nCdf_varGet, cdfId, 'jB_re', jB_re 
-		jb_re = temporary(jb_re[*,*,ThisSPEC,ThisRHS])
+		jb_re = temporary(jb_re[*,*,ThisSPEC])
 
 		nCdf_varGet, cdfId, 'jalpha_im', jalpha_im 
-		jalpha_im = temporary(jalpha_im[*,*,ThisSPEC,ThisRHS])
+		jalpha_im = temporary(jalpha_im[*,*,ThisSPEC])
 		nCdf_varGet, cdfId, 'jbeta_im', jbeta_im 
-		jbeta_im = temporary(jbeta_im[*,*,ThisSPEC,ThisRHS])
+		jbeta_im = temporary(jbeta_im[*,*,ThisSPEC])
 		nCdf_varGet, cdfId, 'jB_im', jB_im 
-		jb_im = temporary(jb_im[*,*,ThisSPEC,ThisRHS])
+		jb_im = temporary(jb_im[*,*,ThisSPEC])
 
 		nCdf_varGet, cdfId, 'jP_r_re', jPr_re 
-		jpr_re = temporary(jpr_re[*,*,ThisSpec,ThisRHS])
+		jpr_re = temporary(jpr_re[*,*,ThisSpec])
 		nCdf_varGet, cdfId, 'jP_t_re', jPt_re 
-		jpt_re = temporary(jpt_re[*,*,ThisSpec,ThisRHS])
+		jpt_re = temporary(jpt_re[*,*,ThisSpec])
 		nCdf_varGet, cdfId, 'jP_z_re', jPz_re 
-		jpz_re = temporary(jpz_re[*,*,ThisSpec,ThisRHS])
+		jpz_re = temporary(jpz_re[*,*,ThisSpec])
 
 		nCdf_varGet, cdfId, 'jP_r_im', jPr_im 
-		jpr_im = temporary(jpr_im[*,*,ThisSpec,ThisRHS])
+		jpr_im = temporary(jpr_im[*,*,ThisSpec])
 		nCdf_varGet, cdfId, 'jP_t_im', jPt_im 
-		jpt_im = temporary(jpt_im[*,*,ThisSPEC,ThisRHS])
+		jpt_im = temporary(jpt_im[*,*,ThisSPEC])
 		nCdf_varGet, cdfId, 'jP_z_im', jPz_im 
-		jpz_im = temporary(jpz_im[*,*,ThisSPEC,ThisRHS])
+		jpz_im = temporary(jpz_im[*,*,ThisSPEC])
 
 		nCdf_varGet, cdfId, 'jouleHeating', jouleHeating 
 
@@ -338,7 +339,7 @@ pro ar2_plot_solution, full = full, $
 		c = contour ( -thisField, x, y, c_value=levels, rgb_indices=colors, rgb_table=1, /fill,/over )
 		p = plot ( rLim, zLim, /over )
 
-	    dimensions = [800,600]
+	    dimensions = [600,600]
         scaleFac = 0.3
 	    scale = max(abs([e_r,e_t,e_z]))*scaleFac 
 
@@ -405,7 +406,6 @@ pro ar2_plot_solution, full = full, $
 		p = plot ( rlim, zlim, /over )
 
 
-
 		scale = max(abs([jA_r,jA_t,jA_z]))*scaleFac
 
 		thisField = jA_r[*,*]
@@ -414,7 +414,7 @@ pro ar2_plot_solution, full = full, $
 		colors = reverse(bytScl(levels, top=253)+1)
 		PlotField = (real_part(thisField)<max(levels))>min(-levels)
 		c = contour ( PlotField, x, y, c_value=levels, rgb_indices=colors, rgb_table=3, /fill, $
-                aspect_ratio=1.0, title=title, layout=[1,3,1], dimensions=dimensions )
+                aspect_ratio=1.0, title=title, layout=[2,3,1], dimensions=dimensions )
 		c = contour ( -PlotField, x, y, c_value=levels, rgb_indices=colors, rgb_table=1, /fill,/over )
 		p = plot ( rlim, zlim, /over )
 
@@ -424,7 +424,7 @@ pro ar2_plot_solution, full = full, $
 		colors = reverse(bytScl(levels, top=253)+1)
 		PlotField = (real_part(thisField)<max(levels))>min(-levels)
 		c = contour ( PlotField, x, y, c_value=levels, rgb_indices=colors, rgb_table=3, /fill, $
-                aspect_ratio=1.0, title=title, layout=[1,3,2], /current )
+                aspect_ratio=1.0, title=title, layout=[2,3,3], /current )
 		c = contour ( -PlotField, x, y, c_value=levels, rgb_indices=colors, rgb_table=1, /fill,/over )
 		p = plot ( rlim, zlim, /over )
 
@@ -434,7 +434,7 @@ pro ar2_plot_solution, full = full, $
 		colors = reverse(bytScl(levels, top=253)+1)
 		PlotField = (real_part(thisField)<max(levels))>min(-levels)
 		c = contour ( PlotField, x, y, c_value=levels, rgb_indices=colors, rgb_table=3, /fill, $
-                aspect_ratio=1.0, title=title, layout=[1,3,3], /current )
+                aspect_ratio=1.0, title=title, layout=[2,3,5], /current )
 		c = contour ( -PlotField, x, y, c_value=levels, rgb_indices=colors, rgb_table=1, /fill,/over )
 		p = plot ( rlim, zlim, /over )
 
@@ -446,7 +446,7 @@ pro ar2_plot_solution, full = full, $
 		colors = reverse(bytScl(levels, top=253)+1)
 		PlotField = (real_part(thisField)<max(levels))>min(-levels)
 		c = contour ( PlotField, x, y, c_value=levels, rgb_indices=colors, rgb_table=3, /fill, $
-                aspect_ratio=1.0, title=title, layout=[1,3,1], dimensions=dimensions )
+                aspect_ratio=1.0, title=title, layout=[2,3,2], /current )
 		c = contour ( -PlotField, x, y, c_value=levels, rgb_indices=colors, rgb_table=1, /fill,/over )
 		p = plot ( rlim, zlim, /over )
 

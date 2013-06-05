@@ -85,16 +85,16 @@ type :: gridBlock
 
     ! Antenna Currents
     ! ----------------
-    complex, allocatable, dimension(:,:,:) :: &
+    complex, allocatable, dimension(:,:) :: &
         jR, jT, jZ
 
     ! E field solution
     ! ----------------
     complex, allocatable, dimension(:,:,:) :: &
         ealphak, ebetak, eBk
-    complex, allocatable, dimension(:,:,:) :: &
+    complex, allocatable, dimension(:,:) :: &
        ealpha,  ebeta, eB 
-    complex, allocatable, dimension(:,:,:) :: &
+    complex, allocatable, dimension(:,:) :: &
        eR,  eTh, eZ 
 
     ! Mode integration range
@@ -103,13 +103,13 @@ type :: gridBlock
 
     ! Plasma currents per species
     ! ---------------------------
-    complex, allocatable, dimension(:,:,:,:) :: &
+    complex, allocatable, dimension(:,:,:) :: &
         jAlpha, jBeta, jB, &
         jP_r, jP_t, jP_z
 
     ! Power absorption
     ! ----------------
-    real, allocatable, dimension(:,:,:,:) :: &
+    real, allocatable, dimension(:,:,:) :: &
         jouleHeating
 
     ! Rotation matrix and derivatives

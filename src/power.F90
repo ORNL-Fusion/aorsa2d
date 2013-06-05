@@ -2,7 +2,7 @@ module power
 
 contains
 
-subroutine current ( g )
+subroutine current ( g, rhs )
 
     use grid
     use read_data
@@ -13,16 +13,16 @@ subroutine current ( g )
     use profiles, &
         only: k0, omgrf, mSpec
     use constants
-    use antenna, only: NRHS
 
     implicit none
    
     type(gridBlock), intent(inout) :: g 
+    integer, intent(in) :: rhs
 
     complex :: ek_nm(3), jVec(3), thisSigma(3,3)
     complex :: bFn
 
-    integer :: s, w, rhs
+    integer :: s, w
     real :: kr, kz, kVec_stix(3)
     complex, allocatable :: jAlphaTmp(:,:), jBetaTmp(:,:), jBTmp(:,:)
 
@@ -31,10 +31,10 @@ subroutine current ( g )
     real :: R_(3,3)
 #endif
 
-    allocate ( &
-        g%jAlpha(g%nR,g%nZ,nSpec,NRHS), &
-        g%jBeta(g%nR,g%nZ,nSpec,NRHS), &
-        g%jB(g%nR,g%nZ,nSpec,NRHS) )
+    if (.not.allocated(g%jAlpha)) allocate ( &
+        g%jAlpha(g%nR,g%nZ,nSpec), &
+        g%jBeta(g%nR,g%nZ,nSpec), &
+        g%jB(g%nR,g%nZ,nSpec) )
 
     allocate ( jAlphaTmp(g%nR,g%nZ), jBetaTmp(g%nR,g%nZ), jBTmp(g%nR,g%nZ) )
 
@@ -143,19 +143,15 @@ subroutine current ( g )
 
                         endif
 #endif
-                        do rhs=1,NRHS
-    
-                            ek_nm(1) = g%eAlphak(g%wl(w)%n,g%wl(w)%m,rhs)
-                            ek_nm(2) = g%eBetak(g%wl(w)%n,g%wl(w)%m,rhs)
-                            ek_nm(3) = g%eBk(g%wl(w)%n,g%wl(w)%m,rhs) 
+                        ek_nm(1) = g%eAlphak(g%wl(w)%n,g%wl(w)%m,rhs)
+                        ek_nm(2) = g%eBetak(g%wl(w)%n,g%wl(w)%m,rhs)
+                        ek_nm(3) = g%eBk(g%wl(w)%n,g%wl(w)%m,rhs) 
 
-                            jVec = matMul ( thisSigma, ek_nm ) 
+                        jVec = matMul ( thisSigma, ek_nm ) 
 
-                            g%jAlpha(g%wl(w)%i,g%wl(w)%j,s,rhs) = g%jAlpha(g%wl(w)%i,g%wl(w)%j,s,rhs) + jVec(1) * bFn
-                            g%jBeta(g%wl(w)%i,g%wl(w)%j,s,rhs) = g%jBeta(g%wl(w)%i,g%wl(w)%j,s,rhs) + jVec(2) * bFn
-                            g%jB(g%wl(w)%i,g%wl(w)%j,s,rhs) = g%jB(g%wl(w)%i,g%wl(w)%j,s,rhs) + jVec(3) * bFn
-
-                        enddo ! rhs loop
+                        g%jAlpha(g%wl(w)%i,g%wl(w)%j,s) = g%jAlpha(g%wl(w)%i,g%wl(w)%j,s) + jVec(1) * bFn
+                        g%jBeta(g%wl(w)%i,g%wl(w)%j,s) = g%jBeta(g%wl(w)%i,g%wl(w)%j,s) + jVec(2) * bFn
+                        g%jB(g%wl(w)%i,g%wl(w)%j,s) = g%jB(g%wl(w)%i,g%wl(w)%j,s) + jVec(3) * bFn
 
             endif twoThirdsRule
 
@@ -166,13 +162,9 @@ subroutine current ( g )
 
             if (g%label(g%wl(w)%iPt)==888) then
 
-                do rhs=1,NRHS
-
-                    g%jAlpha(g%wl(w)%i,g%wl(w)%j,s,rhs) = 0
-                    g%jBeta(g%wl(w)%i,g%wl(w)%j,s,rhs) = 0
-                    g%jB(g%wl(w)%i,g%wl(w)%j,s,rhs) = 0
-
-                enddo
+                g%jAlpha(g%wl(w)%i,g%wl(w)%j,s) = 0
+                g%jBeta(g%wl(w)%i,g%wl(w)%j,s) = 0
+                g%jB(g%wl(w)%i,g%wl(w)%j,s) = 0
 
             endif
 
@@ -187,12 +179,11 @@ subroutine current ( g )
 
     ! Switch to individual 2D arrays for the sum over processors
 
-    do rhs=1,NRHS
     do s=1,nSpec
 
-        jAlphaTmp = g%jAlpha(:,:,s,rhs)
-        jBetaTmp = g%jBeta(:,:,s,rhs)
-        jBTmp = g%jB(:,:,s,rhs)
+        jAlphaTmp = g%jAlpha(:,:,s)
+        jBetaTmp = g%jBeta(:,:,s)
+        jBTmp = g%jB(:,:,s)
 
         call cGSUM2D ( iContext, 'All', ' ', g%nR, g%nZ, jAlphaTmp, g%nR, -1, -1 )
         call cGSUM2D ( iContext, 'All', ' ', g%nR, g%nZ, jBetaTmp, g%nR, -1, -1 )
@@ -200,58 +191,50 @@ subroutine current ( g )
 
         call blacs_barrier ( iContext, 'All' ) 
 
-        g%jAlpha(:,:,s,rhs) = jAlphaTmp
-        g%jBeta(:,:,s,rhs) = jBetaTmp
-        g%jB(:,:,s,rhs) = jBTmp
+        g%jAlpha(:,:,s) = jAlphaTmp
+        g%jBeta(:,:,s) = jBetaTmp
+        g%jB(:,:,s) = jBTmp
 
     enddo
-    enddo ! rhs loop
+
+        deallocate(jAlphaTmp,jBetaTmp,jBTmp)
+
 #endif
 #endif
 
 end subroutine current 
 
 
-subroutine jDotE ( g )
+subroutine jDotE ( g, rhs)
 
     use grid
     use aorsaNamelist, &
         only: nSpec
-    use antenna, only: NRHS
 
     implicit none
    
     type(gridBlock), intent(inout) :: g 
+    integer, intent(in) :: rhs
 
-    integer :: i, j, s, rhs
+    integer :: i, j, s
 
-    allocate ( &
-        g%jouleHeating(g%nR,g%nZ,nSpec,NRHS) )
+    if(.not.allocated(g%jouleHeating))allocate ( g%jouleHeating(g%nR,g%nZ,nSpec) )
 
-
-    do rhs=1,NRHS
     species: &
     do s=1,nSpec
 
         do i=1,g%nR
             do j=1,g%nZ
 
-                !eHere = (/ g%eAlpha(i,j), g%eBeta(i,j), g%eB(i,j) /)
-                !jHere = (/ g%jAlpha(i,j,s), g%jBeta(i,j,s), g%jB(i,j,s) /)
-
-                !g%jouleHeating(i,j,s) = &
-                !    0.5 * realpart ( dot_product ( eHere, jHere ) )
-
-                g%jouleHeating(i,j,s,rhs) = &
-                    0.5 * real(real( conjg(g%eAlpha(i,j,rhs)) * g%jAlpha(i,j,s,rhs) &
-                                    + conjg(g%eBeta(i,j,rhs)) * g%jBeta(i,j,s,rhs) &
-                                    + conjg(g%eB(i,j,rhs)) * g%jB(i,j,s,rhs)  ))
+                g%jouleHeating(i,j,s) = &
+                    0.5 * real(real( conjg(g%eAlpha(i,j)) * g%jAlpha(i,j,s) &
+                                    + conjg(g%eBeta(i,j)) * g%jBeta(i,j,s) &
+                                    + conjg(g%eB(i,j)) * g%jB(i,j,s)  ))
 
             enddo
         enddo  
 
     enddo species
-    enddo ! rhs loop
 
 end subroutine jDotE
 

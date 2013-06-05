@@ -42,7 +42,7 @@ contains
     end subroutine alloc_total_brhs
 
 
-    subroutine init_brhs ( g )
+    subroutine init_brhs ( g, rhs )
 
         use aorsaNamelist, &
         only: rAnt, zAnt, npRow, npCol, &
@@ -64,8 +64,9 @@ contains
         implicit none
 
         type(gridBlock), intent(inout) :: g
+        integer, intent(in) :: rhs
 
-        integer :: i, j, iRow, iCol, rhs
+        integer :: i, j, iRow, iCol
         complex :: TmpAntJ
 
         ! scalapack index variables
@@ -74,19 +75,16 @@ contains
         integer :: localRow, localCol, ii, jj
 
 
-        allocate ( &
-            g%jR(g%nR,g%nZ,NRHS), &
-            g%jT(g%nR,g%nZ,NRHS), &
-            g%jZ(g%nR,g%nZ,NRHS) )
+        if(.not.allocated(g%jR))allocate ( &
+            g%jR(g%nR,g%nZ), &
+            g%jT(g%nR,g%nZ), &
+            g%jZ(g%nR,g%nZ) )
 
         g%jR = 0
         g%jT = 0
         g%jZ = 0
  
         !   note curden is in Amps per meter of toroidal length (2.*pi*rt).
-
-    rhs_fill_loop: &
-    do rhs = 1,NRHS
 
         do i = 1, g%nR
             do j = 1, g%nZ
@@ -105,29 +103,24 @@ contains
                     !   4 -> t_im
                     !   5 -> z_im
 
-                    if(CurrentSource_ComponentID(rhs).eq.0) g%jR(i,j,rhs) = TmpAntJ
-                    if(CurrentSource_ComponentID(rhs).eq.1) g%jT(i,j,rhs) = TmpAntJ
-                    if(CurrentSource_ComponentID(rhs).eq.2) g%jZ(i,j,rhs) = TmpAntJ
+                    if(CurrentSource_ComponentID(rhs).eq.0) g%jR(i,j) = TmpAntJ
+                    if(CurrentSource_ComponentID(rhs).eq.1) g%jT(i,j) = TmpAntJ
+                    if(CurrentSource_ComponentID(rhs).eq.2) g%jZ(i,j) = TmpAntJ
 
-                    if(CurrentSource_ComponentID(rhs).eq.3) g%jR(i,j,rhs) = zi*TmpAntJ
-                    if(CurrentSource_ComponentID(rhs).eq.4) g%jT(i,j,rhs) = zi*TmpAntJ
-                    if(CurrentSource_ComponentID(rhs).eq.5) g%jZ(i,j,rhs) = zi*TmpAntJ
+                    if(CurrentSource_ComponentID(rhs).eq.3) g%jR(i,j) = zi*TmpAntJ
+                    if(CurrentSource_ComponentID(rhs).eq.4) g%jT(i,j) = zi*TmpAntJ
+                    if(CurrentSource_ComponentID(rhs).eq.5) g%jZ(i,j) = zi*TmpAntJ
 
                 endif 
 
                 if(useAllRHSsSource)then
-                    if(useEqdsk) then
-                        !TmpAntJ = exp ( &
-                        !-( (g%rho(i,j)-rhoAnt)**2/antSigRho**2 + (g%Z(j)-zAnt)**2/antSigY**2 ) &
-                        !      )
-                        TmpAntJ = 50*exp ( -( (g%R(i)-rAnt)**2/antSigX**2 + (g%Z(j)-zAnt)**2/antSigY**2 ) )
-                    else
-                        TmpAntJ = 50*exp ( -( (g%R(i)-rAnt)**2/antSigX**2 + (g%Z(j)-zAnt)**2/antSigY**2 ) )
-                    endif
 
-                    if (AntennaJ_R) g%jR(i,j,rhs) = TmpAntJ
-                    if (AntennaJ_T) g%jT(i,j,rhs) = TmpAntJ
-                    if (AntennaJ_Z) g%jZ(i,j,rhs) = TmpAntJ
+                    TmpAntJ = 50*exp ( -( (g%R(i)-rAnt)**2/antSigX**2 + (g%Z(j)-zAnt)**2/antSigY**2 ) )
+
+                    if (AntennaJ_R) g%jR(i,j) = TmpAntJ
+                    if (AntennaJ_T) g%jT(i,j) = TmpAntJ
+                    if (AntennaJ_Z) g%jZ(i,j) = TmpAntJ
+
                 endif
  
                 !   boundary conditions
@@ -135,17 +128,17 @@ contains
 
                 if(g%nR/=1) then
                 if ( i==1 .or. i==g%nR ) then
-                    g%jR(i,j,rhs)    = 0
-                    g%jT(i,j,rhs)    = 0
-                    g%jZ(i,j,rhs)    = 0
+                    g%jR(i,j)    = 0
+                    g%jT(i,j)    = 0
+                    g%jZ(i,j)    = 0
                 endif
                 endif
 
                 if(g%nZ/=1) then
                 if ( j==1 .or. j==g%nZ ) then
-                    g%jR(i,j,rhs)    = 0
-                    g%jT(i,j,rhs)    = 0
-                    g%jZ(i,j,rhs)    = 0
+                    g%jR(i,j)    = 0
+                    g%jT(i,j)    = 0
+                    g%jZ(i,j)    = 0
                 endif
                 endif
 
@@ -171,40 +164,11 @@ contains
                 do ii = 0, 2
 
 #ifdef par
-!                    !   2D (with only 1 col) block cyclic storage, see:
-!                    !   http://www.netlib.org/scalapack/slug/node76.html
-!                    !       and
-!                    !   http://acts.nersc.gov/scalapack/hands-on/example4.html
-!                    !
-!                    !   note that brhs is distributed only in col 0 of the 
-!                    !   process grid. All other columns possess an empty
-!                    !   local portion of brhs
-!
-!                    !iCol    = 1 
-!                    !jj      = 0
-!                    l_sp    = ( iRow-1+ii ) / ( npRow * rowBlockSize )
-!                    !m_sp    = ( iCol-1+jj ) / ( npCol * colBlockSize )
-!
-!                    pr_sp   = mod ( rowStartProc + (iRow-1+ii)/rowBlockSize, npRow )
-!                    !pc_sp   = mod ( colStartProc + (iCol-1+jj)/colBlockSize, npCol )
-!
-!                    x_sp    = mod ( iRow-1+ii, rowBlockSize ) + 1
-!                    !y_sp    = mod ( iCol-1+jj, colBlockSize ) + 1
-!
-!                    localRow    = l_sp*rowBlockSize+x_sp
-!                    !localCol    = m_sp*colBlockSize+y_sp
-!
-!                    if (myRow==pr_sp .and. myCol==pc_sp) then
-!
-!                        if (ii==0) brhs(localRow)    = -zi*omgrf*mu0*g%jR(i,j)
-!                        if (ii==1) brhs(localRow)    = -zi*omgrf*mu0*g%jT(i,j)
-!                        if (ii==2) brhs(localRow)    = -zi*omgrf*mu0*g%jZ(i,j)
-!
-!                    endif
+                    ! now below in it's own section  
 #else
-                    if (ii==0) brhs(iRow+0,rhs)    = -zi*omgrf*mu0*g%jR(i,j,rhs)
-                    if (ii==1) brhs(iRow+1,rhs)    = -zi*omgrf*mu0*g%jT(i,j,rhs)
-                    if (ii==2) brhs(iRow+2,rhs)    = -zi*omgrf*mu0*g%jZ(i,j,rhs)
+                    if (ii==0) brhs(iRow+0,rhs)    = -zi*omgrf*mu0*g%jR(i,j)
+                    if (ii==1) brhs(iRow+1,rhs)    = -zi*omgrf*mu0*g%jT(i,j)
+                    if (ii==2) brhs(iRow+2,rhs)    = -zi*omgrf*mu0*g%jZ(i,j)
 #endif
                 enddo
             enddo
@@ -219,15 +183,13 @@ contains
                 i = (iRow-1)/(3*g%nZ)+1
                 j = (mod(iRow-1,3*g%nZ)+1-1)/3+1
           
-                brhs(ii+0,rhs) =  -zi*omgrf*mu0*g%jR(i,j,rhs)
-                brhs(ii+1,rhs) =  -zi*omgrf*mu0*g%jT(i,j,rhs)
-                brhs(ii+2,rhs) =  -zi*omgrf*mu0*g%jZ(i,j,rhs)
+                brhs(ii+0,rhs) =  -zi*omgrf*mu0*g%jR(i,j)
+                brhs(ii+1,rhs) =  -zi*omgrf*mu0*g%jT(i,j)
+                brhs(ii+2,rhs) =  -zi*omgrf*mu0*g%jZ(i,j)
 
             enddo
         endif
 #endif
-
-    enddo rhs_fill_loop
 
     end subroutine
 
