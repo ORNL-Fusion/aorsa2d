@@ -103,13 +103,13 @@ contains
                     !   4 -> t_im
                     !   5 -> z_im
 
-                    if(CurrentSource_ComponentID(rhs).eq.0) g%jR(i,j) = TmpAntJ
-                    if(CurrentSource_ComponentID(rhs).eq.1) g%jT(i,j) = TmpAntJ
-                    if(CurrentSource_ComponentID(rhs).eq.2) g%jZ(i,j) = TmpAntJ
+                    if(CurrentSource_ComponentID(rhs).eq.0) g%jR(i,j) = TmpAntJ+zi*TmpAntJ
+                    if(CurrentSource_ComponentID(rhs).eq.1) g%jT(i,j) = TmpAntJ+zi*TmpAntJ
+                    if(CurrentSource_ComponentID(rhs).eq.2) g%jZ(i,j) = TmpAntJ+zi*TmpAntJ
 
-                    if(CurrentSource_ComponentID(rhs).eq.3) g%jR(i,j) = zi*TmpAntJ
-                    if(CurrentSource_ComponentID(rhs).eq.4) g%jT(i,j) = zi*TmpAntJ
-                    if(CurrentSource_ComponentID(rhs).eq.5) g%jZ(i,j) = zi*TmpAntJ
+                    !if(CurrentSource_ComponentID(rhs).eq.3) g%jR(i,j) = zi*TmpAntJ
+                    !if(CurrentSource_ComponentID(rhs).eq.4) g%jT(i,j) = zi*TmpAntJ
+                    !if(CurrentSource_ComponentID(rhs).eq.5) g%jZ(i,j) = zi*TmpAntJ
 
                 endif 
 

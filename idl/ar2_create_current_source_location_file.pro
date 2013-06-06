@@ -7,15 +7,15 @@ pro ar2_create_current_source_location_file
 
     patch2 = 1
 
-	nRSources = 2 ; x 3 x 2 for all components, real & imag
-    nZSources = 5 
+	nRSources = 5 ; x 3 for all components, real & imag
+    nZSources = 15 
     nSourcesTotal = nRSources * nZSources
 	NRHS = nSourcesTotal * 3
 
     if patch2 eq 1 then begin
 
-        nRSources2 = 5 
-        nZSources2 = 10 
+        nRSources2 = 3 
+        nZSources2 = 20 
         NRHS2 = nRSources2 * nZSources2 * 3
 
         NRHS = NRHS + NRHS2
@@ -30,7 +30,7 @@ pro ar2_create_current_source_location_file
 	ii=0
 
 	rMin = 1.8
-    rMax = 1.9
+    rMax = 1.85
 	zMin = -0.17
 	zMax = 0.17
 
@@ -40,7 +40,7 @@ pro ar2_create_current_source_location_file
                 if nRSources gt 1 then $
                     cs_r[ii] = rMin+(rMax-rMin)/(nRSources-1)*i else cs_r[ii] = rMin
 		    	if nZSources gt 1 then $
-                    cs_z[ii] = zMin+(zMax-zMin)/(nZSources-1)*i else cs_z[ii] = zMin
+                    cs_z[ii] = zMin+(zMax-zMin)/(nZSources-1)*j else cs_z[ii] = zMin
 		    	component_ident[ii] = c
 		    	ii++
 		    endfor
@@ -60,7 +60,7 @@ pro ar2_create_current_source_location_file
                     if nRSources2 gt 1 then $
 	    	    	    cs_r[ii] = rMin+(rMax-rMin)/(nRSources2-1)*i else cs_r[ii] = rMin
                     if nZSources2 gt 1 then $
-	    	    	    cs_z[ii] = zMin+(zMax-zMin)/(nZSources2-1)*i else cs_z[ii] = zMin
+	    	    	    cs_z[ii] = zMin+(zMax-zMin)/(nZSources2-1)*j else cs_z[ii] = zMin
 	    	    	component_ident[ii] = c
 	    	    	ii++
 	    	    endfor
@@ -70,13 +70,13 @@ pro ar2_create_current_source_location_file
     endif
 
 
-	if ii ne NRHS then stop
+	if ii ne NRHS then message, 'ERROR'
     
     iiBad = where(cs_r ne cs_r,iiBadCnt)
-    if iiBadCnt gt 0 then print, 'ERROR' & stop
+    if iiBadCnt gt 0 then message, 'ERROR'
 
     iiBad = where(cs_z ne cs_z,iiBadCnt)
-    if iiBadCnt gt 0 then print, 'ERROR' & stop
+    if iiBadCnt gt 0 then message, 'ERROR' 
 
 	nc_id = nCdf_create ('ar2SourceLocations.nc', /clobber )
 
@@ -105,5 +105,7 @@ pro ar2_create_current_source_location_file
 	nCdf_close, nc_id
 
 	print, 'Success'
+
+    p = plot( cs_r, cs_z, symbol = "s", lineStyle='none' )
 
 end
