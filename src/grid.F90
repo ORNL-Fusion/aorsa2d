@@ -468,7 +468,7 @@ contains
         implicit none
 
         type(gridBlock), intent(inout) :: gAll(:)
-        integer(kind=long), intent(in) :: nPts_tot
+        integer, intent(in) :: nPts_tot
 
         integer :: wMe, iMe, jMe, me, nbr, offSet, label
 

@@ -5,7 +5,6 @@ use constants
 implicit none
 
 real :: antSigX, antSigY
-integer :: NRHS = 3
 
 #ifndef dblprec
     complex, allocatable :: brhs(:,:)
@@ -19,22 +18,23 @@ contains
     subroutine alloc_total_brhs ( nPts_tot )
 
         use parallel
-        use AR2SourceLocationsInput
+        use AR2SourceLocationsInput, NRHS_FromInputFile=>NRHS
 
         implicit none
 
-        integer(kind=long), intent(in) :: nPts_tot
+        integer, intent(in) :: nPts_tot
 
         if(NRHS<1)then
                 write(*,*) 'ERROR: NRHS<1'
                 stop
         endif
 
-        allocate ( brhs_global(nPts_tot*3,NRHS) )
 #ifdef par
-        allocate ( brhs(nRowLocal,NRHS) )
+        allocate ( brhs(LM_B,LN_B) )
+        allocate ( brhs_global(M_B,N_B) )
 #else
         allocate ( brhs(nPts_tot*3,NRHS) )
+        allocate ( brhs_global(nPts_tot*3,NRHS) )
 #endif
         brhs        = 0
         brhs_global = 0
@@ -42,7 +42,117 @@ contains
     end subroutine alloc_total_brhs
 
 
-    subroutine init_brhs ( g, rhs )
+    function get_jA (g, i, j, rhs)
+
+        use aorsaNamelist, &
+        only: rAnt, zAnt, npRow, npCol, &
+            antSigX, antSigY, &
+            metalLeft, metalRight, metalTop, metalBot, &
+            useEqdsk, r0, rhoAnt, antSigRho, &
+            AntennaJ_R, AntennaJ_T, AntennaJ_Z, &
+            antSigUnit, useAR2SourceLocationsFile, &
+            useAllRHSsSource
+        use grid
+        use profiles, only: omgrf
+        use constants
+        use ar2SourceLocationsInput, &
+            only: CurrentSource_r, CurrentSource_z, &
+            CurrentSource_ComponentID
+
+        implicit none
+
+        type(gridBlock), intent(in) :: g
+        integer, intent(in) :: rhs, i, j
+        complex, dimension(3) :: get_jA
+        real :: TmpAntJ
+
+        if(useAR2SourceLocationsFile)then
+        
+            TmpAntJ = 1*exp ( -( &
+                (g%R(i)-CurrentSource_r(rhs))**2/antSigX**2 &
+                    + (g%Z(j)-CurrentSource_z(rhs))**2/antSigY**2 ) )
+        
+            ! ID mapping to components:
+            !   0 -> r
+            !   1 -> t
+            !   2 -> z
+        
+            if(CurrentSource_ComponentID(rhs).eq.0) get_jA(1) = TmpAntJ+zi*TmpAntJ
+            if(CurrentSource_ComponentID(rhs).eq.1) get_jA(2) = TmpAntJ+zi*TmpAntJ
+            if(CurrentSource_ComponentID(rhs).eq.2) get_jA(3) = TmpAntJ+zi*TmpAntJ
+        
+        endif 
+        
+        if(useAllRHSsSource)then
+        
+            TmpAntJ = 50*exp ( -( (g%R(i)-rAnt)**2/antSigX**2 + (g%Z(j)-zAnt)**2/antSigY**2 ) )
+        
+            if (AntennaJ_R) get_jA(1) = TmpAntJ
+            if (AntennaJ_T) get_jA(2) = TmpAntJ
+            if (AntennaJ_Z) get_jA(3) = TmpAntJ
+        
+        endif
+        
+        !   boundary conditions
+        !   -------------------
+        
+        if(g%nR/=1) then
+        if ( i==1 .or. i==g%nR ) then
+            get_jA  = 0
+        endif
+        endif
+        
+        if(g%nZ/=1) then
+        if ( j==1 .or. j==g%nZ ) then
+            get_jA = 0
+        endif
+        endif
+        
+        !if ( capR(i) < metalLeft .or. capR(i) > metalRight &
+        !        .or. y(j) > metalTop .or. y(j) < metalBot ) then 
+        !    jR(i,j)    = 0
+        !    jT(i,j)    = 0
+        !    jZ(i,j)    = 0
+        !endif
+
+    end function get_jA
+
+    subroutine fill_jA ( g, rhs )
+
+        use grid
+
+        implicit none
+
+        type(gridBlock), intent(inout) :: g
+        integer, intent(in) :: rhs
+        integer :: i, j
+        complex :: This_jA(3)
+
+        if(.not.allocated(g%jR))allocate ( &
+            g%jR(g%nR,g%nZ), &
+            g%jT(g%nR,g%nZ), &
+            g%jZ(g%nR,g%nZ) )
+
+        g%jR = 0
+        g%jT = 0
+        g%jZ = 0
+ 
+        do i = 1,g%nR
+            do j = 1,g%nZ
+
+                This_jA = get_jA( g, i, j, rhs )
+
+                g%jR(i,j) = This_jA(1)
+                g%jT(i,j) = This_jA(2)
+                g%jZ(i,j) = This_jA(3)
+
+            enddo
+        enddo
+       
+    end subroutine fill_jA
+
+
+    subroutine init_brhs ( g, nPts_tot )
 
         use aorsaNamelist, &
         only: rAnt, zAnt, npRow, npCol, &
@@ -56,7 +166,7 @@ contains
         use parallel
         use profiles, only: omgrf
         use constants
-        use scalapack_mod, only: IndxL2G
+        use scalapack_mod
         use ar2SourceLocationsInput, &
             only: CurrentSource_r, CurrentSource_z, &
             CurrentSource_ComponentID
@@ -64,16 +174,15 @@ contains
         implicit none
 
         type(gridBlock), intent(inout) :: g
-        integer, intent(in) :: rhs
 
-        integer :: i, j, iRow, iCol
-        complex :: TmpAntJ
+        integer :: i, j, iRow, iCol, rhs
+        integer, intent(in) :: nPts_tot
+        complex :: This_jA(3)
 
         ! scalapack index variables
 
         integer :: pr_sp, pc_sp, l_sp, m_sp, x_sp, y_sp
         integer :: localRow, localCol, ii, jj
-
 
         if(.not.allocated(g%jR))allocate ( &
             g%jR(g%nR,g%nZ), &
@@ -84,111 +193,44 @@ contains
         g%jT = 0
         g%jZ = 0
  
-        !   note curden is in Amps per meter of toroidal length (2.*pi*rt).
+#ifndef par
+        do ii = 1,nPts_tot*3,3
+            do rhs = 1,NRHS 
 
-        do i = 1, g%nR
-            do j = 1, g%nZ
+                !iRow = (j-1) * 3 + (i-1) * g%nZ * 3 + 1
+                !iRow = iRow + ( g%startRow-1 )
 
-                if(useAR2SourceLocationsFile)then
+                i = (ii-1)/(3*g%nZ)+1
+                j = (mod(ii-1,3*g%nZ)+1-1)/3+1
 
-                    TmpAntJ = 1*exp ( -( &
-                        (g%R(i)-CurrentSource_r(rhs))**2/antSigUnit**2 &
-                            + (g%Z(j)-CurrentSource_z(rhs))**2/antSigUnit**2 ) )
+                This_jA = get_jA( g, i, j, rhs )
 
-                    ! ID mapping to components:
-                    !   0 -> r_re
-                    !   1 -> t_re
-                    !   2 -> z_re
-                    !   3 -> r_im
-                    !   4 -> t_im
-                    !   5 -> z_im
+                brhs(ii+0,rhs) = -zi*omgrf*mu0*This_jA(1)
+                brhs(ii+1,rhs) = -zi*omgrf*mu0*This_jA(2)
+                brhs(ii+2,rhs) = -zi*omgrf*mu0*This_jA(3)
 
-                    if(CurrentSource_ComponentID(rhs).eq.0) g%jR(i,j) = TmpAntJ+zi*TmpAntJ
-                    if(CurrentSource_ComponentID(rhs).eq.1) g%jT(i,j) = TmpAntJ+zi*TmpAntJ
-                    if(CurrentSource_ComponentID(rhs).eq.2) g%jZ(i,j) = TmpAntJ+zi*TmpAntJ
-
-                    !if(CurrentSource_ComponentID(rhs).eq.3) g%jR(i,j) = zi*TmpAntJ
-                    !if(CurrentSource_ComponentID(rhs).eq.4) g%jT(i,j) = zi*TmpAntJ
-                    !if(CurrentSource_ComponentID(rhs).eq.5) g%jZ(i,j) = zi*TmpAntJ
-
-                endif 
-
-                if(useAllRHSsSource)then
-
-                    TmpAntJ = 50*exp ( -( (g%R(i)-rAnt)**2/antSigX**2 + (g%Z(j)-zAnt)**2/antSigY**2 ) )
-
-                    if (AntennaJ_R) g%jR(i,j) = TmpAntJ
-                    if (AntennaJ_T) g%jT(i,j) = TmpAntJ
-                    if (AntennaJ_Z) g%jZ(i,j) = TmpAntJ
-
-                endif
- 
-                !   boundary conditions
-                !   -------------------
-
-                if(g%nR/=1) then
-                if ( i==1 .or. i==g%nR ) then
-                    g%jR(i,j)    = 0
-                    g%jT(i,j)    = 0
-                    g%jZ(i,j)    = 0
-                endif
-                endif
-
-                if(g%nZ/=1) then
-                if ( j==1 .or. j==g%nZ ) then
-                    g%jR(i,j)    = 0
-                    g%jT(i,j)    = 0
-                    g%jZ(i,j)    = 0
-                endif
-                endif
-
-
-                !if ( capR(i) < metalLeft .or. capR(i) > metalRight &
-                !        .or. y(j) > metalTop .or. y(j) < metalBot ) then 
-                !    jR(i,j)    = 0
-                !    jT(i,j)    = 0
-                !    jZ(i,j)    = 0
-                !endif
-
-
-           enddo
-        enddo
-
-
-        do i = 1, g%nR
-            do j = 1, g%nZ
-
-                iRow = (j-1) * 3 + (i-1) * g%nZ * 3 + 1
-                iRow = iRow + ( g%startRow-1 )
-
-                do ii = 0, 2
-
-#ifdef par
-                    ! now below in it's own section  
-#else
-                    if (ii==0) brhs(iRow+0,rhs)    = -zi*omgrf*mu0*g%jR(i,j)
-                    if (ii==1) brhs(iRow+1,rhs)    = -zi*omgrf*mu0*g%jT(i,j)
-                    if (ii==2) brhs(iRow+2,rhs)    = -zi*omgrf*mu0*g%jZ(i,j)
-#endif
-                enddo
             enddo
         enddo
+#endif
        
 #ifdef par
-        if(MyCol==0)then
-            do ii=1,nRowLocal,3
-       
-                iRow = IndxL2G ( ii, RowBlockSize, MyRow, 0, NpRow )
+        do ii=1,LM_B,3
+            do jj=1,LN_B
+        
+                iRow = IndxL2G ( ii, desc_B(MB_), myRow, 0, NpRow )
+                rhs = IndxL2G ( jj, desc_B(NB_), myCol, 0, NpCol )
 
                 i = (iRow-1)/(3*g%nZ)+1
                 j = (mod(iRow-1,3*g%nZ)+1-1)/3+1
-          
-                brhs(ii+0,rhs) =  -zi*omgrf*mu0*g%jR(i,j)
-                brhs(ii+1,rhs) =  -zi*omgrf*mu0*g%jT(i,j)
-                brhs(ii+2,rhs) =  -zi*omgrf*mu0*g%jZ(i,j)
+
+                This_jA = get_jA( g, i, j, rhs )
+
+                brhs(ii+0,jj) =  -zi*omgrf*mu0*This_jA(1)
+                brhs(ii+1,jj) =  -zi*omgrf*mu0*This_jA(2)
+                brhs(ii+2,jj) =  -zi*omgrf*mu0*This_jA(3)
 
             enddo
-        endif
+        enddo
 #endif
 
     end subroutine

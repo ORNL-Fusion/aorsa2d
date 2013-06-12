@@ -15,7 +15,6 @@ contains
         use constants
         use rotation
         use parallel
-        use antenna, only: NRHS
 
         implicit none
 
@@ -176,7 +175,14 @@ contains
 
             call check ( nf90_enddef ( nc_id ) )
         endif
-      
+
+        if(iAm==0)then
+            nc_stat = nf90_put_var ( nc_id, nPhi_id, nPhi ) 
+            nc_stat = nf90_put_var ( nc_id, freq_id, freqcy ) 
+            nc_stat = nf90_put_var ( nc_id, x_id, g%R ) 
+            nc_stat = nf90_put_var ( nc_id, y_id, g%Z )    
+        endif
+
         allocate(IntTmp(g%nR,g%nZ)) 
         allocate(Cnt(g%nR,g%nZ))
         IntTmp = 0
@@ -188,6 +194,7 @@ contains
             IntTmp(i,j) = g%isMetal(p)
             Cnt(i,j) = Cnt(i,j)+1
         enddo
+        
 #ifdef par
         call iGSUM2D ( iContext, 'All', ' ', g%nR, g%nZ, IntTmp, g%nR, -1, -1 )
         call iGSUM2D ( iContext, 'All', ' ', g%nR, g%nZ, Cnt, g%nR, -1, -1 )
@@ -196,11 +203,12 @@ contains
         IntTmp = abs(IntTmp-1)
 
         if(iAm==0)then
-            nc_stat = nf90_put_var ( nc_id, nPhi_id, nPhi ) 
-            nc_stat = nf90_put_var ( nc_id, freq_id, freqcy ) 
-            nc_stat = nf90_put_var ( nc_id, x_id, g%R ) 
-            nc_stat = nf90_put_var ( nc_id, y_id, g%Z )
+
             nc_stat = nf90_put_var ( nc_id, LimMask_id, IntTmp )
+            if(nc_stat.ne.0)then
+                    write(*,*) 'ERROR: nc_stat: ', nc_stat
+                    stop
+            endif
         endif   
 
         deallocate(IntTmp)
@@ -363,7 +371,8 @@ contains
         use grid
         use aorsaNamelist, &
             only: nSpec, nPhi, freqcy
- 
+        use parallel
+
         implicit none
 
         type(gridBlock), intent(in) :: g
@@ -412,6 +421,7 @@ contains
         call check ( nf90_def_dim ( nc_id, "nModesX", g%nModesR, nModesX_id ) )
         call check ( nf90_def_dim ( nc_id, "nModesY", g%nModesZ, nModesY_id ) )
         call check ( nf90_def_dim ( nc_id, "nSpec", nSpec, nSpec_id ) )
+        call check ( nf90_def_dim ( nc_id, "NRHS", NRHS, NRHS_id ) )
 
         call check ( nf90_def_var ( nc_id, "ealpha_re", NF90_REAL, &
             (/nX_id,nY_id/), e1_re_id ) ) 
@@ -495,12 +505,12 @@ contains
         call check ( nf90_put_var ( nc_id, e3_re_id, real(real(g%eB)) ) )
         call check ( nf90_put_var ( nc_id, e3_im_id, real(aimag(g%eB)) ) )
 
-        call check ( nf90_put_var ( nc_id, e1k_re_id, real(real(g%ealphak)) ) )
-        call check ( nf90_put_var ( nc_id, e1k_im_id, real(aimag(g%ealphak)) ) )
-        call check ( nf90_put_var ( nc_id, e2k_re_id, real(real(g%ebetak)) ) )
-        call check ( nf90_put_var ( nc_id, e2k_im_id, real(aimag(g%ebetak)) ) )
-        call check ( nf90_put_var ( nc_id, e3k_re_id, real(real(g%eBk)) ) )
-        call check ( nf90_put_var ( nc_id, e3k_im_id, real(aimag(g%eBk)) ) )
+        call check ( nf90_put_var ( nc_id, e1k_re_id, real(real(g%ealphak(:,:,rhs))) ) )
+        call check ( nf90_put_var ( nc_id, e1k_im_id, real(aimag(g%ealphak(:,:,rhs))) ) )
+        call check ( nf90_put_var ( nc_id, e2k_re_id, real(real(g%ebetak(:,:,rhs))) ) )
+        call check ( nf90_put_var ( nc_id, e2k_im_id, real(aimag(g%ebetak(:,:,rhs))) ) )
+        call check ( nf90_put_var ( nc_id, e3k_re_id, real(real(g%eBk(:,:,rhs))) ) )
+        call check ( nf90_put_var ( nc_id, e3k_im_id, real(aimag(g%eBk(:,:,rhs))) ) )
 
         call check ( nf90_put_var ( nc_id, er_re_id, real(real(g%eR)) ) )
         call check ( nf90_put_var ( nc_id, er_im_id, real(aimag(g%eR)) ) )

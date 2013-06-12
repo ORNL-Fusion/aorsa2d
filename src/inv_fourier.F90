@@ -10,17 +10,12 @@ contains
             only: chebyshevX, chebyshevY, cosX, cosY, fracOfModesInSolution
         use grid
         use parallel
-        use antenna, only: NRHS
  
         implicit none
 
         type(gridBlock), intent(inout) :: g
         integer, intent(in) :: rhs
         
-        !complex, intent(in) :: a(:,:)
-        !complex, intent(inout), optional, allocatable :: &
-        !    f(:,:)
-
         complex :: bFn
         integer :: i, j, n, m, w
         integer :: nS, nF, mS, mF
@@ -29,7 +24,6 @@ contains
         if (.not. allocated ( g%eBeta ) ) allocate ( g%eBeta(g%nR,g%nZ) )
         if (.not. allocated ( g%eB ) ) allocate ( g%eB(g%nR,g%nZ) )
 
-        !f = 0
         g%eAlpha = 0
         g%eBeta = 0
         g%eB = 0
@@ -87,6 +81,8 @@ contains
         enddo
 
 #ifdef par
+        call blacs_barrier ( iContext, 'All' ) 
+
         call cGSUM2D ( iContext, 'All', ' ', g%nR, g%nZ, g%eAlpha(:,:), g%nR, -1, -1 )
         call cGSUM2D ( iContext, 'All', ' ', g%nR, g%nZ, g%eBeta(:,:), g%nR, -1, -1 )
         call cGSUM2D ( iContext, 'All', ' ', g%nR, g%nZ, g%eB(:,:), g%nR, -1, -1 )

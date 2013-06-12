@@ -3,12 +3,12 @@ pro ar2_plot_solution, full = full, $
 		sav = sav, NoRunData=NoRunData, $
 		nPhi = _nPhi, RHS=_RHS, spec = _ThisSPEC
 
-	if keyword_set(_RHS) then ThisRHS = _RHS else ThisRHS = 0
+	if keyword_set(_RHS) then ThisRHS = _RHS else ThisRHS = 1
 	if keyword_set(_ThisSPEC) then ThisSPEC = _ThisSPEC else ThisSPEC = 0
 
 	ar2_read_namelist, ar2Input = ar2Input
 
-	AR2InputFile = ar2Input['AR2InputFileName']
+	ar2InputFile = ar2Input['AR2InputFileName']
 
 	ThisGridNo = 1
 	GridNoStr = string(ThisGridNo,format='(i3.3)')
@@ -21,12 +21,12 @@ pro ar2_plot_solution, full = full, $
 	SolutionFile = 'output/solution_'+GridNoStr+'_'+nPhiStr+'_'+rhsStr+'.nc'
 	RunDataFile = 'output/runData_'+GridNoStr+'_'+nPhiStr+'_'+rhsStr+'.nc'
 
-	print, 'AR2InputFile: ', AR2InputFile
+	print, 'ar2InputFile: ', ar2InputFile
 	print, 'SolutionFile: ', SolutionFile
 	print, 'RunDataFile: ', RunDataFile
 
-	ar2_read_ar2input, AR2InputFile, RunDataFile, $
-			rLim=rLim,zLim=zLim,LimMask=LimMask,nPhi=ThisNPhi
+	ar2_read_ar2input, ar2InputFile, RunDataFile, $
+			rLim=rLim,zLim=zLim,LimMask=LimMask
 
 	@constants
 
@@ -384,7 +384,6 @@ pro ar2_plot_solution, full = full, $
 		c = contour ( -PlotField, x, y, c_value=levels, rgb_indices=colors, rgb_table=1, /fill,/over )
 		p = plot ( rlim, zlim, /over )
 
-
 		thisField = e_z[*,*]
         title = 'E_z'
 		levels = fIndGen(nLevs)/(nLevs-1)*scale
@@ -449,6 +448,36 @@ pro ar2_plot_solution, full = full, $
                 aspect_ratio=1.0, title=title, layout=[2,3,2], /current )
 		c = contour ( -PlotField, x, y, c_value=levels, rgb_indices=colors, rgb_table=1, /fill,/over )
 		p = plot ( rlim, zlim, /over )
+
+
+		scale = max(abs([ealphak,ebetak,ebk]))*scaleFac
+
+		thisField = abs(ealphak[*,*])
+        title = 'abs(ealphak)'
+		levels = fIndGen(nLevs)/(nLevs-1)*scale
+		colors = reverse(bytScl(levels, top=253)+1)
+		PlotField = (real_part(thisField)<max(levels))>min(-levels)
+		c = contour ( PlotField, x, y, c_value=levels, rgb_indices=colors, rgb_table=3, /fill, $
+                aspect_ratio=1.0, title=title, layout=[2,3,2], dimensions=dimensions )
+		c = contour ( -PlotField, x, y, c_value=levels, rgb_indices=colors, rgb_table=1, /fill,/over )
+
+		thisField = abs(ebetak[*,*])
+        title = 'abs(ebetak)'
+		levels = fIndGen(nLevs)/(nLevs-1)*scale
+		colors = reverse(bytScl(levels, top=253)+1)
+		PlotField = (real_part(thisField)<max(levels))>min(-levels)
+		c = contour ( PlotField, x, y, c_value=levels, rgb_indices=colors, rgb_table=3, /fill, $
+                aspect_ratio=1.0, title=title, layout=[2,3,4], /current )
+		c = contour ( -PlotField, x, y, c_value=levels, rgb_indices=colors, rgb_table=1, /fill,/over )
+
+		thisField = abs(ebk[*,*])*0.5e2
+        title = 'abs(ebk) x 0.5e2'
+		levels = fIndGen(nLevs)/(nLevs-1)*scale
+		colors = reverse(bytScl(levels, top=253)+1)
+		PlotField = (real_part(thisField)<max(levels))>min(-levels)
+		c = contour ( PlotField, x, y, c_value=levels, rgb_indices=colors, rgb_table=3, /fill, $
+                aspect_ratio=1.0, title=title, layout=[2,3,6], /current )
+		c = contour ( -PlotField, x, y, c_value=levels, rgb_indices=colors, rgb_table=1, /fill,/over )
 
 
 	endelse

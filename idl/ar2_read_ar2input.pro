@@ -1,7 +1,6 @@
 pro ar2_read_ar2input, ar2InFileName, runDataFileName,$
-		nPhi=nPhi,rLim=rLim, zLim=zLim, LimMask=LimMask
+		rLim=rLim, zLim=zLim, LimMask=LimMask
 
-	nPhiStr = string(nPhi,format='(i+4.3)')
 	cdfId = ncdf_open ( ar2InFileName, /noWrite ) 
 	nCdf_varGet, cdfid, 'rMin', rMin
 	nCdf_varGet, cdfid, 'rMax', rMax

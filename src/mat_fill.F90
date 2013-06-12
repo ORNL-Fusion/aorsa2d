@@ -41,22 +41,21 @@ contains
     subroutine alloc_total_aMat ( nPts_tot )
 
         use parallel
+        use scalapack_mod
 
         implicit none
-
-        integer(kind=long), intent(in) :: nPts_tot
-
+        integer, intent(in) :: nPts_tot
 
 #ifdef par
 
         if (iAm == 0) then
             write(*,*) '    nSpatialPts_tot: ', nPts_tot
-            write(*,*) '    nRowLocal: ', nRowLocal
-            write(*,*) '    nColLocal: ', nColLocal
-            write(*,*) '    nRowGlobal: ', nRow
-            write(*,*) '    nColGlobal: ', nCol
+            write(*,*) '    nRowLocal: ', LM_A
+            write(*,*) '    nColLocal: ', LN_A
+            write(*,*) '    nRowGlobal: ', desc_A(M_)
+            write(*,*) '    nColGlobal: ', desc_A(N_) 
 
-            LocalSizeMB = nRowLocal*nColLocal*2.0*8.0 / 1024.0**2
+            LocalSizeMB = LM_A*LN_A*2.0*8.0 / 1024.0**2
             GlobalSizeMB = nPts_tot*3.0*nPts_tot*3.0*2.0*8.0 / 1024.0**2.0
             LocalSizeGB = LocalSizeMB/1024.0
             GlobalSizeGB = GlobalSizeMB/1024.0
@@ -70,7 +69,7 @@ contains
             endif
         endif
 
-        allocate ( aMat(nRowLocal,nColLocal) )
+        allocate ( aMat(LM_A,LN_A) )
 #else 
         write(*,*) '    nPts_tot: ', nPts_tot
         write(*,100), &
@@ -94,11 +93,12 @@ contains
         use aorsaNamelist, &
             only: overlap
         use spline_dlg
+        use parallel, only: NRHS
 
         implicit none
 
         type(gridBlock), intent(in) :: gAll(:)
-        integer(kind=long), intent(in) :: nPts_tot
+        integer, intent(in) :: nPts_tot
 
         type(gridBlock) :: me, nbr
         integer :: i, j, n, m, iRow, iCol, rhs
@@ -284,7 +284,7 @@ contains
         use parallel
         use aorsaNamelist, &
             only: npRow, npCol
-        use scalapack_mod, only: IndxL2G
+        use scalapack_mod
  
         implicit none
 
@@ -332,15 +332,15 @@ contains
             enddo j_workList
         enddo i_workList
 #else
-        allocate(workListTooLong(nRowLocal*nColLocal))
+        allocate(workListTooLong(LM_A*LN_A))
 
         ! Touch this piece of code and die!
         WorkListPosition = 0
-        do ii=1,nRowLocal,3
-            do jj=1,nColLocal,3
+        do ii=1,LM_A,3
+            do jj=1,LN_A,3
        
-                iRow = IndxL2G ( ii, RowBlockSize, MyRow, 0, NpRow )
-                iCol = IndxL2G ( jj, ColBlockSize, MyCol, 0, NpCol )
+                iRow = IndxL2G ( ii, desc_A(MB_), MyRow, 0, NpRow )
+                iCol = IndxL2G ( jj, desc_A(NB_), MyCol, 0, NpCol )
 
                 i = (iRow-1)/(3*g%nZ)+1
                 j = (mod(iRow-1,3*g%nZ)+1-1)/3+1
@@ -415,7 +415,7 @@ contains
         use write_data
         use getMatElements
         use fitPack
-        use scalapack_mod, only: IndxG2P, IndxG2L
+        use scalapack_mod
 
         implicit none
 
@@ -636,14 +636,14 @@ contains
                 jj_loop: &
                 do jj=0,2
 #ifdef par
-                    pr_sp = IndxG2P ( iRow, RowBlockSize, Dummy, 0, NpRow )
-                    pc_sp = IndxG2P ( iCol, ColBlockSize, Dummy, 0, NpCol )
+                    pr_sp = IndxG2P ( iRow, desc_A(MB_), Dummy, 0, NpRow )
+                    pc_sp = IndxG2P ( iCol, desc_A(NB_), Dummy, 0, NpCol )
 #if __CheckParallelLocation__==1
                     myProc: &
                     if ( myRow==pr_sp .and. myCol==pc_sp ) then
 #endif
-                        LocalRow = IndxG2L ( iRow+ii, RowBlockSize, Dummy, Dummy, NpRow )
-                        LocalCol = IndxG2L ( iCol+jj, ColBlockSize, Dummy, Dummy, NpCol )
+                        LocalRow = IndxG2L ( iRow+ii, desc_A(MB_), Dummy, Dummy, NpRow )
+                        LocalCol = IndxG2L ( iCol+jj, desc_A(NB_), Dummy, Dummy, NpCol )
 #else
                         LocalRow    = iRow+ii
                         LocalCol    = iCol+jj

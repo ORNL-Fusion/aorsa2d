@@ -1,17 +1,15 @@
 pro ar2_fit_sources, $
-	ThisComponentID=ThisComponentID, $
     RunDataFiles = RunDataFiles, $
-	CoeffsOut2D = CoeffsOut2D, $ ; nPhi x nSources
+	CoeffsOut = CoeffsOut, $ ; [nSourceFiles]
     TwoDim = TwoDim
 
 	; 0 = r
 	; 1 = t
 	; 2 = z
 
-	if not keyword_set(ThisComponentID) then ThisComponentID=0
-
 	SourceLocationsFile = 'ar2SourceLocations.nc'
-	if not keyword_set(RunDataFiles) then ThisRunDataFiles = file_search('output/runData*.nc')
+	if not keyword_set(RunDataFiles) then ThisRunDataFiles = file_search('output/runData*.nc') $
+            else ThisRunDataFiles = RunDataFiles
 
 	cdfId = ncdf_open ( SourceLocationsFile, /noWrite ) 
 
@@ -24,11 +22,8 @@ pro ar2_fit_sources, $
 	NRHS = n_elements(CurrentSource_r)
 
     NRHS_check = n_elements(ThisRunDataFiles)
-	if NRHS ne NRHS_check then begin
-			print, 'Error: NRHS does not match'
-			stop
-	endif
 
+    assert, NRHS eq NRHS_check, 'NRHS ne nRunDataFiles'
 
     for rhs=0,NRHS-1 do begin
 
@@ -149,7 +144,6 @@ pro ar2_fit_sources, $
 
     if keyword_set(TwoDim) then begin
 
-        n_nPhi = 1
         nPhi = RHS_nPhi[0]
 
     endif else begin
@@ -160,53 +154,96 @@ pro ar2_fit_sources, $
 
     endelse
 
-	n_Basis = NRHS * n_nPhi / 3
+	n_Basis = NRHS / 3
 
 	amat = complexarr(n_data,n_Basis)
 
-	c = 0
-	for p=0,n_nPhi-1 do begin
-		for rhs=0,NRHS-1 do begin
-			if CurrentSource_ComponentID[rhs] eq ThisComponentID then begin
+    ComponentIndicies = IntArr(NRHS/3,3)
 
-				; interpolate 2D
-				r_index = (r_data-min(r))/(max(r)-min(r))*nR
-				z_index = (z_data-min(z))/(max(z)-min(z))*nZ
-				tmp_2D = interpolate(jr_2D[*,*,rhs],[r_index],[z_index],cubic=-0.5)
+    ComponentArray = [0,1,2]
 
-				for i=0,n_data-1 do begin
+    foreach component, ComponentArray do begin
 
-					; expand to 3D for t angle and nPhi
+        c = 0
+
+	    for rhs=0,NRHS-1 do begin
+
+	    	if CurrentSource_ComponentID[rhs] eq component then begin
+
+                ComponentIndicies[c,component] = rhs
+
+	    		; interpolate 2D
+	    		r_index = (r_data-min(r))/(max(r)-min(r))*nR
+	    		z_index = (z_data-min(z))/(max(z)-min(z))*nZ
+	    		tmp_2D = interpolate(jr_2D[*,*,rhs],[r_index],[z_index],cubic=-0.5)
+
+	    		for i=0,n_data-1 do begin
+
+	    			; expand to 3D for t angle and nPhi
                     if keyword_set(TwoDim) then begin
-					    amat[i,c] = tmp_2D[i]
+	    			    amat[i,c] = tmp_2D[i]
                     endif else begin
-					    tmp_3D  = tmp_2D[i]*exp(complex(0,1)*nPhi[p]*t_data[i])
-					    amat[i,c] = tmp_3D
+	    			    tmp_3D  = tmp_2D[i]*exp(complex(0,1)*nPhi[p]*t_data[i])
+	    			    amat[i,c] = tmp_3D
                     endelse
 
-				endfor
-				c++
-			endif
-		endfor
-	endfor
+	    		endfor
+	    		c++
+	    	endif
 
-	
-	;coeff_reform_test = intarr(n_nPhi*NRHS/3)
-	;c=0
-	;for p=0,n_nPhi-1 do begin
-	;	for rhs=0,NRHS-1,3 do begin
-	;			coeff_reform_test[c] = rhs
-	;			c++
-	;	endfor
-	;endfor
+	    endfor
 
-	;amat = [[amat],[complex(0,1)*amat]]
+	    ;coeff_reform_test = intarr(n_nPhi*NRHS/3)
+	    ;c=0
+	    ;for p=0,n_nPhi-1 do begin
+	    ;	for rhs=0,NRHS-1,3 do begin
+	    ;			coeff_reform_test[c] = rhs
+	    ;			c++
+	    ;	endfor
+	    ;endfor
 
-	print, n_Basis, c
+	    ;amat = [[amat],[complex(0,1)*amat]]
 
-	help, amat
-	b = jr_data[*]
-	coeffs = LA_LEAST_SQUARES(transpose(amat),b, status=stat,method=3)
+	    print, n_Basis, c
+
+	    help, amat
+
+        if component eq 0 then b = jr_data[*]
+        if component eq 1 then b = jt_data[*]
+        if component eq 2 then b = jz_data[*]
+
+	    coeffs = LA_LEAST_SQUARES(transpose(amat),b, status=stat,method=3)
+        
+        ThisFit_2D = reform(transpose(amat)##coeffs,nR_data,nZ_data)
+
+        if component eq 0 then FitR_2D = ThisFit_2D
+        if component eq 1 then FitT_2D = ThisFit_2D
+        if component eq 2 then FitZ_2D = ThisFit_2D
+
+        if component eq 0 then Coeffs_R = coeffs
+        if component eq 1 then Coeffs_T = coeffs
+        if component eq 2 then Coeffs_Z = coeffs
+
+    endforeach
+
+
+    ; Create the "perFileList" coefficient list
+
+    CoeffsOut = ComplexArr(NRHS)
+
+    CoeffsOut[ComponentIndicies[*,0]] = Coeffs_R 
+    CoeffsOut[ComponentIndicies[*,1]] = Coeffs_T 
+    CoeffsOut[ComponentIndicies[*,2]] = Coeffs_Z 
+
+    p=plot(Coeffs_R,layout=[1,4,1],dimension=[600,600],title='Coeffs R')
+    p=plot(imaginary(Coeffs_R),/over,color='b')
+    p=plot(Coeffs_T,layout=[1,4,2],/current,title='Coeffs T')
+    p=plot(imaginary(Coeffs_T),/over,color='b')
+    p=plot(Coeffs_Z,layout=[1,4,3],/current,title='Coeffs Z')
+    p=plot(imaginary(Coeffs_Z),/over,color='b')
+    p=plot(CoeffsOut,layout=[1,4,4],/current,title='Coeffs All')
+    p=plot(imaginary(CoeffsOut),/over,color='b')
+
 
     if keyword_set(TwoDim) then begin
 
@@ -237,7 +274,7 @@ pro ar2_fit_sources, $
 		c = contour ( -PlotField, x, y, c_value=levels, rgb_indices=colors, rgb_table=1, /fill,/over )
         p = plot( CurrentSource_r, CurrentSource_z, /over, symbol = "s", lineStyle='none' )
 
-        ThisField = reform(transpose(amat)##coeffs,nR_data,nZ_data)
+        ThisField = FitR_2D 
 
         title = 'Re(Fit)'
  		PlotField = (real_part(thisField)<max(levels))>min(-levels)
@@ -252,10 +289,6 @@ pro ar2_fit_sources, $
             aspect_ratio=1.0, layout=[2,2,4], /current, title=title )
 		c = contour ( -PlotField, x, y, c_value=levels, rgb_indices=colors, rgb_table=1, /fill,/over )
         p = plot( CurrentSource_r, CurrentSource_z, /over, symbol = "s", lineStyle='none' )
-
-        Coeffs2D = coeffs
-
-        stop
 
     endif else begin
 
@@ -285,7 +318,5 @@ pro ar2_fit_sources, $
 	    c5=contour(coeffs_2D,nPhi,CurrentSource_z[IndGen(nSources)*3],n_levels=21,/fill)
 
     endelse
-
-	CoeffsOut2D = Coeffs2D ; (n_nPhi,nSources)
 
 end
