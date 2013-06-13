@@ -51,6 +51,11 @@ contains
         M_B = nCol
         N_B = NRHS
 
+        if(NRHS==0)then
+            write(*,*) 'ERROR: NRHS = ', NRHS
+            stop
+        endif
+
         ! block sizes
 
         ! Keep this a multiple of 3 such that each 3 rows of a spatial point
@@ -58,7 +63,7 @@ contains
 
         rowBlockSize = 3*32
         colBlockSize = 3*32
-        rhsBlockSize = 32
+        rhsBlockSize = 3*16
 
         MB_A = rowBlockSize
         NB_A = colBlockSize
@@ -128,6 +133,8 @@ contains
 
         LM_B = NumRoc(M_B,MB_B,myRow,RSRC_B,npRow) 
         LN_B = NumRoc(N_B,NB_B,myCol,CSRC_B,npCol) 
+
+        write(*,*) N_B, NB_B, myCol, CSRC_B, npCol
 
         LLD_A = max(1,numroc(M_A,MB_A,myRow,RSRC_A,npRow))
         LLD_B = max(1,numroc(M_B,MB_B,myRow,RSRC_B,npRow))

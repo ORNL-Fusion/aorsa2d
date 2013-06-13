@@ -109,6 +109,14 @@ program aorsa2dMain
     InputFileName = 'aorsa2d.in'
     call read_nameList (trim(rid)//trim(InputFileName))
 
+    if(useAR2SourceLocationsFile)then
+        call ReadAR2SourceLocations(AR2SourceLocationsFileName) 
+        NRHS = NRHS_FromInputFile
+    else 
+        NRHS = 1
+    endif
+
+    if(iAm==0) &
 
 !   initialise the parallel env
 !   ---------------------------
@@ -370,15 +378,6 @@ program aorsa2dMain
     if (iAm==0) &
     write(*,*) 'Building antenna current (brhs)'
 
-    if(useAR2SourceLocationsFile)then
-        call ReadAR2SourceLocations(AR2SourceLocationsFileName) 
-        NRHS = NRHS_FromInputFile
-    else 
-        NRHS = 1
-    endif
-
-    if(iAm==0) &
-    write(*,*) 'NRHS: ', NRHS
 
     call alloc_total_brhs ( nPts_tot )
 

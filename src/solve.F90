@@ -299,6 +299,10 @@ contains
             call start_timer(tSolve0)
             call pzgesv ( desc_B(M_), desc_B(N_), A, IA, JA, desc_A, ipiv, &
                     B, IB, JB, desc_B, info ) 
+            if(info.ne.0)then
+                    write(*,*) 'ERROR: PZGESC info = : ', info
+                    stop
+            endif
             if(iAm==0)write(*,*) '    Time to solve (0): ', end_timer(tSolve0)
 #endif
 #endif
@@ -453,31 +457,19 @@ contains
 
         implicit none
 
-        integer :: ii, gg, jj, iRow, iCol
+        integer :: Li, Lj, Gi, Gj ! (L)ocal and (G)lobal indices
 
         !   Gather the solution vector from all processors by
         !   creating a global solution vector of the full, not
         !   local size, and have each proc fill in its piece.
-        !   Then do a global sum on all procs such that all procs
-        !   will have a complete copy of the solution.
-        !   NOT SURE IF THIS WILL WORK FOR A NON 2x2 grid yet.
 
-        do ii=1,LM_B
-            do jj=1,LN_B
+        do Li=1,LM_B
+            do Lj=1,LN_B
 
-                iRow = IndxL2G ( ii, desc_B(MB_), MyRow, 0, NpRow )
-                iCol = IndxL2G ( jj, desc_B(NB_), MyRow, 0, NpRow )
+                Gi = IndxL2G ( Li, desc_B(MB_), MyRow, desc_B(RSRC_), NpRow )
+                Gj = IndxL2G ( Lj, desc_B(NB_), MyCol, desc_B(CSRC_), NpCol )
 
-                gg   =  myRow*desc_B(MB_)+1 &
-                        +mod(ii-1,desc_B(MB_)) &
-                        +(ii-1)/desc_B(MB_) * npRow*desc_B(MB_)
-
-                if(iRow.ne.gg)then
-                        write(*,*) 'ERROR: iRow ne gg'
-                        stop
-                endif
-
-                B_global(iRow,iCol) = B(ii,jj)
+                B_global(Gi,Gj) = B(Li,Lj)
 
             enddo
         enddo
