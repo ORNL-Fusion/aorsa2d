@@ -92,27 +92,9 @@ ifeq (${PARALLEL},1)
 endif
 
 
-# other machines
-# --------------
-ifneq (,$(findstring dlg-air,$(shell uname -n)))
-	include Makefile.dlg-air
-endif
+ThisMachine := $(shell uname -n)
+include Makefile.$(ThisMachine)
 
-ifneq (,$(findstring dlg-hp,$(shell uname -n)))
-	include Makefile.dlg-hp
-endif
-
-ifneq (,$(findstring hopper,$(shell uname -n)))
-	include Makefile.nersc
-endif
-
-ifneq (,$(findstring jaguarpf,$(shell uname -n)))
-	include Makefile.jaguarpf
-endif
-
-ifneq (,$(findstring greendl,$(shell uname -n)))
-	include Makefile.greendl
-endif
 
 ifeq (${DDT},1)
     LIBS+=-Bddt
