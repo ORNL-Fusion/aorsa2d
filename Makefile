@@ -94,8 +94,16 @@ endif
 
 # Machine specific stuff
 # ----------------------
-MACHINE_NAME := $(shell uname -n)
-include machine_makefiles/Makefile.${MACHINE_NAME}
+ThisMachine := $(shell uname -n)
+
+ifneq (,$(findstring titan,$(ThisMachine)))
+ThisMachine := titan
+endif
+ifneq (,$(findstring hopper,$(ThisMachine)))
+ThisMachine := nersc 
+endif
+
+include machine_makefiles/Makefile.${ThisMachine}
 
 ifeq (${DDT},1)
     LIBS+=-Bddt
