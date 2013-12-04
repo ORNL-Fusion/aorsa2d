@@ -66,6 +66,8 @@ contains
         complex, dimension(3) :: get_jA
         real :: TmpAntJ
 
+        get_jA = 0
+
         if(useAR2SourceLocationsFile)then
         
             TmpAntJ = 1*exp ( -( &
@@ -228,6 +230,16 @@ contains
                 brhs(ii+0,jj) =  -zi*omgrf*mu0*This_jA(1)
                 brhs(ii+1,jj) =  -zi*omgrf*mu0*This_jA(2)
                 brhs(ii+2,jj) =  -zi*omgrf*mu0*This_jA(3)
+
+!#ifdef __GFORTRAN__
+!                if(ISNAN(REAL(brhs(ii+0,jj)))) stop '"re brhs(ii+0,jj)" is a NaN'
+!                if(ISNAN(REAL(brhs(ii+1,jj)))) stop '"re brhs(ii+1,jj)" is a NaN'
+!                if(ISNAN(REAL(brhs(ii+2,jj)))) stop '"re brhs(ii+2,jj)" is a NaN'
+!
+!                if(ISNAN(AIMAG(brhs(ii+0,jj)))) stop '"im brhs(ii+0,jj)" is a NaN'
+!                if(ISNAN(AIMAG(brhs(ii+1,jj)))) stop '"im brhs(ii+1,jj)" is a NaN'
+!                if(ISNAN(AIMAG(brhs(ii+2,jj)))) stop '"im brhs(ii+2,jj)" is a NaN'
+!#endif
 
             enddo
         enddo
