@@ -85,13 +85,13 @@ contains
         
         endif 
         
-        if(useAllRHSsSource)then
+        if(useAllRHSsSource)then ! This will ADD to the multiple RHS sources if enabled
         
             TmpAntJ = 50*exp ( -( (g%R(i)-rAnt)**2/antSigX**2 + (g%Z(j)-zAnt)**2/antSigY**2 ) )
         
-            if (AntennaJ_R) get_jA(1) = TmpAntJ
-            if (AntennaJ_T) get_jA(2) = TmpAntJ
-            if (AntennaJ_Z) get_jA(3) = TmpAntJ
+            if (AntennaJ_R) get_jA(1) = get_jA(1) + TmpAntJ
+            if (AntennaJ_T) get_jA(2) = get_jA(2) + TmpAntJ
+            if (AntennaJ_Z) get_jA(3) = get_jA(3) + TmpAntJ
         
         endif
         

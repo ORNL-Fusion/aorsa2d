@@ -137,9 +137,9 @@ subroutine current ( g, rhs )
                         if (g%isMetal(g%wl(w)%iPt)) then 
 
                             thisSigma = 0
-                            thisSigma(1,1) = metal 
-                            thisSigma(2,2) = metal
-                            thisSigma(3,3) = metal
+                            thisSigma(1,1) = 0!metal 
+                            thisSigma(2,2) = 0!metal
+                            thisSigma(3,3) = 0!metal
 
                         endif
 #endif

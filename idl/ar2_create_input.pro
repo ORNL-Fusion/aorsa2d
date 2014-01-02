@@ -49,8 +49,10 @@ end
 
 pro ar2_create_input
 
-	flat_profiles = 1
-	gaussian_profiles = 0
+	bField_eqdsk = 1
+	bField_gaussian = 0
+    bField_flat = 0
+
 	br_flat = 0.0
 	bt_flat = 1.0
 	bz_flat = 0.0
@@ -62,7 +64,7 @@ pro ar2_create_input
 	;@ar2_run_langmuir
 	;@ar2_run_nstxslow
 	;@ar2_run_ar_vo_bench
-    @ar2_run_coupling_right
+    @ar2_run_coupling_right_simple
 
 	nSpec = n_elements ( amu )
 	wrf	= freq * 2d0 * !dpi
@@ -82,7 +84,7 @@ pro ar2_create_input
 	y2d = z2d
 
 
-	if eqdsk eq 1 then begin
+	if bField_eqdsk eq 1 then begin
 
 		; Load eqdsk file
 
@@ -163,7 +165,7 @@ pro ar2_create_input
 		bt = MakePeriodic ( bt, mask_lim);, /look )
 		bz = MakePeriodic ( bz, mask_lim);, /look )
 
-	endif else if flat_profiles eq 1 then begin
+	endif else if bField_flat eq 1 then begin
 
 		mask_bbb = FltArr(nR,nZ)+1	
 		mask_lim = FltArr(nR,nZ)+1	
@@ -172,7 +174,7 @@ pro ar2_create_input
 		bt = fltArr(nR,nZ)+bt_flat
 		bz = fltArr(nR,nZ)+bz_flat
 
-	endif else if gaussian_profiles eq 1 then begin
+	endif else if bField_gaussian eq 1 then begin
 
 		oversample_boundary, rlim, zlim, rlim_os, zlim_os 
 
@@ -257,9 +259,6 @@ pro ar2_create_input
 		endfor
 
 
-		p=plot(r,Density_m3[*,nZ/2,0],title='Density [1/m3]',/ylog)
-		p=plot(r,Temp_eV[*,nZ/2,0],title='Temp [eV]')
-
 	endif else begin
 
 		for s=0,nSpec-1 do begin
@@ -268,24 +267,18 @@ pro ar2_create_input
 		endfor
 
 	endelse
+    
+	p=plot(r,Density_m3[*,nZ/2,0],title='Density [1/m3]',/ylog)
+	p=plot(r,Temp_eV[*,nZ/2,0],title='Temp [eV]')
+
 
     ; Create nuOmg profiles
 
-    global_nuOmg = r2D*0
-    absorbingNuOmg = 0.1
-    iiNuOmgSet = where(r2D lt 1.8,iiNuOmgSetCnt) 
-    global_nuOmg[iiNuOmgSet] = absorbingNuOmg
-    iiNuOmgSet = where(r2D lt 2.1 and z2d lt -0.18,iiNuOmgSetCnt) 
-    global_nuOmg[iiNuOmgSet] = absorbingNuOmg
-    iiNuOmgSet = where(r2D lt 2.1 and z2d gt 0.18,iiNuOmgSetCnt) 
-    global_nuOmg[iiNuOmgSet] = absorbingNuOmg
-    global_nuOmg = global_nuOmg + ((r2D-2.2)>0)*0.5
+    @ar2_run_coupling_right_simple_nuomg
 
-    MinNuOmg = 0.005
-    for s=0,nSpec-1 do begin
-        nuOmg[*,*,s] = global_nuOmg>MinNuOmg
-    endfor
-    ;nSmooth = 5 
+    p=plot(r,nuOmg[*,nZ/2,0],title='nuOmg [electrons]')
+
+   ;nSmooth = 5 
     ;for s=0,nSpec-1 do begin
     ;    for n=0,nSmooth-1 do begin
     ;        nuOmg[*,*,s] = smooth(nuOmg[*,*,s]>MinNuOmg,min([nR,nZ])*0.05,/edge_truncate)
@@ -333,7 +326,8 @@ pro ar2_create_input
 	range=20
 	levels = (findGen(nLevs)+1)/nLevs*range
 	colors = 256-(bytScl(levels,top=254)+1)
-	c = contour(kPerp_F,r,nPhiArray,c_value=levels,rgb_indices=colors,rgb_table='1',/fill)
+	c = contour(kPerp_F,r,nPhiArray,c_value=levels,rgb_indices=colors,$
+            rgb_table=1,/fill, title='kPerp_F')
 
 	nLevs=31
 	range=500
@@ -341,12 +335,13 @@ pro ar2_create_input
 	levels = [1,2,3,10,20,30,100,200,300,1e3,2e3,4e3]
 	levels_map = findgen(n_elements(levels))
 	colors = 256-(bytScl(levels_map,top=254)+1)
-	c = contour(kPerp_S,r,nPhiArray,c_value=levels,rgb_indices=colors,rgb_table='3',/fill)
+	c = contour(kPerp_S,r,nPhiArray,c_value=levels,rgb_indices=colors,$
+            rgb_table=3,/fill, title='kPerp_S')
 
-	c = contour(stixp,r,z,layout=[2,2,1],n_levels=21)
-	c = contour(stixs,r,z,layout=[2,2,2],n_levels=21,/current)
-	c = contour(stixr,r,z,layout=[2,2,3],n_levels=21,/current)
-	c = contour(stixl,r,z,layout=[2,2,4],n_levels=21,/current)
+	c = contour(stixp,r,z,layout=[2,2,1],n_levels=21,title='StixP')
+	c = contour(stixs,r,z,layout=[2,2,2],n_levels=21,/current,title='StixS')
+	c = contour(stixr,r,z,layout=[2,2,3],n_levels=21,/current,title='StixR')
+	c = contour(stixl,r,z,layout=[2,2,4],n_levels=21,/current,title='StixL')
 
 	nLevs=31
 	range=20
@@ -355,13 +350,14 @@ pro ar2_create_input
 	levels_map = findgen(n_elements(levels))
 	colors = 256-(bytScl(levels_map,top=254)+1)
 	c = contour(kPerp_F2D_avg,r,z,layout=[2,1,1],$
-			c_value=levels,rgb_indices=colors,rgb_table='1',/fill,aspect_ratio=1.0)
+			c_value=levels,rgb_indices=colors,rgb_table=1,$
+            /fill,aspect_ratio=1.0, title='kPerp_F2D_avg')
 	p=plot(rlim,zlim,/over,thick=2)
 
 	p=plot(RightSide_rlim,RightSide_zlim,/over,thick=2)
 	p=plot(LeftSide_rlim,LeftSide_zlim,/over,thick=2)
 
-	p=plot(VorpalBox_r,VorpalBox_z,/over,thick=2,color='b')
+	;p=plot(VorpalBox_r,VorpalBox_z,/over,thick=2,color='b')
 	
 	nLevs=31
 	range=500
@@ -370,13 +366,15 @@ pro ar2_create_input
 	levels_map = findgen(n_elements(levels))
 	colors = 256-(bytScl(levels_map,top=254)+1)
 	c = contour(kPerp_S2D_avg,r,z,layout=[2,1,2],/current,$
-			c_value=levels,rgb_indices=colors,rgb_table='3',/fill,aspect_ratio=1.0)
+			c_value=levels,rgb_indices=colors,rgb_table=3,$
+            /fill,aspect_ratio=1.0, title='kPerp_S2D_avg')
 	p=plot(rlim,zlim,/over,thick=2)
-	p=plot(VorpalBox_r,VorpalBox_z,/over,thick=2,color='b')
+	;p=plot(VorpalBox_r,VorpalBox_z,/over,thick=1,color='b',transparency=50)
+    p=plot(rDomainBox,zDomainBox,/over,thick=1,linestyle='dash')
 	
 	; Plot up resonance locations too.
 
-	if eqdsk eq 1 and nZ gt 1 then begin
+	if bField_eqdsk eq 1 and nZ gt 1 then begin
 		p = plot(g.rbbbs,g.zbbbs,thick=2,aspect_ratio=1.0)
 		p = plot(g.rlim,g.zlim,thick=2,/over)
 
@@ -385,18 +383,18 @@ pro ar2_create_input
 		endfor
 		if nSpec gt 2 then $
 		c=contour(1/(abs(IonIonHybrid_res_freq mod wrf)/wrf),r,z,c_value=fIndGen(25)*10,/over)
-	endif else if eqdsk eq 0 and nZ gt 1 then begin
+	endif else if bField_eqdsk eq 0 and nZ gt 1 then begin
 
-		c=contour(psi,r,z,aspect_ratio=1.0)	
+		c=contour(psi,r,z,aspect_ratio=1.0, title='psi')	
 		p=plot(rlim,zlim,/over,thick=2)
-		p=plot(VorpalBox_r,VorpalBox_z,/over,thick=2,color='b')
+		;p=plot(VorpalBox_r,VorpalBox_z,/over,thick=2,color='b')
 		for s=1,nSpec-1 do begin
 			c=contour(resonances[*,*,s],r,z,c_value=fIndGen(5)/4.0*0.01,/over)
 		endfor
 		if nSpec gt 2 then $
 		c=contour(1/(abs(IonIonHybrid_res_freq mod wrf)/wrf),r,z,c_value=fIndGen(25)*10,/over)
 
-	endif else if eqdsk eq 0 and nZ eq 0 then begin
+	endif else if bField_eqdsk eq 0 and nZ eq 0 then begin
 		for s=1,nSpec-1 do begin
 			p = plot(r,resonances[*,0,s],/over)
 		endfor
@@ -404,7 +402,7 @@ pro ar2_create_input
 
 	; Write netCdf file
 
-	save, freq, nphi, eqdsk, eqdskFileName, flux_profiles, atomicZ, amu, $
+	save, freq, nphi, bField_eqdsk, eqdskFileName, flux_profiles, atomicZ, amu, $
 			nn, tt, nR, nZ, rMin, rMax, zMin, zMax, fileName = 'ar2RunCreationParameters.sav'
 
 	outFileName	= 'ar2Input.nc'

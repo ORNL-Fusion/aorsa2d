@@ -207,17 +207,27 @@ pro ar2_plot_solution, full = full, $
 
 		eRange = max(abs([e_r,e_t,e_z]))
 		p_r = plot ( x, e_r, layout=[1,3,1],$
-				title='Er',yRange=[-eRange,eRange],ytitle='Er [V/m]',name='Re',window_title='aorsa',font_size=16)
+				title='Er',$
+                ;yRange=[-eRange,eRange],$
+                ytitle='Er [V/m]',$
+                name='Re',$
+                window_title='aorsa')
 		p_i = plot ( x, imaginary(e_r), color='red',/over,name='Im')
 		;l = legend(target=[p_r,p_i],position=[0.98,0.95],/norm,font_size=10,horizontal_alignment='RIGHT')
 
 		p_r = plot ( x, e_t, layout=[1,3,2],/current,$
-				title='Et',yRange=[-eRange,eRange],ytitle='Et [V/m]',name='Re')
+				title='Et',$
+                ;yRange=[-eRange,eRange],$
+                ytitle='Et [V/m]',$
+                name='Re')
 		p_i = plot ( x, imaginary(e_t), color='red',/over,name='Im')
 		;l = legend(target=[p_r,p_i],position=[0.98,0.62],/norm,font_size=10,horizontal_alignment='RIGHT')
 
 		p_r = plot ( x, e_z, layout=[1,3,3],/current,$
-				title='Ez',yRange=[-eRange,eRange],ytitle='Ez [V/m]',name='Re')
+				title='Ez',$
+                ;yRange=[-eRange,eRange],$
+                ytitle='Ez [V/m]',$
+                name='Re')
 		p_i = plot ( x, imaginary(e_z), color='red',/over,name='Im')
 		;l = legend(target=[p_r,p_i],position=[0.98,0.28],/norm,font_size=10,horizontal_alignment='RIGHT')
 
@@ -232,7 +242,7 @@ pro ar2_plot_solution, full = full, $
 
 		p = plot (x,jDotE,color='b',thick=3,transparency=50,$
 				title='J dot E',name='jDote_0',font_size=10,$
-				layout=[1,2,1],window_title='aorsa')
+				layout=[1,3,1],window_title='aorsa')
 
 		p_array = !NULL
 		p_array = [p_array,p]
@@ -248,6 +258,12 @@ pro ar2_plot_solution, full = full, $
 
 		endfor
 
+        p = plot(x,jA_r,thick=2,/current,layout=[1,3,2],title='jA components')
+        p = plot(x,jA_t,thick=2,/over)
+        p = plot(x,jA_z,thick=2,/over)
+
+        p = plot(x,nuOmg,/current,title='nuOmg',yRange = [0,0.1],layout=[1,3,3])
+
 		; jP
 		; --
 
@@ -255,48 +271,48 @@ pro ar2_plot_solution, full = full, $
 
 		s = 0
 		;p_array = !NULL
-		p = plot (x,jp_r[*,0,s],thick=2,transparency=50,$
+		p = plot (x,jpalpha[*,0,s],thick=2,transparency=50,$
 				title='jPr',name='jPr_re_'+strTrim(string(s),2),font_size=10,$
 				layout=[1,3,1],yRange=[-jpRange,jpRange],window_title='aorsa')
 		;p_array = [p_array,p]
-		p = plot (x,imaginary(jp_r[*,0,s]),/over,name='jPr_im_'+strTrim(string(s),2),color='r',thick=2)
+		p = plot (x,imaginary(jpalpha[*,0,s]),/over,name='jPr_im_'+strTrim(string(s),2),color='r',thick=2)
 		;p_array = [p_array,p]
 		for s=1,nSpec-1 do begin
-			p = plot ( x, jp_r[*,0,s],/over,name='jPr_re_'+strTrim(string(s),2),thick=2,lineStyle=s)
+			p = plot ( x, jpalpha[*,0,s],/over,name='jPr_re_'+strTrim(string(s),2),thick=2,lineStyle=s)
 			;p_array = [p_array,p]
-			p = plot ( x, imaginary(jp_r[*,0,s]),/over,name='jPr_im_'+strTrim(string(s),2),thick=2,lineStyle=s,color='r')
+			p = plot ( x, imaginary(jpalpha[*,0,s]),/over,name='jPr_im_'+strTrim(string(s),2),thick=2,lineStyle=s,color='r')
 			;p_array = [p_array,p]
 		endfor
 	   	;l = legend(target=p_array,position=[0.99,0.9],/norm,font_size=10,horizontal_alignment='RIGHT')
 
 		s = 0
 		;p_array = !null
-		p = plot (x,jp_t[*,0,s],thick=2,transparency=50,$
+		p = plot (x,jpb[*,0,s],thick=2,transparency=50,$
 				title='jPt',name='jPt_re_'+strtrim(string(s),2),font_size=10,$
 				layout=[1,3,2],yrange=[-jPrange,jPrange],/current)
 		;p_array = [p_array,p]
-		p = plot (x,imaginary(jp_t[*,0,s]),/over,name='jPt_im_'+strtrim(string(s),2),color='r',thick=2)
+		p = plot (x,imaginary(jpb[*,0,s]),/over,name='jPt_im_'+strtrim(string(s),2),color='r',thick=2)
 		;p_array = [p_array,p]
 		for s=1,nspec-1 do begin
-			p = plot ( x, jp_t[*,0,s],/over,name='jPt_re_'+strtrim(string(s),2),thick=2,linestyle=s)
+			p = plot ( x, jpb[*,0,s],/over,name='jPt_re_'+strtrim(string(s),2),thick=2,linestyle=s)
 			;p_array = [p_array,p]
-			p = plot ( x, imaginary(jp_t[*,0,s]),/over,name='jPt_im_'+strtrim(string(s),2),thick=2,linestyle=s,color='r')
+			p = plot ( x, imaginary(jpb[*,0,s]),/over,name='jPt_im_'+strtrim(string(s),2),thick=2,linestyle=s,color='r')
 			;p_array = [p_array,p]
 		endfor
 	   	;l = legend(target=p_array,position=[0.99,0.6],/norm,font_size=10,horizontal_alignment='right')
 
 		s = 0
 		;p_array = !null
-		p = plot (x,jP_z[*,0,s],thick=2,transparency=50,$
+		p = plot (x,jPbeta[*,0,s],thick=2,transparency=50,$
 				title='jPz',name='jPz_re_'+strtrim(string(s),2),font_size=10,$
 				layout=[1,3,3],yrange=[-jPrange,jPrange],/current)
 		;p_array = [p_array,p]
-		p = plot (x,imaginary(jP_z[*,0,s]),/over,name='jPz_im_'+strtrim(string(s),2),color='r',thick=2)
+		p = plot (x,imaginary(jPbeta[*,0,s]),/over,name='jPz_im_'+strtrim(string(s),2),color='r',thick=2)
 		;p_array = [p_array,p]
 		for s=1,nspec-1 do begin
-			p = plot ( x, jP_z[*,0,s],/over,name='jPz_re_'+strtrim(string(s),2),thick=2,linestyle=s)
+			p = plot ( x, jPbeta[*,0,s],/over,name='jPz_re_'+strtrim(string(s),2),thick=2,linestyle=s)
 			;p_array = [p_array,p]
-			p = plot ( x, imaginary(jP_z[*,0,s]),/over,name='jPz_im_'+strtrim(string(s),2),thick=2,linestyle=s,color='r')
+			p = plot ( x, imaginary(jPbeta[*,0,s]),/over,name='jPz_im_'+strtrim(string(s),2),thick=2,linestyle=s,color='r')
 			;p_array = [p_array,p]
 		endfor
 	   	;l = legend(target=p_array,position=[0.99,0.25],/norm,font_size=10,horizontal_alignment='right')
@@ -304,11 +320,11 @@ pro ar2_plot_solution, full = full, $
 	endif else begin ; Now 2D plotting
 
         dimensions = [500,600]
-        scaleFac = 0.05
+        scaleFac = 0.5
         nPhiString = ' (nPhi: '+string(ThisNPHI,format='(i+4.3)')+')'
 
 		scale = max(abs([jP_r,jP_t,jP_z]))*scaleFac
-        scale = 0.16
+        ;scale = 0.16
         print, 'jP scale: ', scale
 
 		nLevs = 11
