@@ -5,10 +5,11 @@ pro ar2_create_current_source_location_file
 	; location means 3 RHS vectors as we need to account
 	; for each component of the source vector. 
 
-    patch2 = 1
+    SingleCurrentAtEnd = 1
+    patch2 = 0
 
 	nRSources = 5 ; x 3 for all components, real & imag
-    nZSources = 15 
+    nZSources = 1 
     nSourcesTotal = nRSources * nZSources
 	NRHS = nSourcesTotal * 3
 
@@ -23,15 +24,21 @@ pro ar2_create_current_source_location_file
 
     endif
 
+    if SingleCurrentAtEnd eq 1 then begin
+
+        NRHS = NRHS + 1
+
+    endif
+
 	cs_r = fltArr(NRHS)
 	cs_z = fltArr(NRHS)
 	component_ident = intArr(NRHS)
 
 	ii=0
 
-	rMin = 1.8
-    rMax = 1.85
-	zMin = -0.17
+	rMin = 1.85
+    rMax = 1.90
+	zMin = 0
 	zMax = 0.17
 
 	for i=0,nRSources-1 do begin
@@ -69,6 +76,14 @@ pro ar2_create_current_source_location_file
 
     endif
 
+    if SingleCurrentAtEnd eq 1 then begin
+
+        cs_r[-1] = 2.5
+        cs_z[-1] = 0.0
+        component_ident[-1] = 2 ; z-direction     
+        ii++
+
+    endif
 
 	if ii ne NRHS then message, 'ERROR'
     
@@ -78,7 +93,11 @@ pro ar2_create_current_source_location_file
     iiBad = where(cs_z ne cs_z,iiBadCnt)
     if iiBadCnt gt 0 then message, 'ERROR' 
 
-	nc_id = nCdf_create ('ar2SourceLocations.nc', /clobber )
+
+    ; Add the standard single RHS current source as the last element
+
+
+   	nc_id = nCdf_create ('ar2SourceLocations.nc', /clobber )
 
 	nCdf_control, nc_id, /fill
 

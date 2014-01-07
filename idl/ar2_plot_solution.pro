@@ -63,6 +63,7 @@ pro ar2_plot_solution, full = full, $
 		nCdf_varGet, cdfId, 'dzBfn_re', dzbFn_bFn_re
 		nCdf_varGet, cdfId, 'dzBfn_im', dzbFn_bFn_im
 		nCdf_varGet, cdfId, 'nuOmg', nuOmg
+		nCdf_varGet, cdfId, 'LimMask', LimMask
 	ncdf_close, cdfId
 
 	xx	= complex ( xx_re, xx_im )

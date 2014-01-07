@@ -62,9 +62,24 @@ program aorsa2dMain
     character(len=20) :: rid
     character(len=80) :: InputFileName
 
+    logical :: exists
+
     if(huge(nPts_tot) < 2147483647)then
             write(*,*) 'ERROR: 32 bit machine?'
             stop
+    endif
+
+
+    ! Check if the "output" directory exists
+    ! Future: implement the "modFileSys" lib.
+    inquire(file='output/.',exist=exists)
+    if(.not.exists)then
+        call system("mkdir output")
+        inquire(file='output/.',exist=exists)
+        if(.not.exists)then
+            write(*,*) 'ERROR: directory "output/" does not exist'
+            stop
+        endif
     endif
 
     !! GPTL vars
