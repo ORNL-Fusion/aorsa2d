@@ -8,7 +8,7 @@ HDF_DIR := ${HOME}/code/hdf/gnu_4.3.2
 LIBS += -L ${HDF_DIR}/lib -lhdf5 -lhdf5_hl
 INC_DIR += -I ${HDF_DIR}/include
 
-NETCDF_DIR := ${HOME}/code/netcdf/gnu_4.3.2
+NETCDF_DIR := /opt/local
 LIBS +=-L ${NETCDF_DIR}/lib -lnetcdf -lnetcdff
 INC_DIR += -I ${NETCDF_DIR}/include 
 
@@ -28,7 +28,7 @@ LIBS += ${PAPI_LINK}
 INC_DIR += ${PAPI_INC}
 
 ifeq (${PARALLEL},1)
-		F90 := mpif90
+		F90 := openmpif90
 else
 		F90 := gfortran
 endif

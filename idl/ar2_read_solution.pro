@@ -1,8 +1,12 @@
 function ar2_read_solution, runFolderName, RHS
 
+	; This is just to ensure we get consistent files, i.e., not
+	; relying on the order of the list of a file read.
 	SolutionFiles = file_search(runFolderName+'/output/solution*.nc')
-    SolutionFile = SolutionFiles[RHS-1]
-
+	SolutionStr = StrMid(file_basename(SolutionFiles[0]),0,18)
+	RHS_Str = string(RHS,format='(i6.6)')
+    SolutionFile = File_DirName(SolutionFiles[0])+'/'+SolutionStr+RHS_STr+'.nc'
+	;print, SolutionFile
 
 	cdfId = ncdf_open ( SolutionFile, /noWrite ) 
 

@@ -1,7 +1,9 @@
 pro ar2_fit_sources, $
     FitThis = FitThis, $
     WithTheseFiles = WithTheseFiles, $
-	CoeffsOut = CoeffsOut, $ ; [nSourceFiles]
+	CoeffsOut_r = CoeffsOut_r, $ ; [NRHS,nSpec]
+	CoeffsOut_t = CoeffsOut_t, $ ; [NRHS,nSpec]
+	CoeffsOut_z = CoeffsOut_z, $ ; [NRHS,nSpec]
     TwoDim = TwoDim, $
     NRHS = NRHS, $
     FitLayer = FitLayer
@@ -11,7 +13,7 @@ pro ar2_fit_sources, $
 	; 2 = z
 
 	DataFiles = file_search(WithTheseFiles+'/output/solution*.nc')
-    sFitMe = ar2_read_solution (WithTheseFiles, 0)
+	sFitMe = FitThis
     nSpecies = n_elements(sFitMe.jP_r[0,0,*])
 
 	if(not keyword_set(NRHS))then NRHS = n_elements(DataFiles)
@@ -30,24 +32,35 @@ pro ar2_fit_sources, $
     ; Could do each species seperately too I guess.
 
 	amat = complexarr(N,NRHS)
+    CoeffsOut_r = ComplexArr(NRHS,nSpecies)
+    CoeffsOut_t = ComplexArr(NRHS,nSpecies)
+    CoeffsOut_z = ComplexArr(NRHS,nSpecies)
 
     ComponentArray = [0,1,2]
 
 for spec = 0, nSpecies-1 do begin
+	print, 'Species: ', spec
+	print, '----------------'
 
     foreach component, ComponentArray do begin
-
+		print, 'Component: ', component
         c = 0
 
 	    for rhs=0,NRHS-1 do begin
 
-            s = ar2_read_solution (WithTheseFiles, rhs)
+            s = ar2_read_solution (WithTheseFiles, rhs+1)
 
-            if component eq 0 then thisJp = s.jP_r[iiFitThese,0,spec]
-            if component eq 1 then thisJp = s.jP_t[iiFitThese,0,spec]
-            if component eq 2 then thisJp = s.jP_z[iiFitThese,0,spec]
+			; Get basis functions at fit locations ...
 
-            aMat[*,rhs] = thisJp[*]
+			if component eq 0 then thisJp_re = interpol(real_part(s.jP_r[*,0,spec]),s.r,sFitMe.r[iiFitThese],/spline)
+			if component eq 1 then thisJp_re = interpol(real_part(s.jP_t[*,0,spec]),s.r,sFitMe.r[iiFitThese],/spline)
+			if component eq 2 then thisJp_re = interpol(real_part(s.jP_z[*,0,spec]),s.r,sFitMe.r[iiFitThese],/spline)
+
+			if component eq 0 then thisJp_im = interpol(imaginary(s.jP_r[*,0,spec]),s.r,sFitMe.r[iiFitThese],/spline)
+			if component eq 1 then thisJp_im = interpol(imaginary(s.jP_t[*,0,spec]),s.r,sFitMe.r[iiFitThese],/spline)
+			if component eq 2 then thisJp_im = interpol(imaginary(s.jP_z[*,0,spec]),s.r,sFitMe.r[iiFitThese],/spline)
+
+            aMat[*,rhs] = complex(thisJp_re,thisJp_im)
 
 	    endfor
 
@@ -57,11 +70,26 @@ for spec = 0, nSpecies-1 do begin
         if component eq 1 then b = sFitMe.jP_t[iiFitThese,0,spec]
         if component eq 2 then b = sFitMe.jP_z[iiFitThese,0,spec]
 
-	    coeffs = LA_LEAST_SQUARES(transpose(amat),b, status=stat,method=3)
-        
-        if component eq 0 then Coeffs_R = coeffs
-        if component eq 1 then Coeffs_T = coeffs
-        if component eq 2 then Coeffs_Z = coeffs
+	    coeffs = LA_LEAST_SQUARES(transpose(amat),b, status=stat,method=3,residual=residual)
+		if stat ne 0 then stop
+       	print, coeffs 
+
+        if component eq 0 then data = sFitMe.jP_r[iiFitThese,0,spec]
+        if component eq 1 then data = sFitMe.jP_t[iiFitThese,0,spec]
+        if component eq 2 then data = sFitMe.jP_z[iiFitThese,0,spec]
+
+		;fit = transpose(amat)##coeffs
+		;p=plot(sFitMe.r[iiFitThese],data,symbol="o",layout=[1,2,1],title="Fit vs Data")
+		;p=plot(sFitMe.r[iiFitThese],fit,thick=2,/over)
+		;p=plot(sFitMe.r[iiFitThese],imaginary(data),color="red",/over)
+		;p=plot(sFitMe.r[iiFitThese],imaginary(fit),color="red",/over,thick=2)
+		;p=plot(real_part(coeffs),layout=[1,2,2],title="Coeffs",/current)
+		;p=plot(imaginary(coeffs),color="red",/over)
+		;stop
+
+        if component eq 0 then CoeffsOut_r[*,spec] = coeffs
+        if component eq 1 then CoeffsOut_t[*,spec] = coeffs
+        if component eq 2 then CoeffsOut_z[*,spec] = coeffs
 
     endforeach
 
@@ -69,20 +97,15 @@ endfor
 
     ; Create the "perFileList" coefficient list
 
-    CoeffsOut = ComplexArr(NRHS)
 
-    CoeffsOut[ComponentIndicies[*,0]] = Coeffs_R 
-    CoeffsOut[ComponentIndicies[*,1]] = Coeffs_T 
-    CoeffsOut[ComponentIndicies[*,2]] = Coeffs_Z 
-
-    p=plot(Coeffs_R,layout=[1,4,1],dimension=[600,600],title='Coeffs R')
-    p=plot(imaginary(Coeffs_R),/over,color='b')
-    p=plot(Coeffs_T,layout=[1,4,2],/current,title='Coeffs T')
-    p=plot(imaginary(Coeffs_T),/over,color='b')
-    p=plot(Coeffs_Z,layout=[1,4,3],/current,title='Coeffs Z')
-    p=plot(imaginary(Coeffs_Z),/over,color='b')
-    p=plot(CoeffsOut,layout=[1,4,4],/current,title='Coeffs All')
-    p=plot(imaginary(CoeffsOut),/over,color='b')
+        ;p=plot(Coeffs_R,layout=[1,4,1],dimension=[600,600],title='Coeffs R')
+    ;p=plot(imaginary(Coeffs_R),/over,color='b')
+    ;p=plot(Coeffs_T,layout=[1,4,2],/current,title='Coeffs T')
+    ;p=plot(imaginary(Coeffs_T),/over,color='b')
+    ;p=plot(Coeffs_Z,layout=[1,4,3],/current,title='Coeffs Z')
+    ;p=plot(imaginary(Coeffs_Z),/over,color='b')
+    ;p=plot(CoeffsOut,layout=[1,4,4],/current,title='Coeffs All')
+    ;p=plot(imaginary(CoeffsOut),/over,color='b')
 
 
     if keyword_set(TwoDim) then begin
@@ -131,31 +154,6 @@ endfor
         p = plot( CurrentSource_r, CurrentSource_z, /over, symbol = "s", lineStyle='none' )
 
     endif else begin
-
-	    input = transpose(reform(jr_data,nz_data,nt_data))
-	    c1=contour(input,t_data_1D*!radeg,z_data_1D,n_levels=21,/fill)
-
-	    fit = transpose(reform(transpose(amat)##coeffs,nz_data,nt_data))
-	    c2=contour(fit,t_data_1D*!radeg,z_data_1D,n_levels=21,/fill)
-
-	    zSlice=3
-	    p=plot(t_data_1d*!radeg,input[*,zSlice])
-	    p=plot(t_data_1d*!radeg,fit[*,zSlice],color='red',/over)
-	    p=plot(t_data_1d*!radeg,imaginary(input[*,zSlice]),/over,linestyle='dash')
-	    p=plot(t_data_1d*!radeg,imaginary(fit[*,zSlice]),color='red',/over,linestyle='dash')
-
-	    tSlice=3
-	    p=plot(z_data_1d,input[tSlice,*])
-	    p=plot(z_data_1d,fit[tSlice,*],color='red',/over)
-	    p=plot(z_data_1d,imaginary(input[tSlice,*]),/over,linestyle='dash')
-	    p=plot(z_data_1d,imaginary(fit[tSlice,*]),color='red',/over,linestyle='dash')
-
-	    c3=contour(imaginary(input),t_data_1D*!radeg,z_data_1D,n_levels=21,/fill,rgb_table=3)
-	    c4=contour(imaginary(fit),t_data_1D*!radeg,z_data_1D,n_levels=21,/fill,rgb_table=3)
-
-	    coeffs_2D = transpose(reform(coeffs,nSources,n_nPhi))
-
-	    c5=contour(coeffs_2D,nPhi,CurrentSource_z[IndGen(nSources)*3],n_levels=21,/fill)
 
     endelse
 
