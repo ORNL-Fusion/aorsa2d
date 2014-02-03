@@ -7,7 +7,8 @@ subroutine current ( g, rhs )
     use grid
     use read_data
     use aorsaNamelist, &
-        only: nSpec, iSigma, fracOfModesInSolution
+        only: nSpec, iSigma, fracOfModesInSolution, ZeroJp, &
+        ZeroJp_rMin, ZeroJp_rMax, ZeroJp_zMin, ZeroJp_zMax
     use sigma
     use parallel
     use profiles, &
@@ -30,6 +31,7 @@ subroutine current ( g, rhs )
 #if __noU__==1
     real :: R_(3,3)
 #endif
+    real :: R, z
 
     if (.not.allocated(g%jAlpha)) allocate ( &
         g%jAlpha(g%nR,g%nZ,nSpec), &
@@ -142,12 +144,35 @@ subroutine current ( g, rhs )
                             thisSigma(3,3) = 0!metal
 
                         endif
+
+                        ! This will zero the plasma current in regions
+                        ! where we want to specify it manually in the
+                        ! RHS.
+
+                        if(ZeroJp)then 
+                            R = g%R(g%wl(w)%i)
+                            z = g%z(g%wl(w)%j)
+                            if(R>=ZeroJp_rMin &
+                                    .and.R<=ZeroJp_rMax &
+                                    .and.z>=ZeroJp_zMin &
+                                    .and.z<=ZeroJp_zMax) then
+
+                                thisSigma = 0
+
+                            endif
+                        endif
+
+
 #endif
                         ek_nm(1) = g%eAlphak(g%wl(w)%n,g%wl(w)%m,rhs)
                         ek_nm(2) = g%eBetak(g%wl(w)%n,g%wl(w)%m,rhs)
                         ek_nm(3) = g%eBk(g%wl(w)%n,g%wl(w)%m,rhs) 
 
                         jVec = matMul ( thisSigma, ek_nm ) 
+
+                        jVec(1) = thisSigma(1,1)*ek_nm(1)+thisSigma(1,2)*ek_nm(2)+thisSigma(1,3)*ek_nm(3)
+                        jVec(2) = thisSigma(2,1)*ek_nm(1)+thisSigma(2,2)*ek_nm(2)+thisSigma(2,3)*ek_nm(3)
+                        jVec(3) = thisSigma(3,1)*ek_nm(1)+thisSigma(3,2)*ek_nm(2)+thisSigma(3,3)*ek_nm(3)
 
                         g%jAlpha(g%wl(w)%i,g%wl(w)%j,s) = g%jAlpha(g%wl(w)%i,g%wl(w)%j,s) + jVec(1) * bFn
                         g%jBeta(g%wl(w)%i,g%wl(w)%j,s) = g%jBeta(g%wl(w)%i,g%wl(w)%j,s) + jVec(2) * bFn

@@ -73,6 +73,11 @@ implicit none
       logical :: useAr2Input = .false.
       logical :: useAR2SourceLocationsFile = .false.
       logical :: useAllRHSsSource = .true.
+      logical :: ZeroJp = .false.
+      real :: ZeroJp_rMin = 0.0
+      real :: ZeroJp_rMax = 100.0
+      real :: ZeroJp_zMin = -100.0
+      real :: ZeroJp_zMax = 100.00
       character(len=100) :: AR2InputFileName = 'ar2Input.nc'
       character(len=100) :: AR2SourceLocationsFileName = 'AR2SourceLocations.nc'
       CHARACTER*128 :: netCDF_file1 = 'phillips_nstx3.5.2.nc'  !cql3d distribution file name 1
@@ -487,7 +492,8 @@ implicit none
      &    nRAll, nZAll, rMinAll, rMaxAll, zMinAll, zMaxAll, &
      &    overlap, parabolic, cosX, cosY, nZ_1D, fracOfModesInSolution, &
      &    AntennaJ_R, AntennaJ_T, AntennaJ_Z, AR2SourceLocationsFileName, &
-     &    useAR2SourceLocationsFile, useAllRHSsSource
+     &    useAR2SourceLocationsFile, useAllRHSsSource, ZeroJp, &
+     &    ZeroJp_rMin, ZeroJp_rMax, ZeroJp_zMin, ZeroJp_zMax
 
                 
 contains

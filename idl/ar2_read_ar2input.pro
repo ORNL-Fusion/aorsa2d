@@ -1,5 +1,5 @@
 pro ar2_read_ar2input, ar2InFileName, runDataFileName,$
-		rLim=rLim, zLim=zLim, LimMask=LimMask
+		rLim=rLim, zLim=zLim, LimMask=LimMask, ar2 = ar2
 
 	cdfId = ncdf_open ( ar2InFileName, /noWrite ) 
 	nCdf_varGet, cdfid, 'rMin', rMin
@@ -10,7 +10,7 @@ pro ar2_read_ar2input, ar2InFileName, runDataFileName,$
 	nCdf_varGet, cdfid, 'r', r 
 	nCdf_varGet, cdfid, 'z', z
 	nCdf_varGet, cdfid, 'br', br
-	nCdf_varGet, cdfid, 'bz', bt 
+	nCdf_varGet, cdfid, 'bt', bt 
 	nCdf_varGet, cdfid, 'bz', bz
 
 	nCdf_varGet, cdfid, 'AtomicZ', AtomicZ 
@@ -18,6 +18,7 @@ pro ar2_read_ar2input, ar2InFileName, runDataFileName,$
 
 	nCdf_varGet, cdfid, 'Density_m3', Density_m3
 	nCdf_varGet, cdfid, 'Temp_eV', Temp_eV
+	nCdf_varGet, cdfid, 'nuOmg', nuOmg
 
 	nCdf_varGet, cdfid, 'LimMask', mask_lim 
 	nCdf_varGet, cdfid, 'Lim_r', rlim 
@@ -28,5 +29,23 @@ pro ar2_read_ar2input, ar2InFileName, runDataFileName,$
 		nCdf_varGet, cdfid, 'LimMask', LimMask
 	ncdf_close, cdfId
 
+    ar2 = { $
+            rMin: rMin, $
+            rMax: rMax, $
+            zMin: zMin, $
+            zMax: zMax, $
+            r: r, $
+            z: z, $
+            br: br, $
+            bt: bt, $
+            bz: bz, $
+            AtomicZ: AtomicZ, $
+            amu: amu, $
+            Density_m3: Density_m3, $
+            Temp_eV: Temp_eV, $
+            nuOmg: nuOmg, $
+            LimMask: LimMask, $
+            Lim_r: rlim, $
+            Lim_z: zlim }
 
 end

@@ -6,7 +6,9 @@ function get3by3Block( g, w)!, r, z)
 
     use grid
     use aorsaNamelist, only: &
-       chebyshevX, chebyshevY, iSigma, nSpec, nPhi
+       chebyshevX, chebyshevY, iSigma, nSpec, nPhi, ZeroJp, &
+       ZeroJp_rMin, ZeroJp_rMax, ZeroJp_zMin, ZeroJp_zMax
+
     use constants
     use profiles, only: k0, omgrf, mSpec
     use sigma
@@ -20,6 +22,7 @@ function get3by3Block( g, w)!, r, z)
     !real, intent(in) :: r, z
     
     complex :: get3by3Block(3,3)
+    complex(kind=dbl) :: omgRFc
 
     complex(kind=dbl) :: &
         sigAlpAlp, sigAlpBet, sigAlpPrl, &
@@ -74,13 +77,12 @@ function get3by3Block( g, w)!, r, z)
     integer :: s
 
     type(spatialSigmaInput_cold) :: sigmaIn_cold
-#if __noU__==1
     real :: R_(3,3)
-#endif
 
     z   = g%z(g%wl(w)%j)
     r   = g%R(g%wl(w)%i)
     kt  = nPhi!g%kPhi(i)
+    omgRFc = omgRF * (1d0 + zi * g%nuOmg(g%wl(w)%iPt,1))
 
     !interior: &
     !!if(g%label(g%wl(w)%i,g%wl(w)%j)==0)then
@@ -189,6 +191,23 @@ function get3by3Block( g, w)!, r, z)
                 !    g%omgp2(g%wl(w)%i,g%wl(w)%j,s), omgrf, &
                 !    g%nuOmg(g%wl(w)%i,g%wl(w)%j) )
                 sigma_tmp = sigmaCold_stix ( sigmaIn_cold )
+                !R_ = g%U_RTZ_to_ABb(g%wl(w)%iPt,:,:)
+                !sigma_tmp = matmul(transpose(R_),matmul(sigma_tmp,R_))
+                
+                !if(g%wl(w)%m==0.and.g%wl(w)%n==0) &
+                !write(*,*) '(3,3)', s, g%R(g%wl(w)%i), &
+                !    g%z(g%wl(w)%j),sigma_tmp(3,3)!, g%omgp2(g%wl(w)%iPt,s), omgRFc
+
+                !R_ = transpose(g%U_RTZ_to_ABb(g%wl(w)%iPt,:,:))
+                !sigma_tmp = matmul(R_,matmul(sigma_tmp,transpose(R_)))
+                !write(*,*) 'Species: ', s
+                !write(*,*) 'r: ', g%R(g%wl(w)%i)
+                !write(*,'(3(f9.5,2x,f9.5,5x))') sigma_tmp(:,1)
+                !write(*,'(3(f9.5,2x,f9.5,5x))') sigma_tmp(:,2)
+                !write(*,'(3(f9.5,2x,f9.5,5x))') sigma_tmp(:,3)
+                !write(*,*)
+
+                !if(s==nSpec) stop
 
             endif coldPlasma
 
@@ -196,11 +215,13 @@ function get3by3Block( g, w)!, r, z)
             sigmaHere = sigmaHere + sigma_tmp
 
         enddo
-       
+
+ 
 #if __noU__==1
         ! Rotate sigma from alp,bet,prl to r,t,z
-        R_ = g%U_RTZ_to_ABb(g%wl(w)%iPt,:,:)
-        sigmaHere = matmul(transpose(R_),matmul(sigmaHere,R_))
+        R_ = transpose(g%U_RTZ_to_ABb(g%wl(w)%iPt,:,:))
+        sigmaHere = matmul(R_,matmul(sigmaHere,transpose(R_)))
+        write(*,*) sigmaHere
 #endif
 
         sigAlpAlp = sigmaHere(1,1)
@@ -256,6 +277,31 @@ function get3by3Block( g, w)!, r, z)
             sigPrlBet = 0 
             sigPrlPrl = metal 
 
+        endif
+
+        ! This will zero the plasma current in regions
+        ! where we want to specify it manually in the
+        ! RHS.
+
+        if(ZeroJp)then 
+            if(R>=ZeroJp_rMin &
+                    .and.R<=ZeroJp_rMax &
+                    .and.z>=ZeroJp_zMin &
+                    .and.z<=ZeroJp_zMax) then
+
+                sigAlpAlp = 0
+                sigAlpBet = 0
+                sigAlpPrl = 0 
+                        
+                sigBetAlp = 0 
+                sigBetBet = 0
+                sigBetPrl = 0 
+                        
+                sigPrlAlp = 0 
+                sigPrlBet = 0 
+                sigPrlPrl = 0
+
+            endif
         endif
 
         kAlpAlp = 1.0 + zi / (eps0 * omgrf) * sigAlpAlp

@@ -9,7 +9,7 @@ contains
     subroutine write_runData ( g, rid, rhs )
  
         use aorsaNamelist, &
-        only: nSpec, nPhi, freqcy
+        only: nSpec, nPhi, freqcy, nZ_1D
         use bField
         use grid
         use constants
@@ -38,7 +38,7 @@ contains
         integer :: &
             xx_re_id, yy_re_id, xx_im_id, yy_im_id, &
             drBfn_re_id, dzBfn_re_id, drbFn_im_id, dzbFn_im_id, &
-            LimMask_id
+            LimMask_id, nZ_1D_id
 
         integer :: drUrrid, drUrtid, drUrzid
         integer :: drUtrid, drUttid, drUtzid
@@ -77,6 +77,9 @@ contains
                 scalar_id, nPhi_id ) )
             call check ( nf90_def_var ( nc_id, "freq", NF90_REAL, &
                 scalar_id, freq_id ) )
+            call check ( nf90_def_var ( nc_id, "nZ_1D", NF90_REAL, &
+                scalar_id, nZ_1D_id ) )
+
 
             call check ( nf90_def_var ( nc_id, "capR", NF90_REAL, &
                 (/nX_id/), x_id ) ) 
@@ -181,6 +184,8 @@ contains
             nc_stat = nf90_put_var ( nc_id, freq_id, freqcy ) 
             nc_stat = nf90_put_var ( nc_id, x_id, g%R ) 
             nc_stat = nf90_put_var ( nc_id, y_id, g%Z )    
+            nc_stat = nf90_put_var ( nc_id, nZ_1D_id, nZ_1D )    
+
         endif
 
         allocate(IntTmp(g%nR,g%nZ)) 
@@ -306,6 +311,51 @@ contains
         enddo
         if(iAm==0)nc_stat = nf90_put_var ( nc_id, dens_id, RealTmp3 )
         RealTmp3 = 0
+
+        !omgc
+        RealTmp3 = 0
+        do s=1,nSpec
+            RealTmp = 0 
+            Cnt = 0 
+            do p=1,size(g%pt)
+                i = g%pt(p)%i
+                j = g%pt(p)%j
+                RealTmp(i,j) = g%omgc(p,s)
+                Cnt(i,j) = Cnt(i,j)+1
+            enddo
+#ifdef par
+            call sGSUM2D ( iContext, 'All', ' ', g%nR, g%nZ, RealTmp, g%nR, -1, -1 )
+            call sGSUM2D ( iContext, 'All', ' ', g%nR, g%nZ, Cnt, g%nR, -1, -1 )
+#endif
+            RealTmp3(:,:,s) = RealTmp/Cnt
+            RealTmp = 0
+            Cnt = 0
+        enddo
+        if(iAm==0)nc_stat = nf90_put_var ( nc_id, omgc_id, RealTmp3 )
+        RealTmp3 = 0
+
+        !omgp2
+        RealTmp3 = 0
+        do s=1,nSpec
+            RealTmp = 0 
+            Cnt = 0 
+            do p=1,size(g%pt)
+                i = g%pt(p)%i
+                j = g%pt(p)%j
+                RealTmp(i,j) = g%omgp2(p,s)
+                Cnt(i,j) = Cnt(i,j)+1
+            enddo
+#ifdef par
+            call sGSUM2D ( iContext, 'All', ' ', g%nR, g%nZ, RealTmp, g%nR, -1, -1 )
+            call sGSUM2D ( iContext, 'All', ' ', g%nR, g%nZ, Cnt, g%nR, -1, -1 )
+#endif
+            RealTmp3(:,:,s) = RealTmp/Cnt
+            RealTmp = 0
+            Cnt = 0
+        enddo
+        if(iAm==0)nc_stat = nf90_put_var ( nc_id, omgp2_id, RealTmp3 )
+        RealTmp3 = 0
+
 
         !nuOmg
         RealTmp3 = 0

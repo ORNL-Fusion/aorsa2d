@@ -497,6 +497,66 @@ contains
             endif
 
 
+!            g%drUrr(w) = dfdx(1,1)
+!            g%drUrt(w) = dfdx(2,1)
+!            g%drUrz(w) = dfdx(3,1)
+!
+!            g%drUtr(w) = dfdx(1,2)
+!            g%drUtt(w) = dfdx(2,2)
+!            g%drUtz(w) = dfdx(3,2)
+!
+!            g%drUzr(w) = dfdx(1,3)
+!            g%drUzt(w) = dfdx(2,3)
+!            g%drUzz(w) = dfdx(3,3)
+!
+!            g%drrUrr(w) = d2fdx2(1,1)
+!            g%drrUrt(w) = d2fdx2(2,1)
+!            g%drrUrz(w) = d2fdx2(3,1)
+!
+!            g%drrUtr(w) = d2fdx2(1,2)
+!            g%drrUtt(w) = d2fdx2(2,2)
+!            g%drrUtz(w) = d2fdx2(3,2)
+!
+!            g%drrUzr(w) = d2fdx2(1,3)
+!            g%drrUzt(w) = d2fdx2(2,3)
+!            g%drrUzz(w) = d2fdx2(3,3)
+!
+!            g%dzUrr(w) = dfdy(1,1)
+!            g%dzUrt(w) = dfdy(2,1)
+!            g%dzUrz(w) = dfdy(3,1)
+!
+!            g%dzUtr(w) = dfdy(1,2)
+!            g%dzUtt(w) = dfdy(2,2)
+!            g%dzUtz(w) = dfdy(3,2)
+!
+!            g%dzUzr(w) = dfdy(1,3)
+!            g%dzUzt(w) = dfdy(2,3)
+!            g%dzUzz(w) = dfdy(3,3)
+!
+!            g%dzzUrr(w) = d2fdy2(1,1)
+!            g%dzzUrt(w) = d2fdy2(2,1)
+!            g%dzzUrz(w) = d2fdy2(3,1)
+!
+!            g%dzzUtr(w) = d2fdy2(1,2)
+!            g%dzzUtt(w) = d2fdy2(2,2)
+!            g%dzzUtz(w) = d2fdy2(3,2)
+!
+!            g%dzzUzr(w) = d2fdy2(1,3)
+!            g%dzzUzt(w) = d2fdy2(2,3)
+!            g%dzzUzz(w) = d2fdy2(3,3)
+!
+!            g%drzUrr(w) = d2fdxy(1,1)
+!            g%drzUrt(w) = d2fdxy(2,1)
+!            g%drzUrz(w) = d2fdxy(3,1)
+!
+!            g%drzUtr(w) = d2fdxy(1,2)
+!            g%drzUtt(w) = d2fdxy(2,2)
+!            g%drzUtz(w) = d2fdxy(3,2)
+!
+!            g%drzUzr(w) = d2fdxy(1,3)
+!            g%drzUzt(w) = d2fdxy(2,3)
+!            g%drzUzz(w) = d2fdxy(3,3)
+
             g%drUrr(w) = dfdx(1,1)
             g%drUrt(w) = dfdx(1,2)
             g%drUrz(w) = dfdx(1,3)
@@ -556,7 +616,7 @@ contains
             g%drzUzr(w) = d2fdxy(3,1)
             g%drzUzt(w) = d2fdxy(3,2)
             g%drzUzz(w) = d2fdxy(3,3)
-             
+ 
         enddo
 
     end subroutine deriv_rotation

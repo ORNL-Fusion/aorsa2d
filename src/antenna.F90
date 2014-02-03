@@ -51,13 +51,15 @@ contains
             useEqdsk, r0, rhoAnt, antSigRho, &
             AntennaJ_R, AntennaJ_T, AntennaJ_Z, &
             antSigUnit, useAR2SourceLocationsFile, &
-            useAllRHSsSource
+            useAllRHSsSource, ZeroJp, &
+            ZeroJp_rMin, ZeroJp_rMax, ZeroJp_zMin, ZeroJp_zMax
         use grid
         use profiles, only: omgrf
         use constants
         use ar2SourceLocationsInput, &
             only: CurrentSource_r, CurrentSource_z, &
-            CurrentSource_ComponentID
+            CurrentSource_ComponentID, &
+            CS_RealFac, CS_ImagFac
 
         implicit none
 
@@ -65,6 +67,7 @@ contains
         integer, intent(in) :: rhs, i, j
         complex, dimension(3) :: get_jA
         real :: TmpAntJ
+        logical :: DoThisPoint
 
         get_jA = 0
 
@@ -73,15 +76,29 @@ contains
             TmpAntJ = 1*exp ( -( &
                 (g%R(i)-CurrentSource_r(rhs))**2/antSigX**2 &
                     + (g%Z(j)-CurrentSource_z(rhs))**2/antSigY**2 ) )
-        
+
             ! ID mapping to components:
             !   0 -> r
             !   1 -> t
             !   2 -> z
-        
-            if(CurrentSource_ComponentID(rhs).eq.0) get_jA(1) = TmpAntJ+zi*TmpAntJ
-            if(CurrentSource_ComponentID(rhs).eq.1) get_jA(2) = TmpAntJ+zi*TmpAntJ
-            if(CurrentSource_ComponentID(rhs).eq.2) get_jA(3) = TmpAntJ+zi*TmpAntJ
+
+            DoThisPoint = .true.
+            !if(ZeroJp)then
+            !        DoThisPoint = .false.
+            !        if(g%R(i)>=ZeroJp_rMin &
+            !                .and.g%R(i)<=ZeroJp_rMax &
+            !                .and.g%z(j)>=ZeroJp_zMin &
+            !                .and.g%z(j)<=ZeroJp_zMax) DoThisPoint = .true.
+            !endif
+      
+            if(DoThisPoint)then 
+                if(CurrentSource_ComponentID(rhs).eq.0) &
+                        get_jA(1) = CS_RealFac(rhs)*TmpAntJ + CS_ImagFac(rhs)*zi*TmpAntJ
+                if(CurrentSource_ComponentID(rhs).eq.1) &
+                        get_jA(2) = CS_RealFac(rhs)*TmpAntJ + CS_ImagFac(rhs)*zi*TmpAntJ
+                if(CurrentSource_ComponentID(rhs).eq.2) &
+                        get_jA(3) = CS_RealFac(rhs)*TmpAntJ + CS_ImagFac(rhs)*zi*TmpAntJ
+            endif
         
         endif 
         

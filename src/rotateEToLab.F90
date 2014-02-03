@@ -16,11 +16,11 @@ subroutine rotate_E_to_lab ( g, rhs )
     type(gridBlock), intent(inout) :: g
     integer, intent(in) :: rhs
 
-    complex :: ELab_RTZ(3), jPLab_RTZ(3)
+    complex :: ELab_RTZ(3), jPLab_RTZ(3), e1,e2,e3
     integer :: i, j, s
 
     real :: mag1, mag2
-    real :: R_(3,3)
+    real :: R_(3,3), R_inv(3,3)
     real :: bTmp(3), bRu, bTu, bZu, bMagTmp
 
     if(.not.allocated(g%eR))allocate ( g%eR(g%nR,g%nZ), &
@@ -43,13 +43,30 @@ subroutine rotate_E_to_lab ( g, rhs )
             bTu = bTmp(2)/bMagTmp
             bZu = bTmp(3)/bMagTmp
             R_ = RotMatHere(bRu,bTu,bZu)
+            R_inv = transpose(R_)
+            !write(*,*) 'r: ', g%R(i)
+            !write(*,*) 'bu: ', bTmp/bMagTmp
+            !write(*,*) 'rot: ', R_
 
 #if __noU__==1
             ELab_RTZ = (/ g%eAlpha(i,j), g%eBeta(i,j), g%eb(i,j) /)
 #else
             ELab_RTZ = &
-                matMul ( transpose ( R_ ), &
+                matMul (  transpose ( R_ ), &
                     (/ g%eAlpha(i,j), g%eBeta(i,j), g%eb(i,j) /) )
+            !e1 = g%eAlpha(i,j)
+            !e2 = g%eBeta(i,j)
+            !e3 = g%eb(i,j)
+
+            !ELab_RTZ(1) = R_inv(1,1)*e1 + R_inv(2,1)*e2 + R_inv(3,1)*e3
+            !ELab_RTZ(2) = R_inv(1,2)*e1 + R_inv(2,2)*e2 + R_inv(3,2)*e3
+            !ELab_RTZ(3) = R_inv(1,3)*e1 + R_inv(2,3)*e2 + R_inv(3,3)*e3
+
+            !ELab_RTZ(1) = R_inv(1,1)*e1 + R_inv(1,2)*e2 + R_inv(1,3)*e3
+            !ELab_RTZ(2) = R_inv(2,1)*e1 + R_inv(2,2)*e2 + R_inv(2,3)*e3
+            !ELab_RTZ(3) = R_inv(3,1)*e1 + R_inv(3,2)*e2 + R_inv(3,3)*e3
+
+
 #endif
             g%eR(i,j) = ELab_RTZ(1)
             g%eTh(i,j) = ELab_RTZ(2)

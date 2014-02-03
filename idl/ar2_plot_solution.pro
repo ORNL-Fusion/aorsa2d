@@ -1,7 +1,8 @@
 pro ar2_plot_solution, full = full, $
 		scale1 = scale1, scale2 = scale2, scale3_ = scale3_, $
 		sav = sav, NoRunData=NoRunData, $
-		nPhi = _nPhi, RHS=_RHS, spec = _ThisSPEC
+		nPhi = _nPhi, RHS=_RHS, spec = _ThisSPEC, $
+        sumSpecies = sumSpecies
 
 	if keyword_set(_RHS) then ThisRHS = _RHS else ThisRHS = 1
 	if keyword_set(_ThisSPEC) then ThisSPEC = _ThisSPEC else ThisSPEC = 0
@@ -64,6 +65,7 @@ pro ar2_plot_solution, full = full, $
 		nCdf_varGet, cdfId, 'dzBfn_im', dzbFn_bFn_im
 		nCdf_varGet, cdfId, 'nuOmg', nuOmg
 		nCdf_varGet, cdfId, 'LimMask', LimMask
+        nCdf_varGet, cdfId, 'nZ_1D', nz_1D
 	ncdf_close, cdfId
 
 	xx	= complex ( xx_re, xx_im )
@@ -131,33 +133,45 @@ pro ar2_plot_solution, full = full, $
 		ez_im = temporary(ez_im[*,*])
 
 		nCdf_varGet, cdfId, 'jalpha_re', jalpha_re 
-		jalpha_re = temporary(jalpha_re[*,*,ThisSPEC])
+        if keyword_set(sumSpecies) then $
+                jalpha_re = (total(jalpha_re,3))[*] else jalpha_re = temporary(jalpha_re[*,*,ThisSPEC])
 		nCdf_varGet, cdfId, 'jbeta_re', jbeta_re 
-		jbeta_re = temporary(jbeta_re[*,*,ThisSPEC])
+        if keyword_set(sumSpecies) then $
+                jbeta_re = (total(jbeta_re,3))[*] else jbeta_re = temporary(jbeta_re[*,*,ThisSPEC])
 		nCdf_varGet, cdfId, 'jB_re', jB_re 
-		jb_re = temporary(jb_re[*,*,ThisSPEC])
+        if keyword_set(sumSpecies) then $
+                jb_re = (total(jb_re,3))[*] else jb_re = temporary(jb_re[*,*,ThisSPEC])
 
 		nCdf_varGet, cdfId, 'jalpha_im', jalpha_im 
-		jalpha_im = temporary(jalpha_im[*,*,ThisSPEC])
+        if keyword_set(sumSpecies) then $
+                jalpha_im = (total(jalpha_im,3))[*] else jalpha_im = temporary(jalpha_im[*,*,ThisSPEC])
 		nCdf_varGet, cdfId, 'jbeta_im', jbeta_im 
-		jbeta_im = temporary(jbeta_im[*,*,ThisSPEC])
+        if keyword_set(sumSpecies) then $
+                jbeta_im = (total(jbeta_im,3))[*] else jbeta_im = temporary(jbeta_im[*,*,ThisSPEC])
 		nCdf_varGet, cdfId, 'jB_im', jB_im 
-		jb_im = temporary(jb_im[*,*,ThisSPEC])
+        if keyword_set(sumSpecies) then $
+                jb_im = (total(jb_im,3))[*] else jb_im = temporary(jb_im[*,*,ThisSPEC])
 
 		nCdf_varGet, cdfId, 'jP_r_re', jPr_re 
-		jpr_re = temporary(jpr_re[*,*,ThisSpec])
+        if keyword_set(sumSpecies) then $
+                jpr_re = (total(jpr_re,3))[*] else jpr_re = temporary(jpr_re[*,*,ThisSPEC])
 		nCdf_varGet, cdfId, 'jP_t_re', jPt_re 
-		jpt_re = temporary(jpt_re[*,*,ThisSpec])
+        if keyword_set(sumSpecies) then $
+                jpt_re = (total(jpt_re,3))[*] else jpt_re = temporary(jpt_re[*,*,ThisSPEC])
 		nCdf_varGet, cdfId, 'jP_z_re', jPz_re 
-		jpz_re = temporary(jpz_re[*,*,ThisSpec])
-
+        if keyword_set(sumSpecies) then $
+                jpz_re = (total(jpz_re,3))[*] else jpz_re = temporary(jpz_re[*,*,ThisSPEC])
+	
 		nCdf_varGet, cdfId, 'jP_r_im', jPr_im 
-		jpr_im = temporary(jpr_im[*,*,ThisSpec])
+        if keyword_set(sumSpecies) then $
+                jpr_im = (total(jpr_im,3))[*] else jpr_im = temporary(jpr_im[*,*,ThisSPEC])
 		nCdf_varGet, cdfId, 'jP_t_im', jPt_im 
-		jpt_im = temporary(jpt_im[*,*,ThisSPEC])
+        if keyword_set(sumSpecies) then $
+                jpt_im = (total(jpt_im,3))[*] else jpt_im = temporary(jpt_im[*,*,ThisSPEC])
 		nCdf_varGet, cdfId, 'jP_z_im', jPz_im 
-		jpz_im = temporary(jpz_im[*,*,ThisSPEC])
-
+        if keyword_set(sumSpecies) then $
+                jpz_im = (total(jpz_im,3))[*] else jpz_im = temporary(jpz_im[*,*,ThisSPEC])
+	
 		nCdf_varGet, cdfId, 'jouleHeating', jouleHeating 
 
 		ealpha	= complex ( ealpha_re, ealpha_im )
@@ -182,8 +196,12 @@ pro ar2_plot_solution, full = full, $
 
 	ncdf_close, cdfId
 
+
+    w = 2*!pi*freq
+    wRFc = complex(w+nuOmg*0,w*nuOmg)
 	x = r
 	y = z
+    dr = r[1]-r[0]
 	nx = n_elements(r)
 	ny = n_elements(z)
 	x2D	= rebin ( r, nX, nY )
@@ -241,10 +259,13 @@ pro ar2_plot_solution, full = full, $
 					+ jp_t[*,*,0] * conj(e_t) $
 					+ jp_z[*,*,0] * conj(e_z)
 
-		p = plot (x,jDotE,color='b',thick=3,transparency=50,$
-				title='J dot E',name='jDote_0',font_size=10,$
+		p = plot (x,(total(JouleHeating,3))[*],color='b',thick=1,$
+				title='J dot E',name='jP . E (Total)',font_size=10,$
 				layout=[1,3,1],window_title='aorsa')
-
+        colorArr = ['blue','red','green','orange']
+        for s=0,n_elements(JouleHeating[0,0,*])-1 do begin
+            p = plot(x,JouleHeating[*,0,s],color=colorArr[s],/over,thick=3,linestyle='--',transparency=50)
+        endfor
 		p_array = !NULL
 		p_array = [p_array,p]
 
@@ -263,7 +284,12 @@ pro ar2_plot_solution, full = full, $
         p = plot(x,jA_t,thick=2,/over)
         p = plot(x,jA_z,thick=2,/over)
 
-        p = plot(x,nuOmg,/current,title='nuOmg',yRange = [0,0.1],layout=[1,3,3])
+        p = plot(x,imaginary(jA_r),thick=4,/over, lineStyle="--")
+        p = plot(x,imaginary(jA_t),thick=4,/over, lineStyle="--")
+        p = plot(x,imaginary(jA_z),thick=4,/over, lineStyle="--")
+
+
+        p = plot(x,nuOmg,/current,title='nuOmg',layout=[1,3,3])
 
 		; jP
 		; --
@@ -272,51 +298,100 @@ pro ar2_plot_solution, full = full, $
 
 		s = 0
 		;p_array = !NULL
-		p = plot (x,jpalpha[*,0,s],thick=2,transparency=50,$
-				title='jPr',name='jPr_re_'+strTrim(string(s),2),font_size=10,$
+		p = plot (x,jp_r,thick=2,transparency=50,$
+				title='jPr(total)',name='jPr_re_'+strTrim(string(s),2),font_size=10,$
 				layout=[1,3,1],yRange=[-jpRange,jpRange],window_title='aorsa')
 		;p_array = [p_array,p]
-		p = plot (x,imaginary(jpalpha[*,0,s]),/over,name='jPr_im_'+strTrim(string(s),2),color='r',thick=2)
+		p = plot (x,imaginary(jp_r),/over,name='jPr_im_'+strTrim(string(s),2),color='r',thick=2)
 		;p_array = [p_array,p]
-		for s=1,nSpec-1 do begin
-			p = plot ( x, jpalpha[*,0,s],/over,name='jPr_re_'+strTrim(string(s),2),thick=2,lineStyle=s)
-			;p_array = [p_array,p]
-			p = plot ( x, imaginary(jpalpha[*,0,s]),/over,name='jPr_im_'+strTrim(string(s),2),thick=2,lineStyle=s,color='r')
-			;p_array = [p_array,p]
-		endfor
+		;for s=1,nSpec-1 do begin
+		;	p = plot ( x, jp_r[*,0,s],/over,name='jPr_re_'+strTrim(string(s),2),thick=2,lineStyle=s)
+		;	;p_array = [p_array,p]
+		;	p = plot ( x, imaginary(jp_r[*,0,s]),/over,name='jPr_im_'+strTrim(string(s),2),thick=2,lineStyle=s,color='r')
+		;	;p_array = [p_array,p]
+		;endfor
 	   	;l = legend(target=p_array,position=[0.99,0.9],/norm,font_size=10,horizontal_alignment='RIGHT')
 
 		s = 0
 		;p_array = !null
-		p = plot (x,jpb[*,0,s],thick=2,transparency=50,$
+		p = plot (x,jp_t,thick=2,transparency=50,$
 				title='jPt',name='jPt_re_'+strtrim(string(s),2),font_size=10,$
 				layout=[1,3,2],yrange=[-jPrange,jPrange],/current)
 		;p_array = [p_array,p]
-		p = plot (x,imaginary(jpb[*,0,s]),/over,name='jPt_im_'+strtrim(string(s),2),color='r',thick=2)
+		p = plot (x,imaginary(jp_t),/over,name='jPt_im_'+strtrim(string(s),2),color='r',thick=2)
 		;p_array = [p_array,p]
-		for s=1,nspec-1 do begin
-			p = plot ( x, jpb[*,0,s],/over,name='jPt_re_'+strtrim(string(s),2),thick=2,linestyle=s)
-			;p_array = [p_array,p]
-			p = plot ( x, imaginary(jpb[*,0,s]),/over,name='jPt_im_'+strtrim(string(s),2),thick=2,linestyle=s,color='r')
-			;p_array = [p_array,p]
-		endfor
+		;for s=1,nspec-1 do begin
+		;	p = plot ( x, jp_t[*,0,s],/over,name='jPt_re_'+strtrim(string(s),2),thick=2,linestyle=s)
+		;	;p_array = [p_array,p]
+		;	p = plot ( x, imaginary(jp_t[*,0,s]),/over,name='jPt_im_'+strtrim(string(s),2),thick=2,linestyle=s,color='r')
+		;	;p_array = [p_array,p]
+		;endfor
 	   	;l = legend(target=p_array,position=[0.99,0.6],/norm,font_size=10,horizontal_alignment='right')
 
 		s = 0
 		;p_array = !null
-		p = plot (x,jPbeta[*,0,s],thick=2,transparency=50,$
+		p = plot (x,jP_z,thick=2,transparency=50,$
 				title='jPz',name='jPz_re_'+strtrim(string(s),2),font_size=10,$
 				layout=[1,3,3],yrange=[-jPrange,jPrange],/current)
 		;p_array = [p_array,p]
-		p = plot (x,imaginary(jPbeta[*,0,s]),/over,name='jPz_im_'+strtrim(string(s),2),color='r',thick=2)
+		p = plot (x,imaginary(jP_z),/over,name='jPz_im_'+strtrim(string(s),2),color='r',thick=2)
 		;p_array = [p_array,p]
-		for s=1,nspec-1 do begin
-			p = plot ( x, jPbeta[*,0,s],/over,name='jPz_re_'+strtrim(string(s),2),thick=2,linestyle=s)
-			;p_array = [p_array,p]
-			p = plot ( x, imaginary(jPbeta[*,0,s]),/over,name='jPz_im_'+strtrim(string(s),2),thick=2,linestyle=s,color='r')
-			;p_array = [p_array,p]
-		endfor
+		;for s=1,nspec-1 do begin
+		;	p = plot ( x, jP_z[*,0,s],/over,name='jPz_re_'+strtrim(string(s),2),thick=2,linestyle=s)
+		;	;p_array = [p_array,p]
+		;	p = plot ( x, imaginary(jP_z[*,0,s]),/over,name='jPz_im_'+strtrim(string(s),2),thick=2,linestyle=s,color='r')
+		;	;p_array = [p_array,p]
+		;endfor
 	   	;l = legend(target=p_array,position=[0.99,0.25],/norm,font_size=10,horizontal_alignment='right')
+
+        ; Calculate the H vector & the Poynting vector
+
+        II = complex(0,1)
+       
+        h_r = complexArr(nX)
+        h_t = complexArr(nX)
+        h_z = complexArr(nX)
+
+        k_z = nZ_1D*0 ; this is NOT right, fix for non-zero nZ
+
+        for i=2,nX-3 do begin
+
+            dEz_dr = (1.0/12.0*e_z[i-2] - 2.0/3.0*e_z[i-1]$
+                    +2.0/3.0*e_z[i+1] - 1.0/12.0*e_z[i+2])/dr
+            drEt_dr = (1.0/12.0*r[i-2]*e_t[i-2] - 2.0/3.0*r[i-1]*e_t[i-1]$
+                    +2.0/3.0*r[i+1]*e_t[i+1] - 1.0/12.0*r[i+2]*e_t[i+2])/dr
+
+            h_r[i] = -II*k_z*e_t[i] + II*nPhi*e_z[i]/r[i]
+            h_t[i] = II*k_z*e_r[i] - dEz_dr 
+            h_z[i] = (-II*nPhi*e_r[i] + drEt_dr )/r[i]
+
+        endfor
+
+        h_r = h_r / (II*wRFc*u0)
+        h_t = h_t / (II*wRFc*u0)
+        h_z = h_z / (II*wRFc*u0)
+
+        p=plot(r,h_r,layout=[1,3,1],title='h_r',window_title='aorsa')
+        p=plot(r,imaginary(h_r),/over,color='r')
+        p=plot(r,h_t,layout=[1,3,2],/current,title='h_t')
+        p=plot(r,imaginary(h_t),/over,color='r')
+        p=plot(r,h_z,layout=[1,3,3],/current,title='h_z')
+        p=plot(r,imaginary(h_z),/over,color='r')
+
+        ; Time average Poynting vector
+        S_r = e_t*conj(h_z)-e_z*conj(h_t)
+        S_t = -(e_r*conj(h_z)-e_z*conj(h_r))
+        S_z = e_r*conj(h_t)-e_t*conj(h_r)
+
+        S_r = 0.5*real_part(S_r)
+        S_t = 0.5*real_part(S_t)
+        S_z = 0.5*real_part(S_z)
+
+        SRange = max(abs([S_r,S_t,S_z]))
+        p=plot(r,S_r,layout=[1,3,1],title='Time average Poynting vector S_r',$
+                window_title='aorsa',yRange=[-SRange,SRange])
+        p=plot(r,S_t,layout=[1,3,2],/current,title='S_t',yRange=[-SRange,SRange])
+        p=plot(r,S_z,layout=[1,3,3],/current,title='S_z',yRange=[-SRange,SRange])
 
 	endif else begin ; Now 2D plotting
 

@@ -156,7 +156,6 @@ contains
 
                 g%nuOmg(w,s) = surf2 ( ThisR, ThisZ, ar2_nR, ar2_nZ, ar2_r_dp, ar2_z_dp, &
                     Tmp2DArr, ar2_nR, zp_tmp, sigma_dp )
-
             enddo
          
         enddo

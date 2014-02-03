@@ -422,7 +422,7 @@ contains
         !real, intent(in) :: nuOmg
         type(spatialSigmaInput_cold) :: a 
 
-        complex :: omgrfc
+        complex(kind=DBL) :: omgrfc
         complex :: sig1, sig2, sig3
         complex :: sigmaCold_stix(3,3)
         complex :: zieps0
@@ -435,9 +435,9 @@ contains
         zieps0 = zi * eps0
         omgRFc = a%omgRF * (1.0 + zi * a%nuOmg)
 
-        sig1 = zieps0 * omgRFc * a%omgP2 / (omgRFc**2 - a%omgC**2)
-        sig2 = eps0 * a%omgC   * a%omgP2 / (a%omgC**2 - omgRFc**2)
-        sig3 = zieps0 * a%omgp2 / omgRFc
+        sig1 = zieps0 * omgRFc * a%omgP2 / (omgRFc**2 - a%omgC**2) ! Stix_S
+        sig2 = eps0 * a%omgC   * a%omgP2 / (a%omgC**2 - omgRFc**2) ! Stix_D
+        sig3 = zieps0 * a%omgp2 / omgRFc ! Stix_P
 
         sigmaCold_stix(1,1) = sig1 
         sigmaCold_stix(1,2) = sig2 
@@ -455,9 +455,9 @@ contains
         ! Swanson version
 
         e_swan = sign(1d0,a%omgc) ! this is q/|q|
-        K1_swan = 1 - a%omgP2 / (omgRFc**2-a%omgC**2)
+        K1_swan = 1d0 - a%omgP2 / (omgRFc**2-a%omgC**2)
         K2_swan = e_swan*a%omgC*a%omgP2/(omgRFc*(omgRFc**2-a%omgC**2))/zi
-        K3_swan = 1-a%omgP2/omgRFc**2
+        K3_swan = 1d0-a%omgP2/omgRFc**2
 
         EpsilonCold_swan = (0,0)
         EpsilonCold_swan(1,1) = +K1_swan
@@ -471,7 +471,9 @@ contains
         IdentMat(2,2) = 1
         IdentMat(3,3) = 1
 
-        SigmaCold_swan = -(EpsilonCold_swan-IdentMat)*omgrfc*eps0*zi
+        !SigmaCold_swan = -(EpsilonCold_swan-IdentMat)*omgrfc*eps0*zi
+        !SigmaCold_stix = SigmaCold_swan
+        !SigmaCold_stix = EpsilonCold_swan
 
 !        write(*,*) '1,1  ', SigmaCold_stix(1,1), SigmaCold_swan(1,1)
 !        write(*,*) '2,2  ', SigmaCold_stix(2,2), SigmaCold_swan(2,2)

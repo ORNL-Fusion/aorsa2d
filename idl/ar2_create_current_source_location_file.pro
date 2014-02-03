@@ -33,12 +33,14 @@ pro ar2_create_current_source_location_file
 	cs_r = fltArr(NRHS)
 	cs_z = fltArr(NRHS)
 	component_ident = intArr(NRHS)
+    realFac = fltArr(NRHS)
+    imagFac = fltArr(NRHS)
 
 	ii=0
 
 	rMin = 1.85
     rMax = 1.90
-	zMin = 0
+	zMin = 0.3
 	zMax = 0.17
 
 	for i=0,nRSources-1 do begin
@@ -76,13 +78,17 @@ pro ar2_create_current_source_location_file
 
     endif
 
+    realFac[*] = 1
+    imagFac[*] = 1
+
     if SingleCurrentAtEnd eq 1 then begin
 
         cs_r[-1] = 2.5
         cs_z[-1] = 0.0
         component_ident[-1] = 2 ; z-direction     
+        realFac[-1] = 1
+        imagFac[-1] = 0
         ii++
-
     endif
 
 	if ii ne NRHS then message, 'ERROR'
@@ -115,11 +121,19 @@ pro ar2_create_current_source_location_file
 	component_ident_id = nCdf_varDef ( nc_id, 'component_ident', nRHS_id, /short )
 	if component_ident_id lt 0 then stop
 
+	realFac_id = nCdf_varDef ( nc_id, 'realFac', nRHS_id, /float )
+	if realFac_id lt 0 then stop
+	imagFac_id = nCdf_varDef ( nc_id, 'imagFac', nRHS_id, /float )
+	if imagFac_id lt 0 then stop
+
+
 	nCdf_control, nc_id, /enDef
 
 	nCdf_varPut, nc_id, cs_r_id, cs_r
 	nCdf_varPut, nc_id, cs_z_id, cs_z
 	nCdf_varPut, nc_id, component_ident_id, component_ident
+	nCdf_varPut, nc_id, realFac_id, realFac
+	nCdf_varPut, nc_id, imagFac_id, imagFac
 
 	nCdf_close, nc_id
 

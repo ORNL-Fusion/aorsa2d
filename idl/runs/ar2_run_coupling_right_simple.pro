@@ -2,7 +2,7 @@
 	ShrinkFac = 0.25
 
 	freq = 53.0e6
-	nphi = -27
+	nphi = 2 ; This is taken from the namelist input file remember!
 	b0 = 4.3
 	r0 = 6.0 * ShrinkFac
 

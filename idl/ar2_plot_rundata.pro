@@ -1,6 +1,6 @@
 pro ar2_plot_rundata
 
-	fileList = file_search ( 'runData*.nc' )
+	fileList = file_search ( 'output/runData*.nc' )
     FileListIndex = 0
 
 	cdfId = ncdf_open ( fileList[FileListIndex], /noWrite ) 
@@ -78,7 +78,7 @@ pro ar2_plot_rundata
 	nSpec	= n_elements ( densitySpec[0,0,*] )
 
 	p=plot(x, bMod[*,nz/2.0], $
-			title = 'z=0 equil B field')
+			title = 'z=0 equil B field', thick=2)
 	p=plot(x, bx[*,nz/2.0], /over)
 	p=plot(x, by[*,nz/2.0], /over)
 	p=plot(x, bz[*,nz/2.0], /over)
