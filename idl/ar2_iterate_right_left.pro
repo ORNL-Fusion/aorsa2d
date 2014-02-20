@@ -9,7 +9,7 @@ pro ar2_iterate_right_left
 
     nSubCycles = 3 
 
-for MM = 0,2 do begin ; Cyclic MPE loop
+for MM = 0,10 do begin ; Cyclic MPE loop
 
 
 for NN = 0, nSubCycles-1 do begin ; full iteration loop
@@ -52,6 +52,10 @@ for NN = 0, nSubCycles-1 do begin ; full iteration loop
 	This_jP_t = complexArr(nL)
 	This_jP_z = complexArr(nL)
 
+	This_jA_r = complexArr(nL) 
+	This_jA_t = complexArr(nL)
+	This_jA_z = complexArr(nL)
+
 	This_E_r = complexArr(nL) 
 	This_E_t = complexArr(nL)
 	This_E_z = complexArr(nL)
@@ -64,10 +68,6 @@ for NN = 0, nSubCycles-1 do begin ; full iteration loop
         basis_r = (total(This_s.jP_r,3))[*]
         basis_t = (total(This_s.jP_t,3))[*]
         basis_z = (total(This_s.jP_z,3))[*]
-        ;basis_r = (This_s.jP_r)[*]
-        ;basis_t = (This_s.jP_t)[*]
-        ;basis_z = (This_s.jP_z)[*]
-
 
 		This_jP_r[*] += Coeffs_r[rhs] * basis_r
 		This_jP_t[*] += Coeffs_t[rhs] * basis_t
@@ -81,7 +81,23 @@ for NN = 0, nSubCycles-1 do begin ; full iteration loop
 		This_E_t[*] += Coeffs_t[rhs] * basis_t
 		This_E_z[*] += Coeffs_z[rhs] * basis_z
 
+        basis_r = (This_r.jA_r)[*]
+        basis_t = (This_r.jA_t)[*]
+        basis_z = (This_r.jA_z)[*]
+
+		This_jA_r[*] += Coeffs_r[rhs] * basis_r
+		This_jA_t[*] += Coeffs_t[rhs] * basis_t
+		This_jA_z[*] += Coeffs_z[rhs] * basis_z
+
 	endfor
+
+    ; Retart the iteration by scaling the magnitude of 
+    ; what AORSA feeds back ...
+
+    ScaleFac = 0.1
+    This_jP_r = This_jP_r * ScaleFac 
+    This_jP_t = This_jP_t * ScaleFac 
+    This_jP_z = This_jP_z * ScaleFac 
 
     DoPlots = 0
     if DoPlots then begin
@@ -98,6 +114,13 @@ for NN = 0, nSubCycles-1 do begin ; full iteration loop
     p=plot(This_s.r,imaginary(This_jP_t),/over,color='r')
     p=plot(This_s.r,This_jP_z,layout=[1,3,3],/current)
     p=plot(This_s.r,imaginary(This_jP_z),/over,color='r')
+
+    ;p=plot(This_s.r,This_jA_z,layout=[1,3,3],/current,color='b')
+    ;p=plot(This_s.r,imaginary(This_jA_z),/over,color='b',linestyle='--')
+
+    p=plot(right_s.r,right_s.jP_z,/over,thick=2)
+    p=plot(right_s.r,imaginary(right_s.jP_z),/over,thick=2,color='r')
+
     stop
     endif
 
@@ -200,7 +223,7 @@ rsfwc_read_iterations, nSubCycles, MPE_FileName = MPE_FileName
 
 Copy_MPE_FileIntoIteration0 = 'cp '+MPE_FileName+' '+RightName+'0/rsfwc_1d_r0.nc'
 spawn, Copy_MPE_FileIntoIteration0 
-stop
+
 endfor
 
 end

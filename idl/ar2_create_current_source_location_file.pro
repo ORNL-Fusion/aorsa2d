@@ -88,7 +88,7 @@ pro ar2_create_current_source_location_file
     endif
 
     realFac[*] = 1
-    imagFac[*] = 1
+    imagFac[*] = 0
 
     if SingleCurrentAtEnd eq 1 then begin
 
