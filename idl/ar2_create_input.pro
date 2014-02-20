@@ -64,8 +64,9 @@ pro ar2_create_input
 	;@ar2_run_langmuir
 	;@ar2_run_nstxslow
 	;@ar2_run_ar_vo_bench
-    @ar2_run_coupling_right_simple
+    ;@ar2_run_coupling_right_simple
     ;@ar2_run_coupling_left_simple
+    @ar2_run_coupling_simple_full
 
 	nSpec = n_elements ( amu )
 	wrf	= freq * 2d0 * !dpi
@@ -275,8 +276,9 @@ pro ar2_create_input
 
     ; Create nuOmg profiles
 
-    @ar2_run_coupling_right_simple_nuomg
+    ;@ar2_run_coupling_right_simple_nuomg
     ;@ar2_run_coupling_left_simple_nuomg
+    @ar2_run_coupling_simple_full_nuomg
 
     p=plot(r,nuOmg[*,nZ/2,0],title='nuOmg [electrons]')
 
@@ -477,31 +479,31 @@ pro ar2_create_input
 		VorpalFileName = 'VorpalProfiles_'+string(s,format='(i1)')+'.txt'
 
 		Vorpal_nX = 64
-		Vorpal_nY = 32
-		Vorpal_nZ = 16
+		Vorpal_nY = 64 
+		Vorpal_nZ = 36
 
-		Vorpal_xDim = 0.8
-		Vorpal_yDim = 0.4
-		Vorpal_zDim = 0.36
+		Vorpal_xDim = rMax-rMin
+		Vorpal_yDim = zMax-zMin
+		Vorpal_zDim = 0.1 * Vorpal_xDim
 
-		Vorpal_xMin = min(VorpalBox_r)
-		Vorpal_xMax = max(VorpalBox_r)
+		Vorpal_xMin = rMin
+		Vorpal_xMax = rMax
 		Vorpal_x_grid = fIndGen(Vorpal_nX)*(Vorpal_xMax-Vorpal_xMin)/(Vorpal_nX-1)+Vorpal_xMin
 
-		Vorpal_yMin = -Vorpal_yDim/2.0
-		Vorpal_yMax = +Vorpal_yDim/2.0
+		Vorpal_yMin = zMin
+		Vorpal_yMax = zMax
 		Vorpal_y_grid = fIndGen(Vorpal_nY)*(Vorpal_yMax-Vorpal_yMin)/(Vorpal_nY-1)+Vorpal_yMin
 
-		Vorpal_zMin = min(VorpalBox_z)
-		Vorpal_zMax = max(VorpalBox_z)
+		Vorpal_zMin = -Vorpal_zDim/2.0
+		Vorpal_zMax = +Vorpal_zDim/2.0
 		Vorpal_z_grid = fIndGen(Vorpal_nZ)*(Vorpal_zMax-Vorpal_zMin)/(Vorpal_nz-1)+Vorpal_zMin
 
-		Vx3D = rebin(Vorpal_x_grid, Vorpal_nX, Vorpal_nY, Vorpal_nZ)
-		Vy3D = transpose(rebin(Vorpal_y_grid, Vorpal_nY, Vorpal_nZ, Vorpal_nX),[2,0,1])
-		Vz3D = transpose(rebin(Vorpal_z_grid, Vorpal_nZ, Vorpal_nX, Vorpal_nY),[1,2,0])
+		;Vx3D = rebin(Vorpal_x_grid, Vorpal_nX, Vorpal_nY, Vorpal_nZ)
+		;Vy3D = transpose(rebin(Vorpal_y_grid, Vorpal_nY, Vorpal_nZ, Vorpal_nX),[2,0,1])
+		;Vz3D = transpose(rebin(Vorpal_z_grid, Vorpal_nZ, Vorpal_nX, Vorpal_nY),[1,2,0])
 
-		Vr3D = sqrt(Vx3D^2+Vy3D^2)
-		Vt3D = atan(Vy3D,Vx3D)
+		;Vr3D = sqrt(Vx3D^2+Vy3D^2)
+		;Vt3D = atan(Vy3D,Vx3D)
 
 		openw, lun, VorpalFileName, /get_lun
 
@@ -511,18 +513,18 @@ pro ar2_create_input
 		printf, lun, 'amu: '+string(amu[s],format='(f12.10)')
 		printf, lun, 'AtomicZ: ',+string(AtomicZ[s],format='(f+6.2)')
 
-		i3D = (Vr3D - min(r))/(max(r)-min(r))*(nR-1)
-		j3D = (Vz3D - min(z))/(max(z)-min(z))*(nZ-1)
+		;i3D = (Vr3D - min(r))/(max(r)-min(r))*(nR-1)
+		;j3D = (Vz3D - min(z))/(max(z)-min(z))*(nZ-1)
 
-		V_Br = reform(interpolate(br,i3D[*],j3D[*],cubic=-0.5),Vorpal_nX,Vorpal_nY,Vorpal_nZ)
-		V_Bt = reform(interpolate(bt,i3D[*],j3D[*],cubic=-0.5),Vorpal_nX,Vorpal_nY,Vorpal_nZ)
-		V_Bz = reform(interpolate(bz,i3D[*],j3D[*],cubic=-0.5),Vorpal_nX,Vorpal_nY,Vorpal_nZ)
+		;V_Br = reform(interpolate(br,i3D[*],j3D[*],cubic=-0.5),Vorpal_nX,Vorpal_nY,Vorpal_nZ)
+		;V_Bt = reform(interpolate(bt,i3D[*],j3D[*],cubic=-0.5),Vorpal_nX,Vorpal_nY,Vorpal_nZ)
+		;V_Bz = reform(interpolate(bz,i3D[*],j3D[*],cubic=-0.5),Vorpal_nX,Vorpal_nY,Vorpal_nZ)
 
-		V_Bx = cos(Vt3D)*V_Br-sin(Vt3D)*V_Bt
-		V_By = sin(Vt3D)*V_Br+cos(Vt3D)*V_Bt
+		;V_Bx = cos(Vt3D)*V_Br-sin(Vt3D)*V_Bt
+		;V_By = sin(Vt3D)*V_Br+cos(Vt3D)*V_Bt
 
-		V_T = reform(interpolate(Temp_eV[*,*,s],i3D[*],j3D[*],cubic=-0.5),Vorpal_nX,Vorpal_nY,Vorpal_nZ)
-		V_n = reform(interpolate(Density_m3[*,*,s],i3D[*],j3D[*],cubic=-0.5),Vorpal_nX,Vorpal_nY,Vorpal_nZ)
+		;V_T = reform(interpolate(Temp_eV[*,*,s],i3D[*],j3D[*],cubic=-0.5),Vorpal_nX,Vorpal_nY,Vorpal_nZ)
+		;V_n = reform(interpolate(Density_m3[*,*,s],i3D[*],j3D[*],cubic=-0.5),Vorpal_nX,Vorpal_nY,Vorpal_nZ)
 
 		printf, lun, 'X, Y, Z, Bx[T], By[T], Bz[T], T[eV], n[m^-3]'
 
@@ -530,9 +532,24 @@ pro ar2_create_input
 			for j=0,Vorpal_nY-1 do begin
 				for k=0,Vorpal_nZ-1 do begin
 
-					printf, lun, Vx3D[i,j,k], Vy3D[i,j,k], Vz3D[i,j,k], $
-						V_Bx[i,j,k], V_By[i,j,k], V_Bz[i,j,k], $
-						V_T[i,j,k], V_n[i,j,k], format='(7(f10.3,1x),e12.3)'
+                    thisX = Vorpal_x_grid[i]
+                    thisY = Vorpal_y_grid[j]
+                    thisZ = Vorpal_z_grid[k]
+
+                    thisI = (thisX-rMin)/(rMax-rMin)*(nR-1)
+                    thisJ = (thisY-zMin)/(zMax-zMin)*(nZ-1)
+
+		            this_Br = interpolate(br,thisI,thisJ,cubic=-0.5)
+		            this_Bt = interpolate(bt,thisI,thisJ,cubic=-0.5)
+		            this_Bz = interpolate(bz,thisI,thisJ,cubic=-0.5)
+
+                    this_Bx = this_Br
+                    this_By = this_Bz
+                    this_Bz = -this_Bt
+
+					printf, lun, thisX, thisY, thisZ, $
+						this_Bx, this_By, this_Bz,format='(5(f10.3,1x),e12.3)';, $
+						;V_T[i,j,k], V_n[i,j,k], format='(7(f10.3,1x),e12.3)'
 
 				endfor
 			endfor

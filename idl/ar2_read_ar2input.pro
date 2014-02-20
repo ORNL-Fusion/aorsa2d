@@ -1,4 +1,4 @@
-pro ar2_read_ar2input, ar2InFileName, runDataFileName,$
+pro ar2_read_ar2input, ar2InFileName, $
 		rLim=rLim, zLim=zLim, LimMask=LimMask, ar2 = ar2
 
 	cdfId = ncdf_open ( ar2InFileName, /noWrite ) 
@@ -25,9 +25,9 @@ pro ar2_read_ar2input, ar2InFileName, runDataFileName,$
 	nCdf_varGet, cdfid, 'Lim_z', zlim 
 	ncdf_close, cdfId
 
-	cdfId = ncdf_open ( runDataFileName, /noWrite ) 
-		nCdf_varGet, cdfid, 'LimMask', LimMask
-	ncdf_close, cdfId
+	;cdfId = ncdf_open ( runDataFileName, /noWrite ) 
+	;	nCdf_varGet, cdfid, 'LimMask', LimMask
+	;ncdf_close, cdfId
 
     ar2 = { $
             rMin: rMin, $
@@ -44,7 +44,7 @@ pro ar2_read_ar2input, ar2InFileName, runDataFileName,$
             Density_m3: Density_m3, $
             Temp_eV: Temp_eV, $
             nuOmg: nuOmg, $
-            LimMask: LimMask, $
+            LimMask: mask_lim, $
             Lim_r: rlim, $
             Lim_z: zlim }
 

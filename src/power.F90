@@ -169,10 +169,10 @@ subroutine current ( g, rhs )
                         ek_nm(3) = g%eBk(g%wl(w)%n,g%wl(w)%m,rhs) 
 
                         jVec = matMul ( thisSigma, ek_nm ) 
-
-                        jVec(1) = thisSigma(1,1)*ek_nm(1)+thisSigma(1,2)*ek_nm(2)+thisSigma(1,3)*ek_nm(3)
-                        jVec(2) = thisSigma(2,1)*ek_nm(1)+thisSigma(2,2)*ek_nm(2)+thisSigma(2,3)*ek_nm(3)
-                        jVec(3) = thisSigma(3,1)*ek_nm(1)+thisSigma(3,2)*ek_nm(2)+thisSigma(3,3)*ek_nm(3)
+                        !thisSigma = transpose(thisSigma)
+                        !jVec(1) = thisSigma(1,1)*ek_nm(1)+thisSigma(2,1)*ek_nm(2)+thisSigma(3,1)*ek_nm(3)
+                        !jVec(2) = thisSigma(1,2)*ek_nm(1)+thisSigma(2,2)*ek_nm(2)+thisSigma(3,2)*ek_nm(3)
+                        !jVec(3) = thisSigma(1,3)*ek_nm(1)+thisSigma(2,3)*ek_nm(2)+thisSigma(3,3)*ek_nm(3)
 
                         g%jAlpha(g%wl(w)%i,g%wl(w)%j,s) = g%jAlpha(g%wl(w)%i,g%wl(w)%j,s) + jVec(1) * bFn
                         g%jBeta(g%wl(w)%i,g%wl(w)%j,s) = g%jBeta(g%wl(w)%i,g%wl(w)%j,s) + jVec(2) * bFn

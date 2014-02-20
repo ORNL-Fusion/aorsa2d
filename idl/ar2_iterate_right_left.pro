@@ -1,30 +1,42 @@
 pro ar2_iterate_right_left
 
-    leftName = 'left_simple'
-    rightName = 'right_simple'
+    cd, current = WorkingDir
+    leftName = '~/scratch/aorsa2d/ar2_vorpal/left_simple'
+    rightName = '~/scratch/rsfwc_1d/ar2_vorpal/right_simple_'
 
-    LeftFitLayer = [1.85,1.9]
-    RightFitLayer = [2.0,2.05]
+    LeftFitLayer = [1.7,1.9]
+    RightFitLayer = [1.9,2.1]
 
-    driverSideName = rightName
+    nSubCycles = 3 
 
-    ; Get the initial driver side jP
+for MM = 0,2 do begin ; Cyclic MPE loop
 
-	driverSideFiles = file_search(driverSideName+'/output/solution*.nc')
-    NRHS_driverSide = n_elements(driverSideFiles)
 
-    ; Assume the last element of the driver side is the standard
-    ; AORSA driver (single component), and the rest are the unit response
-    ; drivers.
+for NN = 0, nSubCycles-1 do begin ; full iteration loop
 
-    print, 'Driver RHS number: ', NRHS_driverSide
-    Driver_s = ar2_read_solution (driverSideName, NRHS_driverSide)
+    right_ThisDir =  RightName+StrCompress(string(NN),/rem)
+    right_NextDir =  RightName+StrCompress(string(NN+1),/rem)
+    right_PrevDir =  RightName+StrCompress(string(NN-1),/rem)
 
-	IteratedRight_s = Driver_s
+    cd, right_ThisDir
+    if MM eq 0 or NN gt 0 then begin
+            print, 'Running RSFWC-1D ...'
+            print, right_ThisDir
+            print, 'MM: ', MM
+            print, 'NN: ', NN
+            spawn, 'idl run_rsfwc.pro'
+    endif
 
-for NN = 0, 4 do begin ; full iteration loop
+    DirExists = file_test(right_NextDir,/directory)
+    if not DirExists then begin
+        CreateNextDirectory = 'cp -r '+right_ThisDir+' '+right_NextDir
+        print, 'Running ... '+CreateNextDirectory
+        spawn, CreateNextDirectory 
+    endif   
+    cd, right_NextDir
 
-    ar2_fit_sources, FitThis = IteratedRight_s, WithTheseFiles = leftName, $
+    right_s = rsfwc_read_solution (right_ThisDir)
+    ar2_fit_sources, FitThis = Right_s, WithTheseFiles = leftName, $
 			FitLayer = RightFitLayer, $
 			CoeffsOut_r = Coeffs_r, $
 			CoeffsOut_t = Coeffs_t, $
@@ -34,88 +46,161 @@ for NN = 0, 4 do begin ; full iteration loop
 	nSpec = n_elements(Coeffs_r[0,*])
 
     This_s = ar2_read_solution (LeftName, 1)
+    nL = n_elements(This_s.jP_r[*,0,0])
 
-	This_jP_r = This_s.jP_r*0
-	This_jP_t = This_s.jP_t*0
-	This_jP_z = This_s.jP_z*0
+	This_jP_r = complexArr(nL) 
+	This_jP_t = complexArr(nL)
+	This_jP_z = complexArr(nL)
 
-	for ss = 0, nSpec-1 do begin
-		for rhs = 0, NRHS-1 do begin
-    		This_s = ar2_read_solution (LeftName, rhs+1)
-			This_jP_r[*,*,ss] += Coeffs_r[rhs,ss] * This_s.jP_r[*,*,ss]
-			This_jP_t[*,*,ss] += Coeffs_t[rhs,ss] * This_s.jP_t[*,*,ss]
-			This_jP_z[*,*,ss] += Coeffs_z[rhs,ss] * This_s.jP_z[*,*,ss]
-		endfor
+	This_E_r = complexArr(nL) 
+	This_E_t = complexArr(nL)
+	This_E_z = complexArr(nL)
+
+	for rhs = 0, NRHS-1 do begin
+    	This_s = ar2_read_solution (LeftName, rhs+1)
+    	This_r = ar2_read_runData (LeftName, rhs+1)
+
+        ; Remember to sum over the species :)
+        basis_r = (total(This_s.jP_r,3))[*]
+        basis_t = (total(This_s.jP_t,3))[*]
+        basis_z = (total(This_s.jP_z,3))[*]
+        ;basis_r = (This_s.jP_r)[*]
+        ;basis_t = (This_s.jP_t)[*]
+        ;basis_z = (This_s.jP_z)[*]
+
+
+		This_jP_r[*] += Coeffs_r[rhs] * basis_r
+		This_jP_t[*] += Coeffs_t[rhs] * basis_t
+		This_jP_z[*] += Coeffs_z[rhs] * basis_z
+
+        basis_r = (This_s.E_r)[*]
+        basis_t = (This_s.E_t)[*]
+        basis_z = (This_s.E_z)[*]
+
+		This_E_r[*] += Coeffs_r[rhs] * basis_r
+		This_E_t[*] += Coeffs_t[rhs] * basis_t
+		This_E_z[*] += Coeffs_z[rhs] * basis_z
+
 	endfor
 
-    IteratedLeft_s = ar2_read_solution (LeftName, 1)
-	IteratedLeft_s.jP_r = This_jP_r
-	IteratedLeft_s.jP_t = This_jP_t
-	IteratedLeft_s.jP_z = This_jP_z
+    DoPlots = 0
+    if DoPlots then begin
+    p=plot(This_s.r,This_E_r,layout=[1,3,1], window_title='AORSA Fit E')
+    p=plot(This_s.r,imaginary(This_E_r),/over,color='r')
+    p=plot(This_s.r,This_E_t,layout=[1,3,2],/current)
+    p=plot(This_s.r,imaginary(This_E_t),/over,color='r')
+    p=plot(This_s.r,This_E_z,layout=[1,3,3],/current)
+    p=plot(This_s.r,imaginary(This_E_z),/over,color='r')
 
-	iiLeftFit = where(This_s.r lt 999);RightFitLayer[1])
-	p=plot(This_s.r,real_part(This_jP_r[iiLeftFit,0,0]),layout=[1,3,1],title="Iteration: "+string(NN,format='(i2.2)'))
-	p=plot(This_s.r,imaginary(This_jP_r[iiLeftFit,0,0]),/over,color="red")
-	p=plot(Driver_s.r,real_part(Driver_s.jP_r[*,0,0]),/over,thick=3)
-	p=plot(Driver_s.r,imaginary(Driver_s.jP_r[*,0,0]),/over,thick=3,color="red")
-
-	p=plot(This_s.r,real_part(This_jP_t[iiLeftFit,0,0]),layout=[1,3,2],/current)
-	p=plot(This_s.r,imaginary(This_jP_t[iiLeftFit,0,0]),/over,color="red")
-	p=plot(Driver_s.r,real_part(Driver_s.jP_t[*,0,0]),/over,thick=3)
-	p=plot(Driver_s.r,imaginary(Driver_s.jP_t[*,0,0]),/over,thick=3,color="red")
-
-    p=plot(This_s.r,real_part(This_jP_z[iiLeftFit,0,0]),layout=[1,3,3],/current)
-	p=plot(This_s.r,imaginary(This_jP_z[iiLeftFit,0,0]),/over,color="red")
-	p=plot(Driver_s.r,real_part(Driver_s.jP_z[*,0,0]),/over,thick=3)
-	p=plot(Driver_s.r,imaginary(Driver_s.jP_z[*,0,0]),/over,thick=3,color="red")
-
-    ar2_fit_sources, FitThis = IteratedLeft_s, WithTheseFiles = RightName, $
-			FitLayer = LeftFitLayer, $
-			CoeffsOut_r = Coeffs_r, $
-			CoeffsOut_t = Coeffs_t, $
-			CoeffsOut_z = Coeffs_z, $
-			NRHS = NRHS
-
-	NRHS = n_elements(Coeffs_r[*,0])
-	nSpec = n_elements(Coeffs_r[0,*])
-
-    This_s = ar2_read_solution (RightName, 1)
-
-	This_jP_r = This_s.jP_r*0
-	This_jP_t = This_s.jP_t*0
-	This_jP_z = This_s.jP_z*0
-
-	for ss = 0, nSpec-1 do begin
-		for rhs = 0, NRHS-1 do begin
-    		This_s = ar2_read_solution (RightName, rhs+1)
-			This_jP_r[*,*,ss] += Coeffs_r[rhs,ss] * This_s.jP_r[*,*,ss]
-			This_jP_t[*,*,ss] += Coeffs_t[rhs,ss] * This_s.jP_t[*,*,ss]
-			This_jP_z[*,*,ss] += Coeffs_z[rhs,ss] * This_s.jP_z[*,*,ss]
-		endfor
-	endfor
-
-	IteratedRight_s.jP_r = This_jP_r
-	IteratedRight_s.jP_t = This_jP_t
-	IteratedRight_s.jP_z = This_jP_z
-
-	iiRightFit = where(This_s.r gt -999);LeftFitLayer[0])
-	p=plot(This_s.r,real_part(This_jP_r[iiRightFit,0,0]),layout=[1,3,1])
-	p=plot(This_s.r,imaginary(This_jP_r[iiRightFit,0,0]),/over,color="red")
-	p=plot(IteratedLeft_s.r,real_part(IteratedLeft_s.jP_r[iiLeftFit,0,0]),/over,thick=3)
-	p=plot(IteratedLeft_s.r,imaginary(IteratedLeft_s.jP_r[iiLeftFit,0,0]),/over,thick=3,color="red")
-
-	p=plot(This_s.r,real_part(This_jP_t[iiRightFit,0,0]),layout=[1,3,2],/current)
-	p=plot(This_s.r,imaginary(This_jP_t[iiRightFit,0,0]),/over,color="red")
-	p=plot(IteratedLeft_s.r,real_part(IteratedLeft_s.jP_t[iiLeftFit,0,0]),/over,thick=3)
-	p=plot(IteratedLeft_s.r,imaginary(IteratedLeft_s.jP_t[iiLeftFit,0,0]),/over,thick=3,color="red")
-
-    p=plot(This_s.r,real_part(This_jP_z[iiRightFit,0,0]),layout=[1,3,3],/current)
-	p=plot(This_s.r,imaginary(This_jP_z[iiRightFit,0,0]),/over,color="red")
-	p=plot(IteratedLeft_s.r,real_part(IteratedLeft_s.jP_z[iiLeftFit,0,0]),/over,thick=3)
-	p=plot(IteratedLeft_s.r,imaginary(IteratedLeft_s.jP_z[iiLeftFit,0,0]),/over,thick=3,color="red")
-    
+    p=plot(This_s.r,This_jP_r,layout=[1,3,1], window_title='AORSA Fit jP')
+    p=plot(This_s.r,imaginary(This_jP_r),/over,color='r')
+    p=plot(This_s.r,This_jP_t,layout=[1,3,2],/current)
+    p=plot(This_s.r,imaginary(This_jP_t),/over,color='r')
+    p=plot(This_s.r,This_jP_z,layout=[1,3,3],/current)
+    p=plot(This_s.r,imaginary(This_jP_z),/over,color='r')
     stop
+    endif
+
+
+    ; Create netCdf file for RSFWC to read
+    ; ------------------------------------
+
+    r_rsfwc = right_s.r
+    r_rsfwc_ = right_s.r_
+
+    RSFWC_replace = intArr(n_elements(r_rsfwc))
+    RSFWC_replace_ = intArr(n_elements(r_rsfwc_))
+
+    iiRSFWC = where(r_rsfwc ge LeftFitLayer[0] and r_rsfwc le LeftFitLayer[1],iiCntRSFWC)
+    iiRSFWC_ = where(r_rsfwc_ ge LeftFitLayer[0] and r_rsfwc_ le LeftFitLayer[1],iiCntRSFWC_)
+
+    RSFWC_replace[iiRSFWC] = 1
+    RSFWC_replace_[iiRSFWC_] = 1
+
+    Jp_r_RSFWC = complexArr(n_elements(r_rsfwc))
+    Jp_r_RSFWC_ = complexArr(n_elements(r_rsfwc_))
+    Jp_t_RSFWC = complexArr(n_elements(r_rsfwc))
+    Jp_t_RSFWC_ = complexArr(n_elements(r_rsfwc_))
+    Jp_z_RSFWC = complexArr(n_elements(r_rsfwc))
+    Jp_z_RSFWC_ = complexArr(n_elements(r_rsfwc_))
+
+	jP_r_re =  interpol(real_part(This_jP_r),This_s.r, r_rsfwc,/spline)
+	jP_r_re_ = interpol(real_part(This_jP_r),This_s.r,r_rsfwc_,/spline)
+	jP_r_im =  interpol(imaginary(This_jP_r),This_s.r, r_rsfwc,/spline)
+	jP_r_im_ = interpol(imaginary(This_jP_r),This_s.r,r_rsfwc_,/spline)
+
+	jP_t_re =  interpol(real_part(This_jP_t),This_s.r, r_rsfwc,/spline)
+	jP_t_re_ = interpol(real_part(This_jP_t),This_s.r,r_rsfwc_,/spline)
+	jP_t_im =  interpol(imaginary(This_jP_t),This_s.r, r_rsfwc,/spline)
+	jP_t_im_ = interpol(imaginary(This_jP_t),This_s.r,r_rsfwc_,/spline)
+
+	jP_z_re =  interpol(real_part(This_jP_z),This_s.r, r_rsfwc,/spline)
+	jP_z_re_ = interpol(real_part(This_jP_z),This_s.r,r_rsfwc_,/spline)
+	jP_z_im =  interpol(imaginary(This_jP_z),This_s.r, r_rsfwc,/spline)
+	jP_z_im_ = interpol(imaginary(This_jP_z),This_s.r,r_rsfwc_,/spline)
+
+    jP_r_RSFWC  = complex(jP_r_re, jP_r_im)
+    jP_r_RSFWC_ = complex(jP_r_re_,jP_r_im_)
+
+    jP_t_RSFWC  = complex(jP_t_re, jP_t_im)
+    jP_t_RSFWC_ = complex(jP_t_re_,jP_t_im_)
+
+    jP_z_RSFWC  = complex(jP_z_re, jP_z_im)
+    jP_z_RSFWC_ = complex(jP_z_re_,jP_z_im_)
+
+    ncId = ncdf_create('aorsa_to_rsfwc.nc', /clobber)
+    ncdf_control, ncId, /fill
+    nrId = ncdf_dimdef(ncId, 'nR', n_elements(right_s.r))
+    nrId_ = ncdf_dimdef(ncId, 'nR_', n_elements(right_s.r_))
+
+    replace_id = ncdf_vardef(ncId, 'replace',nrId,/short)
+    replace_id_ = ncdf_vardef(ncId, 'replace_',nrId_,/short)
+
+    jP_r_re_id = ncdf_vardef(ncId,'jP_r_re',nrId,/float)
+    jP_t_re_id = ncdf_vardef(ncId,'jP_p_re',nrId,/float)
+    jP_z_re_id = ncdf_vardef(ncId,'jP_z_re',nrId,/float)
+    jP_r_im_id = ncdf_vardef(ncId,'jP_r_im',nrId,/float)
+    jP_t_im_id = ncdf_vardef(ncId,'jP_p_im',nrId,/float)
+    jP_z_im_id = ncdf_vardef(ncId,'jP_z_im',nrId,/float)
+
+    jP_r_re_id_ = ncdf_vardef(ncId,'jP_r_re_',nrId_,/float)
+    jP_t_re_id_ = ncdf_vardef(ncId,'jP_p_re_',nrId_,/float)
+    jP_z_re_id_ = ncdf_vardef(ncId,'jP_z_re_',nrId_,/float)
+    jP_r_im_id_ = ncdf_vardef(ncId,'jP_r_im_',nrId_,/float)
+    jP_t_im_id_ = ncdf_vardef(ncId,'jP_p_im_',nrId_,/float)
+    jP_z_im_id_ = ncdf_vardef(ncId,'jP_z_im_',nrId_,/float)
+
+    ncdf_control, ncId, /endef
+
+    ncdf_varput, ncId, replace_id, RSFWC_replace 
+    ncdf_varput, ncId, replace_id_, RSFWC_replace_
+
+    ncdf_varput, ncId, jP_r_re_id, real_part(jP_r_RSFWC)
+    ncdf_varput, ncId, jP_t_re_id, real_part(jP_t_RSFWC)
+    ncdf_varput, ncId, jP_z_re_id, real_part(jP_z_RSFWC)
+    ncdf_varput, ncId, jP_r_im_id, imaginary(jP_r_RSFWC)
+    ncdf_varput, ncId, jP_t_im_id, imaginary(jP_t_RSFWC)
+    ncdf_varput, ncId, jP_z_im_id, imaginary(jP_z_RSFWC)
+
+    ncdf_varput, ncId, jP_r_re_id_, real_part(jP_r_RSFWC_)
+    ncdf_varput, ncId, jP_t_re_id_, real_part(jP_t_RSFWC_)
+    ncdf_varput, ncId, jP_z_re_id_, real_part(jP_z_RSFWC_)
+    ncdf_varput, ncId, jP_r_im_id_, imaginary(jP_r_RSFWC_)
+    ncdf_varput, ncId, jP_t_im_id_, imaginary(jP_t_RSFWC_)
+    ncdf_varput, ncId, jP_z_im_id_, imaginary(jP_z_RSFWC_)
+
+    ncdf_close, ncId
 
 endfor ; full iteration loop
+
+cd, WorkingDir
+MPE_FileName = 'restart_mpe_'+StrCompress(string(MM),/rem)+'.nc'
+
+rsfwc_read_iterations, nSubCycles, MPE_FileName = MPE_FileName
+
+Copy_MPE_FileIntoIteration0 = 'cp '+MPE_FileName+' '+RightName+'0/rsfwc_1d_r0.nc'
+spawn, Copy_MPE_FileIntoIteration0 
+stop
+endfor
 
 end

@@ -5,10 +5,14 @@ pro ar2_create_current_source_location_file
 	; location means 3 RHS vectors as we need to account
 	; for each component of the source vector. 
 
-    SingleCurrentAtEnd = 1
+    ; Right simple
+    ;SingleCurrentAtEnd = 1
+    ; Left simple
+    SingleCurrentAtEnd = 0
+
     patch2 = 0
 
-	nRSources = 5 ; x 3 for all components, real & imag
+	nRSources = 20 ; x 3 for all components, real & imag
     nZSources = 1 
     nSourcesTotal = nRSources * nZSources
 	NRHS = nSourcesTotal * 3
@@ -38,8 +42,13 @@ pro ar2_create_current_source_location_file
 
 	ii=0
 
+    ; Right simple
 	rMin = 1.85
-    rMax = 1.90
+    rMax = 2.00
+    ; Left simple
+    rMin = 1.9
+    rMax = 2.1
+
 	zMin = 0.3
 	zMax = 0.17
 

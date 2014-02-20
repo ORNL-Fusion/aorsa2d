@@ -26,7 +26,7 @@ pro ar2_plot_solution, full = full, $
 	print, 'SolutionFile: ', SolutionFile
 	print, 'RunDataFile: ', RunDataFile
 
-	ar2_read_ar2input, ar2InputFile, RunDataFile, $
+	ar2_read_ar2input, ar2InputFile, $
 			rLim=rLim,zLim=zLim,LimMask=LimMask
 
 	@constants
@@ -289,17 +289,19 @@ pro ar2_plot_solution, full = full, $
         p = plot(x,imaginary(jA_z),thick=4,/over, lineStyle="--")
 
 
-        p = plot(x,nuOmg,/current,title='nuOmg',layout=[1,3,3])
+        nuOmgRange = [0,max(nuOmg)+0.02]
+        p = plot(x,nuOmg,/current,title='nuOmg',layout=[1,3,3],yRange=nuOmgRange)
 
 		; jP
 		; --
 
 		jpRange = max(abs([abs(jp_r),abs(jp_t),abs(jp_z)]))
 
+        if keyword_set(sumSpecies) then SpecStr = 'Total' else SpecStr = 'SingleSpec'
 		s = 0
 		;p_array = !NULL
 		p = plot (x,jp_r,thick=2,transparency=50,$
-				title='jPr(total)',name='jPr_re_'+strTrim(string(s),2),font_size=10,$
+				title='jPr - '+SpecStr,name='jPr_re_'+strTrim(string(s),2),font_size=10,$
 				layout=[1,3,1],yRange=[-jpRange,jpRange],window_title='aorsa')
 		;p_array = [p_array,p]
 		p = plot (x,imaginary(jp_r),/over,name='jPr_im_'+strTrim(string(s),2),color='r',thick=2)

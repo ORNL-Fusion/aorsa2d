@@ -1,10 +1,19 @@
-function ar2_read_rundata, runFolderName, ar2InputFile, RHS
+function ar2_read_rundata, runFolderName, RHS
 
-	RunDataFiles = file_search(runFolderName+'/output/solution*.nc')
-    RunDataFile = RunDataFiles[RHS-1]
+	;RunDataFiles = file_search(runFolderName+'/output/solution*.nc')
+    ;RunDataFile = RunDataFiles[RHS-1]
 
-	ar2_read_ar2input, ar2InputFile, RunDataFile, $
-			rLim=rLim,zLim=zLim,LimMask=LimMask
+	; This is just to ensure we get consistent files, i.e., not
+	; relying on the order of the list of a file read.
+	RunDataFiles = file_search(runFolderName+'/output/runData*.nc')
+	RunDataStr = StrMid(file_basename(RunDataFiles[0]),0,17)
+	RHS_Str = string(RHS,format='(i6.6)')
+    RunDataFile = File_DirName(RunDataFiles[0])+'/'+RunDataStr+RHS_STr+'.nc'
+	;print, RunDataFile
+
+
+	;ar2_read_ar2input, ar2InputFile, RunDataFile, $
+	;		rLim=rLim,zLim=zLim,LimMask=LimMask
 
 	cdfId = ncdf_open ( RunDataFile, /noWrite ) 
 		nCdf_varGet, cdfId, 'nPhi', nPhi 
@@ -38,7 +47,7 @@ function ar2_read_rundata, runFolderName, ar2InputFile, RHS
 	xx	= complex ( xx_re, xx_im )
 	yy	= complex ( yy_re, yy_im )
 
-    nuOmg = nuOmg[*,*,ThisSpec]
+    ;nuOmg = nuOmg[*,*,ThisSpec]
 
 	jA_r = complex ( jr_re[*,*], jr_im[*,*] )
 	jA_t = complex ( jt_re[*,*], jt_im[*,*] )
@@ -51,7 +60,11 @@ function ar2_read_rundata, runFolderName, ar2InputFile, RHS
 	nM	= n_elements ( yy[*,0] )
 
     runData = { $
-            
-            }
+        r : x, $
+        z : y, $
+        jA_r : complex(jr_re,jr_im), $ 
+        jA_t : complex(jt_re,jt_im), $ 
+        jA_z : complex(jz_re,jz_im) }
 
+    return, runData
 end

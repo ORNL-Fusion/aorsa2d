@@ -12,9 +12,9 @@ pro ar2_fit_sources, $
 	; 1 = t
 	; 2 = z
 
+	RunDataFiles = file_search(WithTheseFiles+'/output/runData*.nc')
 	DataFiles = file_search(WithTheseFiles+'/output/solution*.nc')
 	sFitMe = FitThis
-    nSpecies = n_elements(sFitMe.jP_r[0,0,*])
 
 	if(not keyword_set(NRHS))then NRHS = n_elements(DataFiles)
 
@@ -31,54 +31,58 @@ pro ar2_fit_sources, $
     ; Build fit martix A and solve for each component seperately.
     ; Could do each species seperately too I guess.
 
-	amat = complexarr(N,NRHS)
-    CoeffsOut_r = ComplexArr(NRHS,nSpecies)
-    CoeffsOut_t = ComplexArr(NRHS,nSpecies)
-    CoeffsOut_z = ComplexArr(NRHS,nSpecies)
+	amat = complexarr(NRHS,N)
+    CoeffsOut_r = ComplexArr(NRHS)
+    CoeffsOut_t = ComplexArr(NRHS)
+    CoeffsOut_z = ComplexArr(NRHS)
 
     ComponentArray = [0,1,2]
 
-for spec = 0, nSpecies-1 do begin
-	print, 'Species: ', spec
-	print, '----------------'
-
     foreach component, ComponentArray do begin
-		print, 'Component: ', component
+		;print, 'Component: ', component
         c = 0
 
 	    for rhs=0,NRHS-1 do begin
 
-            s = ar2_read_solution (WithTheseFiles, rhs+1)
+            ;s = ar2_read_solution (WithTheseFiles, rhs+1)
+            ;s_jP_r = (total(s.jP_r,3))[*]
+            ;s_jP_t = (total(s.jP_t,3))[*]
+            ;s_jP_z = (total(s.jP_z,3))[*]
+
+            r = ar2_read_rundata (WithTheseFiles, rhs+1)
+            r_jA_r = r.jA_r
+            r_jA_t = r.jA_t
+            r_jA_z = r.jA_z
 
 			; Get basis functions at fit locations ...
 
-			if component eq 0 then thisJp_re = interpol(real_part(s.jP_r[*,0,spec]),s.r,sFitMe.r[iiFitThese],/spline)
-			if component eq 1 then thisJp_re = interpol(real_part(s.jP_t[*,0,spec]),s.r,sFitMe.r[iiFitThese],/spline)
-			if component eq 2 then thisJp_re = interpol(real_part(s.jP_z[*,0,spec]),s.r,sFitMe.r[iiFitThese],/spline)
+			if component eq 0 then thisJp_re = interpol(real_part(r_jA_r),r.r,sFitMe.r[iiFitThese],/spline)
+			if component eq 1 then thisJp_re = interpol(real_part(r_jA_t),r.r,sFitMe.r[iiFitThese],/spline)
+			if component eq 2 then thisJp_re = interpol(real_part(r_jA_z),r.r,sFitMe.r[iiFitThese],/spline)
 
-			if component eq 0 then thisJp_im = interpol(imaginary(s.jP_r[*,0,spec]),s.r,sFitMe.r[iiFitThese],/spline)
-			if component eq 1 then thisJp_im = interpol(imaginary(s.jP_t[*,0,spec]),s.r,sFitMe.r[iiFitThese],/spline)
-			if component eq 2 then thisJp_im = interpol(imaginary(s.jP_z[*,0,spec]),s.r,sFitMe.r[iiFitThese],/spline)
+			if component eq 0 then thisJp_im = interpol(imaginary(r_jA_r),r.r,sFitMe.r[iiFitThese],/spline)
+			if component eq 1 then thisJp_im = interpol(imaginary(r_jA_t),r.r,sFitMe.r[iiFitThese],/spline)
+			if component eq 2 then thisJp_im = interpol(imaginary(r_jA_z),r.r,sFitMe.r[iiFitThese],/spline)
 
-            aMat[*,rhs] = complex(thisJp_re,thisJp_im)
+            aMat[rhs,*] = complex(thisJp_re,thisJp_im)
 
 	    endfor
 
-	    help, amat
+	    ;help, amat
 
-        if component eq 0 then b = sFitMe.jP_r[iiFitThese,0,spec]
-        if component eq 1 then b = sFitMe.jP_t[iiFitThese,0,spec]
-        if component eq 2 then b = sFitMe.jP_z[iiFitThese,0,spec]
+        if component eq 0 then b = sFitMe.jP_r[iiFitThese,0]
+        if component eq 1 then b = sFitMe.jP_t[iiFitThese,0]
+        if component eq 2 then b = sFitMe.jP_z[iiFitThese,0]
 
-	    coeffs = LA_LEAST_SQUARES(transpose(amat),b, status=stat,method=3,residual=residual)
+	    coeffs = LA_LEAST_SQUARES(amat,b, status=stat,method=3,residual=residual)
 		if stat ne 0 then stop
-       	print, coeffs 
+       	;print, coeffs 
 
-        if component eq 0 then data = sFitMe.jP_r[iiFitThese,0,spec]
-        if component eq 1 then data = sFitMe.jP_t[iiFitThese,0,spec]
-        if component eq 2 then data = sFitMe.jP_z[iiFitThese,0,spec]
+        if component eq 0 then data = sFitMe.jP_r[iiFitThese,0]
+        if component eq 1 then data = sFitMe.jP_t[iiFitThese,0]
+        if component eq 2 then data = sFitMe.jP_z[iiFitThese,0]
 
-		;fit = transpose(amat)##coeffs
+		;fit = amat##coeffs
 		;p=plot(sFitMe.r[iiFitThese],data,symbol="o",layout=[1,2,1],title="Fit vs Data")
 		;p=plot(sFitMe.r[iiFitThese],fit,thick=2,/over)
 		;p=plot(sFitMe.r[iiFitThese],imaginary(data),color="red",/over)
@@ -87,13 +91,11 @@ for spec = 0, nSpecies-1 do begin
 		;p=plot(imaginary(coeffs),color="red",/over)
 		;stop
 
-        if component eq 0 then CoeffsOut_r[*,spec] = coeffs
-        if component eq 1 then CoeffsOut_t[*,spec] = coeffs
-        if component eq 2 then CoeffsOut_z[*,spec] = coeffs
+        if component eq 0 then CoeffsOut_r[*] = coeffs
+        if component eq 1 then CoeffsOut_t[*] = coeffs
+        if component eq 2 then CoeffsOut_z[*] = coeffs
 
     endforeach
-
-endfor
 
     ; Create the "perFileList" coefficient list
 

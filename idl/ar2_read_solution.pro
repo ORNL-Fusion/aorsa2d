@@ -120,7 +120,10 @@ function ar2_read_solution, runFolderName, RHS
                 jPB: jPB, $
                 jP_r: jP_r, $
                 jP_t: jP_t, $
-                jP_z: jP_z }
+                jP_z: jP_z, $
+                e_r: e_r, $
+                e_t: e_t, $
+                e_z: e_z }
 
 
     return, solution
