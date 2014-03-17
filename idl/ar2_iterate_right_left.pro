@@ -214,6 +214,29 @@ for NN = 0, nSubCycles-1 do begin ; full iteration loop
 
     ncdf_close, ncId
 
+    ; Create ASCII file for Vorpal to read
+    ; ------------------------------------
+
+	VorpalFileName = 'aorsaToVorpal_E.txt'
+	openw, lun, VorpalFileName, /get_lun
+
+	printf, lun, 'nX: '+string(n_elements(this_s.r), format='(i4.4)')
+	printf, lun, 'X, Re(Ex)[V/m], Im(Ex)[V/m], Re(Ey)[V/m], Im(Ey)[V/m], Re(Ez)[V/m], Im(Ez)[V/m]'
+
+	this_E_x = this_E_r
+	this_E_y = this_E_z
+	this_E_z = -this_E_t
+
+	for i=0,n_elements(this_s.r)-1 do begin
+		printf, lun, this_s.r[i], $
+			real_part(this_E_x), imaginary(this_E_x), $
+			real_part(this_E_y), imaginary(this_E_y), $
+			real_part(this_E_z), imaginary(this_E_z), $
+			format='(7(f10.3,1x)'
+	endfor
+ 	close, lun
+
+
 endfor ; full iteration loop
 
 cd, WorkingDir

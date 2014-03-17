@@ -1,6 +1,6 @@
 pro ar2_read_vorpal
 
-    RunId = 'Benchmark03'
+    RunId = 'output/test'
     freq = 53.0e6
     files_edgeE = file_search(RunId+'_edgeE_*')
     files_globals = file_search(RunId+'_Globals_*')
@@ -19,7 +19,8 @@ pro ar2_read_vorpal
     yGrid = fIndGen(nCells[1]+1)*dGrid[1]+lBounds[1] 
     zGrid = fIndGen(nCells[2]+1)*dGrid[2]+lBounds[2] 
 
-    b=h5_parse(RunId+'_B0_1.h5',/read)
+    files_B0 = file_search(RunId+'_B0_*')
+    b=h5_parse(files_B0[0],/read)
     b0 = b.b0._data
 
 
@@ -46,9 +47,10 @@ pro ar2_read_vorpal
         
     endfor
 
-    p=plot(xGrid,b0[0,zSlice,ySlice,*])
+    p=plot(xGrid,b0[0,zSlice,ySlice,*],/buffer)
     p=plot(xGrid,b0[1,zSlice,ySlice,*],/over,color='red')
     p=plot(xGrid,b0[2,zSlice,ySlice,*],/over,color='blue')
+	p.save, "v_b0.png", resolution=300
 
     SortII = sort(time)
     time = time[SortII]
@@ -64,21 +66,20 @@ pro ar2_read_vorpal
     eEdgeY_freq = complexArr(nX)
     eEdgeZ_freq = complexArr(nX)
 
-    iiSteadyState = where(time gt 3.0*max(time)/4.0)
+    iiSteadyState = where(time gt 0);3.0*max(time)/4.0)
     for i=0,nX-1 do begin
-        eEdgeX_freq[i] = ar2_time_to_freq(eEdgeX[i,iiSteadyState],time[iiSteadyState],freq)
+        eEdgeX_freq[i] = ar2_time_to_freq(eEdgeX[i,iiSteadyState],time[iiSteadyState],freq,i=i)
         eEdgeY_freq[i] = ar2_time_to_freq(eEdgeY[i,iiSteadyState],time[iiSteadyState],freq)
         eEdgeZ_freq[i] = ar2_time_to_freq(eEdgeZ[i,iiSteadyState],time[iiSteadyState],freq)
     endfor
 
-    p=plot(xGrid,eEdgeX_freq,layout=[1,3,1])
+    p=plot(xGrid,eEdgeX_freq,layout=[1,3,1],/buffer)
     p=plot(xGrid,imaginary(eEdgeX_freq),/over,color='r')
     p=plot(xGrid,eEdgeY_freq,layout=[1,3,2],/current)
     p=plot(xGrid,imaginary(eEdgeY_freq),/over,color='r')
     p=plot(xGrid,eEdgeZ_freq,layout=[1,3,3],/current)
     p=plot(xGrid,imaginary(eEdgeZ_freq),/over,color='r')
-
-
+	p.save, "v_eEdge.png", resolution=300
 
 stop
 end
