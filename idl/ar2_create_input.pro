@@ -64,9 +64,9 @@ pro ar2_create_input
 	;@ar2_run_langmuir
 	;@ar2_run_nstxslow
 	;@ar2_run_ar_vo_bench
-    ;@ar2_run_coupling_right_simple
+    @ar2_run_coupling_right_simple
     ;@ar2_run_coupling_left_simple
-    @ar2_run_coupling_simple_full
+    ;@ar2_run_coupling_simple_full
 
 	nSpec = n_elements ( amu )
 	wrf	= freq * 2d0 * !dpi
@@ -276,9 +276,9 @@ pro ar2_create_input
 
     ; Create nuOmg profiles
 
-    ;@ar2_run_coupling_right_simple_nuomg
+    @ar2_run_coupling_right_simple_nuomg
     ;@ar2_run_coupling_left_simple_nuomg
-    @ar2_run_coupling_simple_full_nuomg
+    ;@ar2_run_coupling_simple_full_nuomg
 
     p=plot(r,nuOmg[*,nZ/2,0],title='nuOmg [electrons]')
 
@@ -479,23 +479,23 @@ pro ar2_create_input
 		VorpalFileName = 'VorpalProfiles_'+string(s,format='(i1)')+'.txt'
 
 		Vorpal_nX = 64
-		Vorpal_nY = 64 
-		Vorpal_nZ = 36
+		Vorpal_nY = 36 
+		Vorpal_nZ = 64
 
 		Vorpal_xDim = rMax-rMin
-		Vorpal_yDim = zMax-zMin
-		Vorpal_zDim = 0.1 * Vorpal_xDim
+		Vorpal_yDim = 0.1 * Vorpal_xDim
+		Vorpal_zDim = zMax-zMin
 
 		Vorpal_xMin = rMin
 		Vorpal_xMax = rMax
 		Vorpal_x_grid = fIndGen(Vorpal_nX)*(Vorpal_xMax-Vorpal_xMin)/(Vorpal_nX-1)+Vorpal_xMin
 
-		Vorpal_yMin = zMin
-		Vorpal_yMax = zMax
+		Vorpal_yMin = -Vorpal_yDim/2.0
+		Vorpal_yMax = +Vorpal_yDim/2.0
 		Vorpal_y_grid = fIndGen(Vorpal_nY)*(Vorpal_yMax-Vorpal_yMin)/(Vorpal_nY-1)+Vorpal_yMin
 
-		Vorpal_zMin = -Vorpal_zDim/2.0
-		Vorpal_zMax = +Vorpal_zDim/2.0
+		Vorpal_zMin = zMin
+		Vorpal_zMax = zMax
 		Vorpal_z_grid = fIndGen(Vorpal_nZ)*(Vorpal_zMax-Vorpal_zMin)/(Vorpal_nz-1)+Vorpal_zMin
 
 		;Vx3D = rebin(Vorpal_x_grid, Vorpal_nX, Vorpal_nY, Vorpal_nZ)
@@ -537,15 +537,15 @@ pro ar2_create_input
                     thisZ = Vorpal_z_grid[k]
 
                     thisI = (thisX-rMin)/(rMax-rMin)*(nR-1)
-                    thisJ = (thisY-zMin)/(zMax-zMin)*(nZ-1)
+                    thisJ = (thisZ-zMin)/(zMax-zMin)*(nZ-1)
 
 		            this_Br = interpolate(br,thisI,thisJ,cubic=-0.5)
 		            this_Bt = interpolate(bt,thisI,thisJ,cubic=-0.5)
 		            this_Bz = interpolate(bz,thisI,thisJ,cubic=-0.5)
 
                     this_Bx = this_Br
-                    this_By = this_Bz
-                    this_Bz = -this_Bt
+                    this_By = this_Bt
+                    this_Bz = this_Bz
 
 					printf, lun, thisX, thisY, thisZ, $
 						this_Bx, this_By, this_Bz,format='(5(f10.3,1x),e12.3)';, $

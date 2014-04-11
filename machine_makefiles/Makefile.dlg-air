@@ -1,10 +1,10 @@
-BLAS := ${HOME}/code/goto_blas/libgoto2_gnu_4.3.2_64.a -pthread
-LIBS += ${BLAS}
+BLAS := /opt/local/lib -pthread
+LIBS += -L ${BLAS} -latlas -lblas
 
-LAPACK := ${HOME}/code/lapack/lapack-3.1.1/lapack_LINUX.a 
-LIBS += ${LAPACK}
+LAPACK := /opt/local/lib 
+LIBS += -L ${LAPACK} -llapack
 
-HDF_DIR := ${HOME}/code/hdf/gnu_4.3.2
+HDF_DIR := /opt/local
 LIBS += -L ${HDF_DIR}/lib -lhdf5 -lhdf5_hl
 INC_DIR += -I ${HDF_DIR}/include
 
@@ -21,9 +21,9 @@ ifeq (${PARALLEL},1)
 	LIBS := ${SCALAPACK} ${BLACS} ${LIBS}
 endif
 
-PAPI_DIR := /home/dg6/code/papi/gnu_4.3.2
+PAPI_DIR := /Users/dg6/code/papi/gnu-4.8.2
 PAPI_INC := -I${PAPI_DIR}/include/
-PAPI_LINK := -L${PAPI_DIR}/lib -lpapi
+PAPI_LINK := ${PAPI_DIR}/lib/libpapi.a
 LIBS += ${PAPI_LINK}
 INC_DIR += ${PAPI_INC}
 

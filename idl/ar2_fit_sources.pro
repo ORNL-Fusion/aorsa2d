@@ -100,7 +100,7 @@ pro ar2_fit_sources, $
     ; Create the "perFileList" coefficient list
 
 
-        ;p=plot(Coeffs_R,layout=[1,4,1],dimension=[600,600],title='Coeffs R')
+    ;p=plot(Coeffs_R,layout=[1,4,1],dimension=[600,600],title='Coeffs R')
     ;p=plot(imaginary(Coeffs_R),/over,color='b')
     ;p=plot(Coeffs_T,layout=[1,4,2],/current,title='Coeffs T')
     ;p=plot(imaginary(Coeffs_T),/over,color='b')
