@@ -1,8 +1,14 @@
-pro ar2_iterate_right_left_vorpal
+pro ar2_iterate_right_left_vorpal, titan=titan
 
     cd, current = WorkingDir
-    leftName = '/Users/dg6/scratch/aorsa2d/ar2_vorpal/left_simple'
-    rightName = '/Users/dg6/scratch/vorpal/right_simple_'
+
+	if keyword_set(titan)then begin
+    	leftName = '/lustre/atlas/proj-shared/fus048/dg6/ar2_vorpal/left_simple'
+    	rightName = '/lustre/atlas/proj-shared/fus048/dg6/vorpal/right_simple_'
+	endif else begin
+    	leftName = '/Users/dg6/scratch/aorsa2d/ar2_vorpal/left_simple'
+    	rightName = '/Users/dg6/scratch/vorpal/right_simple_'
+	endelse
 
     LeftFitLayer = [1.7,1.9]
     RightFitLayer = [1.9,2.1]
@@ -24,7 +30,12 @@ for NN = 0, nSubCycles-1 do begin ; full iteration loop
             print, right_ThisDir
             print, 'MM: ', MM
             print, 'NN: ', NN
-            spawn, './vorpal-osx.sh'
+			
+			if keyword_set(titan)then begin
+            	spawn, './vorpal-titan-interactive.pbs'
+			endif else begin
+            	spawn, './vorpal-osx.sh'
+			endelse
     endif
 
     DirExists = file_test(right_NextDir,/directory)
