@@ -4,8 +4,8 @@ function ar2_read_vorpal, runFolderName=runFolderName, oneD = oneD, freq = freq
 	plotB0 = 0
 	plotDensity = 0
 	plotE = 1
-	plotSource = 0
-	plotjP = 0
+	plotSource = 1
+	plotjP = 1
 
     RunId = 'output/test'
 	if keyword_set(runFolderName) then RunId = runFolderName+'/output/test'
@@ -229,7 +229,6 @@ function ar2_read_vorpal, runFolderName=runFolderName, oneD = oneD, freq = freq
     p=plot(xGrid,jPZ_freq,layout=[1,3,3],/current)
     p=plot(xGrid,imaginary(jPZ_freq),/over,color='r')
 	p.save, "v_jP.png", resolution=300
-	stop
 	endif
 
     solution = { $
@@ -238,7 +237,10 @@ function ar2_read_vorpal, runFolderName=runFolderName, oneD = oneD, freq = freq
 			z: xGrid*0, $
             jP_r: jPx_freq, $
             jP_t: jPy_freq, $
-            jP_z: jPz_freq }
+            jP_z: jPz_freq, $
+            E_r: eEdgeX_freq, $
+            E_t: eEdgeY_freq, $
+            E_z: eEdgeZ_freq }
             
     return, solution
 end

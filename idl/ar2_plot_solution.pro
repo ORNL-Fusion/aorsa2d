@@ -8,7 +8,6 @@ pro ar2_plot_solution, full = full, $
 	if keyword_set(_ThisSPEC) then ThisSPEC = _ThisSPEC else ThisSPEC = 0
 
 	ar2_read_namelist, ar2Input = ar2Input
-
 	ar2InputFile = ar2Input['AR2InputFileName']
 
 	ThisGridNo = 1

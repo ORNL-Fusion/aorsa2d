@@ -1,6 +1,10 @@
-pro ar2_read_namelist, ar2Input=ar2Input
+pro ar2_read_namelist, ar2Input=ar2Input, RunFolderName = RunFolderName
 
-	FileName = 'aorsa2d.in'
+    if keyword_set(RunFolderName) then begin
+	    FileName = RunFolderName+'/aorsa2d.in'
+    endif else begin
+	    FileName = 'aorsa2d.in'
+    endelse
 
 	openr, lun, FileName, /get_lun
 	array = ''

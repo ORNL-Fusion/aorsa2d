@@ -1,12 +1,39 @@
 function ar2_read_solution, runFolderName, RHS
 
-	; This is just to ensure we get consistent files, i.e., not
-	; relying on the order of the list of a file read.
-	SolutionFiles = file_search(runFolderName+'/output/solution*.nc')
-	SolutionStr = StrMid(file_basename(SolutionFiles[0]),0,18)
-	RHS_Str = string(RHS,format='(i6.6)')
-    SolutionFile = File_DirName(SolutionFiles[0])+'/'+SolutionStr+RHS_STr+'.nc'
+	;; This is just to ensure we get consistent files, i.e., not
+	;; relying on the order of the list of a file read.
+	;SolutionFiles = file_search(runFolderName+'/output/solution*.nc')
+	;SolutionStr = StrMid(file_basename(SolutionFiles[0]),0,18)
+	;RHS_Str = string(RHS,format='(i6.6)')
+    ;SolutionFile = File_DirName(SolutionFiles[0])+'/'+SolutionStr+RHS_STr+'.nc'
+
+	ar2_read_namelist, ar2Input = ar2Input, RunFolderName = RunFolderName
+	ThisGridNo = 1
+	GridNoStr = string(ThisGridNo,format='(i3.3)')
+	ThisNPhi = ar2Input['nPhi']
+    ThisRHS = RHS
+	nPhiStr = string(ThisNPhi,format='(i+4.3)')
+	rhsStr = string(ThisRHS,format='(i6.6)')
+
+	SolutionFile = expand_path(RunFolderName)+'/output/solution_'+GridNoStr+'_'+nPhiStr+'_'+rhsStr+'.nc'
+	RunDataFile = expand_path(RunFolderName)+'/output/runData_'+GridNoStr+'_'+nPhiStr+'_'+rhsStr+'.nc'
+
 	;print, SolutionFile
+
+	cdfId = ncdf_open ( RunDataFile, /noWrite ) 
+		nCdf_varGet, cdfId, 'nPhi', nPhi 
+		nCdf_varGet, cdfId, 'freq', freq 
+		nCdf_varGet, cdfId, 'capR', x 
+		nCdf_varGet, cdfId, 'y', y 
+		nCdf_varGet, cdfId, 'jr_re', jr_re 
+		nCdf_varGet, cdfId, 'jr_im', jr_im 
+		nCdf_varGet, cdfId, 'jt_re', jt_re 
+		nCdf_varGet, cdfId, 'jt_im', jt_im 
+		nCdf_varGet, cdfId, 'jz_re', jz_re 
+		nCdf_varGet, cdfId, 'jz_im', jz_im 
+        nCdf_varGet, cdfId, 'nZ_1D', nz_1D
+	ncdf_close, cdfId
+
 
 	cdfId = ncdf_open ( SolutionFile, /noWrite ) 
 
@@ -123,8 +150,10 @@ function ar2_read_solution, runFolderName, RHS
                 jP_z: jP_z, $
                 e_r: e_r, $
                 e_t: e_t, $
-                e_z: e_z }
-
+                e_z: e_z, $
+                jA_r: complex(jr_re,jr_im), $
+                jA_t: complex(jt_re,jt_im), $
+                jA_z: complex(jz_re,jz_im) }
 
     return, solution
 
