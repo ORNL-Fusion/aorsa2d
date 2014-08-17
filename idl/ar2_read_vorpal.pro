@@ -4,11 +4,11 @@ function ar2_read_vorpal, runFolderName=runFolderName, oneD = oneD, freq = freq
 	plotB0 = 0
 	plotDensity = 0
 	plotE = 1
-	plotSource = 1
+	plotSource = 0
 	plotjP = 1
 
     RunId = 'output/test'
-	if keyword_set(runFolderName) then RunId = runFolderName+'/output/test'
+	if keyword_set(runFolderName) then RunId = expand_path(runFolderName)+'/output/test'
     if not keyword_set(freq) then freq = 53.0e6
     files_edgeE = file_search(RunId+'_edgeE_*')
     files_rfSource = file_search(RunId+'_rfSource_*')
@@ -153,9 +153,23 @@ function ar2_read_vorpal, runFolderName=runFolderName, oneD = oneD, freq = freq
     SortII = sort(time)
     time = time[SortII]
     for i=0,nX-1 do begin
+
         eEdgeX[i,*] = eEdgeX[i,SortII]
         eEdgeY[i,*] = eEdgeY[i,SortII]
         eEdgeZ[i,*] = eEdgeZ[i,SortII]
+
+        rfSourceX[i,*] = rfSourceX[i,SortII]
+        rfSourceY[i,*] = rfSourceY[i,SortII]
+        rfSourceZ[i,*] = rfSourceZ[i,SortII]
+
+        jP0X[i,*] = jP0X[i,SortII]
+        jP0Y[i,*] = jP0Y[i,SortII]
+        jP0Z[i,*] = jP0Z[i,SortII]
+
+        jP1X[i,*] = jP1X[i,SortII]
+        jP1Y[i,*] = jP1Y[i,SortII]
+        jP1Z[i,*] = jP1Z[i,SortII]
+ 
     endfor
 
     ; Create the freq domain version
@@ -179,20 +193,20 @@ function ar2_read_vorpal, runFolderName=runFolderName, oneD = oneD, freq = freq
     iiSteadyState = where(time gt 0);3.0*max(time)/4.0)
     for i=0,nX-1 do begin
         eEdgeX_freq[i] = ar2_time_to_freq(eEdgeX[i,iiSteadyState],time[iiSteadyState],freq,i=i)
-        eEdgeY_freq[i] = ar2_time_to_freq(eEdgeY[i,iiSteadyState],time[iiSteadyState],freq)
-        eEdgeZ_freq[i] = ar2_time_to_freq(eEdgeZ[i,iiSteadyState],time[iiSteadyState],freq)
+        eEdgeY_freq[i] = ar2_time_to_freq(eEdgeY[i,iiSteadyState],time[iiSteadyState],freq,i=i)
+        eEdgeZ_freq[i] = ar2_time_to_freq(eEdgeZ[i,iiSteadyState],time[iiSteadyState],freq,i=i)
 
         rfSourceX_freq[i] = ar2_time_to_freq(rfSourceX[i,iiSteadyState],time[iiSteadyState],freq,i=i)
-        rfSourceY_freq[i] = ar2_time_to_freq(rfSourceY[i,iiSteadyState],time[iiSteadyState],freq)
-        rfSourceZ_freq[i] = ar2_time_to_freq(rfSourceZ[i,iiSteadyState],time[iiSteadyState],freq)
+        rfSourceY_freq[i] = ar2_time_to_freq(rfSourceY[i,iiSteadyState],time[iiSteadyState],freq,i=i)
+        rfSourceZ_freq[i] = ar2_time_to_freq(rfSourceZ[i,iiSteadyState],time[iiSteadyState],freq,i=i);,/PlotSpec, NStop=126)
 
         jP0X_freq[i] = e0*ar2_time_to_freq(jP0X[i,iiSteadyState],time[iiSteadyState],freq,i=i)
-        jP0Y_freq[i] = e0*ar2_time_to_freq(jP0Y[i,iiSteadyState],time[iiSteadyState],freq)
-        jP0Z_freq[i] = e0*ar2_time_to_freq(jP0Z[i,iiSteadyState],time[iiSteadyState],freq)
+        jP0Y_freq[i] = e0*ar2_time_to_freq(jP0Y[i,iiSteadyState],time[iiSteadyState],freq,i=i);,/PlotSpec, NStop=120)
+        jP0Z_freq[i] = e0*ar2_time_to_freq(jP0Z[i,iiSteadyState],time[iiSteadyState],freq,i=i)
 
         jP1X_freq[i] = e0*ar2_time_to_freq(jP1X[i,iiSteadyState],time[iiSteadyState],freq,i=i)
-        jP1Y_freq[i] = e0*ar2_time_to_freq(jP1Y[i,iiSteadyState],time[iiSteadyState],freq)
-        jP1Z_freq[i] = e0*ar2_time_to_freq(jP1Z[i,iiSteadyState],time[iiSteadyState],freq)
+        jP1Y_freq[i] = e0*ar2_time_to_freq(jP1Y[i,iiSteadyState],time[iiSteadyState],freq,i=i);,/PlotSpec, NStop=120)
+        jP1Z_freq[i] = e0*ar2_time_to_freq(jP1Z[i,iiSteadyState],time[iiSteadyState],freq,i=i)
  
     endfor
 
@@ -200,13 +214,46 @@ function ar2_read_vorpal, runFolderName=runFolderName, oneD = oneD, freq = freq
 	jPy_freq = jP0Y_freq + jP1Y_freq 
 	jPz_freq = jP0Z_freq + jP1Z_freq 
 
+    ;; There is a factor of pi mismatch in the amplitude of the E and Jp relative to 
+    ;; Ja when compared with AORSA. Not sure which (AORSA or VORPAL) is correct, so 
+    ;; just applying a factor of pi correction here. It is ONLY on the E and Jp, i.e.,
+    ;; the Ja compare correctly.
+
+    ;CorrectionFactor = 1.0/!pi
+
+    ;eEdgeX_freq = eEdgeX_freq * CorrectionFactor
+    ;eEdgeY_freq = eEdgeY_freq * CorrectionFactor
+    ;eEdgeZ_freq = eEdgeZ_freq * CorrectionFactor
+
+    ;jPX_freq = jPX_freq * CorrectionFactor
+    ;jPY_freq = jPY_freq * CorrectionFactor
+    ;jPZ_freq = jPZ_freq * CorrectionFactor
+
+    ;; There is also a phase difference that I'm as yet unable to account for when comparing 
+    ;; E and Jp relative to Ja when comparing AORSA and VORPAL. Again, just correcting for 
+    ;; it here until I figure our where the cause is.
+
+    ;eEdgeX_freq = -conj(eEdgeX_freq) 
+    ;eEdgeY_freq = -conj(eEdgeY_freq) 
+    ;eEdgeZ_freq = -conj(eEdgeZ_freq) 
+
+    ;jPX_freq = -conj(jPX_freq) 
+    ;jPY_freq = -conj(jPY_freq) 
+    ;jPZ_freq = -conj(jPZ_freq) 
+
 	if plotE then begin
 	xRange = [1.0,3.0]
-    p=plot(xGrid,eEdgeX_freq,layout=[1,3,1],xRange=xRange,title='Vorpal eEdge')
+    range=1.0
+    p=plot(xGrid,eEdgeX_freq,layout=[1,3,1],xRange=xRange,title='Vorpal eEdge',$
+            yRange=[-range,range], yTitle='Ex [V/m]')
     p=plot(xGrid,imaginary(eEdgeX_freq),/over,color='r')
-    p=plot(xGrid,eEdgeY_freq,layout=[1,3,2],/current,xRange=xRange)
+    range=0.15
+    p=plot(xGrid,eEdgeY_freq,layout=[1,3,2],/current,xRange=xRange,$
+            yRange=[-range,range], yTitle='Ey [V/m]')
     p=plot(xGrid,imaginary(eEdgeY_freq),/over,color='r')
-    p=plot(xGrid,eEdgeZ_freq,layout=[1,3,3],/current,xRange=xRange)
+    range=0.4
+    p=plot(xGrid,eEdgeZ_freq,layout=[1,3,3],/current,xRange=xRange,$
+            yRange=[-range,range], yTitle='Ez [V/m]')
     p=plot(xGrid,imaginary(eEdgeZ_freq),/over,color='r')
 	p.save, "v_eEdge.png", resolution=300
 	endif
@@ -240,7 +287,10 @@ function ar2_read_vorpal, runFolderName=runFolderName, oneD = oneD, freq = freq
             jP_z: jPz_freq, $
             E_r: eEdgeX_freq, $
             E_t: eEdgeY_freq, $
-            E_z: eEdgeZ_freq }
+            E_z: eEdgeZ_freq, $
+            jA_r: rfSourceX_freq, $
+            jA_t: rfSourceY_freq, $
+            jA_z: rfSourceZ_freq }
             
     return, solution
 end

@@ -44,52 +44,75 @@ pro ar2_fit_sources, $
 
 	    for rhs=0,NRHS-1 do begin
 
-            ;s = ar2_read_solution (WithTheseFiles, rhs+1)
-            ;s_jP_r = (total(s.jP_r,3))[*]
-            ;s_jP_t = (total(s.jP_t,3))[*]
-            ;s_jP_z = (total(s.jP_z,3))[*]
+            s = ar2_read_solution (WithTheseFiles, rhs+1)
+            s_jP_r = (total(s.jP_r,3))[*]
+            s_jP_t = (total(s.jP_t,3))[*]
+            s_jP_z = (total(s.jP_z,3))[*]
+
+            s_E_r = s.E_r
+            s_E_t = s.E_t
+            s_E_z = s.E_z
 
             r = ar2_read_rundata (WithTheseFiles, rhs+1)
             r_jA_r = r.jA_r
             r_jA_t = r.jA_t
             r_jA_z = r.jA_z
 
+            ; Fit the E field (hard)
+            pos = s.r
+            basis_r = s_E_r
+            basis_t = s_E_t
+            basis_z = s_E_z
+           
+            ;; Fit the current sources (transparent) 
+            ;pos = r.r
+            ;basis_r = r_jA_r
+            ;basis_t = r_jA_t
+            ;basis_z = r_jA_z
+
 			; Get basis functions at fit locations ...
 
-			if component eq 0 then thisJp_re = interpol(real_part(r_jA_r),r.r,sFitMe.r[iiFitThese],/spline)
-			if component eq 1 then thisJp_re = interpol(real_part(r_jA_t),r.r,sFitMe.r[iiFitThese],/spline)
-			if component eq 2 then thisJp_re = interpol(real_part(r_jA_z),r.r,sFitMe.r[iiFitThese],/spline)
+			if component eq 0 then thisBasis_re = interpol(real_part(basis_r),pos,sFitMe.r[iiFitThese],/spline)
+			if component eq 1 then thisBasis_re = interpol(real_part(basis_t),pos,sFitMe.r[iiFitThese],/spline)
+			if component eq 2 then thisBasis_re = interpol(real_part(basis_z),pos,sFitMe.r[iiFitThese],/spline)
 
-			if component eq 0 then thisJp_im = interpol(imaginary(r_jA_r),r.r,sFitMe.r[iiFitThese],/spline)
-			if component eq 1 then thisJp_im = interpol(imaginary(r_jA_t),r.r,sFitMe.r[iiFitThese],/spline)
-			if component eq 2 then thisJp_im = interpol(imaginary(r_jA_z),r.r,sFitMe.r[iiFitThese],/spline)
+			if component eq 0 then thisBasis_im = interpol(imaginary(basis_r),pos,sFitMe.r[iiFitThese],/spline)
+			if component eq 1 then thisBasis_im = interpol(imaginary(basis_t),pos,sFitMe.r[iiFitThese],/spline)
+			if component eq 2 then thisBasis_im = interpol(imaginary(basis_z),pos,sFitMe.r[iiFitThese],/spline)
 
-            aMat[rhs,*] = complex(thisJp_re,thisJp_im)
+            aMat[rhs,*] = complex(thisBasis_re,thisBasis_im)
 
 	    endfor
 
 	    ;help, amat
 
-        if component eq 0 then b = sFitMe.jP_r[iiFitThese,0]
-        if component eq 1 then b = sFitMe.jP_t[iiFitThese,0]
-        if component eq 2 then b = sFitMe.jP_z[iiFitThese,0]
+        ;data_r = sFitMe.jP_r[iiFitThese]
+        ;data_t = sFitMe.jP_t[iiFitThese]
+        ;data_z = sFitMe.jP_z[iiFitThese]
+
+        data_r = sFitMe.E_r[iiFitThese]
+        data_t = sFitMe.E_t[iiFitThese]
+        data_z = sFitMe.E_z[iiFitThese]
+
+        if component eq 0 then b = data_r 
+        if component eq 1 then b = data_t 
+        if component eq 2 then b = data_z 
 
 	    coeffs = LA_LEAST_SQUARES(amat,b, status=stat,method=3,residual=residual)
 		if stat ne 0 then stop
        	;print, coeffs 
 
-        if component eq 0 then data = sFitMe.jP_r[iiFitThese,0]
-        if component eq 1 then data = sFitMe.jP_t[iiFitThese,0]
-        if component eq 2 then data = sFitMe.jP_z[iiFitThese,0]
+        if component eq 0 then data = data_r 
+        if component eq 1 then data = data_t 
+        if component eq 2 then data = data_z 
 
-		;fit = amat##coeffs
-		;p=plot(sFitMe.r[iiFitThese],data,symbol="o",layout=[1,2,1],title="Fit vs Data")
-		;p=plot(sFitMe.r[iiFitThese],fit,thick=2,/over)
-		;p=plot(sFitMe.r[iiFitThese],imaginary(data),color="red",/over)
-		;p=plot(sFitMe.r[iiFitThese],imaginary(fit),color="red",/over,thick=2)
-		;p=plot(real_part(coeffs),layout=[1,2,2],title="Coeffs",/current)
-		;p=plot(imaginary(coeffs),color="red",/over)
-		;stop
+		fit = amat##coeffs
+		p=plot(sFitMe.r[iiFitThese],data,symbol="o",layout=[1,2,1],title="Fit vs Data")
+		p=plot(sFitMe.r[iiFitThese],fit,thick=2,/over)
+		p=plot(sFitMe.r[iiFitThese],imaginary(data),color="red",/over)
+		p=plot(sFitMe.r[iiFitThese],imaginary(fit),color="red",/over,thick=2)
+		p=plot(real_part(coeffs),layout=[1,2,2],title="Coeffs",/current)
+		p=plot(imaginary(coeffs),color="red",/over)
 
         if component eq 0 then CoeffsOut_r[*] = coeffs
         if component eq 1 then CoeffsOut_t[*] = coeffs

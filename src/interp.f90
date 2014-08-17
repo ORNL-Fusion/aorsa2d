@@ -92,7 +92,7 @@ contains
 
     function dlg_interpB ( pos, bMagHere, psiHere, rhoHere )
 
-        use aorsaNameList, only: useEqdsk, useAr2Input
+        use aorsaNameList, only: useEqdsk, useAr2Input, noPoloidalField
         use AR2Input, &
             only:nR_ar2=>nR,nZ_ar2=>nZ, &
             br_ar2=>bR,bt_ar2=>bt,bz_ar2=>bz,r_ar2=>r,z_ar2=>z
@@ -136,9 +136,15 @@ contains
         if ( present (rhoHere).and.useEqdsk ) &
             rhoHere    = rho_here 
 
-        dlg_interpB(1)  = bR_here 
-        dlg_interpB(2)  = bPhi_here
-        dlg_interpB(3)  = bz_here 
+        if(noPoloidalField)then
+            dlg_interpB(1)  = bR_here*0
+            dlg_interpB(2)  = bPhi_here
+            dlg_interpB(3)  = bz_here*0 
+        else
+            dlg_interpB(1)  = bR_here 
+            dlg_interpB(2)  = bPhi_here
+            dlg_interpB(3)  = bz_here 
+        endif
     
     end function dlg_interpB
 

@@ -12,7 +12,7 @@ pro ar2_create_current_source_location_file
 
     patch2 = 0
 
-	nRSources = 20 ; x 3 for all components, real & imag
+	nRSources = 10 ; x 3 for all components, real & imag
     nZSources = 1 
     nSourcesTotal = nRSources * nZSources
 	NRHS = nSourcesTotal * 3
@@ -89,6 +89,14 @@ pro ar2_create_current_source_location_file
 
     realFac[*] = 1
     imagFac[*] = 0
+
+    ;NRHS = NRHS+n_elements(cs_r)
+    ;ii = ii + n_elements(cs_r)
+    ;cs_r = [cs_r,cs_r]
+    ;cs_z = [cs_z,cs_z]
+    ;component_ident = [component_ident,component_ident]
+    ;realFac = [realFac,realFac*0]
+    ;imagFac = [imagFac,imagFac+1]
 
     if SingleCurrentAtEnd eq 1 then begin
 

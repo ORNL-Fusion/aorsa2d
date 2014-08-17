@@ -17,6 +17,7 @@ subroutine ReadAr2Input (AR2FileName)
 
     use netcdf
     use check_mod
+    use aorsaNamelist, only: noPoloidalField
 
     implicit none
 
@@ -86,6 +87,11 @@ subroutine ReadAr2Input (AR2FileName)
     stat = nf90_get_var(nc_id,LimMask_id,LimMask)
 
     call check( nf90_close(nc_id) )
+
+    if(noPoloidalField)then
+        br = br*0
+        bz = bz*0
+    endif
 
 end subroutine ReadAr2Input
 

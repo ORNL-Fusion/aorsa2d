@@ -13,9 +13,9 @@ pro ar2_iterate_right_left_vorpal, titan=titan
     LeftFitLayer = [1.7,1.9]
     RightFitLayer = [1.9,2.1]
 
-    nSubCycles = 3 
+    nSubCycles = 5 
 
-for MM = 0,2 do begin ; Cyclic MPE loop
+for MM = 1,2 do begin ; Cyclic MPE loop
 
 
 for NN = 0, nSubCycles-1 do begin ; full iteration loop
@@ -48,7 +48,15 @@ for NN = 0, nSubCycles-1 do begin ; full iteration loop
 
     ;right_s = rsfwc_read_solution (right_ThisDir)
 	freq = 53.0e6
-    right_s = ar2_read_vorpal (runFolderName = right_ThisDir, /oneD, freq = freq )
+
+    ; Use the MPE solution instead of an initial Vorpal run
+    ; for the first step in non-zero MPE cycles
+    if MM gt 0 and NN eq 0 then begin
+        right_s = ar2_read_mpe (right_ThisDir+'/restart_mpe.nc') 
+        stop
+    endif else begin
+        right_s = ar2_read_vorpal (runFolderName = right_ThisDir, /oneD, freq = freq )
+    endelse
 
     ar2_fit_sources, FitThis = Right_s, WithTheseFiles = leftName, $
 			FitLayer = RightFitLayer, $
@@ -113,7 +121,7 @@ for NN = 0, nSubCycles-1 do begin ; full iteration loop
     ;This_jP_t = This_jP_t * ScaleFac 
     ;This_jP_z = This_jP_z * ScaleFac 
 
-    DoPlots = 0
+    DoPlots = 1
     if DoPlots then begin
     p=plot(This_s.r,This_E_r,layout=[1,3,1], window_title='AORSA Fit E')
     p=plot(This_s.r,imaginary(This_E_r),/over,color='r')
@@ -135,98 +143,8 @@ for NN = 0, nSubCycles-1 do begin ; full iteration loop
     ;p=plot(right_s.r,right_s.jP_z,/over,thick=2)
     ;p=plot(right_s.r,imaginary(right_s.jP_z),/over,thick=2,color='r')
 
-    ;stop
     endif
 
-
-    ;; Create netCdf file for RSFWC to read
-    ;; ------------------------------------
-
-    ;r_rsfwc = right_s.r
-    ;r_rsfwc_ = right_s.r_
-
-    ;RSFWC_replace = intArr(n_elements(r_rsfwc))
-    ;RSFWC_replace_ = intArr(n_elements(r_rsfwc_))
-
-    ;iiRSFWC = where(r_rsfwc ge LeftFitLayer[0] and r_rsfwc le LeftFitLayer[1],iiCntRSFWC)
-    ;iiRSFWC_ = where(r_rsfwc_ ge LeftFitLayer[0] and r_rsfwc_ le LeftFitLayer[1],iiCntRSFWC_)
-
-    ;RSFWC_replace[iiRSFWC] = 1
-    ;RSFWC_replace_[iiRSFWC_] = 1
-
-    ;Jp_r_RSFWC = complexArr(n_elements(r_rsfwc))
-    ;Jp_r_RSFWC_ = complexArr(n_elements(r_rsfwc_))
-    ;Jp_t_RSFWC = complexArr(n_elements(r_rsfwc))
-    ;Jp_t_RSFWC_ = complexArr(n_elements(r_rsfwc_))
-    ;Jp_z_RSFWC = complexArr(n_elements(r_rsfwc))
-    ;Jp_z_RSFWC_ = complexArr(n_elements(r_rsfwc_))
-
-	;jP_r_re =  interpol(real_part(This_jP_r),This_s.r, r_rsfwc,/spline)
-	;jP_r_re_ = interpol(real_part(This_jP_r),This_s.r,r_rsfwc_,/spline)
-	;jP_r_im =  interpol(imaginary(This_jP_r),This_s.r, r_rsfwc,/spline)
-	;jP_r_im_ = interpol(imaginary(This_jP_r),This_s.r,r_rsfwc_,/spline)
-
-	;jP_t_re =  interpol(real_part(This_jP_t),This_s.r, r_rsfwc,/spline)
-	;jP_t_re_ = interpol(real_part(This_jP_t),This_s.r,r_rsfwc_,/spline)
-	;jP_t_im =  interpol(imaginary(This_jP_t),This_s.r, r_rsfwc,/spline)
-	;jP_t_im_ = interpol(imaginary(This_jP_t),This_s.r,r_rsfwc_,/spline)
-
-	;jP_z_re =  interpol(real_part(This_jP_z),This_s.r, r_rsfwc,/spline)
-	;jP_z_re_ = interpol(real_part(This_jP_z),This_s.r,r_rsfwc_,/spline)
-	;jP_z_im =  interpol(imaginary(This_jP_z),This_s.r, r_rsfwc,/spline)
-	;jP_z_im_ = interpol(imaginary(This_jP_z),This_s.r,r_rsfwc_,/spline)
-
-    ;jP_r_RSFWC  = complex(jP_r_re, jP_r_im)
-    ;jP_r_RSFWC_ = complex(jP_r_re_,jP_r_im_)
-
-    ;jP_t_RSFWC  = complex(jP_t_re, jP_t_im)
-    ;jP_t_RSFWC_ = complex(jP_t_re_,jP_t_im_)
-
-    ;jP_z_RSFWC  = complex(jP_z_re, jP_z_im)
-    ;jP_z_RSFWC_ = complex(jP_z_re_,jP_z_im_)
-
-    ;ncId = ncdf_create('aorsa_to_rsfwc.nc', /clobber)
-    ;ncdf_control, ncId, /fill
-    ;nrId = ncdf_dimdef(ncId, 'nR', n_elements(right_s.r))
-    ;nrId_ = ncdf_dimdef(ncId, 'nR_', n_elements(right_s.r_))
-
-    ;replace_id = ncdf_vardef(ncId, 'replace',nrId,/short)
-    ;replace_id_ = ncdf_vardef(ncId, 'replace_',nrId_,/short)
-
-    ;jP_r_re_id = ncdf_vardef(ncId,'jP_r_re',nrId,/float)
-    ;jP_t_re_id = ncdf_vardef(ncId,'jP_p_re',nrId,/float)
-    ;jP_z_re_id = ncdf_vardef(ncId,'jP_z_re',nrId,/float)
-    ;jP_r_im_id = ncdf_vardef(ncId,'jP_r_im',nrId,/float)
-    ;jP_t_im_id = ncdf_vardef(ncId,'jP_p_im',nrId,/float)
-    ;jP_z_im_id = ncdf_vardef(ncId,'jP_z_im',nrId,/float)
-
-    ;jP_r_re_id_ = ncdf_vardef(ncId,'jP_r_re_',nrId_,/float)
-    ;jP_t_re_id_ = ncdf_vardef(ncId,'jP_p_re_',nrId_,/float)
-    ;jP_z_re_id_ = ncdf_vardef(ncId,'jP_z_re_',nrId_,/float)
-    ;jP_r_im_id_ = ncdf_vardef(ncId,'jP_r_im_',nrId_,/float)
-    ;jP_t_im_id_ = ncdf_vardef(ncId,'jP_p_im_',nrId_,/float)
-    ;jP_z_im_id_ = ncdf_vardef(ncId,'jP_z_im_',nrId_,/float)
-
-    ;ncdf_control, ncId, /endef
-
-    ;ncdf_varput, ncId, replace_id, RSFWC_replace 
-    ;ncdf_varput, ncId, replace_id_, RSFWC_replace_
-
-    ;ncdf_varput, ncId, jP_r_re_id, real_part(jP_r_RSFWC)
-    ;ncdf_varput, ncId, jP_t_re_id, real_part(jP_t_RSFWC)
-    ;ncdf_varput, ncId, jP_z_re_id, real_part(jP_z_RSFWC)
-    ;ncdf_varput, ncId, jP_r_im_id, imaginary(jP_r_RSFWC)
-    ;ncdf_varput, ncId, jP_t_im_id, imaginary(jP_t_RSFWC)
-    ;ncdf_varput, ncId, jP_z_im_id, imaginary(jP_z_RSFWC)
-
-    ;ncdf_varput, ncId, jP_r_re_id_, real_part(jP_r_RSFWC_)
-    ;ncdf_varput, ncId, jP_t_re_id_, real_part(jP_t_RSFWC_)
-    ;ncdf_varput, ncId, jP_z_re_id_, real_part(jP_z_RSFWC_)
-    ;ncdf_varput, ncId, jP_r_im_id_, imaginary(jP_r_RSFWC_)
-    ;ncdf_varput, ncId, jP_t_im_id_, imaginary(jP_t_RSFWC_)
-    ;ncdf_varput, ncId, jP_z_im_id_, imaginary(jP_z_RSFWC_)
-
-    ;ncdf_close, ncId
 
     ; Create ASCII file for Vorpal to read
     ; ------------------------------------
@@ -259,6 +177,8 @@ rsfwc_read_iterations, nSubCycles, RightName, $
 		MPE_FileName = MPE_FileName, /vorpal, freq = freq
 
 Copy_MPE_FileIntoIteration0 = 'cp '+MPE_FileName+' '+RightName+'0/rsfwc_1d_r0.nc'
+Copy_MPE_FileIntoIteration0 = 'cp '+MPE_FileName+' '+RightName+'0/restart_mpe.nc'
+
 spawn, Copy_MPE_FileIntoIteration0 
 
 endfor

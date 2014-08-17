@@ -295,6 +295,7 @@ pro ar2_plot_solution, full = full, $
 		; --
 
 		jpRange = max(abs([abs(jp_r),abs(jp_t),abs(jp_z)]))
+        jpRange = 4 
 
         if keyword_set(sumSpecies) then SpecStr = 'Total' else SpecStr = 'SingleSpec'
 		s = 0

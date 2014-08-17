@@ -53,9 +53,15 @@ pro ar2_create_input
 	bField_gaussian = 0
     bField_flat = 0
 
+    gaussian_profiles = 0
+    parabolic_profiles = 0
+    flux_profiles = 0
+
 	br_flat = 0.0
 	bt_flat = 1.0
 	bz_flat = 0.0
+
+    generate_vorpal_input = 0
 
 	@constants
 
@@ -64,9 +70,10 @@ pro ar2_create_input
 	;@ar2_run_langmuir
 	;@ar2_run_nstxslow
 	;@ar2_run_ar_vo_bench
-    @ar2_run_coupling_right_simple
+    ;@ar2_run_coupling_right_simple
     ;@ar2_run_coupling_left_simple
     ;@ar2_run_coupling_simple_full
+	@ar2_run_colestock-kashuba
 
 	nSpec = n_elements ( amu )
 	wrf	= freq * 2d0 * !dpi
@@ -84,6 +91,7 @@ pro ar2_create_input
 
 	x2d = r2d
 	y2d = z2d
+    x0 = r0
 
 
 	if bField_eqdsk eq 1 then begin
@@ -247,7 +255,7 @@ pro ar2_create_input
 			Density_m3[*,*,s] = Density_m3[*,*,s]>DensityMin
 			Density_m3[*,*,s] = Smooth(Density_m3[*,*,s],SmoothWidth,/edge_mirror)
 
-			Density_m3[*,*,0] = Density_m3+Density_m3[*,*,s]*atomicZ[s]
+			Density_m3[*,*,0] = Density_m3[*,*,0]+Density_m3[*,*,s]*atomicZ[s]
 
 
 		endfor
@@ -261,6 +269,27 @@ pro ar2_create_input
 		endfor
 
 
+    endif else if parabolic_profiles eq 1 then begin
+
+        Density_m3[*] = 0
+		SmoothWidth=min([nR,nZ])*0.2
+
+        ; Density ^2
+        x = x2d-x0 
+        l = parabolic_half_length
+        for s=1,nSpec-1 do begin
+            Density_m3[*,*,s] = (nn[1,s]*(1-x^2/l^2))>DensityMin
+			Density_m3[*,*,s] = Smooth(Density_m3[*,*,s],SmoothWidth,/edge_mirror)
+
+			Density_m3[*,*,0] = Density_m3[*,*,0]+Density_m3[*,*,s]*atomicZ[s]
+        endfor
+
+        ; Temp ^4
+        for s=0,nSpec-1 do begin
+            Temp_eV[*,*,s] = (tt[1,s]*(1-(x^2/l^2)^2))>TempMin
+			Temp_eV[*,*,s] = Smooth(Temp_eV[*,*,s],SmoothWidth,/edge_mirror)
+        endfor
+
 	endif else begin
 
 		for s=0,nSpec-1 do begin
@@ -270,15 +299,23 @@ pro ar2_create_input
 
 	endelse
     
-	p=plot(r,Density_m3[*,nZ/2,0],title='Density [1/m3]',/ylog)
-	p=plot(r,Temp_eV[*,nZ/2,0],title='Temp [eV]')
-
+	p=plot(r,Density_m3[*,nZ/2,0],title='Density [1/m3]',/ylog,thick=2)
+    for s=1,nSpec-1 do begin
+	    p=plot(r,Density_m3[*,nZ/2,s],/over)
+    endfor
+	p=plot(r,Temp_eV[*,nZ/2,0],title='Temp [eV]', thick=2)
+    for s=1,nSpec-1 do begin
+	    p=plot(r,Temp_eV[*,nZ/2,s],/over)
+    endfor
+	
 
     ; Create nuOmg profiles
 
-    @ar2_run_coupling_right_simple_nuomg
+    ;@ar2_run_coupling_right_simple_nuomg
     ;@ar2_run_coupling_left_simple_nuomg
     ;@ar2_run_coupling_simple_full_nuomg
+    @ar2_run_colestock-kashuba_nuomg
+    ;nuOmg[*] = 0
 
     p=plot(r,nuOmg[*,nZ/2,0],title='nuOmg [electrons]')
 
@@ -313,7 +350,6 @@ pro ar2_create_input
 			IonIonHybrid_res_freq=IonIonHybrid_res_freq, Spec1=1.0,Spec2=2.0, $
 			kPerSq_F=kPerpSq_F,kPerSq_S=kPerpSq_S, $
 			StixP=StixP,StixL=StixL,StixR=StixR,StixS=StixS
-		
 		slice = nZ/4
 		kPerp_F[*,nphi_i] = sqrt(kPerpSq_F[*,slice])
 		kPerp_S[*,nphi_i] = sqrt(kPerpSq_S[*,slice])
@@ -322,6 +358,13 @@ pro ar2_create_input
 		kPerp_S2D_avg = kPerp_S2D_avg + sqrt(kPerpSq_S)
 
 	endfor
+
+    ; plot up the ion cyclortron resonances
+
+    for s=1,nSpec-1 do begin
+        if s eq 1 then p=plot(r,resonances[*,nZ/2,s], title='Ion cyclotron resonsances') $
+                else p=plot(r,resonances[*,nZ/2,s],/over)
+    endfor
 
 	kPerp_F2D_avg = kPerp_F2D_avg/n_nPhi
 	kPerp_S2D_avg = kPerp_S2D_avg/n_nPhi
@@ -342,10 +385,17 @@ pro ar2_create_input
 	c = contour(kPerp_S,r,nPhiArray,c_value=levels,rgb_indices=colors,$
             rgb_table=3,/fill, title='kPerp_S')
 
-	c = contour(stixp,r,z,layout=[2,2,1],n_levels=21,title='StixP')
-	c = contour(stixs,r,z,layout=[2,2,2],n_levels=21,/current,title='StixS')
-	c = contour(stixr,r,z,layout=[2,2,3],n_levels=21,/current,title='StixR')
-	c = contour(stixl,r,z,layout=[2,2,4],n_levels=21,/current,title='StixL')
+    if nZ gt 1 then begin
+	    c = contour(stixp,r,z,layout=[2,2,1],n_levels=21,title='StixP')
+	    c = contour(stixs,r,z,layout=[2,2,2],n_levels=21,/current,title='StixS')
+	    c = contour(stixr,r,z,layout=[2,2,3],n_levels=21,/current,title='StixR')
+	    c = contour(stixl,r,z,layout=[2,2,4],n_levels=21,/current,title='StixL')
+    endif else begin
+	    p = plot(r,stixp,layout=[2,2,1],title='StixP')
+	    p = plot(r,stixs,layout=[2,2,2],/current,title='StixS')
+	    p = plot(r,stixr,layout=[2,2,3],/current,title='StixR')
+	    p = plot(r,stixl,layout=[2,2,4],/current,title='StixL')
+    endelse
 
 	nLevs=31
 	range=20
@@ -353,13 +403,19 @@ pro ar2_create_input
 	levels = [1,2,3,10,20,30,100,200,300,1e3,2e3,4e3]
 	levels_map = findgen(n_elements(levels))
 	colors = 256-(bytScl(levels_map,top=254)+1)
-	c = contour(kPerp_F2D_avg,r,z,layout=[2,1,1],$
+    if nZ gt 1 then begin
+	    c = contour(kPerp_F2D_avg,r,z,layout=[2,1,1],$
 			c_value=levels,rgb_indices=colors,rgb_table=1,$
             /fill,aspect_ratio=1.0, title='kPerp_F2D_avg')
-	p=plot(rlim,zlim,/over,thick=2)
+    endif else begin
+	    p = plot(r,kPerp_F2D_avg,layout=[2,1,1],$
+            title='kPerp_F2D_avg')
+    endelse
 
-	p=plot(RightSide_rlim,RightSide_zlim,/over,thick=2)
-	p=plot(LeftSide_rlim,LeftSide_zlim,/over,thick=2)
+	if bfield_eqdsk then p=plot(rlim,zlim,/over,thick=2)
+
+	if bfield_eqdsk then p=plot(RightSide_rlim,RightSide_zlim,/over,thick=2)
+	if bfield_eqdsk then p=plot(LeftSide_rlim,LeftSide_zlim,/over,thick=2)
 
 	;p=plot(VorpalBox_r,VorpalBox_z,/over,thick=2,color='b')
 	
@@ -369,12 +425,24 @@ pro ar2_create_input
 	levels = [1,2,3,10,20,30,100,200,300,1e3,2e3,4e3]
 	levels_map = findgen(n_elements(levels))
 	colors = 256-(bytScl(levels_map,top=254)+1)
-	c = contour(kPerp_S2D_avg,r,z,layout=[2,1,2],/current,$
+    if nZ gt 1 then begin
+	    c = contour(kPerp_S2D_avg,r,z,layout=[2,1,2],/current,$
 			c_value=levels,rgb_indices=colors,rgb_table=3,$
             /fill,aspect_ratio=1.0, title='kPerp_S2D_avg')
+    endif else begin
+	    p = plot(r,kPerp_S2D_avg,layout=[2,1,2],/current,$
+            title='kPerp_S2D_avg')
+    endelse
+
+    if bfield_eqdsk eq 0 then begin
+            rLim = [rMin, rMax, rMax, rMin, rMin]
+            zLim = [zMin, zMin, zMax, zMax, zMin]
+    endif
+
 	p=plot(rlim,zlim,/over,thick=2)
+
 	;p=plot(VorpalBox_r,VorpalBox_z,/over,thick=1,color='b',transparency=50)
-    p=plot(rDomainBox,zDomainBox,/over,thick=1,linestyle='dash')
+    ;p=plot(rDomainBox,zDomainBox,/over,thick=1,linestyle='dash')
 	
 	; Plot up resonance locations too.
 
@@ -387,9 +455,9 @@ pro ar2_create_input
 		endfor
 		if nSpec gt 2 then $
 		c=contour(1/(abs(IonIonHybrid_res_freq mod wrf)/wrf),r,z,c_value=fIndGen(25)*10,/over)
-	endif else if bField_eqdsk eq 0 and nZ gt 1 then begin
+	endif else if flux_profiles eq 1 and nZ gt 1 then begin
 
-		c=contour(psi,r,z,aspect_ratio=1.0, title='psi')	
+		c=contour(psinorm,r,z,aspect_ratio=1.0, title='psi')	
 		p=plot(rlim,zlim,/over,thick=2)
 		;p=plot(VorpalBox_r,VorpalBox_z,/over,thick=2,color='b')
 		for s=1,nSpec-1 do begin
@@ -398,11 +466,18 @@ pro ar2_create_input
 		if nSpec gt 2 then $
 		c=contour(1/(abs(IonIonHybrid_res_freq mod wrf)/wrf),r,z,c_value=fIndGen(25)*10,/over)
 
-	endif else if bField_eqdsk eq 0 and nZ eq 0 then begin
-		for s=1,nSpec-1 do begin
-			p = plot(r,resonances[*,0,s],/over)
+	endif else if nZ gt 1 then begin
+		;for s=1,nSpec-1 do begin
+		;	p = plot(r,resonances[*,0,s],/over)
+		;endfor
+        for s=1,nSpec-1 do begin
+			c=contour(resonances[*,*,s],r,z,c_value=fIndGen(5)/4.0*0.01,/over)
 		endfor
-	endif
+		if nSpec gt 2 then $
+		c=contour(1/(abs(IonIonHybrid_res_freq mod wrf)/wrf),r,z,c_value=fIndGen(25)*10,/over)
+
+
+    endif
 
 	; Write netCdf file
 
@@ -473,6 +548,8 @@ pro ar2_create_input
 	nCdf_close, nc_id
 
 	; Write VORPAL-AORSA Coupling text file
+
+    if generate_vorpal_input then begin
 
 	for s=0,nSpec-1 do begin
 
@@ -558,6 +635,8 @@ pro ar2_create_input
 		close, lun
 
 	endfor
+
+    endif
 
 	stop
 end
