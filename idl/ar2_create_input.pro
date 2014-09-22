@@ -71,9 +71,9 @@ pro ar2_create_input
 	;@ar2_run_nstxslow
 	;@ar2_run_ar_vo_bench
     ;@ar2_run_coupling_right_simple
-    ;@ar2_run_coupling_left_simple
+    @ar2_run_coupling_left_simple
     ;@ar2_run_coupling_simple_full
-	@ar2_run_colestock-kashuba
+	;@ar2_run_colestock-kashuba
 
 	nSpec = n_elements ( amu )
 	wrf	= freq * 2d0 * !dpi
@@ -312,9 +312,9 @@ pro ar2_create_input
     ; Create nuOmg profiles
 
     ;@ar2_run_coupling_right_simple_nuomg
-    ;@ar2_run_coupling_left_simple_nuomg
+    @ar2_run_coupling_left_simple_nuomg
     ;@ar2_run_coupling_simple_full_nuomg
-    @ar2_run_colestock-kashuba_nuomg
+    ;@ar2_run_colestock-kashuba_nuomg
     ;nuOmg[*] = 0
 
     p=plot(r,nuOmg[*,nZ/2,0],title='nuOmg [electrons]')

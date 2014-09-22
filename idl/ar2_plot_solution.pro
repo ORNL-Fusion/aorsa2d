@@ -26,7 +26,7 @@ pro ar2_plot_solution, full = full, $
 	print, 'RunDataFile: ', RunDataFile
 
 	ar2_read_ar2input, ar2InputFile, $
-			rLim=rLim,zLim=zLim,LimMask=LimMask
+			rLim=rLim,zLim=zLim,LimMask=LimMask,ar2=ar2
 
 	@constants
 
@@ -297,7 +297,10 @@ pro ar2_plot_solution, full = full, $
 		jpRange = max(abs([abs(jp_r),abs(jp_t),abs(jp_z)]))
         jpRange = 4 
 
-        if keyword_set(sumSpecies) then SpecStr = 'Total' else SpecStr = 'SingleSpec'
+        if keyword_set(sumSpecies) then SpecStr = 'Total' $
+                else $
+                SpecStr = 'SingleSpec  amu:'+string(ar2.amu[ThisSPEC])+'  Z: '+string(ar2.atomicZ[ThisSPEC])
+        
 		s = 0
 		;p_array = !NULL
 		p = plot (x,jp_r,thick=2,transparency=50,$

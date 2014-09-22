@@ -2,7 +2,7 @@ global_nuOmg = r2D*0
 
 ; Create a smooth absorbing layer at the boundary edge
 
-MinNuOmg = 0.00
+MinNuOmg = 0.5
 absorbingNuOmg = 10.0
 absorbing_left_r = 2.10 ; Left domain edge
 absorbing_right_r = 2.65 

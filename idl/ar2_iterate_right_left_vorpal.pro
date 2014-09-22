@@ -15,7 +15,7 @@ pro ar2_iterate_right_left_vorpal, titan=titan
 
     nSubCycles = 5 
 
-for MM = 1,2 do begin ; Cyclic MPE loop
+for MM = 0,2 do begin ; Cyclic MPE loop
 
 
 for NN = 0, nSubCycles-1 do begin ; full iteration loop
