@@ -21,11 +21,11 @@ ifeq (${PARALLEL},1)
 	LIBS := ${SCALAPACK} ${BLACS} ${LIBS}
 endif
 
-PAPI_DIR := /Users/dg6/code/papi/gnu-4.8.2
-PAPI_INC := -I${PAPI_DIR}/include/
-PAPI_LINK := ${PAPI_DIR}/lib/libpapi.a
-LIBS += ${PAPI_LINK}
-INC_DIR += ${PAPI_INC}
+#PAPI_DIR := /Users/dg6/code/papi/gnu-4.8.2
+#PAPI_INC := -I${PAPI_DIR}/include/
+#PAPI_LINK := ${PAPI_DIR}/lib/libpapi.a
+#LIBS += ${PAPI_LINK}
+#INC_DIR += ${PAPI_INC}
 
 ifeq (${PARALLEL},1)
 		F90 := openmpif90

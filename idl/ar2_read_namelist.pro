@@ -1,4 +1,4 @@
-pro ar2_read_namelist, ar2Input=ar2Input, RunFolderName = RunFolderName
+function ar2_read_namelist, RunFolderName = RunFolderName
 
     if keyword_set(RunFolderName) then begin
 	    FileName = RunFolderName+'/aorsa2d.in'
@@ -20,7 +20,8 @@ pro ar2_read_namelist, ar2Input=ar2Input, RunFolderName = RunFolderName
 			"useAR2Input", 0, $
 		    "nPhi",0, $
 			"AR2SourceLocationsFileName", '', $
-			"useAR2SourceLocationsFile", 0)
+			"useAR2SourceLocationsFile", 0, $
+            "freq", 0.0)
 
 	foreach value, ar2Input, entryName do begin
 
@@ -30,13 +31,13 @@ pro ar2_read_namelist, ar2Input=ar2Input, RunFolderName = RunFolderName
 
 			if StrMatch(ThisLine,'*'+entryName+'*',/fold_case) then begin
 
-					if size(ar2Input[entryName],/type) eq 7 then begin
+					if size(ar2Input[entryName],/type) eq 7 then begin ; string
 						pos = StRegEx(ThisLine,"'.*'",length=len)
 						ThisLine = strtrim(strmid(ThisLine,pos+1,len-2),2)
 						ar2Input[entryName] = ThisLine	
 					endif
 
-					if size(ar2Input[entryName],/type) eq 2 then begin
+					if size(ar2Input[entryName],/type) eq 2 then begin ; int / bool?
 						pos = StRegEx(ThisLine,"=.*,",length=len)
 						ThisLine = strtrim(strmid(ThisLine,pos+1,len-2),2)
 						if strcmp(ThisLine,'.true.') then begin
@@ -48,9 +49,19 @@ pro ar2_read_namelist, ar2Input=ar2Input, RunFolderName = RunFolderName
 						endelse
 						ar2Input[entryName] = ThisInt
 					endif
+
+		            if size(ar2Input[entryName],/type) eq 4 then begin ; float
+						pos = StRegEx(ThisLine,"=.*,",length=len)
+						ThisLine = strtrim(strmid(ThisLine,pos+1,len-2),2)
+						ar2Input[entryName] = float(ThisLine)
+					endif
+
 			endif
 
 		endfor
 
 	endforeach
-end
+
+    return, ar2Input
+
+end 

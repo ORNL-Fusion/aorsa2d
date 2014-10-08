@@ -44,7 +44,7 @@ CPP_DIRECTIVES += -DzFunHammett
 
 # use papi, set to "-Dusepapi"
 # ----------------------------
-CPP_DIRECTIVES += -Dusepapi 
+CPP_DIRECTIVES += #-Dusepapi 
 
 # caculate sigma as part of the fill (=2) or standalone with file write (=1)
 # --------------------------------------------------------------------------

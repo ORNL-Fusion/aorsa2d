@@ -7,7 +7,7 @@ function ar2_read_solution, runFolderName, RHS
 	;RHS_Str = string(RHS,format='(i6.6)')
     ;SolutionFile = File_DirName(SolutionFiles[0])+'/'+SolutionStr+RHS_STr+'.nc'
 
-	ar2_read_namelist, ar2Input = ar2Input, RunFolderName = RunFolderName
+	ar2Input = ar2_read_namelist( RunFolderName = RunFolderName)
 	ThisGridNo = 1
 	GridNoStr = string(ThisGridNo,format='(i3.3)')
 	ThisNPhi = ar2Input['nPhi']

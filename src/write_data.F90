@@ -433,7 +433,7 @@ contains
         character(len=6) :: rhs_string
         character(len=4) :: nPhi_string
 
-        integer :: nc_id, nX_id, nY_id, nModesX_id, nModesY_id, nSpec_id, NRHS_id
+        integer :: nc_id, nX_id, nY_id, nModesX_id, nModesY_id, nSpec_id, NRHS_id, nR_id
         integer :: &
             e1_re_id, e1_im_id, &
             e2_re_id, e2_im_id, &
@@ -467,6 +467,7 @@ contains
         call check ( nf90_create ( fName, nf90_clobber, nc_id ) )
         stat=nf90_def_dim(nc_id,"scalar",1,scalar_id)
         call check ( nf90_def_dim ( nc_id, "nX", g%nR, nX_id ) )
+        call check ( nf90_def_dim ( nc_id, "nR", g%nR, nR_id ) )
         call check ( nf90_def_dim ( nc_id, "nY", g%nZ, nY_id ) )
         call check ( nf90_def_dim ( nc_id, "nModesX", g%nModesR, nModesX_id ) )
         call check ( nf90_def_dim ( nc_id, "nModesY", g%nModesZ, nModesY_id ) )

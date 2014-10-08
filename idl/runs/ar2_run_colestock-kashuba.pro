@@ -34,7 +34,7 @@
             [0,	2d3,		0.0,	0.0] ]
 
 	DensityMin = 5d17
-	TempMin = 200 
+	TempMin = 2d3 
 
 	; Grid
 

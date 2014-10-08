@@ -64,7 +64,11 @@ function ar2_read_rundata, runFolderName, RHS
         z : y, $
         jA_r : complex(jr_re,jr_im), $ 
         jA_t : complex(jt_re,jt_im), $ 
-        jA_z : complex(jz_re,jz_im) }
+        jA_z : complex(jz_re,jz_im), $
+        densitySpec : densitySpec, $
+        br : brU * bmod, $
+        bt : btU * bmod, $
+        bz : bzU * bmod }
 
     return, runData
 end
