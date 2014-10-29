@@ -7,7 +7,7 @@ pro ar2_plot_solution, full = full, $
 	if keyword_set(_RHS) then ThisRHS = _RHS else ThisRHS = 1
 	if keyword_set(_ThisSPEC) then ThisSPEC = _ThisSPEC else ThisSPEC = 0
 
-	ar2_read_namelist, ar2Input = ar2Input
+	ar2Input = ar2_read_namelist()
 	ar2InputFile = ar2Input['AR2InputFileName']
 
 	ThisGridNo = 1
@@ -295,7 +295,7 @@ pro ar2_plot_solution, full = full, $
 		; --
 
 		jpRange = max(abs([abs(jp_r),abs(jp_t),abs(jp_z)]))
-        jpRange = 4 
+        jpRange = 1 
 
         if keyword_set(sumSpecies) then SpecStr = 'Total' $
                 else $

@@ -54,6 +54,13 @@ pro ar2_create_kj_input
 	jA_z_re_id = nCdf_varDef ( nc_id, 'jA_z_re', nr_id, /float )
 	jA_z_im_id = nCdf_varDef ( nc_id, 'jA_z_im', nr_id, /float )
 
+	jP_r_re_spec_id = nCdf_varDef ( nc_id, 'jP_r_re_spec', [nr_id,nSpec_id], /float )
+	jP_r_im_spec_id = nCdf_varDef ( nc_id, 'jP_r_im_spec', [nr_id,nSpec_id], /float )
+	jP_p_re_spec_id = nCdf_varDef ( nc_id, 'jP_p_re_spec', [nr_id,nSpec_id], /float )
+	jP_p_im_spec_id = nCdf_varDef ( nc_id, 'jP_p_im_spec', [nr_id,nSpec_id], /float )
+	jP_z_re_spec_id = nCdf_varDef ( nc_id, 'jP_z_re_spec', [nr_id,nSpec_id], /float )
+	jP_z_im_spec_id = nCdf_varDef ( nc_id, 'jP_z_im_spec', [nr_id,nSpec_id], /float )
+
 	Density_id = nCdf_varDef ( nc_id, 'density_m3', [nr_id,nSpec_id], /float )
 
 	nCdf_control, nc_id, /enDef
@@ -95,6 +102,14 @@ pro ar2_create_kj_input
 	nCdf_varPut, nc_id, jA_p_im_id, imaginary(s.jA_t)
 	nCdf_varPut, nc_id, jA_z_re_id, real_part(s.jA_z)
 	nCdf_varPut, nc_id, jA_z_im_id, imaginary(s.jA_z)
+
+    SpecShift = nS-1 
+	nCdf_varPut, nc_id, jP_r_re_spec_id, real_part(shift(reform(s.jP_r),[0,SpecShift]))
+	nCdf_varPut, nc_id, jP_r_im_spec_id, imaginary(shift(reform(s.jP_r),[0,SpecShift])) 
+	nCdf_varPut, nc_id, jP_p_re_spec_id, real_part(shift(reform(s.jP_t),[0,SpecShift]))
+	nCdf_varPut, nc_id, jP_p_im_spec_id, imaginary(shift(reform(s.jP_t),[0,SpecShift])) 
+	nCdf_varPut, nc_id, jP_z_re_spec_id, real_part(shift(reform(s.jP_z),[0,SpecShift]))
+	nCdf_varPut, nc_id, jP_z_im_spec_id, imaginary(shift(reform(s.jP_z),[0,SpecShift])) 
 
     TmpDensity = FltArr(nR,nS)
     for s=0,nS-1 do begin
