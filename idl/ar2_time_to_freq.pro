@@ -29,7 +29,7 @@ function ar2_time_to_freq, s, t, freq, i=i, PlotSpec=PlotSpec, NStop = NStop
 
 	; Find the number of the last complete cycle
 
-	PeriodFractionOffset = -0.75;-0.37;0;;-0.75 ; this seems to match ;)
+	PeriodFractionOffset = -0.75; Should always be -ve
 	period = 1.0/freq
 	t_period = floor(t/period)
 	last_period = max(t_period)-1 ; starting at 0

@@ -1,4 +1,6 @@
-function ar2_read_vorpal, runFolderName=runFolderName, oneD = oneD, freq = freq
+function ar2_read_vorpal, runFolderName=runFolderName, _2d = _2d, freq = freq
+
+    if keyword_set(_2d) then oneD=_2d else oneD = 1 
 
 	@constants
 	plotB0 = 0
@@ -243,15 +245,15 @@ function ar2_read_vorpal, runFolderName=runFolderName, oneD = oneD, freq = freq
 
 	if plotE then begin
 	xRange = [1.0,3.0]
-    range=1.0
+    range=3.0
     p=plot(xGrid,eEdgeX_freq,layout=[1,3,1],xRange=xRange,title='Vorpal eEdge',$
             yRange=[-range,range], yTitle='Ex [V/m]')
     p=plot(xGrid,imaginary(eEdgeX_freq),/over,color='r')
-    range=0.15
+    range=0.4
     p=plot(xGrid,eEdgeY_freq,layout=[1,3,2],/current,xRange=xRange,$
             yRange=[-range,range], yTitle='Ey [V/m]')
     p=plot(xGrid,imaginary(eEdgeY_freq),/over,color='r')
-    range=0.4
+    range=1.0
     p=plot(xGrid,eEdgeZ_freq,layout=[1,3,3],/current,xRange=xRange,$
             yRange=[-range,range], yTitle='Ez [V/m]')
     p=plot(xGrid,imaginary(eEdgeZ_freq),/over,color='r')

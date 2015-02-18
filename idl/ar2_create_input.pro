@@ -61,7 +61,7 @@ pro ar2_create_input
 	bt_flat = 1.0
 	bz_flat = 0.0
 
-    generate_vorpal_input = 0
+    generate_vorpal_input = 1
 
 	@constants
 
@@ -71,9 +71,9 @@ pro ar2_create_input
 	;@ar2_run_nstxslow
 	;@ar2_run_ar_vo_bench
     ;@ar2_run_coupling_right_simple
-    ;@ar2_run_coupling_left_simple
+    @ar2_run_coupling_left_simple
     ;@ar2_run_coupling_simple_full
-	@ar2_run_colestock-kashuba
+	;@ar2_run_colestock-kashuba
 
 	nSpec = n_elements ( amu )
 	wrf	= freq * 2d0 * !dpi
@@ -312,9 +312,9 @@ pro ar2_create_input
     ; Create nuOmg profiles
 
     ;@ar2_run_coupling_right_simple_nuomg
-    ;@ar2_run_coupling_left_simple_nuomg
+    @ar2_run_coupling_left_simple_nuomg
     ;@ar2_run_coupling_simple_full_nuomg
-    @ar2_run_colestock-kashuba_nuomg
+    ;@ar2_run_colestock-kashuba_nuomg
     ;nuOmg[*] = 0
 
     p=plot(r,nuOmg[*,nZ/2,0],title='nuOmg [electrons]')
@@ -603,7 +603,7 @@ pro ar2_create_input
 		;V_T = reform(interpolate(Temp_eV[*,*,s],i3D[*],j3D[*],cubic=-0.5),Vorpal_nX,Vorpal_nY,Vorpal_nZ)
 		;V_n = reform(interpolate(Density_m3[*,*,s],i3D[*],j3D[*],cubic=-0.5),Vorpal_nX,Vorpal_nY,Vorpal_nZ)
 
-		printf, lun, 'X, Y, Z, Bx[T], By[T], Bz[T], T[eV], n[m^-3]'
+		printf, lun, 'X, Y, Z, Bx[T], By[T], Bz[T], T[eV], n[m^-3], nuOmg'
 
 		for i=0,Vorpal_nX-1 do begin
 			for j=0,Vorpal_nY-1 do begin
@@ -624,8 +624,13 @@ pro ar2_create_input
                     this_By = this_Bt
                     this_Bz = this_Bz
 
+		            this_nuOmg = interpolate(nuOmg[*,*,s],thisI,thisJ,cubic=-0.5)
+		            this_T_eV = interpolate(Temp_eV[*,*,s],thisI,thisJ,cubic=-0.5)
+		            this_n_m3 = interpolate(density_m3[*,*,s],thisI,thisJ,cubic=-0.5)
+
 					printf, lun, thisX, thisY, thisZ, $
-						this_Bx, this_By, this_Bz,format='(5(f10.3,1x),e12.3)';, $
+						this_Bx, this_By, this_Bz, this_T_eV, this_n_m3, this_nuOmg, $
+                        format='(7(f10.3,1x),2(e12.3,1x))';, $
 						;V_T[i,j,k], V_n[i,j,k], format='(7(f10.3,1x),e12.3)'
 
 				endfor

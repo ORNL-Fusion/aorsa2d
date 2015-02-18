@@ -12,7 +12,7 @@ pro ar2_create_current_source_location_file
 
     patch2 = 0
 
-	nRSources = 10 ; x 3 for all components, real & imag
+	nRSources = 12 ; x 3 for all components, real & imag
     nZSources = 1 
     nSourcesTotal = nRSources * nZSources
 	NRHS = nSourcesTotal * 3

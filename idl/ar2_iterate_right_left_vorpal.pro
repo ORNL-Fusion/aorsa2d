@@ -13,12 +13,12 @@ pro ar2_iterate_right_left_vorpal, titan=titan
     LeftFitLayer = [1.7,1.9]
     RightFitLayer = [1.9,2.1]
 
-    nSubCycles = 5 
+    nSubCycles = 2 
 
-for MM = 0,2 do begin ; Cyclic MPE loop
+for MM = 0,0 do begin ; Cyclic MPE loop
 
 
-for NN = 0, nSubCycles-1 do begin ; full iteration loop
+for NN = 1, nSubCycles-1 do begin ; full iteration loop
 
     right_ThisDir =  RightName+StrCompress(string(NN),/rem)
     right_NextDir =  RightName+StrCompress(string(NN+1),/rem)
@@ -34,7 +34,7 @@ for NN = 0, nSubCycles-1 do begin ; full iteration loop
 			if keyword_set(titan)then begin
             	spawn, './vorpal-titan-interactive.pbs'
 			endif else begin
-            	spawn, './vorpal-osx.sh'
+            	;spawn, './vorpal-osx.sh'
 			endelse
     endif
 
@@ -55,7 +55,7 @@ for NN = 0, nSubCycles-1 do begin ; full iteration loop
         right_s = ar2_read_mpe (right_ThisDir+'/restart_mpe.nc') 
         stop
     endif else begin
-        right_s = ar2_read_vorpal (runFolderName = right_ThisDir, /oneD, freq = freq )
+        right_s = ar2_read_vorpal (runFolderName = right_ThisDir, freq = freq )
     endelse
 
     ar2_fit_sources, FitThis = Right_s, WithTheseFiles = leftName, $
@@ -143,6 +143,59 @@ for NN = 0, nSubCycles-1 do begin ; full iteration loop
     ;p=plot(right_s.r,right_s.jP_z,/over,thick=2)
     ;p=plot(right_s.r,imaginary(right_s.jP_z),/over,thick=2,color='r')
 
+    R = right_s
+    L = This_s
+
+    iiV = where(R.r gt RightFitLayer[0]) 
+    iiA = where(L.r lt RightFitLayer[1])
+
+    FullSolutionFile = expand_path('~/scratch/vorpal/full_simple/vorpal.sav')
+    restore, FullSolutionFile
+
+    p=plot(R.r[iiV],R.e_R[iiV],color='b',thick=2,layout=[1,3,1],title='L/R E field')
+    p=plot(R.r[iiV],imaginary(R.e_R[iiV]),color='b',thick=1,lineStyle='-',/over)
+    p=plot(L.r[iiA],This_e_R[iiA],/over,color='g',thick=2)
+    p=plot(L.r[iiA],imaginary(This_e_R[iiA]),color='g',thick=1,lineStyle='-',/over)
+
+    p=plot(v.r,v.e_r,/over)
+    p=plot(v.r,imaginary(v.e_r),/over,lineStyle='-')
+
+    p=plot(R.r[iiV],R.e_T[iiV],color='b',thick=2,layout=[1,3,2],/current)
+    p=plot(R.r[iiV],imaginary(R.e_T[iiV]),color='b',thick=1,lineStyle='-',/over)
+    p=plot(L.r[iiA],This_e_T[iiA],/over,color='g',thick=2)
+    p=plot(L.r[iiA],imaginary(This_e_T[iiA]),color='g',thick=1,lineStyle='-',/over)
+
+    p=plot(v.r,v.e_t,/over)
+    p=plot(v.r,imaginary(v.e_t),/over,lineStyle='-')
+
+    p=plot(R.r[iiV],R.e_Z[iiV],color='b',thick=2,layout=[1,3,3],/current)
+    p=plot(R.r[iiV],imaginary(R.e_Z[iiV]),color='b',thick=1,lineStyle='-',/over)
+    p=plot(L.r[iiA],This_e_Z[iiA],/over,color='g',thick=2)
+    p=plot(L.r[iiA],imaginary(This_e_Z[iiA]),color='g',thick=1,lineStyle='-',/over)
+
+    p=plot(v.r,v.e_z,/over)
+    p=plot(v.r,imaginary(v.e_z),/over,lineStyle='-')
+
+
+    p=plot(R.r[iiV],R.jP_R[iiV],color='b',thick=2,layout=[1,3,1], title='L/R jP')
+    p=plot(R.r[iiV],imaginary(R.jP_R[iiV]),color='b',thick=1,lineStyle='-',/over)
+    p=plot(L.r[iiA],This_jP_R[iiA],/over,color='g',thick=2)
+    p=plot(L.r[iiA],imaginary(This_jP_R[iiA]),color='g',thick=1,lineStyle='-',/over)
+
+    p=plot(R.r[iiV],R.jP_T[iiV],color='b',thick=2,layout=[1,3,2], /current)
+    p=plot(R.r[iiV],imaginary(R.jP_T[iiV]),color='b',thick=1,lineStyle='-',/over)
+    p=plot(L.r[iiA],This_jP_T[iiA],/over,color='g',thick=2)
+    p=plot(L.r[iiA],imaginary(This_jP_T[iiA]),color='g',thick=1,lineStyle='-',/over)
+
+    p=plot(R.r[iiV],R.jP_Z[iiV],color='b',thick=2,layout=[1,3,3], /current)
+    p=plot(R.r[iiV],imaginary(R.jP_Z[iiV]),color='b',thick=1,lineStyle='-',/over)
+    p=plot(L.r[iiA],This_jP_Z[iiA],/over,color='g',thick=2)
+    p=plot(L.r[iiA],imaginary(This_jP_Z[iiA]),color='g',thick=1,lineStyle='-',/over)
+
+
+
+
+stop
     endif
 
 
