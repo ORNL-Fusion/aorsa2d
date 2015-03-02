@@ -71,9 +71,10 @@ pro ar2_create_input
 	;@ar2_run_nstxslow
 	;@ar2_run_ar_vo_bench
     ;@ar2_run_coupling_right_simple
-    @ar2_run_coupling_left_simple
+    ;@ar2_run_coupling_left_simple
     ;@ar2_run_coupling_simple_full
 	;@ar2_run_colestock-kashuba
+    @ar2_run_helicon
 
 	nSpec = n_elements ( amu )
 	wrf	= freq * 2d0 * !dpi
@@ -91,8 +92,7 @@ pro ar2_create_input
 
 	x2d = r2d
 	y2d = z2d
-    x0 = r0
-
+    if gaussian_profiles or parabolic_profiles or bField_gaussian then x0 = r0
 
 	if bField_eqdsk eq 1 then begin
 
@@ -122,6 +122,9 @@ pro ar2_create_input
 		; Create masks for outside the LCFS and Limiting structure
 
 		print, 'Creating masks (may take a while) ...'
+
+        rlim = g.rlim[*]
+        zlim = g.zlim[*]
 
 		oversample_boundary, g.rbbbs, g.zbbbs, rbbbs_os, zbbbs_os 
 		oversample_boundary, g.rlim, g.zlim, rlim_os, zlim_os 
@@ -216,9 +219,6 @@ pro ar2_create_input
 		br = bx2d
 		bz = by2d
 
-		p=plot(r,bt[*,nZ/2])
-		p=plot(r,br[*,nZ/2],/over,color='b')
-		p=plot(r,bz[*,nZ/2],/over,color='r')
 
 	endif else begin
 
@@ -231,6 +231,14 @@ pro ar2_create_input
 
 	endelse
 
+    layout = [4,3]
+    dimensions = [1600,1200]
+    plotpos = 1
+	p=plot(r,bt[*,nZ/2],layout=[layout,plotpos], title='bField',dimensions=dimensions)
+	p=plot(r,br[*,nZ/2],/over,color='b')
+	p=plot(r,bz[*,nZ/2],/over,color='r')
+    ++plotpos
+
 	bMag = sqrt ( br^2 + bt^2 + bz^2 )
 
 	; Create profiles
@@ -242,7 +250,9 @@ pro ar2_create_input
 	if flux_profiles eq 1 then begin
 
 		ar2_create_flux_profiles, nSpec, nn, tt, nR, nZ, PsiNorm, Mask_bbb, d_bbb, $
-			Density_m3, Temp_eV, DensityMin = DensityMin, TempMin = TempMin
+			Density_m3, Temp_eV, DensityMin = DensityMin, TempMin = TempMin, $
+            NumericProfiles = Numeric_flux_profiles, NumericData_n_m3 = NumericData_n_m3, $
+            NumericData_T_eV = NumericData_T_eV
 
 	endif else if gaussian_profiles eq 1 then begin
 
@@ -298,26 +308,37 @@ pro ar2_create_input
 		endfor
 
 	endelse
-    
-	p=plot(r,Density_m3[*,nZ/2,0],title='Density [1/m3]',/ylog,thick=2)
+
+    s_ne = contour(density_m3[*,*,0],r,z, layout=[layout,plotpos],/current,title='density',aspect_ratio=1.0)
+    ++plotpos
+    if bField_eqdsk then p=plot(rLim,zLim,/over)
+   	s_te = contour(temp_eV[*,*,0],r,z, layout=[layout,plotpos],/current,title='temp',aspect_ratio=1.0)
+    if bField_eqdsk then p=plot(rLim,zLim,/over)
+    ++plotpos
+
+	p=plot(r,Density_m3[*,nZ/2,0],title='Density [1/m3]',/ylog,thick=2,layout=[layout,plotpos],/current)
     for s=1,nSpec-1 do begin
 	    p=plot(r,Density_m3[*,nZ/2,s],/over)
     endfor
-	p=plot(r,Temp_eV[*,nZ/2,0],title='Temp [eV]', thick=2)
+    plotpos++	
+
+	p=plot(r,Temp_eV[*,nZ/2,0],title='Temp [eV]', thick=2,layout=[layout,plotpos],/current)
     for s=1,nSpec-1 do begin
 	    p=plot(r,Temp_eV[*,nZ/2,s],/over)
     endfor
-	
+    plotpos++	
 
     ; Create nuOmg profiles
 
     ;@ar2_run_coupling_right_simple_nuomg
-    @ar2_run_coupling_left_simple_nuomg
+    ;@ar2_run_coupling_left_simple_nuomg
     ;@ar2_run_coupling_simple_full_nuomg
     ;@ar2_run_colestock-kashuba_nuomg
+    @ar2_run_helicon_nuomg
     ;nuOmg[*] = 0
 
-    p=plot(r,nuOmg[*,nZ/2,0],title='nuOmg [electrons]')
+    p=plot(r,nuOmg[*,nZ/2,0],title='nuOmg [electrons]',layout=[layout,plotpos],/current)
+    ++plotpos
 
    ;nSmooth = 5 
     ;for s=0,nSpec-1 do begin
@@ -362,9 +383,11 @@ pro ar2_create_input
     ; plot up the ion cyclortron resonances
 
     for s=1,nSpec-1 do begin
-        if s eq 1 then p=plot(r,resonances[*,nZ/2,s], title='Ion cyclotron resonsances') $
+        if s eq 1 then p=plot(r,resonances[*,nZ/2,s], $
+                title='Ion cyclotron resonsances',layout=[layout,PlotPos],/current) $
                 else p=plot(r,resonances[*,nZ/2,s],/over)
     endfor
+    ++PlotPos
 
 	kPerp_F2D_avg = kPerp_F2D_avg/n_nPhi
 	kPerp_S2D_avg = kPerp_S2D_avg/n_nPhi
@@ -374,28 +397,30 @@ pro ar2_create_input
 	levels = (findGen(nLevs)+1)/nLevs*range
 	colors = 256-(bytScl(levels,top=254)+1)
 	c = contour(kPerp_F,r,nPhiArray,c_value=levels,rgb_indices=colors,$
-            rgb_table=1,/fill, title='kPerp_F')
+            rgb_table=1,/fill, title='kPerp_F',layout=[layout,PlotPos],/current)
+    ++PlotPos
 
 	nLevs=31
-	range=500
+	range=10
 	levels = (findGen(nLevs)+1)/nLevs*range
 	levels = [1,2,3,10,20,30,100,200,300,1e3,2e3,4e3]
 	levels_map = findgen(n_elements(levels))
 	colors = 256-(bytScl(levels_map,top=254)+1)
 	c = contour(kPerp_S,r,nPhiArray,c_value=levels,rgb_indices=colors,$
-            rgb_table=3,/fill, title='kPerp_S')
+            rgb_table=3,/fill, title='kPerp_S',layout=[layout,PlotPos],/current)
+    ++PlotPos
 
-    if nZ gt 1 then begin
-	    c = contour(stixp,r,z,layout=[2,2,1],n_levels=21,title='StixP')
-	    c = contour(stixs,r,z,layout=[2,2,2],n_levels=21,/current,title='StixS')
-	    c = contour(stixr,r,z,layout=[2,2,3],n_levels=21,/current,title='StixR')
-	    c = contour(stixl,r,z,layout=[2,2,4],n_levels=21,/current,title='StixL')
-    endif else begin
-	    p = plot(r,stixp,layout=[2,2,1],title='StixP')
-	    p = plot(r,stixs,layout=[2,2,2],/current,title='StixS')
-	    p = plot(r,stixr,layout=[2,2,3],/current,title='StixR')
-	    p = plot(r,stixl,layout=[2,2,4],/current,title='StixL')
-    endelse
+    ;if nZ gt 1 then begin
+	;    c = contour(stixp,r,z,layout=[2,2,1],n_levels=21,title='StixP')
+	;    c = contour(stixs,r,z,layout=[2,2,2],n_levels=21,/current,title='StixS')
+	;    c = contour(stixr,r,z,layout=[2,2,3],n_levels=21,/current,title='StixR')
+	;    c = contour(stixl,r,z,layout=[2,2,4],n_levels=21,/current,title='StixL')
+    ;endif else begin
+	;    p = plot(r,stixp,layout=[2,2,1],title='StixP')
+	;    p = plot(r,stixs,layout=[2,2,2],/current,title='StixS')
+	;    p = plot(r,stixr,layout=[2,2,3],/current,title='StixR')
+	;    p = plot(r,stixl,layout=[2,2,4],/current,title='StixL')
+    ;endelse
 
 	nLevs=31
 	range=20
@@ -404,34 +429,37 @@ pro ar2_create_input
 	levels_map = findgen(n_elements(levels))
 	colors = 256-(bytScl(levels_map,top=254)+1)
     if nZ gt 1 then begin
-	    c = contour(kPerp_F2D_avg,r,z,layout=[2,1,1],$
+	    c = contour(kPerp_F2D_avg,r,z,layout=[layout,plotpos],$
 			c_value=levels,rgb_indices=colors,rgb_table=1,$
-            /fill,aspect_ratio=1.0, title='kPerp_F2D_avg')
+            /fill,aspect_ratio=1.0, title='kPerp_F2D_avg',/current )
+            ++plotpos
     endif else begin
-	    p = plot(r,kPerp_F2D_avg,layout=[2,1,1],$
+	    p = plot(r,kPerp_F2D_avg,layout=[layout,plotpos],$
             title='kPerp_F2D_avg')
+        ++plotpos
     endelse
 
-	if bfield_eqdsk then p=plot(rlim,zlim,/over,thick=2)
-
-	if bfield_eqdsk then p=plot(RightSide_rlim,RightSide_zlim,/over,thick=2)
-	if bfield_eqdsk then p=plot(LeftSide_rlim,LeftSide_zlim,/over,thick=2)
+	if bfield_eqdsk then p=plot(g.rlim,g.zlim,/over,thick=2)
+	;if bfield_eqdsk then p=plot(RightSide_rlim,RightSide_zlim,/over,thick=2)
+	;if bfield_eqdsk then p=plot(LeftSide_rlim,LeftSide_zlim,/over,thick=2)
 
 	;p=plot(VorpalBox_r,VorpalBox_z,/over,thick=2,color='b')
 	
 	nLevs=31
-	range=500
+	range=10
 	levels = (findGen(nLevs)+1)/nLevs*range
 	levels = [1,2,3,10,20,30,100,200,300,1e3,2e3,4e3]
 	levels_map = findgen(n_elements(levels))
 	colors = 256-(bytScl(levels_map,top=254)+1)
     if nZ gt 1 then begin
-	    c = contour(kPerp_S2D_avg,r,z,layout=[2,1,2],/current,$
+	    c = contour(kPerp_S2D_avg,r,z,layout=[layout,plotpos],/current,$
 			c_value=levels,rgb_indices=colors,rgb_table=3,$
             /fill,aspect_ratio=1.0, title='kPerp_S2D_avg')
+        ++PlotPos
     endif else begin
-	    p = plot(r,kPerp_S2D_avg,layout=[2,1,2],/current,$
+	    p = plot(r,kPerp_S2D_avg,layout=[layout,plotpos],/current,$
             title='kPerp_S2D_avg')
+        ++PlotPos
     endelse
 
     if bfield_eqdsk eq 0 then begin
@@ -439,7 +467,7 @@ pro ar2_create_input
             zLim = [zMin, zMin, zMax, zMax, zMin]
     endif
 
-	p=plot(rlim,zlim,/over,thick=2)
+	if bField_eqdsk then p=plot(g.rlim,g.zlim,/over,thick=2)
 
 	;p=plot(VorpalBox_r,VorpalBox_z,/over,thick=1,color='b',transparency=50)
     ;p=plot(rDomainBox,zDomainBox,/over,thick=1,linestyle='dash')
@@ -447,7 +475,8 @@ pro ar2_create_input
 	; Plot up resonance locations too.
 
 	if bField_eqdsk eq 1 and nZ gt 1 then begin
-		p = plot(g.rbbbs,g.zbbbs,thick=2,aspect_ratio=1.0)
+		p = plot(g.rbbbs,g.zbbbs,thick=2,aspect_ratio=1.0,layout=[layout,PlotPos],/current,title='resonances')
+        ++PlotPos
 		p = plot(g.rlim,g.zlim,thick=2,/over)
 
 		for s=1,nSpec-1 do begin

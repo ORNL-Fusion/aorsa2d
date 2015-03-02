@@ -1,13 +1,13 @@
 pro ar2_estimate_time
 
-nR = 1024d0
-nZ = 1024d0 
+nR = 400d0
+nZ = 400d0 
 
-npRow = 2d0
-npCol = 2d0
+npRow = 128d0
+npCol = 128d0
 
-nSpec = 2
-lMax = 2 
+nSpec = 5
+lMax =  50
 
 ; Hopper parameters
 ; -----------------

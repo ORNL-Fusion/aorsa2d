@@ -3,9 +3,13 @@ function prof1, x, a
 end
 
 pro ar2_create_flux_profiles, nSpec, nn, tt, nR, nZ, PsiNorm, Mask_bbb, d_bbb, Density_m3, Temp_eV, $
-		DensityMin = DensityMin, TempMin = TempMin
+		DensityMin = DensityMin, TempMin = TempMin, $
+        NumericProfiles = NumericProfiles, NumericData_n_m3 = NumericData_n_m3, $
+        NumericData_T_eV = NumericData_T_eV
 
 	@constants
+
+    if keyword_set(NumericProfiles) then numeric = NumericProfiles else numeric = 0
 
 	; exp decay profile from Lamelle et al., Nucl. Fusion, 46 (2006) 432-443
 	; see pages 436-437
@@ -21,14 +25,28 @@ pro ar2_create_flux_profiles, nSpec, nn, tt, nR, nZ, PsiNorm, Mask_bbb, d_bbb, D
 
 				if Mask_bbb[i,j] eq 1 then begin
 
-					density_m3[i,j,s] = prof1(sqrt(PsiNorm[i,j]),nn[*,s])
-					temp_eV[i,j,s] = prof1(sqrt(PsiNorm[i,j]),tt[*,s])
+                    if numeric then begin
+
+                        rho = sqrt(PsiNorm[i,j])
+
+                        thisRho = numericData_n_m3[*,0]
+                        thisn = numericData_n_m3[*,s+1]
+                        density_m3[i,j,s] = interpol(thisn,thisRho,rho, /spline) 
+
+                        thisRho = numericData_T_eV[*,0]
+                        thisT = numericData_T_eV[*,s+1]
+                        temp_eV[i,j,s] = interpol(thisT,thisRho,rho, /spline) 
+
+                    endif else begin
+					    density_m3[i,j,s] = prof1(sqrt(PsiNorm[i,j]),nn[*,s])
+					    temp_eV[i,j,s] = prof1(sqrt(PsiNorm[i,j]),tt[*,s])
+                    endelse
 
 				endif else begin
-
+            
 					eta = d_bbb[i,j]*lambda
-					density_m3[i,j,s] = nn[0,s] * exp (-eta)
-					temp_eV[i,j,s] = tt[0,s] * exp (-eta)
+					density_m3[i,j,s] = 0;nn[0,s] * exp (-eta)
+					temp_eV[i,j,s] = 0;tt[0,s] * exp (-eta)
 
 				endelse
 
@@ -37,22 +55,40 @@ pro ar2_create_flux_profiles, nSpec, nn, tt, nR, nZ, PsiNorm, Mask_bbb, d_bbb, D
 
 	endfor
 
+    ; Run simple LCFS to wall smoothing algorithm
+
+    nIter = 45 
+    PercentWidth =  2
+    nWidth = fix(nR*PercentWidth/100.0)
+
+    density_m3_ = density_m3
+    temp_eV_ = temp_eV
+    iiMask = where(mask_bbb eq 1) 
+
+    for s=0,nSpec-1 do begin
+
+        original = density_m3_[*,*,s]
+        for nIter = 0,nIter-1 do begin
+               density_m3[*,*,s] = density_m3[*,*,s]>DensityMin
+               temp = density_m3[*,*,s]
+               temp[iiMask] = original[iiMask]
+               density_m3[*,*,s] = temp
+               density_m3[*,*,s] = smooth(density_m3[*,*,s],nWidth,/edge_truncate)
+        endfor
+
+        original = temp_eV_[*,*,s]
+        for nIter = 0,nIter-1 do begin
+               temp_eV[*,*,s] = temp_eV[*,*,s]>TempMin
+               temp = temp_eV[*,*,s]
+               temp[iiMask] = original[iiMask]
+               temp_eV[*,*,s] = temp
+               temp_eV[*,*,s] = smooth(temp_eV[*,*,s],nWidth,/edge_truncate)
+        endfor
+ 
+    endfor
+
 	Density_m3 = Density_m3>DensityMin
 	Temp_eV = Temp_eV>TempMin
-
-   	s_ne = surface(density_m3[*,*,0], layout=[3,1,1])
-   	s_te = surface(temp_eV[*,*,0], layout=[3,1,2], /current)
-
-	p=plot(Density_m3[*,nZ/2,0])
-	for s=1,nSpec-1 do begin
-		p=plot(Density_m3[*,nZ/2,s],/over)
-	endfor
-
-	p=plot(Temp_eV[*,nZ/2,0])
-	for s=1,nSpec-1 do begin
-		p=plot(Temp_eV[*,nZ/2,s],/over)
-	endfor
-
 
 	; Sanity checking ...
 

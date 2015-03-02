@@ -1,3 +1,45 @@
+; GS_ORTH: recursive Gram-Schmidt orthogonalization of a set of n
+; m-components vectors. The vectors are stored as a (m*n) array,
+; to speed up the computation if virtual memory should be used.
+
+pro gs_orth, v, u, lin_indep, n, m, tol
+
+	on_error, 2
+	this = n - 1
+	if  this gt 0  then begin
+	   ; Induction case: apply the G-S orthogonalization to this vector.
+	   ; Orthogonalize the first (n - 1) vectors before
+	   gs_orth, v, u, lin_indep, n - 1, m, tol
+	   norm = total(v[*,this] * v[*,this])
+	   prod = (v[*,this] # v )[0:this-1]
+	   v[*,this] = v[*,this] - (prod * lin_indep[0:this-1]) # $
+	   						   transpose(v[*,0:this-1])
+	   u[*,this] = u[*,this] - prod # transpose(u[*,0:this-1])
+	   new_norm = total(v[*,this] * v[*,this])
+	   is_lin_indep = norm ne 0
+	   if  is_lin_indep  then  is_lin_indep = new_norm / norm gt tol
+	   if  is_lin_indep  then begin
+	      ; this vector is linearly independent
+	      lin_indep[this] = 1  &  norm = 1 / sqrt(new_norm)
+	   endif else begin
+		  ; this vector is linearly dependent
+	      prod = u[*,this] # u[*,0:this-1]
+		  v[*,this] = - (prod * lin_indep[0:this-1]) # $
+		  				transpose(v[*,0:this-1])
+	      lin_indep[this] = 0
+	      norm = 1 / sqrt(total(u[*,this] * u[*,this]))
+	   endelse
+	endif else begin
+	   ; Base case: one vector to normalize
+	   norm = sqrt(total(v[*,this] * v[*,this]))
+	   if  norm ne 0  then begin
+	      norm = 1 / norm  &  lin_indep[this] = 1
+	   endif else  lin_indep[this] = 0
+	endelse
+	v[*,this] = v[*,this] * norm  &  u[*,this] = u[*,this] * norm
+	return
+end
+
 pro ar2_fit_sources, $
     FitThis = FitThis, $
     WithTheseFiles = WithTheseFiles, $
@@ -28,10 +70,22 @@ pro ar2_fit_sources, $
 
     N = iiFitTheseCnt
 
+    if N lt NRHS then begin
+            print, 'Error: more basis functions than data points'
+            print, 'NRHS: ', NRHS
+            print, 'NPTS: ', N
+            stop
+    endif
+
     ; Build fit martix A and solve for each component seperately.
     ; Could do each species seperately too I guess.
 
 	amat = complexarr(NRHS,N)
+
+	amat_r = complexarr(NRHS,N)
+	amat_t = complexarr(NRHS,N)
+	amat_z = complexarr(NRHS,N)
+
     CoeffsOut_r = ComplexArr(NRHS)
     CoeffsOut_t = ComplexArr(NRHS)
     CoeffsOut_z = ComplexArr(NRHS)
@@ -40,7 +94,7 @@ pro ar2_fit_sources, $
 
     foreach component, ComponentArray do begin
 		;print, 'Component: ', component
-        c = 0
+        ;c = 0
 
 	    for rhs=0,NRHS-1 do begin
 
@@ -58,11 +112,17 @@ pro ar2_fit_sources, $
             r_jA_t = r.jA_t
             r_jA_z = r.jA_z
 
-            ; Fit the E field (hard)
+            ;; Fit the E field (hard)
+            ;pos = s.r
+            ;basis_r = s_E_r
+            ;basis_t = s_E_t
+            ;basis_z = s_E_z
+            
+            ; Fit the jP field (hard)
             pos = s.r
-            basis_r = s_E_r
-            basis_t = s_E_t
-            basis_z = s_E_z
+            basis_r = s_Jp_r
+            basis_t = s_Jp_t
+            basis_z = s_Jp_z
            
             ;; Fit the current sources (transparent) 
             ;pos = r.r
@@ -86,19 +146,24 @@ pro ar2_fit_sources, $
 
 	    ;help, amat
 
-        ;data_r = sFitMe.jP_r[iiFitThese]
-        ;data_t = sFitMe.jP_t[iiFitThese]
-        ;data_z = sFitMe.jP_z[iiFitThese]
+        data_r = sFitMe.jP_r[iiFitThese]
+        data_t = sFitMe.jP_t[iiFitThese]
+        data_z = sFitMe.jP_z[iiFitThese]
 
-        data_r = sFitMe.E_r[iiFitThese]
-        data_t = sFitMe.E_t[iiFitThese]
-        data_z = sFitMe.E_z[iiFitThese]
+        ;data_r = sFitMe.E_r[iiFitThese]
+        ;data_t = sFitMe.E_t[iiFitThese]
+        ;data_z = sFitMe.E_z[iiFitThese]
 
         if component eq 0 then b = data_r 
         if component eq 1 then b = data_t 
         if component eq 2 then b = data_z 
 
+        if component eq 0 then amat_r = amat 
+        if component eq 1 then amat_t = amat 
+        if component eq 2 then amat_z = amat 
+
 	    coeffs = LA_LEAST_SQUARES(amat,b, status=stat,method=3,residual=residual)
+        
 		if stat ne 0 then stop
        	;print, coeffs 
 
@@ -106,7 +171,49 @@ pro ar2_fit_sources, $
         if component eq 1 then data = data_t 
         if component eq 2 then data = data_z 
 
+        if component eq 0 then CoeffsOut_r[*] = coeffs
+        if component eq 1 then CoeffsOut_t[*] = coeffs
+        if component eq 2 then CoeffsOut_z[*] = coeffs
+
+    endforeach
+
+
+    iiR = IndGen(NRHS/3)*3
+    iiT = iiR+1
+    iiZ = iiR+2
+    c=contour(transpose(amat_r[iiR,*]),sFitMe.r[iiFitThese],iir,layout=[1,3,1],/fill)
+    c=contour(transpose(amat_t[iiR,*]),sFitMe.r[iiFitThese],iir,layout=[1,3,2],/fill,/current)
+    c=contour(transpose(amat_z[iiR,*]),sFitMe.r[iiFitThese],iir,layout=[1,3,3],/fill,/current)
+
+    ; Try solving all components at once ...
+
+    amat = [[amat_r],[amat_t],[amat_z]]
+    b = [data_r,data_t,data_z]
+
+stop
+
+    coeffs = LA_LEAST_SQUARES(amat,b, status=stat,method=0,residual=residual,/double)
+
+    CoeffsOut_r[*] = coeffs
+    CoeffsOut_t[*] = coeffs
+    CoeffsOut_z[*] = coeffs
+    
+    foreach component, ComponentArray do begin
+
+        if component eq 0 then coeffs = CoeffsOut_r
+        if component eq 1 then coeffs = CoeffsOut_t
+        if component eq 2 then coeffs = CoeffsOut_z
+
+        if component eq 0 then amat = amat_r 
+        if component eq 1 then amat = amat_t 
+        if component eq 2 then amat = amat_z 
+
+        if component eq 0 then data = data_r 
+        if component eq 1 then data = data_t 
+        if component eq 2 then data = data_z 
+
 		fit = amat##coeffs
+        ;fit = smooth(fit,10,/edge_tr)
 		p=plot(sFitMe.r[iiFitThese],data,symbol="o",layout=[1,2,1],title="Fit vs Data")
 		p=plot(sFitMe.r[iiFitThese],fit,thick=2,/over)
 		p=plot(sFitMe.r[iiFitThese],imaginary(data),color="red",/over)
@@ -114,12 +221,9 @@ pro ar2_fit_sources, $
 		p=plot(real_part(coeffs),layout=[1,2,2],title="Coeffs",/current)
 		p=plot(imaginary(coeffs),color="red",/over)
 
-        if component eq 0 then CoeffsOut_r[*] = coeffs
-        if component eq 1 then CoeffsOut_t[*] = coeffs
-        if component eq 2 then CoeffsOut_z[*] = coeffs
-
     endforeach
 
+stop
     ; Create the "perFileList" coefficient list
 
 
