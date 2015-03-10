@@ -3,7 +3,7 @@
 	nphi = -56
 
 	bField_eqdsk = 1
-	eqdskFileName = 'g200201.00000.dlgMod'
+	eqdskFileName = 'input/g122976.03021.dlgMod'
 	bTorFactor = 1.0
 
 	flux_profiles = 1
@@ -52,11 +52,11 @@
 
 
 	_NumericData_t_eV = reform(fred.s_T_s,_nRhoFile,_nSFile)
-	_NumericData_t_eV = _NumericData_t_eV[0:_nRho-1,0:_nS]	
+	_NumericData_t_eV = _NumericData_t_eV[0:_nRho-1,0:_nS-1]	
 	_NumericData_t_eV = [[_rho],[_NumericData_t_ev*1e3]]
 
 	_NumericData_n_m3 = reform(fred.s_n_s,_nRhoFile,_nSFile)
-	_NumericData_n_m3 = _NumericData_n_m3[0:_nRho-1,0:_nS]	
+	_NumericData_n_m3 = _NumericData_n_m3[0:_nRho-1,0:_nS-1]	
 	_NumericData_n_m3 = [[_rho],[_NumericData_n_m3]]
 
 	_atomicZ = fred.s_q_s[0:_nS-1]/_e
