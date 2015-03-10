@@ -8,7 +8,8 @@ integer :: nR,nZ,nS
 real, allocatable :: br(:,:),bt(:,:),bz(:,:),bMag(:,:)
 real, allocatable :: r(:),z(:)
 real :: rMin,rMax,zMin,zMax
-integer, allocatable :: AtomicZ(:), amu(:),BbbMask(:,:),LimMask(:,:)
+real, allocatable :: AtomicZ(:), amu(:)
+integer, allocatable :: BbbMask(:,:),LimMask(:,:)
 real(kind=dbl), allocatable :: Density_m3(:,:,:), Temp_eV(:,:,:), nuOmg(:,:,:)
 
 contains

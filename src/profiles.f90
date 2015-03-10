@@ -6,7 +6,7 @@ implicit none
 
 real(kind=dbl) :: omgrf, k0
 real(kind=dbl), allocatable, dimension(:) :: mSpec, qSpec, tSpec, dSpec
-integer, allocatable, dimension(:) :: zSpec, amuSpec
+real(kind=dbl), allocatable, dimension(:) :: zSpec, amuSpec
 real(kind=dbl), allocatable, dimension(:,:,:) :: &
     omgc, omgp2
 real, allocatable, dimension(:) :: &

@@ -511,8 +511,8 @@ pro ar2_create_input
 
 	scalar_id	= nCdf_dimDef ( nc_id, 'scalar', 1 )
 
-	AtomicZ_id = nCdf_varDef ( nc_id, 'AtomicZ', [nSpec_id], /short )
-	amu_id = nCdf_varDef ( nc_id, 'amu', [nSpec_id], /short )
+	AtomicZ_id = nCdf_varDef ( nc_id, 'AtomicZ', [nSpec_id], /float )
+	amu_id = nCdf_varDef ( nc_id, 'amu', [nSpec_id], /float )
 
 	rMin_id = nCdf_varDef ( nc_id, 'rMin', [scalar_id], /float )
 	rMax_id = nCdf_varDef ( nc_id, 'rMax', [scalar_id], /float )
@@ -659,5 +659,4 @@ pro ar2_create_input
 
     endif
 
-	stop
 end
