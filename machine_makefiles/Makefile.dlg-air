@@ -17,7 +17,9 @@ ifeq (${PARALLEL},1)
 		${HOME}/code/blacs/blacs_gnu64/LIB/blacs_MPI-LINUX-0.a \
 		${HOME}/code/blacs/blacs_gnu64/LIB/blacsF77init_MPI-LINUX-0.a \
 		${HOME}/code/blacs/blacs_gnu64/LIB/blacs_MPI-LINUX-0.a
-	SCALAPACK = ${HOME}/code/scalapack/scalapack_gnu64/libscalapack.a
+	#SCALAPACK = ${HOME}/code/scalapack/scalapack_gnu64/libscalapack.a
+	#LIBS := ${SCALAPACK} ${BLACS} ${LIBS}
+    SCALAPACK = -L /opt/local/lib -lscalapack
 	LIBS := ${SCALAPACK} ${BLACS} ${LIBS}
 endif
 
@@ -28,7 +30,7 @@ LIBS += ${PAPI_LINK}
 INC_DIR += ${PAPI_INC}
 
 ifeq (${PARALLEL},1)
-		F90 := openmpif90
+		F90 := mpif90
 else
 		F90 := gfortran
 endif

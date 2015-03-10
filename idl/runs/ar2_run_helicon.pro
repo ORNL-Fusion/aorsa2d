@@ -49,8 +49,8 @@
 	TempMin = 1e-3
 
 	; Grid
-	nR = 500
-	nZ = 500
+	nR = 100
+	nZ = 200
 	rMin = 0.8
 	rMax = 2.55
 	zMin = -1.40

@@ -64,17 +64,7 @@ pro ar2_create_input
     generate_vorpal_input = 1
 
 	@constants
-
-	;@gorden_bell
-	;@gorden_bell_b
-	;@ar2_run_langmuir
-	;@ar2_run_nstxslow
-	;@ar2_run_ar_vo_bench
-    ;@ar2_run_coupling_right_simple
-    ;@ar2_run_coupling_left_simple
-    ;@ar2_run_coupling_simple_full
-	;@ar2_run_colestock-kashuba
-    @ar2_run_helicon
+    @input/ar2run
 
 	nSpec = n_elements ( amu )
 	wrf	= freq * 2d0 * !dpi
@@ -232,7 +222,8 @@ pro ar2_create_input
 	endelse
 
     layout = [4,3]
-    dimensions = [1600,1200]
+	ScreenSize = get_screen_size()
+	dimensions = ScreenSize*0.8
     plotpos = 1
 	p=plot(r,bt[*,nZ/2],layout=[layout,plotpos], title='bField',dimensions=dimensions)
 	p=plot(r,br[*,nZ/2],/over,color='b')
@@ -330,11 +321,7 @@ pro ar2_create_input
 
     ; Create nuOmg profiles
 
-    ;@ar2_run_coupling_right_simple_nuomg
-    ;@ar2_run_coupling_left_simple_nuomg
-    ;@ar2_run_coupling_simple_full_nuomg
-    ;@ar2_run_colestock-kashuba_nuomg
-    @ar2_run_helicon_nuomg
+    @input/ar2nuomg
     ;nuOmg[*] = 0
 
     p=plot(r,nuOmg[*,nZ/2,0],title='nuOmg [electrons]',layout=[layout,plotpos],/current)

@@ -68,7 +68,9 @@ function ar2_read_rundata, runFolderName, RHS
         densitySpec : densitySpec, $
         br : brU * bmod, $
         bt : btU * bmod, $
-        bz : bzU * bmod }
+        bz : bzU * bmod, $
+	   	nPhi : nPhi, $
+	   	freq : freq }
 
     return, runData
 end
