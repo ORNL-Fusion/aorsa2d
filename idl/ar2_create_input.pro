@@ -56,23 +56,18 @@ pro ar2_create_input
     gaussian_profiles = 0
     parabolic_profiles = 0
     flux_profiles = 0
+	fred_namelist_input = 0
 
 	br_flat = 0.0
 	bt_flat = 1.0
 	bz_flat = 0.0
 
-    generate_vorpal_input = 1
+    generate_vorpal_input = 0
 
 	@constants
     @input/ar2run
 
-	nSpec = n_elements ( amu )
 	wrf	= freq * 2d0 * !dpi
-
-	for n=1,nSpec-1 do begin
-		nn[0,0]	+= atomicZ[n]*nn[0,n] 
-		nn[1,0]	+= atomicZ[n]*nn[1,n] 
-	endfor
 
 	r = fIndGen(nR)/(nR-1)*(rMax-rMin)+rMin
 	z = fIndGen(nZ)/(nZ-1)*(zMax-zMin)+zMin
@@ -234,13 +229,56 @@ pro ar2_create_input
 
 	; Create profiles
 
+	if fred_namelist_input then begin
+
+		@input/aorsa2d.in.ejf.idl
+			
+		_nRho = fred.s_nRho_n
+		_nRhoFile = n_elements(fred.s_rho_n_grid)
+		_nS = n_elements(fred.s_s_name)
+		_nSFile = n_elements(fred.s_m_s)
+		_rho = fred.s_rho_n_grid[0:_nRho-1]
+
+
+		_NumericData_t_eV = reform(fred.s_T_s,_nRhoFile,_nSFile)
+		_NumericData_t_eV = _NumericData_t_eV[0:_nRho-1,0:_nS-1]	
+		_NumericData_t_eV = [[_rho],[_NumericData_t_ev*1e3]]
+
+		_NumericData_n_m3 = reform(fred.s_n_s,_nRhoFile,_nSFile)
+		_NumericData_n_m3 = _NumericData_n_m3[0:_nRho-1,0:_nS-1]	
+		_NumericData_n_m3 = [[_rho],[_NumericData_n_m3]]
+
+		_atomicZ = fred.s_q_s[0:_nS-1]/_e
+		_amu = fred.s_m_s[0:_nS-1]/_mi
+
+		amu = _amu
+		atomicZ = _atomicZ
+		NumericData_n_m3 = _NumericData_n_m3
+		NumericData_T_eV = _NumericData_T_eV
+		nS = _nS
+		nRho = _nRho
+		
+		;nn = fltArr(4,nS) 
+    	;tt = nn
+
+	endif else begin
+    
+		for n=1,nSpec-1 do begin
+			nn[0,0]	+= atomicZ[n]*nn[0,n] 
+			nn[1,0]	+= atomicZ[n]*nn[1,n] 
+		endfor
+
+	endelse
+
+	nSpec = n_elements ( amu )
+
 	Density_m3	= fltArr ( nR, nZ, nSpec )
 	Temp_eV	= fltArr ( nR, nZ, nSpec )
     nuOmg = fltArr ( nR, nZ, nSpec )
 
 	if flux_profiles eq 1 then begin
 
-		ar2_create_flux_profiles, nSpec, nn, tt, nR, nZ, PsiNorm, Mask_bbb, d_bbb, $
+			ar2_create_flux_profiles, nSpec, nn, tt, nR, nZ, PsiNorm, Mask_bbb, d_bbb, $
 			Density_m3, Temp_eV, DensityMin = DensityMin, TempMin = TempMin, $
             NumericProfiles = Numeric_flux_profiles, NumericData_n_m3 = NumericData_n_m3, $
             NumericData_T_eV = NumericData_T_eV
@@ -497,8 +535,8 @@ pro ar2_create_input
 
 	; Write netCdf file
 
-	save, freq, nphi, bField_eqdsk, eqdskFileName, flux_profiles, atomicZ, amu, $
-			nn, tt, nR, nZ, rMin, rMax, zMin, zMax, fileName = 'ar2RunCreationParameters.sav'
+	;save, freq, nphi, bField_eqdsk, eqdskFileName, flux_profiles, atomicZ, amu, $
+	;		nn, tt, nR, nZ, rMin, rMax, zMin, zMax, fileName = 'ar2RunCreationParameters.sav'
 
 	outFileName	= 'ar2Input.nc'
 	nc_id	= nCdf_create ( outFileName, /clobber )
