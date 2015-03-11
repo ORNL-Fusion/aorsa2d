@@ -19,7 +19,13 @@ Installation
 
 Notes
 -----
-
+To compile (e.g on Edison)
+source the environment file:
+$ source env-edison.sh
+then run make
+$ make clean
+$ make
+Remark:  Makefile automatically reads the appropriate file in machine_makefile
 
 CUDA / MAGMA Notes
 ------------------
