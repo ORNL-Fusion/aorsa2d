@@ -1,0 +1,2 @@
+#/bin/bash
+rsync -avuz --exclude '*.mod' --exclude '*.o' --exclude 'xaorsa*' --exclude 'core' greendl1@edison.nersc.gov:/scratch1/scratchdirs/greendl1/ ~/scratch
