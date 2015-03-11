@@ -171,6 +171,6 @@ include Makefile.double
 include Makefile.deps
 
 clean:
-	rm ${AORSA1D} ${AORSA2D} $(OBJ_DIR)/*.o $(MOD_DIR)/*.mod aorsa.o
+	rm -f ${AORSA1D} ${AORSA2D} $(OBJ_DIR)/*.o $(MOD_DIR)/*.mod aorsa.o
 
 
