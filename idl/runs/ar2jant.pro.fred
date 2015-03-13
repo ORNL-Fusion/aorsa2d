@@ -1,0 +1,36 @@
+theta_ant1 = 45
+theta_ant2 = 72
+
+rshift = 0.09
+zshift = 0.09
+
+rad_to_deg = 57.2957795
+;get angular points on LCFS with respect to center core
+r_lcsf = rbbbs_os - g.rcentr
+theta = atan(zbbbs_os, r_lcsf)*!radeg
+
+; Get antenna location on LCFS, the shift away from LCFS
+ii = where(theta gt theta_ant1 and theta le theta_ant2)
+antr = rbbbs_os(ii)
+antz = zbbbs_os(ii)  
+antr = antr + rshift
+antz = antz + zshift
+
+sigma_ant = 0.05
+
+n_ant = n_elements(antr)
+; Get antenna current: A Guassian peaked at the antenna
+_d = FltArr(nR,nZ,n_ant)
+for k=0,n_ant-1 do begin
+  _d[*,*,k] = sqrt ( ( r2d - antr(k) )^2 + ( z2d - antz(k) )^2 )
+endfor
+d = min(_d,dim=3)
+jAnt =  exp(-(d^2)/(sigma_ant^2))
+
+n = floor(n_ant/2)
+Ju_r = (antr(n) - antr(n+1))/norm([antr(n+1), antz(n+1)] - [antr(n), antz(n)])
+Ju_z = (antz(n) - antz(n+1))/norm([antr(n+1), antz(n+1)] - [antr(n), antz(n)])
+
+jAnt_r = jAnt*Ju_r
+jAnt_z = jAnt*Ju_z
+jAnt_t = jAnt*0.0

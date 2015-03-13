@@ -365,6 +365,26 @@ pro ar2_create_input
     p=plot(r,nuOmg[*,nZ/2,0],title='nuOmg [electrons]',layout=[layout,plotpos],/current)
     ++plotpos
 
+   print, "running ar2jant................"
+   @input/ar2jant
+   print, "...........................finished running ar2jant"
+   nlevs=10
+   scale = 0.1
+   levels = (fltarr(nlevs)+1)/nlevs*scale
+   colors=bytscl(levels)
+   ;c1 = contour(jant,r,z,title='Antenna Current', aspect_ratio=1.0,c_value=levels,/fill,rgb_table=51,rgb_indices=colors)
+   c1 = contour(jant, r, z,title='Antenna Current', $
+    aspect_ratio = 1.0,layout=[layout,plotpos],/fill,/current,$
+    c_value=levels,rgb_table=51,rgb_indices=colors)
+    
+   p1 = plot(rbbbs_os, zbbbs_os,/over)
+   p1 = plot(rlim, zlim,/over)
+   p1 = scatterplot([g.rcentr, g.rcentr], [0.0, 0.0], /over)
+   p1 = plot(antr, antz,/over)
+   ++plotpos
+
+   stop
+
    ;nSmooth = 5 
     ;for s=0,nSpec-1 do begin
     ;    for n=0,nSmooth-1 do begin
@@ -566,6 +586,11 @@ pro ar2_create_input
 	Density_id = nCdf_varDef ( nc_id, 'Density_m3', [nR_id, nz_id, nSpec_id], /float )
 	Temp_id = nCdf_varDef ( nc_id, 'Temp_eV', [nR_id, nz_id, nSpec_id], /float )
 	nuOmg_id = nCdf_varDef ( nc_id, 'nuOmg', [nR_id, nz_id, nSpec_id], /float )
+	jant_id = nCdf_varDef ( nc_id, 'jAnt', [nR_id, nz_id], /float )
+
+	jant_r_id = nCdf_varDef ( nc_id, 'jAnt_r', [nR_id, nz_id], /float )
+	jant_z_id = nCdf_varDef ( nc_id, 'jAnt_z', [nR_id, nz_id], /float )
+	jant_t_id = nCdf_varDef ( nc_id, 'jAnt_t', [nR_id, nz_id], /float )
 
 	LimMask_id = nCdf_varDef ( nc_id, 'LimMask', [nR_id,nz_id], /short )
 	;BbbMask_id = nCdf_varDef ( nc_id, 'BbbMask', [nR_id,nz_id], /short )
@@ -592,6 +617,11 @@ pro ar2_create_input
 	nCdf_varPut, nc_id, Density_id, Density_m3
 	nCdf_varPut, nc_id, Temp_id, Temp_eV
 	nCdf_varPut, nc_id, nuOmg_id, nuOmg
+	
+	nCdf_varPut, nc_id, jant_id, jAnt
+  nCdf_varPut, nc_id, jant_r_id, jAnt_r
+  nCdf_varPut, nc_id, jant_z_id, jAnt_z
+  nCdf_varPut, nc_id, jant_t_id, jAnt_t
 
 	nCdf_varPut, nc_id, LimMask_id, mask_lim 
 	;nCdf_varPut, nc_id, BbbMask_id, mask_bbb

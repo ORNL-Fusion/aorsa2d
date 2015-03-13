@@ -7,77 +7,10 @@
 	bTorFactor = 1.0
 
 	flux_profiles = 1
-    numeric_flux_profiles = 1
+    	numeric_flux_profiles = 1
+	fred_namelist_input = 1
+	
 
-    ;FileName = 'input/densityT.txt'
-    ;nRho = file_lines(FileName)
-    ;openr, lun, FileName, /get_lun
-    ;data = replicate( {rho: 0.0, n: 0.0, ni1: 0.0, ni2: 0.0, ni3: 0.0, ni4: 0.0} ,nRho)
-    ;readf, lun, data    
-    ;free_lun, lun
-
-	;atomicZ	= [-1,1,1,1,6]
-	;amu = [me/mi,2,1,2,12]
-    ;nS = n_elements(amu)
-    ;NumericData_n_m3 = fltArr(nRho,nS+1)
-    ;NumericData_n_m3[*,0] = data[*].rho
-    ;NumericData_n_m3[*,1] = data[*].n
-    ;NumericData_n_m3[*,2] = data[*].ni1
-    ;NumericData_n_m3[*,3] = data[*].ni2
-    ;NumericData_n_m3[*,4] = data[*].ni3
-    ;NumericData_n_m3[*,5] = data[*].ni4
-
-    ;FileName = 'input/tempT.txt'
-    ;nRho = file_lines(FileName)
-    ;openr, lun, FileName, /get_lun
-    ;data = replicate( {rho: 0.0, t: 0.0, ti1: 0.0, ti2: 0.0, ti3: 0.0, ti4: 0.0} ,nRho)
-    ;readf, lun, data    
-    ;free_lun, lun
-
-    ;NumericData_T_eV = fltArr(nRho,nS+1)
-    ;NumericData_T_eV[*,0] = data[*].rho
-    ;NumericData_T_eV[*,1] = data[*].t*1e3
-    ;NumericData_T_eV[*,2] = data[*].ti1 * 1e3
-    ;NumericData_T_eV[*,3] = data[*].ti2 * 1e3
-    ;NumericData_T_eV[*,4] = data[*].ti3 * 1e3
-    ;NumericData_T_eV[*,5] = data[*].ti4 * 1e3
-
-	@input/aorsa2d.in.ejf.idl
-		
-	_nRho = fred.s_nRho_n
-	_nRhoFile = n_elements(fred.s_rho_n_grid)
-	_nS = n_elements(fred.s_s_name)
-	_nSFile = n_elements(fred.s_m_s)
-	_rho = fred.s_rho_n_grid[0:_nRho-1]
-
-
-	_NumericData_t_eV = reform(fred.s_T_s,_nRhoFile,_nSFile)
-	_NumericData_t_eV = _NumericData_t_eV[0:_nRho-1,0:_nS-1]	
-	_NumericData_t_eV = [[_rho],[_NumericData_t_ev*1e3]]
-
-	_NumericData_n_m3 = reform(fred.s_n_s,_nRhoFile,_nSFile)
-	_NumericData_n_m3 = _NumericData_n_m3[0:_nRho-1,0:_nS-1]	
-	_NumericData_n_m3 = [[_rho],[_NumericData_n_m3]]
-
-	_atomicZ = fred.s_q_s[0:_nS-1]/_e
-	_amu = fred.s_m_s[0:_nS-1]/_mi
-
-;s = 4
-;p=plot(numericdata_n_m3[*,0],numericdata_n_m3[*,s],thick=2)
-;p=plot(_numericdata_n_m3[*,0],_numericdata_n_m3[*,s],/over,color='b')
-;p=plot(numericdata_t_ev[*,0],numericdata_t_ev[*,s],thick=2)
-;p=plot(_numericdata_t_ev[*,0],_numericdata_t_ev[*,s],/over,color='b')
-;stop
-
-	amu = _amu
-	atomicZ = _atomicZ
-	NumericData_n_m3 = _NumericData_n_m3
-	NumericData_T_eV = _NumericData_T_eV
-	nS = _nS
-	nRho = _nRho
-
-    nn = fltArr(4,nS) 
-    tt = nn
 
 	DensityMin = 0.2e17
 	TempMin = 1e-3
