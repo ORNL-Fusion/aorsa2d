@@ -11,6 +11,7 @@ implicit none
     logical :: AntennaJ_R = .false.
     logical :: AntennaJ_T = .false.
     logical :: AntennaJ_Z = .true.
+    logical :: useAntennaFromAR2Input = .true.
     integer, parameter :: nSpecMax  = 5 
     integer :: zSpecIn(nSpecMax)    = (/ -1, 2, 0, 0, 0 /)
     integer :: amuSpecIn(nSpecMax)  = (/  0, 4, 0, 0, 0 /) 
@@ -493,7 +494,7 @@ implicit none
      &    overlap, parabolic, cosX, cosY, nZ_1D, fracOfModesInSolution, &
      &    AntennaJ_R, AntennaJ_T, AntennaJ_Z, AR2SourceLocationsFileName, &
      &    useAR2SourceLocationsFile, useAllRHSsSource, ZeroJp, &
-     &    ZeroJp_rMin, ZeroJp_rMax, ZeroJp_zMin, ZeroJp_zMax
+     &    ZeroJp_rMin, ZeroJp_rMax, ZeroJp_zMin, ZeroJp_zMax, useAntennaFromAR2Input
 
                 
 contains

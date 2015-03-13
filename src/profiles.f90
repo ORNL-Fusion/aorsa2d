@@ -20,7 +20,7 @@ contains
         use AR2Input, only: &
             ar2_nS=>nS,ar2_amu=>amu,ar2_AtomicZ=>AtomicZ, &
             ar2_nR=>nR, ar2_nZ=>nZ, ar2_r=>r, ar2_z=>z, &
-            Density_m3, Temp_eV, nuOmg
+            Density_m3, Temp_eV, nuOmg, jant_r, jant_t, jant_z
         use grid
         use aorsaNameList, only: &
             nSpec,freqcy
@@ -157,7 +157,55 @@ contains
                 g%nuOmg(w,s) = surf2 ( ThisR, ThisZ, ar2_nR, ar2_nZ, ar2_r_dp, ar2_z_dp, &
                     Tmp2DArr, ar2_nR, zp_tmp, sigma_dp )
             enddo
-         
+        enddo
+
+        ! JAnt interpolation
+
+        if(.not.allocated(g%jR))allocate ( &
+            g%jR(g%nR,g%nZ), &
+            g%jT(g%nR,g%nZ), &
+            g%jZ(g%nR,g%nZ) )
+
+        Tmp2DArr = jant_r(:,:) 
+        call surf1 ( ar2_nR, ar2_nZ, ar2_r_dp, ar2_z_dp, Tmp2DArr, ar2_nR, zx1, zxm, &
+            zy1, zyn, zxy11, zxym1, zxy1n, zxymn, islpsw, &
+            zp_tmp, temp, sigma_dp, iErr)
+
+        do i=1,g%nR
+            do j=1,g%nZ
+                ThisR = g%r(i)
+                ThisZ = g%z(j)
+                g%jR(i,j) = surf2 ( ThisR, ThisZ, ar2_nR, ar2_nZ, ar2_r_dp, ar2_z_dp, &
+                    Tmp2DArr, ar2_nR, zp_tmp, sigma_dp )
+            enddo
+        enddo
+
+        Tmp2DArr = jant_t(:,:) 
+        call surf1 ( ar2_nR, ar2_nZ, ar2_r_dp, ar2_z_dp, Tmp2DArr, ar2_nR, zx1, zxm, &
+            zy1, zyn, zxy11, zxym1, zxy1n, zxymn, islpsw, &
+            zp_tmp, temp, sigma_dp, iErr)
+
+        do i=1,g%nR
+            do j=1,g%nZ
+                ThisR = g%r(i)
+                ThisZ = g%z(j)
+                g%jT(i,j) = surf2 ( ThisR, ThisZ, ar2_nR, ar2_nZ, ar2_r_dp, ar2_z_dp, &
+                    Tmp2DArr, ar2_nR, zp_tmp, sigma_dp )
+            enddo
+        enddo
+
+        Tmp2DArr = jant_z(:,:) 
+        call surf1 ( ar2_nR, ar2_nZ, ar2_r_dp, ar2_z_dp, Tmp2DArr, ar2_nR, zx1, zxm, &
+            zy1, zyn, zxy11, zxym1, zxy1n, zxymn, islpsw, &
+            zp_tmp, temp, sigma_dp, iErr)
+
+         do i=1,g%nR
+            do j=1,g%nZ
+                ThisR = g%r(i)
+                ThisZ = g%z(j)
+                g%jZ(i,j) = surf2 ( ThisR, ThisZ, ar2_nR, ar2_nZ, ar2_r_dp, ar2_z_dp, &
+                    Tmp2DArr, ar2_nR, zp_tmp, sigma_dp )
+            enddo
         enddo
 
         ! Santiy checking

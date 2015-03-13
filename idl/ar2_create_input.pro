@@ -216,7 +216,9 @@ pro ar2_create_input
 
 	endelse
 
-    layout = [4,3]
+    layout = [5,3]
+    !x.margin = !x.margin / 3
+    !y.margin = !y.margin / 2
 	ScreenSize = get_screen_size()
 	dimensions = ScreenSize*0.8
     plotpos = 1
@@ -382,8 +384,6 @@ pro ar2_create_input
    p1 = scatterplot([g.rcentr, g.rcentr], [0.0, 0.0], /over)
    p1 = plot(antr, antz,/over)
    ++plotpos
-
-   stop
 
    ;nSmooth = 5 
     ;for s=0,nSpec-1 do begin

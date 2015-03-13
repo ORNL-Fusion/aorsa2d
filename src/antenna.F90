@@ -52,7 +52,8 @@ contains
             AntennaJ_R, AntennaJ_T, AntennaJ_Z, &
             antSigUnit, useAR2SourceLocationsFile, &
             useAllRHSsSource, ZeroJp, &
-            ZeroJp_rMin, ZeroJp_rMax, ZeroJp_zMin, ZeroJp_zMax
+            ZeroJp_rMin, ZeroJp_rMax, ZeroJp_zMin, ZeroJp_zMax, &
+            useAntennaFromAR2Input
         use grid
         use profiles, only: omgrf
         use constants
@@ -60,6 +61,12 @@ contains
             only: CurrentSource_r, CurrentSource_z, &
             CurrentSource_ComponentID, &
             CS_RealFac, CS_ImagFac
+
+        use ar2Input, only: &
+            ar2_ja=>jant, &
+            ar2_ja_r=>jant_r, &
+            ar2_ja_t=>jant_t, &
+            ar2_ja_z=>jant_z
 
         implicit none
 
@@ -111,6 +118,10 @@ contains
             if (AntennaJ_Z) get_jA(3) = get_jA(3) + cmplx(TmpAntJ,TmpAntJ*0)
         
         endif
+
+        if(useAntennaFromAR2Input)then 
+                ! nothing to do since these data are read in with the profile read :) 
+        endif
         
         !   boundary conditions
         !   -------------------
@@ -139,6 +150,7 @@ contains
     subroutine fill_jA ( g, rhs )
 
         use grid
+        use aorsaNamelist, only: useAntennaFromAR2Input
 
         implicit none
 
@@ -152,21 +164,25 @@ contains
             g%jT(g%nR,g%nZ), &
             g%jZ(g%nR,g%nZ) )
 
-        g%jR = 0
-        g%jT = 0
-        g%jZ = 0
- 
-        do i = 1,g%nR
-            do j = 1,g%nZ
+        ! overwrite jA from ar2Input.nc if required 
+        if(.not.useAntennaFromAR2Input)then 
 
-                This_jA = get_jA( g, i, j, rhs )
+            g%jR = 0
+            g%jT = 0
+            g%jZ = 0
 
-                g%jR(i,j) = This_jA(1)
-                g%jT(i,j) = This_jA(2)
-                g%jZ(i,j) = This_jA(3)
+            do i = 1,g%nR
+                do j = 1,g%nZ
 
+                    This_jA = get_jA( g, i, j, rhs )
+
+                    g%jR(i,j) = This_jA(1)
+                    g%jT(i,j) = This_jA(2)
+                    g%jZ(i,j) = This_jA(3)
+
+                enddo
             enddo
-        enddo
+        endif
        
     end subroutine fill_jA
 
@@ -180,7 +196,7 @@ contains
             useEqdsk, r0, rhoAnt, antSigRho, &
             AntennaJ_R, AntennaJ_T, AntennaJ_Z, &
             antSigUnit, useAR2SourceLocationsFile, &
-            useAllRHSsSource
+            useAllRHSsSource, useAntennaFromAR2Input
         use grid
         use parallel
         use profiles, only: omgrf
@@ -208,9 +224,11 @@ contains
             g%jT(g%nR,g%nZ), &
             g%jZ(g%nR,g%nZ) )
 
-        g%jR = 0
-        g%jT = 0
-        g%jZ = 0
+        if(.not.useAntennaFromAR2Input)then
+            g%jR = 0
+            g%jT = 0
+            g%jZ = 0
+        endif
  
 #ifndef par
         do ii = 1,nPts_tot*3,3
@@ -222,7 +240,11 @@ contains
                 i = (ii-1)/(3*g%nZ)+1
                 j = (mod(ii-1,3*g%nZ)+1-1)/3+1
 
-                This_jA = get_jA( g, i, j, rhs )
+                if(.not.useAntennaFromAR2Input)then  
+                    This_jA = get_jA( g, i, j, rhs )
+                else
+                    This_jA = (/g%jR(i,j),g%jT(i,j),g%jZ(i,j)/)
+                endif
 
                 brhs(ii+0,rhs) = -zi*omgrf*mu0*This_jA(1)
                 brhs(ii+1,rhs) = -zi*omgrf*mu0*This_jA(2)
