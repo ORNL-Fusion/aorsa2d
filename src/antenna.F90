@@ -264,7 +264,11 @@ contains
                 i = (iRow-1)/(3*g%nZ)+1
                 j = (mod(iRow-1,3*g%nZ)+1-1)/3+1
 
-                This_jA = get_jA( g, i, j, rhs )
+                if(.not.useAntennaFromAR2Input)then  
+                    This_jA = get_jA( g, i, j, rhs )
+                else
+                    This_jA = (/g%jR(i,j),g%jT(i,j),g%jZ(i,j)/)
+                endif
 
                 brhs(ii+0,jj) =  -zi*omgrf*mu0*This_jA(1)
                 brhs(ii+1,jj) =  -zi*omgrf*mu0*This_jA(2)
