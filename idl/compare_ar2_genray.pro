@@ -1,45 +1,48 @@
 pro compare_ar2_genray
 
-	gFileName1 = 'param_along_ray_n-56.txt'
-	gFileName2 = 'param_along_ray_n-71.txt'
-	gFileName2 = 'param_along_ray_2.22_0.txt'
-	eqdskFileName = 'g200201.00000.dlgMod'
+	gFileName = 'param_along_ray_nphi71.txt'
+	;gFileName = 'param_along_ray_nphi94.txt'
+
+	eqdskFileName = 'g122976.03021'
 	eqdsk = readgeqdsk(eqdskFileName)
 
-	g1 = read_genray(gFileName1)
-	g2 = read_genray(gFileName2)
-	g2.z = g2.z-0.08
-	__n = n_elements(g2)
-	__i = IndGen(__n/2)*2
-	g2 = g2[__i]
+	g = read_genray(gFileName)
+	g.z = g.z-0.08
+	__n = n_elements(g)
+	downSampleFac = 10
+	__i = IndGen(__n/downSampleFac)*downSampleFac
+	g = g[__i]
 
-	flipGenRayParDir = 1
+	flipGenRayParDir = 0
 	if flipGenRayParDir then begin
-		g1.npar = -g1.npar
-		g2.npar = -g2.npar
+		g.npar = -g.npar
 	endif
 
-	a = ar2_read_solution('./',1)
-	ar2_read_ar2input,'ar2Input.nc',ar2=d
-	r = ar2_read_rundata('./',1)
+	useAR2File = 0
+	if useAR2File then begin
+		a = ar2_read_solution('./',1)
+		ar2_read_ar2input,'ar2Input.nc',ar2=d
+		r = ar2_read_rundata('./',1)
 
-	_r = a.r
-	_z = a.z
+		_r = a.r
+		_z = a.z
 
-	_er = a.e_r
-	_et = a.e_t
-	_ez = a.e_z
+		_er = a.e_r
+		_et = a.e_t
+		_ez = a.e_z
 
-	nPhi = r.nPhi
+		nPhi = r.nPhi
+		freq = r.freq
+	endif
 
 	useFredFile = 1	
 	if useFredFile then begin
 		eLabFrameFileName = 'E_lab_frame'
-		eLabFrameFileName = 'E_lab_frame-damp-500a'
-		vtkFileName = 'Efield_2D_PARKMURAKAMI.vtk'
+		;eLabFrameFileName = 'E_lab_frame-damp-500a'
+		;vtkFileName = 'Efield_2D_PARKMURAKAMI.vtk'
 
 		f = read_e_lab_frame(eLabFrameFileName)
-		f = read_vtk(vtkFileName)
+		;f = read_vtk(vtkFileName)
 
 		_r = f.r
 		_z = f.z
@@ -47,23 +50,26 @@ pro compare_ar2_genray
 		_et = f.et
 		_ez = f.ez
 		nPhi = -71
+		freq = 500e6
 	endif
 
 	eMag = sqrt(_er^2+_et^2+_ez^2)
 
-	g3 = g1
-	for i=0,n_elements(g3)-1 do begin
-		ir = (g3[i].r-_r[0])/(_r[-1]-_r[0])*(n_elements(_r)-1)
-		tmpE = eMag[ir,*]
+	useMaxFieldTrajectory = 0
+	if useMaxFieldTrajectory then begin
+		for i=0,n_elements(g)-1 do begin
+			ir = (g[i].r-_r[0])/(_r[-1]-_r[0])*(n_elements(_r)-1)
+			tmpE = eMag[ir,*]
 
-		iiPosZ = where(_z gt 0)
-		tmpE[iiPosZ] = 0
-		iiPosZ = where(_z lt -0.6)
-		tmpE[iiPosZ] = 0
+			iiPosZ = where(_z gt 0)
+			tmpE[iiPosZ] = 0
+			iiPosZ = where(_z lt -0.6)
+			tmpE[iiPosZ] = 0
 
-		iz = where(tmpE eq max(tmpE) )
-		g3[i].z = _z[iz[0]]
-	endfor
+			iz = where(tmpE eq max(tmpE) )
+			g[i].z = _z[iz[0]]
+		endfor
+	endif
 
 	ScreenSize = get_screen_size()
 	nLevs = 11
@@ -75,15 +81,10 @@ pro compare_ar2_genray
 			c_value=levels, rgb_table=55, rgb_indices=colors, /fill,$
 			dimensions=ScreenSize*0.8)
 	
-	p=plot(d.lim_r,d.lim_z,/over)
+	p=plot(eqdsk.rlim,eqdsk.zlim,/over)
 	p=plot(eqdsk.rbbbs,eqdsk.zbbbs,/over)
-	p=plot(g1.r[*],g1.z[*],/over)
-	p=plot(g2.r[*],g2.z[*],/over,color='b')
-	p=plot(g3.r[*],g3.z[*],/over,color='g')
+	p=plot(g.r[*],g.z[*],/over)
 
-	iiKeep_g3 = where(g3.r gt 1.6)
-	g3 = g3[iiKeep_g3]
-	g = g2
 	nGenRay = n_elements(g)
 
 	kParMin = -150
@@ -102,15 +103,18 @@ pro compare_ar2_genray
 
 	_nf = 150
 	__pPar=fltArr(nGenRay,_nF*2-1)
+	__pPer=fltArr(nGenRay,_nF*2-1)
 
 	for n=0,nGenRay-1 do begin
+
 		this_r = g[n].r
 		this_z = g[n].z
-		i = (this_r-d.rmin)/(d.rmax-d.rmin)*(n_elements(d.r)-1)
-		j = (this_z-d.zmin)/(d.zmax-d.zmin)*(n_elements(d.z)-1)
-		this_br = interpolate(d.br,i,j,cubic=-0.5)
-		this_bt = interpolate(d.bt,i,j,cubic=-0.5)
-		this_bz = interpolate(d.bz,i,j,cubic=-0.5)
+		i = (this_r-eqdsk.r[0])/(eqdsk.r[-1]-eqdsk.r[0])*(n_elements(eqdsk.r)-1)
+		j = (this_z-eqdsk.z[0])/(eqdsk.z[-1]-eqdsk.z[0])*(n_elements(eqdsk.z)-1)
+
+		this_br = interpolate(eqdsk.br,i,j,cubic=-0.5)
+		this_bt = interpolate(eqdsk.bphi,i,j,cubic=-0.5)
+		this_bz = interpolate(eqdsk.bz,i,j,cubic=-0.5)
 
 		bMag = sqrt(this_br^2+this_bt^2+this_bz^2)
 		_bru = this_br/bMag
@@ -169,10 +173,10 @@ pro compare_ar2_genray
 		_ds = 0.005
 		_g = readgeqdsk(eqdskFileName,fieldLineIn=_pt,fieldLine_CYL=_line1,$
 			B_AlongFieldLine_CYL=_line_b1,fieldLineTraceDS=_ds,$
-			fieldLineTraceNSteps=_nf,fieldLineTraceDir=1)
+			fieldLineTraceNSteps=_nf,fieldLineTraceDir=1, FieldLineTracePerp=0)
 		_g = readgeqdsk(eqdskFileName,fieldLineIn=_pt,fieldLine_CYL=_line2,$
 			B_AlongFieldLine_CYL=_line_b2,fieldLineTraceDS=_ds,$
-			fieldLineTraceNSteps=_nf,fieldLineTraceDir=-1)
+			fieldLineTraceNSteps=_nf,fieldLineTraceDir=-1, FieldLineTracePerp=0)
 
 		fLine = [[reverse(_line1[*,0:-2],2)],[_line2[*,1:-2]]]
 		bLine = [[reverse(_line_b1[*,0:-2],2)],[_line_b2[*,1:-2]]]
@@ -187,35 +191,58 @@ pro compare_ar2_genray
 		__pPar[n,*] = abs(fft(this_E,/center))^2
 		__kPar = fIndGen(_nPar)*2*!pi/(_nPar*_dS)-_nPar*!pi/(_nPar*_dS)
 
+		; now do the same for some perp direction
+
+		_ds = 0.001
+		_g = readgeqdsk(eqdskFileName,fieldLineIn=_pt,fieldLine_CYL=_line1,$
+			B_AlongFieldLine_CYL=_line_b1,fieldLineTraceDS=_ds,$
+			fieldLineTraceNSteps=_nf,fieldLineTraceDir=1, FieldLineTracePerp=1)
+		_g = readgeqdsk(eqdskFileName,fieldLineIn=_pt,fieldLine_CYL=_line2,$
+			B_AlongFieldLine_CYL=_line_b2,fieldLineTraceDS=_ds,$
+			fieldLineTraceNSteps=_nf,fieldLineTraceDir=-1, FieldLineTracePerp=1)
+
+		fLine = [[reverse(_line1[*,0:-2],2)],[_line2[*,1:-2]]]
+		bLine = [[reverse(_line_b1[*,0:-2],2)],[_line_b2[*,1:-2]]]
+
+		_i = (fLine[0,*]-min(_r))/(max(_r)-min(_r))*(n_elements(_r)-1)
+		_j = (fLine[2,*]-min(_z))/(max(_z)-min(_z))*(n_elements(_z)-1)
+		_ii = complex(0,1)
+		__er = interpolate(_er,_i,_j,cubic=-0.5)*exp(-_ii*nPhi*fLine[1,*])
+		this_E = hanning(n_elements(__er))*__er
+		;this_E = __er
+		_nPer = n_elements(this_E)
+		__pPer[n,*] = abs(fft(this_E,/center))^2
+		__kPer = fIndGen(_nPer)*2*!pi/(_nPer*_dS)-_nPer*!pi/(_nPer*_dS)
+
 		print, n	
 		;;if n eq 50 then stop
 
-		for ii=0,_nR-1 do begin
-			for jj=0,_nZ-1 do begin
+		;for ii=0,_nR-1 do begin
+		;	for jj=0,_nZ-1 do begin
 
-				_kMag = sqrt(k_r[ii]^2+k_t^2+k_z[jj]^2)		
-				_kPar = k_r[ii]*_bru+k_t*_btu*k_z[jj]*_bru		
-				_kPer = sqrt(_kMag^2-_kPar^2)
+		;		_kMag = sqrt(k_r[ii]^2+k_t^2+k_z[jj]^2)		
+		;		_kPar = k_r[ii]*_bru+k_t*_btu*k_z[jj]*_bru		
+		;		_kPer = sqrt(_kMag^2-_kPar^2)
 
-				_pMag = p_r[ii]+p_z[jj]		
-				_pPar = p_r[ii]*_bru+p_t*_btu*p_z[jj]*_bru		
-				_pPer = sqrt(_pMag^2-_pPar^2)
+		;		_pMag = p_r[ii]+p_z[jj]		
+		;		_pPar = p_r[ii]*_bru+p_t*_btu*p_z[jj]*_bru		
+		;		_pPer = sqrt(_pMag^2-_pPar^2)
 
-				ikpar = (_kPar-kParMin)/(kParMax-kParMin)*(nkPar-1)
-				if ikpar gt 0 and ikpar lt nkPar then begin
-					pPar[ikpar,n] = pPar[ikpar,n]+_pMag
-					++kParCnt[ikpar]
-				endif
+		;		ikpar = (_kPar-kParMin)/(kParMax-kParMin)*(nkPar-1)
+		;		if ikpar gt 0 and ikpar lt nkPar then begin
+		;			pPar[ikpar,n] = pPar[ikpar,n]+_pMag
+		;			++kParCnt[ikpar]
+		;		endif
 
-				ikper = (_kPer-kPerMin)/(kPerMax-kPerMin)*(nkPer-1)
-				if ikper gt 0 and ikper lt nkPer then begin
-					pPer[ikper,n] = pPer[ikper,n]+_pMag
-					++kPerCnt[ikper]
-				endif
+		;		ikper = (_kPer-kPerMin)/(kPerMax-kPerMin)*(nkPer-1)
+		;		if ikper gt 0 and ikper lt nkPer then begin
+		;			pPer[ikper,n] = pPer[ikper,n]+_pMag
+		;			++kPerCnt[ikper]
+		;		endif
 
 
-			endfor
-		endfor			
+		;	endfor
+		;endfor			
 
 		nz = where(kParCnt gt 0)
 		pPar[nz,n] = pPar[nz,n]/kParCnt[nz]
@@ -224,7 +251,7 @@ pro compare_ar2_genray
 
 	endfor
 
-	w = 2*!pi*r.freq
+	w = 2*!pi*freq
 	_c = 3e8
 	nLevs = 31
 
@@ -234,26 +261,29 @@ pro compare_ar2_genray
 	;c=contour(transpose(ppar),g.distance,kpargrid,layout=[2,2,2], $
 	;		/current,xtitle='Genray Distance',yTitle='kPar [1/m]', $
 	;		c_value=levels, rgb_table=55, rgb_indices=colors, /fill)
-	plotThis = alog10(__ppar)
+	range = 150
+	plotThis = alog(__ppar)
 	scale = max(plotThis)/1.0
 	levels = (fIndGen(nLevs)+1)/(nLevs)*scale
 	colors = bytScl(levels,top=253)+1
 	c=contour(plotThis,g.distance,__kpar,layout=[2,2,2], $
 			/current,xtitle='Genray Distance',yTitle='kPar [1/m]', $
 			c_value=levels, rgb_table=55, rgb_indices=colors, /fill,$
-			yRange=[-150,150])
+			yRange=[-1,1]*range)
 	
 	p=plot(g.distance,g.nPar*w/_c,/over)
 
 	ppower=plot(g.distance,g.power,/current,layout=[2,5,6])
 
-	PlotThis = pper*transpose(rebin(g.distance,nGenRay,n_elements(pPer[*,0])))
-	scale = max(PlotThis)/2.
+	range = 1200
+	plotThis = alog(__pper)
+	scale = max(PlotThis)/1.
 	levels = (fIndGen(nLevs)+1)/(nLevs)*scale
 	colors = bytScl(levels,top=253)+1
-	c=contour(transpose(PlotThis),g.distance,kpergrid,layout=[2,2,4], $
+	c=contour(PlotThis,g.distance,__kper,layout=[2,2,4], $
 			/current,xtitle='Genray Distance',yTitle='kPer [1/m]', $
-			c_value=levels, rgb_table=55, rgb_indices=colors, /fill)
+			c_value=levels, rgb_table=55, rgb_indices=colors, /fill, $
+			yRange=[-1,1]*range)
 	p=plot(g.distance,g.nPer*w/_c,/over)
 
 stop
