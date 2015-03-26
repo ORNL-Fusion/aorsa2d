@@ -65,7 +65,7 @@ pro ar2_create_input
     generate_vorpal_input = 0
 
 	@constants
-    @input/ar2run
+    @ar2run
 
 	wrf	= freq * 2d0 * !dpi
 
@@ -226,6 +226,7 @@ pro ar2_create_input
 	p=plot(r,br[*,nZ/2],/over,color='b')
 	p=plot(r,bz[*,nZ/2],/over,color='r')
     ++plotpos
+	plotFile = 'inputCreationPlots.pdf'
 
 	bMag = sqrt ( br^2 + bt^2 + bz^2 )
 
@@ -233,7 +234,7 @@ pro ar2_create_input
 
 	if fred_namelist_input then begin
 
-		@input/aorsa2d.in.ejf.idl
+		@aorsa2d.in.ejf.idl
 			
 		_nRho = fred.s_nRho_n
 		_nRhoFile = n_elements(fred.s_rho_n_grid)
@@ -259,7 +260,12 @@ pro ar2_create_input
 		NumericData_T_eV = _NumericData_T_eV
 		nS = _nS
 		nRho = _nRho
-		
+	
+		print, 'Read from Fred namelist ...'
+		print, 'nS: ', nS
+		print, 'amu: ', amu
+		print, 'Z: ', atomicZ
+
 		;nn = fltArr(4,nS) 
     	;tt = nn
 
@@ -341,17 +347,21 @@ pro ar2_create_input
 	endelse
 
     s_ne = contour(density_m3[*,*,0],r,z, layout=[layout,plotpos],/current,title='density',aspect_ratio=1.0)
-    ++plotpos
     if bField_eqdsk then p=plot(rLim,zLim,/over)
+	;s_ne.save, plotFile, /append 
+    ++plotpos
+
    	s_te = contour(temp_eV[*,*,0],r,z, layout=[layout,plotpos],/current,title='temp',aspect_ratio=1.0)
     if bField_eqdsk then p=plot(rLim,zLim,/over)
     ++plotpos
+	;s_ne.save, plotFile, /append
 
 	p=plot(r,Density_m3[*,nZ/2,0],title='Density [1/m3]',/ylog,thick=2,layout=[layout,plotpos],/current)
     for s=1,nSpec-1 do begin
 	    p=plot(r,Density_m3[*,nZ/2,s],/over)
     endfor
     plotpos++	
+	;p.save, plotFile, /append
 
 	p=plot(r,Temp_eV[*,nZ/2,0],title='Temp [eV]', thick=2,layout=[layout,plotpos],/current)
     for s=1,nSpec-1 do begin
@@ -361,15 +371,53 @@ pro ar2_create_input
 
     ; Create nuOmg profiles
 
-    @input/ar2nuomg
-    ;nuOmg[*] = 0
+    @ar2nuomg
 
     p=plot(r,nuOmg[*,nZ/2,0],title='nuOmg [electrons]',layout=[layout,plotpos],/current)
     ++plotpos
 
-   print, "running ar2jant................"
-   @input/ar2jant
-   print, "...........................finished running ar2jant"
+   	@ar2jant
+
+	; Set the jAnt 2-D function
+
+	if bField_eqdsk then begin	
+		;get angular points on LCFS with respect to center core
+		r_lcsf = rbbbs_os - g.rcentr
+		theta = atan(zbbbs_os, r_lcsf)*!radeg
+		
+		; Get antenna location on LCFS, the shift away from LCFS
+		ii = where(theta gt theta_ant1 and theta le theta_ant2, iiCnt)
+		if iiCnt lt 2 then begin
+				print, 'ERROR: start and end of the antenna positions are too close together'
+				stop
+		endif
+		antr = rbbbs_os(ii)
+		antz = zbbbs_os(ii)  
+		antr = antr + rshift
+		antz = antz + zshift
+		
+		n_ant = n_elements(antr)
+		; Get antenna current: A Guassian peaked at the antenna
+		_d = FltArr(nR,nZ,n_ant)
+		for k=0,n_ant-1 do begin
+		  _d[*,*,k] = sqrt ( ( r2d - antr(k) )^2 + ( z2d - antz(k) )^2 )
+		endfor
+		d = min(_d,dim=3)
+		jAnt =  exp(-(d^2)/(sigma_ant^2))
+		
+		n = floor(n_ant/2)
+		Ju_r = (antr(n) - antr(n+1))/norm([antr(n+1), antz(n+1)] - [antr(n), antz(n)])
+		Ju_z = (antz(n) - antz(n+1))/norm([antr(n+1), antz(n+1)] - [antr(n), antz(n)])
+		
+		jAnt_r = jAnt*Ju_r
+		jAnt_z = jAnt*Ju_z
+		jAnt_t = jAnt*0.0
+	endif else begin
+		jAnt_r = r2D * 0		
+		jAnt_t = r2D * 0		
+		jAnt_z = r2D * 0		
+	endelse
+
    nlevs=10
    scale = 0.1
    levels = (fltarr(nlevs)+1)/nlevs*scale
@@ -409,21 +457,35 @@ pro ar2_create_input
 	StixR_nPhi = FltArr(nR,n_nPhi)
 	StixL_nPhi = FltArr(nR,n_nPhi)
 
-	for nphi_i=0,n_nPhi-1 do begin
+	;for nphi_i=0,n_nPhi-1 do begin
 
-	ar2_input_dispersion, wrf, amu, atomicZ, nn, nPhiArray[nphi_i], nSpec, nR, nZ, $
+	;	ar2_input_dispersion, wrf, amu, atomicZ, nn, nPhiArray[nphi_i], nSpec, nR, nZ, $
+	;		Density_m3, bMag, r2D, resonances = resonances, $
+	;		IonIonHybrid_res_freq=IonIonHybrid_res_freq, Spec1=1.0,Spec2=2.0, $
+	;		kPerSq_F=kPerpSq_F,kPerSq_S=kPerpSq_S, $
+	;		StixP=StixP,StixL=StixL,StixR=StixR,StixS=StixS
+	;	slice = nZ/4
+	;	kPerp_F[*,nphi_i] = sqrt(kPerpSq_F[*,slice])
+	;	kPerp_S[*,nphi_i] = sqrt(kPerpSq_S[*,slice])
+
+	;	kPerp_F2D_avg = kPerp_F2D_avg + sqrt(kPerpSq_F)
+	;	kPerp_S2D_avg = kPerp_S2D_avg + sqrt(kPerpSq_S)
+	;endfor
+	;kPerp_F2D_avg = kPerp_F2D_avg/n_nPhi
+	;kPerp_S2D_avg = kPerp_S2D_avg/n_nPhi
+
+
+	; Get dispersion solution for some nPhi 
+	ar2_input_dispersion, wrf, amu, atomicZ, nn, nPhi, nSpec, nR, nZ, $
 			Density_m3, bMag, r2D, resonances = resonances, $
 			IonIonHybrid_res_freq=IonIonHybrid_res_freq, Spec1=1.0,Spec2=2.0, $
 			kPerSq_F=kPerpSq_F,kPerSq_S=kPerpSq_S, $
 			StixP=StixP,StixL=StixL,StixR=StixR,StixS=StixS
-		slice = nZ/4
-		kPerp_F[*,nphi_i] = sqrt(kPerpSq_F[*,slice])
-		kPerp_S[*,nphi_i] = sqrt(kPerpSq_S[*,slice])
-
-		kPerp_F2D_avg = kPerp_F2D_avg + sqrt(kPerpSq_F)
-		kPerp_S2D_avg = kPerp_S2D_avg + sqrt(kPerpSq_S)
-
-	endfor
+	
+	kPer_F_2D = sqrt(kPerpSq_F)
+	kPer_S_2D = sqrt(kPerpSq_S)
+	kPerp_F = kPer_F_2D[*,nZ/2]
+	kPerp_S = kPer_S_2D[*,nZ/2]
 
     ; plot up the ion cyclortron resonances
 
@@ -434,38 +496,11 @@ pro ar2_create_input
     endfor
     ++PlotPos
 
-	kPerp_F2D_avg = kPerp_F2D_avg/n_nPhi
-	kPerp_S2D_avg = kPerp_S2D_avg/n_nPhi
-
-	nLevs=21
-	range=20
-	levels = (findGen(nLevs)+1)/nLevs*range
-	colors = 256-(bytScl(levels,top=254)+1)
-	c = contour(kPerp_F,r,nPhiArray,c_value=levels,rgb_indices=colors,$
-            rgb_table=1,/fill, title='kPerp_F',layout=[layout,PlotPos],/current)
+	p = plot(r,kPerp_F, title='kPerp_F',layout=[layout,PlotPos],/current)
     ++PlotPos
 
-	nLevs=31
-	range=10
-	levels = (findGen(nLevs)+1)/nLevs*range
-	levels = [1,2,3,10,20,30,100,200,300,1e3,2e3,4e3]
-	levels_map = findgen(n_elements(levels))
-	colors = 256-(bytScl(levels_map,top=254)+1)
-	c = contour(kPerp_S,r,nPhiArray,c_value=levels,rgb_indices=colors,$
-            rgb_table=3,/fill, title='kPerp_S',layout=[layout,PlotPos],/current)
+	p = plot(r,kPerp_S, title='kPerp_S',layout=[layout,PlotPos],/current)
     ++PlotPos
-
-    ;if nZ gt 1 then begin
-	;    c = contour(stixp,r,z,layout=[2,2,1],n_levels=21,title='StixP')
-	;    c = contour(stixs,r,z,layout=[2,2,2],n_levels=21,/current,title='StixS')
-	;    c = contour(stixr,r,z,layout=[2,2,3],n_levels=21,/current,title='StixR')
-	;    c = contour(stixl,r,z,layout=[2,2,4],n_levels=21,/current,title='StixL')
-    ;endif else begin
-	;    p = plot(r,stixp,layout=[2,2,1],title='StixP')
-	;    p = plot(r,stixs,layout=[2,2,2],/current,title='StixS')
-	;    p = plot(r,stixr,layout=[2,2,3],/current,title='StixR')
-	;    p = plot(r,stixl,layout=[2,2,4],/current,title='StixL')
-    ;endelse
 
 	nLevs=31
 	range=20
@@ -474,21 +509,13 @@ pro ar2_create_input
 	levels_map = findgen(n_elements(levels))
 	colors = 256-(bytScl(levels_map,top=254)+1)
     if nZ gt 1 then begin
-	    c = contour(kPerp_F2D_avg,r,z,layout=[layout,plotpos],$
+	    c = contour(kPer_F_2D,r,z,layout=[layout,plotpos],$
 			c_value=levels,rgb_indices=colors,rgb_table=1,$
             /fill,aspect_ratio=1.0, title='kPerp_F2D_avg',/current )
             ++plotpos
-    endif else begin
-	    p = plot(r,kPerp_F2D_avg,layout=[layout,plotpos],$
-            title='kPerp_F2D_avg')
-        ++plotpos
-    endelse
+    endif 
 
 	if bfield_eqdsk then p=plot(g.rlim,g.zlim,/over,thick=2)
-	;if bfield_eqdsk then p=plot(RightSide_rlim,RightSide_zlim,/over,thick=2)
-	;if bfield_eqdsk then p=plot(LeftSide_rlim,LeftSide_zlim,/over,thick=2)
-
-	;p=plot(VorpalBox_r,VorpalBox_z,/over,thick=2,color='b')
 	
 	nLevs=31
 	range=10
@@ -497,15 +524,12 @@ pro ar2_create_input
 	levels_map = findgen(n_elements(levels))
 	colors = 256-(bytScl(levels_map,top=254)+1)
     if nZ gt 1 then begin
-	    c = contour(kPerp_S2D_avg,r,z,layout=[layout,plotpos],/current,$
+	    c = contour(kPer_S_2D,r,z,layout=[layout,plotpos],/current,$
 			c_value=levels,rgb_indices=colors,rgb_table=3,$
             /fill,aspect_ratio=1.0, title='kPerp_S2D_avg')
         ++PlotPos
-    endif else begin
-	    p = plot(r,kPerp_S2D_avg,layout=[layout,plotpos],/current,$
-            title='kPerp_S2D_avg')
-        ++PlotPos
-    endelse
+		;c.save, plotFile, /append, /close
+    endif 
 
     if bfield_eqdsk eq 0 then begin
             rLim = [rMin, rMax, rMax, rMin, rMin]
@@ -514,15 +538,12 @@ pro ar2_create_input
 
 	if bField_eqdsk then p=plot(g.rlim,g.zlim,/over,thick=2)
 
-	;p=plot(VorpalBox_r,VorpalBox_z,/over,thick=1,color='b',transparency=50)
-    ;p=plot(rDomainBox,zDomainBox,/over,thick=1,linestyle='dash')
-	
 	; Plot up resonance locations too.
 
 	if bField_eqdsk eq 1 and nZ gt 1 then begin
 		p = plot(g.rbbbs,g.zbbbs,thick=2,aspect_ratio=1.0,layout=[layout,PlotPos],/current,title='resonances')
-        ++PlotPos
 		p = plot(g.rlim,g.zlim,thick=2,/over)
+        ++PlotPos
 
 		for s=1,nSpec-1 do begin
 			c=contour(resonances[*,*,s],r,z,c_value=fIndGen(5)/4.0*0.01,/over)
@@ -726,5 +747,7 @@ pro ar2_create_input
 	endfor
 
     endif
-
+	p.save, plotFile
+	stop
+exit ; this is here for OMFit - don't remove
 end

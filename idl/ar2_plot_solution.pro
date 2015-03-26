@@ -446,7 +446,7 @@ pro ar2_plot_solution, full = full, $
         ++PlotPos
 
 	    ;dimensions = [600,600]
-        scaleFac = 0.3
+        scaleFac = 0.1
 	    scale = max(abs([e_r,e_t,e_z]))*scaleFac 
 
 		thisField = e_r[*,*]
