@@ -58,7 +58,7 @@ pro ar2_create_flux_profiles, nSpec, nn, tt, nR, nZ, PsiNorm, Mask_bbb, d_bbb, D
     ; Run simple LCFS to wall smoothing algorithm
 
     nIter = 45 
-    PercentWidth =  2
+    PercentWidth =  8.0
     nWidth = fix(nR*PercentWidth/100.0)
 
     density_m3_ = density_m3

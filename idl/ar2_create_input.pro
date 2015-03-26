@@ -229,6 +229,7 @@ pro ar2_create_input
 	plotFile = 'inputCreationPlots.pdf'
 
 	bMag = sqrt ( br^2 + bt^2 + bz^2 )
+	nSpec = n_elements ( amu )
 
 	; Create profiles
 
@@ -256,6 +257,9 @@ pro ar2_create_input
 
 		amu = _amu
 		atomicZ = _atomicZ
+
+		nSpec = n_elements ( amu )
+
 		NumericData_n_m3 = _NumericData_n_m3
 		NumericData_T_eV = _NumericData_T_eV
 		nS = _nS
@@ -278,7 +282,6 @@ pro ar2_create_input
 
 	endelse
 
-	nSpec = n_elements ( amu )
 
 	Density_m3	= fltArr ( nR, nZ, nSpec )
 	Temp_eV	= fltArr ( nR, nZ, nSpec )
@@ -381,42 +384,43 @@ pro ar2_create_input
 	; Set the jAnt 2-D function
 
 	if bField_eqdsk then begin	
-		;get angular points on LCFS with respect to center core
-		r_lcsf = rbbbs_os - g.rcentr
-		theta = atan(zbbbs_os, r_lcsf)*!radeg
-		
-		; Get antenna location on LCFS, the shift away from LCFS
-		ii = where(theta gt theta_ant1 and theta le theta_ant2, iiCnt)
-		if iiCnt lt 2 then begin
-				print, 'ERROR: start and end of the antenna positions are too close together'
-				stop
-		endif
-		antr = rbbbs_os(ii)
-		antz = zbbbs_os(ii)  
-		antr = antr + rshift
-		antz = antz + zshift
-		
-		n_ant = n_elements(antr)
-		; Get antenna current: A Guassian peaked at the antenna
-		_d = FltArr(nR,nZ,n_ant)
-		for k=0,n_ant-1 do begin
-		  _d[*,*,k] = sqrt ( ( r2d - antr(k) )^2 + ( z2d - antz(k) )^2 )
-		endfor
-		d = min(_d,dim=3)
-		jAnt =  exp(-(d^2)/(sigma_ant^2))
-		
-		n = floor(n_ant/2)
-		Ju_r = (antr(n) - antr(n+1))/norm([antr(n+1), antz(n+1)] - [antr(n), antz(n)])
-		Ju_z = (antz(n) - antz(n+1))/norm([antr(n+1), antz(n+1)] - [antr(n), antz(n)])
-		
-		jAnt_r = jAnt*Ju_r
-		jAnt_z = jAnt*Ju_z
-		jAnt_t = jAnt*0.0
-	endif else begin
-		jAnt_r = r2D * 0		
-		jAnt_t = r2D * 0		
-		jAnt_z = r2D * 0		
-	endelse
+		rCenter = g.rcentr
+		zCenter = 0.0	
+		rlcfs = rbbbs_os - rCenter
+		zlcfs = zbbbs_os - zCenter
+	endif
+
+	;get angular points on LCFS with respect to center core
+
+	theta = atan(zlcfs, rlcfs)*!radeg	
+
+	; Get antenna location on LCFS, the shift away from LCFS
+	ii = where(theta gt theta_ant1 and theta le theta_ant2, iiCnt)
+	if iiCnt lt 2 then begin
+			print, 'ERROR: start and end of the antenna positions are too close together'
+			stop
+	endif
+	antr = rlcfs(ii)
+	antz = zlcfs(ii)  
+	antr = antr + rshift
+	antz = antz + zshift
+	
+	n_ant = n_elements(antr)
+	; Get antenna current: A Guassian peaked at the antenna
+	_d = FltArr(nR,nZ,n_ant)
+	for k=0,n_ant-1 do begin
+	  _d[*,*,k] = sqrt ( ( r2d - antr(k) )^2 + ( z2d - antz(k) )^2 )
+	endfor
+	d = min(_d,dim=3)
+	jAnt =  exp(-(d^2)/(sigma_ant^2))
+	
+	n = floor(n_ant/2)
+	Ju_r = (antr(n) - antr(n+1))/norm([antr(n+1), antz(n+1)] - [antr(n), antz(n)])
+	Ju_z = (antz(n) - antz(n+1))/norm([antr(n+1), antz(n+1)] - [antr(n), antz(n)])
+	
+	jAnt_r = jAnt*Ju_r
+	jAnt_z = jAnt*Ju_z
+	jAnt_t = jAnt*0.0
 
    nlevs=10
    scale = 0.1
@@ -427,9 +431,8 @@ pro ar2_create_input
     aspect_ratio = 1.0,layout=[layout,plotpos],/fill,/current,$
     c_value=levels,rgb_table=51,rgb_indices=colors)
     
-   p1 = plot(rbbbs_os, zbbbs_os,/over)
+   p1 = plot(rlcfs, zlcfs,/over)
    p1 = plot(rlim, zlim,/over)
-   p1 = scatterplot([g.rcentr, g.rcentr], [0.0, 0.0], /over)
    p1 = plot(antr, antz,/over)
    ++plotpos
 
@@ -513,10 +516,15 @@ pro ar2_create_input
 			c_value=levels,rgb_indices=colors,rgb_table=1,$
             /fill,aspect_ratio=1.0, title='kPerp_F2D_avg',/current )
             ++plotpos
+            c_zero_set = contour(kPerpSq_F,r,z,/over,c_value=0.001,color='r',C_LABEL_SHOW=0,c_thick=2)
+            p = plot(rlcfs, zlcfs,/over)
     endif 
 
 	if bfield_eqdsk then p=plot(g.rlim,g.zlim,/over,thick=2)
-	
+
+
+;   c_zero_set = contour(kPer_S_2D,r,z,/over,min_value=0.0,max_value=0.001)
+
 	nLevs=31
 	range=10
 	levels = (findGen(nLevs)+1)/nLevs*range
