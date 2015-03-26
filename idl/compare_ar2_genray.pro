@@ -3,11 +3,13 @@ pro compare_ar2_genray
 	gFileName = 'param_along_ray_nphi71.txt'
 	;gFileName = 'param_along_ray_nphi94.txt'
 
+	nPhi = -71
+	freq = 500e6
+
 	eqdskFileName = 'g122976.03021'
 	eqdsk = readgeqdsk(eqdskFileName)
 
 	g = read_genray(gFileName)
-	g.z = g.z-0.08
 	__n = n_elements(g)
 	downSampleFac = 10
 	__i = IndGen(__n/downSampleFac)*downSampleFac
@@ -49,8 +51,6 @@ pro compare_ar2_genray
 		_er = f.er
 		_et = f.et
 		_ez = f.ez
-		nPhi = -71
-		freq = 500e6
 	endif
 
 	eMag = sqrt(_er^2+_et^2+_ez^2)
@@ -79,7 +79,7 @@ pro compare_ar2_genray
 	c=contour(eMag,_r,_z,aspect_ratio=1.0,layout=[2,1,1], $
 			/current,xtitle='R [m]',yTitle='z [m]', $
 			c_value=levels, rgb_table=55, rgb_indices=colors, /fill,$
-			dimensions=ScreenSize*0.8)
+			dimensions=ScreenSize*0.8,title='title: AORSA (ELab) / Genray'+' nPhi: '+string(nPhi))
 	
 	p=plot(eqdsk.rlim,eqdsk.zlim,/over)
 	p=plot(eqdsk.rbbbs,eqdsk.zbbbs,/over)
@@ -261,30 +261,37 @@ pro compare_ar2_genray
 	;c=contour(transpose(ppar),g.distance,kpargrid,layout=[2,2,2], $
 	;		/current,xtitle='Genray Distance',yTitle='kPar [1/m]', $
 	;		c_value=levels, rgb_table=55, rgb_indices=colors, /fill)
+
+    margin=[0.05,0.05,0.05,0.05]*2
+
 	range = 150
 	plotThis = alog(__ppar)
 	scale = max(plotThis)/1.0
 	levels = (fIndGen(nLevs)+1)/(nLevs)*scale
 	colors = bytScl(levels,top=253)+1
-	c=contour(plotThis,g.distance,__kpar,layout=[2,2,2], $
+	c=contour(plotThis,g.distance,__kpar,layout=[2,3,2], $
 			/current,xtitle='Genray Distance',yTitle='kPar [1/m]', $
 			c_value=levels, rgb_table=55, rgb_indices=colors, /fill,$
-			yRange=[-1,1]*range)
+			yRange=[-1,1]*range,title=gFileName,margin=margin)
 	
 	p=plot(g.distance,g.nPar*w/_c,/over)
 
-	ppower=plot(g.distance,g.power,/current,layout=[2,5,6])
+	ppower=plot(g.distance,g.power,/current,layout=[2,3,4],$
+            ytitle='Power',xTitle='Genray Distance',margin=margin)
 
 	range = 1200
 	plotThis = alog(__pper)
 	scale = max(PlotThis)/1.
 	levels = (fIndGen(nLevs)+1)/(nLevs)*scale
 	colors = bytScl(levels,top=253)+1
-	c=contour(PlotThis,g.distance,__kper,layout=[2,2,4], $
+	c=contour(PlotThis,g.distance,__kper,layout=[2,3,6], $
 			/current,xtitle='Genray Distance',yTitle='kPer [1/m]', $
 			c_value=levels, rgb_table=55, rgb_indices=colors, /fill, $
-			yRange=[-1,1]*range)
+			yRange=[-1,1]*range,margin=margin)
 	p=plot(g.distance,g.nPer*w/_c,/over)
+
+    p.save, 'aorsa-genray-comp.eps', /bitmap, resolution=100
+    p.save, 'aorsa-genray-comp.pdf', /bitmap, resolution=100
 
 stop
 end
