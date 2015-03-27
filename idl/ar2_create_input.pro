@@ -292,7 +292,7 @@ pro ar2_create_input
 			ar2_create_flux_profiles, nSpec, nn, tt, nR, nZ, PsiNorm, Mask_bbb, d_bbb, $
 			Density_m3, Temp_eV, DensityMin = DensityMin, TempMin = TempMin, $
             NumericProfiles = Numeric_flux_profiles, NumericData_n_m3 = NumericData_n_m3, $
-            NumericData_T_eV = NumericData_T_eV
+            NumericData_T_eV = NumericData_T_eV, r2d=r2d, z2d=z2d
 
 	endif else if gaussian_profiles eq 1 then begin
 
@@ -386,13 +386,13 @@ pro ar2_create_input
 	if bField_eqdsk then begin	
 		rCenter = g.rcentr
 		zCenter = 0.0	
-		rlcfs = rbbbs_os - rCenter
-		zlcfs = zbbbs_os - zCenter
+		rlcfs = rbbbs_os
+		zlcfs = zbbbs_os
 	endif
 
 	;get angular points on LCFS with respect to center core
 
-	theta = atan(zlcfs, rlcfs)*!radeg	
+	theta = atan(zlcfs-zCenter, rlcfs-rCenter)*!radeg	
 
 	; Get antenna location on LCFS, the shift away from LCFS
 	ii = where(theta gt theta_ant1 and theta le theta_ant2, iiCnt)
