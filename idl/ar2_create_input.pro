@@ -159,9 +159,9 @@ pro ar2_create_input
 		endfor
 
 
-		br = MakePeriodic ( br, mask_lim);, /look )
-		bt = MakePeriodic ( bt, mask_lim);, /look )
-		bz = MakePeriodic ( bz, mask_lim);, /look )
+		;br = MakePeriodic ( br, mask_lim);, /look )
+		;bt = MakePeriodic ( bt, mask_lim);, /look )
+		;bz = MakePeriodic ( bz, mask_lim);, /look )
 
 	endif else if bField_flat eq 1 then begin
 
@@ -258,10 +258,13 @@ pro ar2_create_input
 		amu = _amu
 		atomicZ = _atomicZ
 
-		nSpec = n_elements ( amu )
+        ;_nS = 2
+        amu = amu[0:_nS-1]
+        atomicZ = atomicZ[0:_nS-1]
 
-		NumericData_n_m3 = _NumericData_n_m3
-		NumericData_T_eV = _NumericData_T_eV
+		nSpec = n_elements ( amu )
+		NumericData_n_m3 = _NumericData_n_m3[*,0:_nS-1+1]
+		NumericData_T_eV = _NumericData_T_eV[*,0:_nS-1+1]
 		nS = _nS
 		nRho = _nRho
 	
@@ -292,7 +295,7 @@ pro ar2_create_input
 			ar2_create_flux_profiles, nSpec, nn, tt, nR, nZ, PsiNorm, Mask_bbb, d_bbb, $
 			Density_m3, Temp_eV, DensityMin = DensityMin, TempMin = TempMin, $
             NumericProfiles = Numeric_flux_profiles, NumericData_n_m3 = NumericData_n_m3, $
-            NumericData_T_eV = NumericData_T_eV
+            NumericData_T_eV = NumericData_T_eV, r2d=r2d, z2d=z2d
 
 	endif else if gaussian_profiles eq 1 then begin
 
@@ -351,20 +354,24 @@ pro ar2_create_input
 
     s_ne = contour(density_m3[*,*,0],r,z, layout=[layout,plotpos],/current,title='density',aspect_ratio=1.0)
     if bField_eqdsk then p=plot(rLim,zLim,/over)
-	;s_ne.save, plotFile, /append 
     ++plotpos
 
    	s_te = contour(temp_eV[*,*,0],r,z, layout=[layout,plotpos],/current,title='temp',aspect_ratio=1.0)
     if bField_eqdsk then p=plot(rLim,zLim,/over)
     ++plotpos
-	;s_ne.save, plotFile, /append
 
 	p=plot(r,Density_m3[*,nZ/2,0],title='Density [1/m3]',/ylog,thick=2,layout=[layout,plotpos],/current)
     for s=1,nSpec-1 do begin
 	    p=plot(r,Density_m3[*,nZ/2,s],/over)
     endfor
     plotpos++	
-	;p.save, plotFile, /append
+
+	p=plot(r,Density_m3[*,nZ/2,0],title='Density [1/m3]',thick=2,layout=[layout,plotpos],/current)
+    for s=1,nSpec-1 do begin
+	    p=plot(r,Density_m3[*,nZ/2,s],/over)
+    endfor
+    plotpos++	
+
 
 	p=plot(r,Temp_eV[*,nZ/2,0],title='Temp [eV]', thick=2,layout=[layout,plotpos],/current)
     for s=1,nSpec-1 do begin
@@ -386,13 +393,13 @@ pro ar2_create_input
 	if bField_eqdsk then begin	
 		rCenter = g.rcentr
 		zCenter = 0.0	
-		rlcfs = rbbbs_os - rCenter
-		zlcfs = zbbbs_os - zCenter
+		rlcfs = rbbbs_os
+		zlcfs = zbbbs_os
 	endif
 
 	;get angular points on LCFS with respect to center core
 
-	theta = atan(zlcfs, rlcfs)*!radeg	
+	theta = atan(zlcfs-zCenter, rlcfs-rCenter)*!radeg	
 
 	; Get antenna location on LCFS, the shift away from LCFS
 	ii = where(theta gt theta_ant1 and theta le theta_ant2, iiCnt)
