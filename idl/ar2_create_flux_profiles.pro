@@ -16,10 +16,6 @@ pro ar2_create_flux_profiles, nSpec, nn, tt, nR, nZ, PsiNorm, Mask_bbb, d_bbb, D
 	; see pages 436-437
 	; Update: had to modify this since Lamelles goes way too low.
 
-	l_sol = 0.01
-	n_ant = densityMin
-	t_ant = tempMin
-
 	for s=0,nspec-1 do begin
 
 		for i=0,nR-1 do begin
@@ -70,9 +66,17 @@ pro ar2_create_flux_profiles, nSpec, nn, tt, nR, nZ, PsiNorm, Mask_bbb, d_bbb, D
 					;_n = min(_nTmp*_mask)
 					;_t = min(_tTmp*_mask)
 
-					eta = -d_bbb[i,j]/l_sol
+	                l_sol = 0.02
+	                n_ant = densityMin[s]
+	                t_ant = tempMin
+
+					;eta = -d_bbb[i,j]/l_sol
+                    eta = -(psiNorm[i,j]-1)/l_sol
 					density_m3[i,j,s] = n_ant + (_n - n_ant) * exp (eta)
 					temp_eV[i,j,s] = t_ant + (_t - t_ant) * exp (eta)
+					;density_m3[i,j,s] = _n * exp (eta) > _n/maxDecay
+					;temp_eV[i,j,s] = _t * exp (eta) > _t/maxDecay
+
 
 				endif
 
@@ -114,8 +118,8 @@ pro ar2_create_flux_profiles, nSpec, nn, tt, nR, nZ, PsiNorm, Mask_bbb, d_bbb, D
  
     ;endfor
 
-	Density_m3 = Density_m3>DensityMin
-	Temp_eV = Temp_eV>TempMin
+	;Density_m3 = Density_m3>DensityMin
+	;Temp_eV = Temp_eV>TempMin
 
 	; Sanity checking ...
 
