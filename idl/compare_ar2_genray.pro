@@ -20,6 +20,9 @@ pro compare_ar2_genray
 		g.npar = -g.npar
 	endif
 
+    traj_r = g.r
+    traj_z = g.z
+
 	useAR2File = 0
 	if useAR2File then begin
 		a = ar2_read_solution('./',1)
@@ -55,20 +58,13 @@ pro compare_ar2_genray
 
 	eMag = sqrt(_er^2+_et^2+_ez^2)
 
-	useMaxFieldTrajectory = 0
+	useMaxFieldTrajectory = 1
 	if useMaxFieldTrajectory then begin
-		for i=0,n_elements(g)-1 do begin
-			ir = (g[i].r-_r[0])/(_r[-1]-_r[0])*(n_elements(_r)-1)
-			tmpE = eMag[ir,*]
+        _ii = where(g.r gt 1.7)
+        g = g[_ii]
+        traj_r = g.r - (g.distance*0.0005)^2
+        traj_z = g.z + (g.distance*0.003)^2
 
-			iiPosZ = where(_z gt 0)
-			tmpE[iiPosZ] = 0
-			iiPosZ = where(_z lt -0.6)
-			tmpE[iiPosZ] = 0
-
-			iz = where(tmpE eq max(tmpE) )
-			g[i].z = _z[iz[0]]
-		endfor
 	endif
 
 	ScreenSize = get_screen_size()
@@ -83,9 +79,10 @@ pro compare_ar2_genray
 	
 	p=plot(eqdsk.rlim,eqdsk.zlim,/over)
 	p=plot(eqdsk.rbbbs,eqdsk.zbbbs,/over)
-	p=plot(g.r[*],g.z[*],/over)
+	p=plot(traj_r[*],traj_z[*],/over,thick=2)
+	p=plot(g.r[*],g.z[*],/over, color='b',thick=2)
 
-	nGenRay = n_elements(g)
+	nGenRay = n_elements(traj_r)
 
 	kParMin = -150
 	kParMax = +150
@@ -107,8 +104,8 @@ pro compare_ar2_genray
 
 	for n=0,nGenRay-1 do begin
 
-		this_r = g[n].r
-		this_z = g[n].z
+		this_r = traj_r[n]
+		this_z = traj_z[n]
 		i = (this_r-eqdsk.r[0])/(eqdsk.r[-1]-eqdsk.r[0])*(n_elements(eqdsk.r)-1)
 		j = (this_z-eqdsk.z[0])/(eqdsk.z[-1]-eqdsk.z[0])*(n_elements(eqdsk.z)-1)
 
@@ -274,7 +271,7 @@ pro compare_ar2_genray
 			c_value=levels, rgb_table=55, rgb_indices=colors, /fill,$
 			yRange=[-1,1]*range,title=gFileName,margin=margin)
 	
-	p=plot(g.distance,g.nPar*w/_c,/over)
+	p=plot(g.distance,g.nPar*w/_c,/over,color='b',thick=2)
 
 	ppower=plot(g.distance,g.power,/current,layout=[2,3,4],$
             ytitle='Power',xTitle='Genray Distance',margin=margin)
@@ -288,7 +285,7 @@ pro compare_ar2_genray
 			/current,xtitle='Genray Distance',yTitle='kPer [1/m]', $
 			c_value=levels, rgb_table=55, rgb_indices=colors, /fill, $
 			yRange=[-1,1]*range,margin=margin)
-	p=plot(g.distance,g.nPer*w/_c,/over)
+	p=plot(g.distance,g.nPer*w/_c,/over,color='b',thick=2)
 
     p.save, 'aorsa-genray-comp.eps', /bitmap, resolution=100
     p.save, 'aorsa-genray-comp.pdf', /bitmap, resolution=100

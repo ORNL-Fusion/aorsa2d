@@ -119,7 +119,7 @@ pro ar2_create_flux_profiles, nSpec, nn, tt, nR, nZ, PsiNorm, Mask_bbb, d_bbb, D
     ;endfor
 
 	;Density_m3 = Density_m3>DensityMin
-	;Temp_eV = Temp_eV>TempMin
+	Temp_eV = Temp_eV>TempMin
 
 	; Sanity checking ...
 

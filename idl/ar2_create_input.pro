@@ -420,7 +420,7 @@ pro ar2_create_input
 	endfor
 	d = min(_d,dim=3)
 	jAnt =  exp(-(d^2)/(sigma_ant^2))
-	
+
 	n = floor(n_ant/2)
 	Ju_r = (antr(n) - antr(n+1))/norm([antr(n+1), antz(n+1)] - [antr(n), antz(n)])
 	Ju_z = (antz(n) - antz(n+1))/norm([antr(n+1), antz(n+1)] - [antr(n), antz(n)])
