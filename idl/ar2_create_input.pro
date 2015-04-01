@@ -258,7 +258,7 @@ pro ar2_create_input
 		amu = _amu
 		atomicZ = _atomicZ
 
-        ;_nS = 2
+        _nS = nS_numeric
         amu = amu[0:_nS-1]
         atomicZ = atomicZ[0:_nS-1]
 
