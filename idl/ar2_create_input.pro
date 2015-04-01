@@ -258,7 +258,7 @@ pro ar2_create_input
 		amu = _amu
 		atomicZ = _atomicZ
 
-        ;_nS = 2
+        _nS = nS_numeric
         amu = amu[0:_nS-1]
         atomicZ = atomicZ[0:_nS-1]
 
@@ -352,11 +352,16 @@ pro ar2_create_input
 
 	endelse
 
-    s_ne = contour(density_m3[*,*,0],r,z, layout=[layout,plotpos],/current,title='density',aspect_ratio=1.0)
+    yRange = [zMin,zMax]
+    xRange = [rMin,rMax]
+
+    s_ne = contour(density_m3[*,*,0],r,z, layout=[layout,plotpos],$
+            /current,title='density',aspect_ratio=1.0, xRange=xRange, yRange=yRange )
     if bField_eqdsk then p=plot(rLim,zLim,/over)
     ++plotpos
 
-   	s_te = contour(temp_eV[*,*,0],r,z, layout=[layout,plotpos],/current,title='temp',aspect_ratio=1.0)
+   	s_te = contour(temp_eV[*,*,0],r,z, layout=[layout,plotpos],$
+            /current,title='temp',aspect_ratio=1.0, xRange=xRange, yRange=yRange)
     if bField_eqdsk then p=plot(rLim,zLim,/over)
     ++plotpos
 
@@ -430,17 +435,15 @@ pro ar2_create_input
 	jAnt_t = jAnt*0.0
 
    nlevs=10
-   scale = 0.1
-   levels = (fltarr(nlevs)+1)/nlevs*scale
+   scale = 1.1
+   levels = (fIndGen(nlevs)+1)/nlevs*scale
    colors=bytscl(levels)
-   ;c1 = contour(jant,r,z,title='Antenna Current', aspect_ratio=1.0,c_value=levels,/fill,rgb_table=51,rgb_indices=colors)
    c1 = contour(jant, r, z,title='Antenna Current', $
     aspect_ratio = 1.0,layout=[layout,plotpos],/fill,/current,$
-    c_value=levels,rgb_table=51,rgb_indices=colors)
-    
+    c_value=levels,rgb_table=51,rgb_indices=colors, xRange=xRange, yRange=yRange)
+   
    p1 = plot(rlcfs, zlcfs,/over)
    p1 = plot(rlim, zlim,/over)
-   p1 = plot(antr, antz,/over)
    ++plotpos
 
    ;nSmooth = 5 
@@ -521,16 +524,13 @@ pro ar2_create_input
     if nZ gt 1 then begin
 	    c = contour(kPer_F_2D,r,z,layout=[layout,plotpos],$
 			c_value=levels,rgb_indices=colors,rgb_table=1,$
-            /fill,aspect_ratio=1.0, title='kPerp_F2D_avg',/current )
+            /fill,aspect_ratio=1.0, title='kPerp_F2D_avg',/current, xRange=xRange, yRange=yRange )
             ++plotpos
             c_zero_set = contour(kPerpSq_F,r,z,/over,c_value=0.001,color='r',C_LABEL_SHOW=0,c_thick=2)
             p = plot(rlcfs, zlcfs,/over)
     endif 
 
 	if bfield_eqdsk then p=plot(g.rlim,g.zlim,/over,thick=2)
-
-
-;   c_zero_set = contour(kPer_S_2D,r,z,/over,min_value=0.0,max_value=0.001)
 
 	nLevs=31
 	range=10
@@ -541,7 +541,7 @@ pro ar2_create_input
     if nZ gt 1 then begin
 	    c = contour(kPer_S_2D,r,z,layout=[layout,plotpos],/current,$
 			c_value=levels,rgb_indices=colors,rgb_table=3,$
-            /fill,aspect_ratio=1.0, title='kPerp_S2D_avg')
+            /fill,aspect_ratio=1.0, title='kPerp_S2D_avg', xRange=xRange, yRange=yRange)
         ++PlotPos
 		;c.save, plotFile, /append, /close
     endif 
@@ -556,7 +556,8 @@ pro ar2_create_input
 	; Plot up resonance locations too.
 
 	if bField_eqdsk eq 1 and nZ gt 1 then begin
-		p = plot(g.rbbbs,g.zbbbs,thick=2,aspect_ratio=1.0,layout=[layout,PlotPos],/current,title='resonances')
+		p = plot(g.rbbbs,g.zbbbs,thick=2,aspect_ratio=1.0,layout=[layout,PlotPos],$
+                /current,title='resonances', xRange=xRange, yRange=yRange)
 		p = plot(g.rlim,g.zlim,thick=2,/over)
         ++PlotPos
 
@@ -567,7 +568,7 @@ pro ar2_create_input
 		c=contour(1/(abs(IonIonHybrid_res_freq mod wrf)/wrf),r,z,c_value=fIndGen(25)*10,/over)
 	endif else if flux_profiles eq 1 and nZ gt 1 then begin
 
-		c=contour(psinorm,r,z,aspect_ratio=1.0, title='psi')	
+		c=contour(psinorm,r,z,aspect_ratio=1.0, title='psi', xRange=xRange, yRange=yRange)	
 		p=plot(rlim,zlim,/over,thick=2)
 		;p=plot(VorpalBox_r,VorpalBox_z,/over,thick=2,color='b')
 		for s=1,nSpec-1 do begin
@@ -600,8 +601,9 @@ pro ar2_create_input
 	
 	nR_id	= nCdf_dimDef ( nc_id, 'nR', nR )
 	nz_id	= nCdf_dimDef ( nc_id, 'nZ', nZ )
-	nSpec_id	= nCdf_dimDef ( nc_id, 'nSpec', nSpec )
+	nSpec_id = nCdf_dimDef ( nc_id, 'nSpec', nSpec )
 	nlim_id	= nCdf_dimDef ( nc_id, 'nlim', n_elements(rlim) )
+	nlcfs_id = nCdf_dimDef ( nc_id, 'nlcfs', n_elements(rlcfs) )
 
 	scalar_id	= nCdf_dimDef ( nc_id, 'scalar', 1 )
 
@@ -634,6 +636,12 @@ pro ar2_create_input
 	Lim_r_id = nCdf_varDef ( nc_id, 'Lim_r', [nlim_id], /float )
 	Lim_z_id = nCdf_varDef ( nc_id, 'Lim_z', [nlim_id], /float )
 
+	rlcfs_id = nCdf_varDef ( nc_id, 'rlcfs', [nlcfs_id], /float )
+	zlcfs_id = nCdf_varDef ( nc_id, 'zlcfs', [nlcfs_id], /float )
+
+	kPerSq_F_id = nCdf_varDef ( nc_id, 'kPerSq_F', [nR_id, nz_id], /float )
+	kPerSq_S_id = nCdf_varDef ( nc_id, 'kPerSq_S', [nR_id, nz_id], /float )
+
 	nCdf_control, nc_id, /enDef
 
 	nCdf_varPut, nc_id, rMin_id, rMin
@@ -655,15 +663,21 @@ pro ar2_create_input
 	nCdf_varPut, nc_id, nuOmg_id, nuOmg
 	
 	nCdf_varPut, nc_id, jant_id, jAnt
-  nCdf_varPut, nc_id, jant_r_id, jAnt_r
-  nCdf_varPut, nc_id, jant_z_id, jAnt_z
-  nCdf_varPut, nc_id, jant_t_id, jAnt_t
+    nCdf_varPut, nc_id, jant_r_id, jAnt_r
+    nCdf_varPut, nc_id, jant_z_id, jAnt_z
+    nCdf_varPut, nc_id, jant_t_id, jAnt_t
 
 	nCdf_varPut, nc_id, LimMask_id, mask_lim 
 	;nCdf_varPut, nc_id, BbbMask_id, mask_bbb
 
+    nCdf_varPut, nc_id, kPerSq_F_id, kPerpSq_F
+    nCdf_varPut, nc_id, kPerSq_S_id, kPerpSq_S
+
 	nCdf_varPut, nc_id, Lim_r_id, rlim
 	nCdf_varPut, nc_id, Lim_z_id, zlim
+
+	nCdf_varPut, nc_id, rlcfs_id, rlcfs
+	nCdf_varPut, nc_id, zlcfs_id, zlcfs
 
 	nCdf_close, nc_id
 

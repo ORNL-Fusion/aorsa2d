@@ -26,7 +26,8 @@ pro ar2_plot_solution, full = full, $
 	print, 'RunDataFile: ', RunDataFile
 
 	ar2_read_ar2input, ar2InputFile, $
-			rLim=rLim,zLim=zLim,LimMask=LimMask,ar2=ar2
+			rLim=rLim,zLim=zLim,LimMask=LimMask,ar2=ar2,$
+            rlcfs=rlcfs, zlcfs=zlcfs
 
 	@constants
 
@@ -406,6 +407,8 @@ pro ar2_plot_solution, full = full, $
 	    ScreenSize = get_screen_size()
 	    dimensions = ScreenSize*0.8
         plotpos = 1
+        xRange = [min(r),max(r)]
+        yRange = [min(z),max(z)]
 
         scaleFac = 0.5
         nPhiString = ' (nPhi: '+string(ThisNPHI,format='(i+4.3)')+')'
@@ -420,7 +423,7 @@ pro ar2_plot_solution, full = full, $
 		levels = fIndGen(nLevs)/(nLevs-1)*scale
 		colors = reverse(bytScl(levels, top=253)+1)
 		c = contour ( thisField, x, y, c_value=levels, rgb_indices=colors, rgb_table=3, /fill, $
-                aspect_ratio=1.0, title=title, dimensions=dimensions,layout=[layout,plotPos] )
+                aspect_ratio=1.0, title=title, dimensions=dimensions,layout=[layout,plotPos], xRange=xRange, yRange=yRange )
 		c = contour ( -thisField, x, y, c_value=levels, rgb_indices=colors, rgb_table=1, /fill,/over )
 		p = plot ( rLim, zLim, /over )
         ++PlotPos
@@ -430,7 +433,7 @@ pro ar2_plot_solution, full = full, $
 		levels = fIndGen(nLevs)/(nLevs-1)*scale
 		colors = reverse(bytScl(levels, top=253)+1)
 		c = contour ( thisField, x, y, c_value=levels, rgb_indices=colors, rgb_table=3, /fill, $
-                aspect_ratio=1.0, title=title, layout=[layout,PlotPos], /current )
+                aspect_ratio=1.0, title=title, layout=[layout,PlotPos], /current, xRange=xRange, yRange=yRange )
 		c = contour ( -thisField, x, y, c_value=levels, rgb_indices=colors, rgb_table=1, /fill,/over )
 		p = plot ( rLim, zLim, /over )
         ++PlotPos
@@ -440,13 +443,13 @@ pro ar2_plot_solution, full = full, $
 		levels = fIndGen(nLevs)/(nLevs-1)*scale
 		colors = reverse(bytScl(levels, top=253)+1)
 		c = contour ( thisField, x, y, c_value=levels, rgb_indices=colors, rgb_table=3, /fill, $
-                aspect_ratio=1.0, title=title, layout=[layout,PlotPos], /current )
+                aspect_ratio=1.0, title=title, layout=[layout,PlotPos], /current, xRange=xRange, yRange=yRange )
 		c = contour ( -thisField, x, y, c_value=levels, rgb_indices=colors, rgb_table=1, /fill,/over )
 		p = plot ( rLim, zLim, /over )
         ++PlotPos
 
 	    ;dimensions = [600,600]
-        scaleFac = 0.1
+        scaleFac = 0.5
 	    scale = max(abs([e_r,e_t,e_z]))*scaleFac 
 
 		thisField = e_r[*,*]
@@ -455,9 +458,11 @@ pro ar2_plot_solution, full = full, $
 		colors = reverse(bytScl(levels, top=253)+1)
 		PlotField = (real_part(thisField)<max(levels))>min(-levels)
 		c = contour ( PlotField, x, y, c_value=levels, rgb_indices=colors, rgb_table=3, /fill, $
-            aspect_ratio=1.0, layout=[layout,PlotPos], dimensions=dimensions, title=title,/current )
+            aspect_ratio=1.0, layout=[layout,PlotPos], dimensions=dimensions, title=title,/current, xRange=xRange, yRange=yRange )
 		c = contour ( -PlotField, x, y, c_value=levels, rgb_indices=colors, rgb_table=1, /fill,/over )
 		p = plot ( rlim, zlim, /over )
+		p = plot ( rlcfs, zlcfs, /over )
+        c_zero_set = contour(ar2.kPerSq_F,ar2.r,ar2.z,/over,c_value=0.001,color='blue',C_LABEL_SHOW=0,c_thick=2)
         ++PlotPos
 
 		thisField = abs(e_r[*,*])
@@ -466,7 +471,7 @@ pro ar2_plot_solution, full = full, $
 		colors = reverse(bytScl(levels, top=253)+1)
 		PlotField = (real_part(thisField)<max(levels))>min(-levels)
 		c = contour ( PlotField, x, y, c_value=levels, rgb_indices=colors, rgb_table=3, /fill, $
-            aspect_ratio=1.0, layout=[layout,PlotPos], /current, title=title )
+            aspect_ratio=1.0, layout=[layout,PlotPos], /current, title=title, xRange=xRange, yRange=yRange )
 		c = contour ( -PlotField, x, y, c_value=levels, rgb_indices=colors, rgb_table=1, /fill,/over )
 		p = plot ( rlim, zlim, /over )
         ++PlotPos
@@ -477,7 +482,7 @@ pro ar2_plot_solution, full = full, $
 		colors = reverse(bytScl(levels, top=253)+1)
 		PlotField = (real_part(thisField)<max(levels))>min(-levels)
 		c = contour ( PlotField, x, y, c_value=levels, rgb_indices=colors, rgb_table=3, /fill, $
-                aspect_ratio=1.0, layout=[layout,PlotPos], /current, title=title )
+                aspect_ratio=1.0, layout=[layout,PlotPos], /current, title=title, xRange=xRange, yRange=yRange )
 		c = contour ( -PlotField, x, y, c_value=levels, rgb_indices=colors, rgb_table=1, /fill,/over )
 		p = plot ( rlim, zlim, /over )
         ++PlotPos
@@ -488,7 +493,7 @@ pro ar2_plot_solution, full = full, $
 		colors = reverse(bytScl(levels, top=253)+1)
 		PlotField = (real_part(thisField)<max(levels))>min(-levels)
 		c = contour ( PlotField, x, y, c_value=levels, rgb_indices=colors, rgb_table=3, /fill, $
-                aspect_ratio=1.0, layout=[layout,PlotPos], /current, title=title )
+                aspect_ratio=1.0, layout=[layout,PlotPos], /current, title=title, xRange=xRange, yRange=yRange )
 		c = contour ( -PlotField, x, y, c_value=levels, rgb_indices=colors, rgb_table=1, /fill,/over )
 		p = plot ( rlim, zlim, /over )
         ++PlotPos
@@ -499,7 +504,7 @@ pro ar2_plot_solution, full = full, $
 		colors = reverse(bytScl(levels, top=253)+1)
 		PlotField = (real_part(thisField)<max(levels))>min(-levels)
 		c = contour ( PlotField, x, y, c_value=levels, rgb_indices=colors, rgb_table=3, /fill, $
-                aspect_ratio=1.0, layout=[layout,PlotPos], /current, title=title )
+                aspect_ratio=1.0, layout=[layout,PlotPos], /current, title=title, xRange=xRange, yRange=yRange )
 		c = contour ( -PlotField, x, y, c_value=levels, rgb_indices=colors, rgb_table=1, /fill,/over )
 		p = plot ( rlim, zlim, /over )
         ++PlotPos
@@ -510,7 +515,7 @@ pro ar2_plot_solution, full = full, $
 		colors = reverse(bytScl(levels, top=253)+1)
 		PlotField = (real_part(thisField)<max(levels))>min(-levels)
 		c = contour ( PlotField, x, y, c_value=levels, rgb_indices=colors, rgb_table=3, /fill, $
-                aspect_ratio=1.0, layout=[layout,PlotPos], /current, title=title )
+                aspect_ratio=1.0, layout=[layout,PlotPos], /current, title=title, xRange=xRange, yRange=yRange )
 		c = contour ( -PlotField, x, y, c_value=levels, rgb_indices=colors, rgb_table=1, /fill,/over )
 		p = plot ( rlim, zlim, /over )
         ++PlotPos
@@ -523,7 +528,7 @@ pro ar2_plot_solution, full = full, $
 		colors = reverse(bytScl(levels, top=253)+1)
 		PlotField = (real_part(thisField)<max(levels))>min(-levels)
 		c = contour ( PlotField, x, y, c_value=levels, rgb_indices=colors, rgb_table=3, /fill, $
-                aspect_ratio=1.0, title=title, layout=[layout,PlotPos], dimensions=dimensions,/current )
+                aspect_ratio=1.0, title=title, layout=[layout,PlotPos], dimensions=dimensions,/current, xRange=xRange, yRange=yRange )
 		c = contour ( -PlotField, x, y, c_value=levels, rgb_indices=colors, rgb_table=1, /fill,/over )
 		p = plot ( rlim, zlim, /over )
         ++PlotPos
@@ -534,7 +539,7 @@ pro ar2_plot_solution, full = full, $
 		colors = reverse(bytScl(levels, top=253)+1)
 		PlotField = (real_part(thisField)<max(levels))>min(-levels)
 		c = contour ( PlotField, x, y, c_value=levels, rgb_indices=colors, rgb_table=3, /fill, $
-                aspect_ratio=1.0, title=title, layout=[layout,PlotPos], /current )
+                aspect_ratio=1.0, title=title, layout=[layout,PlotPos], /current, xRange=xRange, yRange=yRange )
 		c = contour ( -PlotField, x, y, c_value=levels, rgb_indices=colors, rgb_table=1, /fill,/over )
 		p = plot ( rlim, zlim, /over )
         ++PlotPos
@@ -545,7 +550,7 @@ pro ar2_plot_solution, full = full, $
 		colors = reverse(bytScl(levels, top=253)+1)
 		PlotField = (real_part(thisField)<max(levels))>min(-levels)
 		c = contour ( PlotField, x, y, c_value=levels, rgb_indices=colors, rgb_table=3, /fill, $
-                aspect_ratio=1.0, title=title, layout=[layout,PlotPos], /current )
+                aspect_ratio=1.0, title=title, layout=[layout,PlotPos], /current, xRange=xRange, yRange=yRange )
 		c = contour ( -PlotField, x, y, c_value=levels, rgb_indices=colors, rgb_table=1, /fill,/over )
 		p = plot ( rlim, zlim, /over )
         ++PlotPos
@@ -557,7 +562,7 @@ pro ar2_plot_solution, full = full, $
 		colors = reverse(bytScl(levels, top=253)+1)
 		PlotField = (real_part(thisField)<max(levels))>min(-levels)
 		c = contour ( PlotField, x, y, c_value=levels, rgb_indices=colors, rgb_table=3, /fill, $
-                aspect_ratio=1.0, title=title, layout=[layout,PlotPos], /current )
+                aspect_ratio=1.0, title=title, layout=[layout,PlotPos], /current, xRange=xRange, yRange=yRange )
 		c = contour ( -PlotField, x, y, c_value=levels, rgb_indices=colors, rgb_table=1, /fill,/over )
 		p = plot ( rlim, zlim, /over )
         ++PlotPos
@@ -569,9 +574,9 @@ pro ar2_plot_solution, full = full, $
 		levels = fIndGen(nLevs)/(nLevs-1)*scale
 		colors = reverse(bytScl(levels, top=253)+1)
 		PlotField = (real_part(thisField)<max(levels))>min(-levels)
-		c = contour ( PlotField, x, y, c_value=levels, rgb_indices=colors, rgb_table=3, /fill, $
+		c = contour ( PlotField, c_value=levels, rgb_indices=colors, rgb_table=3, /fill, $
                 aspect_ratio=1.0, title=title, layout=[layout,PlotPos], dimensions=dimensions,/current )
-		c = contour ( -PlotField, x, y, c_value=levels, rgb_indices=colors, rgb_table=1, /fill,/over )
+		c = contour ( -PlotField, c_value=levels, rgb_indices=colors, rgb_table=1, /fill,/over )
         ++PlotPos
 
 		thisField = abs(ebetak[*,*])
@@ -579,9 +584,9 @@ pro ar2_plot_solution, full = full, $
 		levels = fIndGen(nLevs)/(nLevs-1)*scale
 		colors = reverse(bytScl(levels, top=253)+1)
 		PlotField = (real_part(thisField)<max(levels))>min(-levels)
-		c = contour ( PlotField, x, y, c_value=levels, rgb_indices=colors, rgb_table=3, /fill, $
+		c = contour ( PlotField, c_value=levels, rgb_indices=colors, rgb_table=3, /fill, $
                 aspect_ratio=1.0, title=title, layout=[layout,PlotPos], /current )
-		c = contour ( -PlotField, x, y, c_value=levels, rgb_indices=colors, rgb_table=1, /fill,/over )
+		c = contour ( -PlotField, c_value=levels, rgb_indices=colors, rgb_table=1, /fill,/over )
         ++PlotPos
 
 		thisField = abs(ebk[*,*])*0.5e2
@@ -589,9 +594,9 @@ pro ar2_plot_solution, full = full, $
 		levels = fIndGen(nLevs)/(nLevs-1)*scale
 		colors = reverse(bytScl(levels, top=253)+1)
 		PlotField = (real_part(thisField)<max(levels))>min(-levels)
-		c = contour ( PlotField, x, y, c_value=levels, rgb_indices=colors, rgb_table=3, /fill, $
+		c = contour ( PlotField, c_value=levels, rgb_indices=colors, rgb_table=3, /fill, $
                 aspect_ratio=1.0, title=title, layout=[layout,PlotPos], /current )
-		c = contour ( -PlotField, x, y, c_value=levels, rgb_indices=colors, rgb_table=1, /fill,/over )
+		c = contour ( -PlotField, c_value=levels, rgb_indices=colors, rgb_table=1, /fill,/over )
         ++PlotPos
 
 	endelse
