@@ -1,5 +1,6 @@
 pro ar2_read_ar2input, ar2InFileName, $
-		rLim=rLim, zLim=zLim, LimMask=LimMask, ar2 = ar2
+		rLim=rLim, zLim=zLim, LimMask=LimMask, ar2 = ar2, $
+        rlcfs=rlcfs, zlcfs=zlcfs
 
 	cdfId = ncdf_open ( ar2InFileName, /noWrite ) 
 	nCdf_varGet, cdfid, 'rMin', rMin
@@ -23,6 +24,13 @@ pro ar2_read_ar2input, ar2InFileName, $
 	nCdf_varGet, cdfid, 'LimMask', mask_lim 
 	nCdf_varGet, cdfid, 'Lim_r', rlim 
 	nCdf_varGet, cdfid, 'Lim_z', zlim 
+
+	nCdf_varGet, cdfid, 'rlcfs', rlcfs 
+	nCdf_varGet, cdfid, 'zlcfs', zlcfs
+
+	nCdf_varGet, cdfid, 'kPerSq_F', kPerSq_F 
+	nCdf_varGet, cdfid, 'kPerSq_S', kPerSq_S 
+	
 	ncdf_close, cdfId
 
 	;cdfId = ncdf_open ( runDataFileName, /noWrite ) 
@@ -46,6 +54,10 @@ pro ar2_read_ar2input, ar2InFileName, $
             nuOmg: nuOmg, $
             LimMask: mask_lim, $
             Lim_r: rlim, $
-            Lim_z: zlim }
+            Lim_z: zlim, $
+            rlcfs: rlcfs, $
+            zlcfs: zlcfs, $
+            kPerSq_F: kPerSq_F, $
+            kPerSq_S: kPerSq_S }
 
 end
