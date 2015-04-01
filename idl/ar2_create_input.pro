@@ -435,17 +435,15 @@ pro ar2_create_input
 	jAnt_t = jAnt*0.0
 
    nlevs=10
-   scale = 0.1
-   levels = (fltarr(nlevs)+1)/nlevs*scale
+   scale = 1.1
+   levels = (fIndGen(nlevs)+1)/nlevs*scale
    colors=bytscl(levels)
-   ;c1 = contour(jant,r,z,title='Antenna Current', aspect_ratio=1.0,c_value=levels,/fill,rgb_table=51,rgb_indices=colors)
    c1 = contour(jant, r, z,title='Antenna Current', $
     aspect_ratio = 1.0,layout=[layout,plotpos],/fill,/current,$
     c_value=levels,rgb_table=51,rgb_indices=colors, xRange=xRange, yRange=yRange)
-    
+   
    p1 = plot(rlcfs, zlcfs,/over)
    p1 = plot(rlim, zlim,/over)
-   p1 = plot(antr, antz,/over)
    ++plotpos
 
    ;nSmooth = 5 
@@ -603,8 +601,9 @@ pro ar2_create_input
 	
 	nR_id	= nCdf_dimDef ( nc_id, 'nR', nR )
 	nz_id	= nCdf_dimDef ( nc_id, 'nZ', nZ )
-	nSpec_id	= nCdf_dimDef ( nc_id, 'nSpec', nSpec )
+	nSpec_id = nCdf_dimDef ( nc_id, 'nSpec', nSpec )
 	nlim_id	= nCdf_dimDef ( nc_id, 'nlim', n_elements(rlim) )
+	nlcfs_id = nCdf_dimDef ( nc_id, 'nlcfs', n_elements(rlcfs) )
 
 	scalar_id	= nCdf_dimDef ( nc_id, 'scalar', 1 )
 
@@ -637,8 +636,8 @@ pro ar2_create_input
 	Lim_r_id = nCdf_varDef ( nc_id, 'Lim_r', [nlim_id], /float )
 	Lim_z_id = nCdf_varDef ( nc_id, 'Lim_z', [nlim_id], /float )
 
-	rlcfs_id = nCdf_varDef ( nc_id, 'rlcfs', [nlim_id], /float )
-	zlcfs_id = nCdf_varDef ( nc_id, 'zlcfs', [nlim_id], /float )
+	rlcfs_id = nCdf_varDef ( nc_id, 'rlcfs', [nlcfs_id], /float )
+	zlcfs_id = nCdf_varDef ( nc_id, 'zlcfs', [nlcfs_id], /float )
 
 	kPerSq_F_id = nCdf_varDef ( nc_id, 'kPerSq_F', [nR_id, nz_id], /float )
 	kPerSq_S_id = nCdf_varDef ( nc_id, 'kPerSq_S', [nR_id, nz_id], /float )
