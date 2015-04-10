@@ -159,9 +159,9 @@ pro ar2_create_input
 		endfor
 
 
-		;br = MakePeriodic ( br, mask_lim);, /look )
-		;bt = MakePeriodic ( bt, mask_lim);, /look )
-		;bz = MakePeriodic ( bz, mask_lim);, /look )
+		br = MakePeriodic ( br, mask_lim);, /look )
+		bt = MakePeriodic ( bt, mask_lim);, /look )
+		bz = MakePeriodic ( bz, mask_lim);, /look )
 
 	endif else if bField_flat eq 1 then begin
 
@@ -236,7 +236,7 @@ pro ar2_create_input
 	if fred_namelist_input then begin
 
 		@aorsa2d.in.ejf.idl
-			
+		
 		_nRho = fred.s_nRho_n
 		_nRhoFile = n_elements(fred.s_rho_n_grid)
 		_nS = n_elements(fred.s_s_name)
@@ -352,7 +352,9 @@ pro ar2_create_input
 
 	endelse
 
-    s_ne = contour(density_m3[*,*,0],r,z, layout=[layout,plotpos],/current,title='density',aspect_ratio=1.0)
+	thisPlot = density_m3[*,*,0]
+	thisPlot[0,0] = thisPlot[0,0]*1e-6
+    s_ne = contour(thisPlot,r,z, layout=[layout,plotpos],/current,title='density',aspect_ratio=1.0)
     if bField_eqdsk then p=plot(rLim,zLim,/over)
     ++plotpos
 
@@ -366,7 +368,8 @@ pro ar2_create_input
     endfor
     plotpos++	
 
-	p=plot(r,Density_m3[*,nZ/2,0],title='Density [1/m3]',thick=2,layout=[layout,plotpos],/current)
+	yRange=[min(Density_m3),max(Density_m3)]
+	p=plot(r,Density_m3[*,nZ/2,0],title='Density [1/m3]',thick=2,layout=[layout,plotpos],/current,yRange=yRange)
     for s=1,nSpec-1 do begin
 	    p=plot(r,Density_m3[*,nZ/2,s],/over)
     endfor
@@ -390,57 +393,68 @@ pro ar2_create_input
 
 	; Set the jAnt 2-D function
 
-	if bField_eqdsk then begin	
-		rCenter = g.rcentr
-		zCenter = 0.0	
-		rlcfs = rbbbs_os
-		zlcfs = zbbbs_os
-	endif
+	if fancy_antenna then begin
 
-	;get angular points on LCFS with respect to center core
+		if bField_eqdsk then begin	
+			rCenter = g.rcentr
+			zCenter = 0.0	
+			rlcfs = rbbbs_os
+			zlcfs = zbbbs_os
+		endif
 
-	theta = atan(zlcfs-zCenter, rlcfs-rCenter)*!radeg	
+		;get angular points on LCFS with respect to center core
 
-	; Get antenna location on LCFS, the shift away from LCFS
-	ii = where(theta gt theta_ant1 and theta le theta_ant2, iiCnt)
-	if iiCnt lt 2 then begin
-			print, 'ERROR: start and end of the antenna positions are too close together'
-			stop
-	endif
-	antr = rlcfs(ii)
-	antz = zlcfs(ii)  
-	antr = antr + rshift
-	antz = antz + zshift
-	
-	n_ant = n_elements(antr)
-	; Get antenna current: A Guassian peaked at the antenna
-	_d = FltArr(nR,nZ,n_ant)
-	for k=0,n_ant-1 do begin
-	  _d[*,*,k] = sqrt ( ( r2d - antr(k) )^2 + ( z2d - antz(k) )^2 )
-	endfor
-	d = min(_d,dim=3)
-	jAnt =  exp(-(d^2)/(sigma_ant^2))
-	
-	n = floor(n_ant/2)
-	Ju_r = (antr(n) - antr(n+1))/norm([antr(n+1), antz(n+1)] - [antr(n), antz(n)])
-	Ju_z = (antz(n) - antz(n+1))/norm([antr(n+1), antz(n+1)] - [antr(n), antz(n)])
-	
-	jAnt_r = jAnt*Ju_r
-	jAnt_z = jAnt*Ju_z
-	jAnt_t = jAnt*0.0
+		theta = atan(zlcfs-zCenter, rlcfs-rCenter)*!radeg	
+
+		; Get antenna location on LCFS, the shift away from LCFS
+		ii = where(theta gt theta_ant1 and theta le theta_ant2, iiCnt)
+		if iiCnt lt 2 then begin
+				print, 'ERROR: start and end of the antenna positions are too close together'
+				stop
+		endif
+		antr = rlcfs(ii)
+		antz = zlcfs(ii)  
+		antr = antr + rshift
+		antz = antz + zshift
+		
+		n_ant = n_elements(antr)
+		; Get antenna current: A Guassian peaked at the antenna
+		_d = FltArr(nR,nZ,n_ant)
+		for k=0,n_ant-1 do begin
+		  _d[*,*,k] = sqrt ( ( r2d - antr(k) )^2 + ( z2d - antz(k) )^2 )
+		endfor
+		d = min(_d,dim=3)
+		jAnt =  exp(-(d^2)/(sigma_ant^2))
+		
+		n = floor(n_ant/2)
+		Ju_r = (antr(n) - antr(n+1))/norm([antr(n+1), antz(n+1)] - [antr(n), antz(n)])
+		Ju_z = (antz(n) - antz(n+1))/norm([antr(n+1), antz(n+1)] - [antr(n), antz(n)])
+		
+		jAnt_r = jAnt*Ju_r
+		jAnt_z = jAnt*Ju_z
+		jAnt_t = jAnt*0.0
+
+	endif else begin
+
+		jAnt =  exp(-(  (r2d-rAnt)^2/antSig_r^2 + (z2d-zAnt)^2/antSig_z^2 ) )
+
+		jAnt_r = jAnt*jRmag
+		jAnt_t = jAnt*jTMag
+		jAnt_z = jAnt*jZMag
+
+	endelse
 
    nlevs=10
    scale = 0.1
    levels = (fltarr(nlevs)+1)/nlevs*scale
    colors=bytscl(levels)
-   ;c1 = contour(jant,r,z,title='Antenna Current', aspect_ratio=1.0,c_value=levels,/fill,rgb_table=51,rgb_indices=colors)
    c1 = contour(jant, r, z,title='Antenna Current', $
     aspect_ratio = 1.0,layout=[layout,plotpos],/fill,/current,$
     c_value=levels,rgb_table=51,rgb_indices=colors)
     
    p1 = plot(rlcfs, zlcfs,/over)
    p1 = plot(rlim, zlim,/over)
-   p1 = plot(antr, antz,/over)
+   if fancy_antenna then p1 = plot(antr, antz,/over)
    ++plotpos
 
    ;nSmooth = 5 

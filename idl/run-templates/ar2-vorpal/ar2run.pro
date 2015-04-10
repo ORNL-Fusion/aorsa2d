@@ -1,6 +1,8 @@
 
 	ShrinkFac = 0.25
 
+	generate_vorpal_input = 1
+
 	freq = 53.0e6
 	nphi = -27
 	b0 = 4.3
@@ -9,16 +11,19 @@
 	x0 = r0
 	y0 = 0.0 * ShrinkFac
 
-	eqdsk = 0
-	eqdskFileName = 'Scen4_bn2.57_129x129.dlgMod'
-	flux_profiles = 0
-	flat_profiles = 0
-	gaussian_profiles = 1
-	br_flat = 1d-5
+	bField_eqdsk = 0
+    bField_gaussian = 1
+    bField_flat = 0
+
+    br_flat = 1d-5
 	bt_flat = 0.0
 	bz_flat = 0.0
 
 	bpmax_b0 = 0.4
+
+	flux_profiles = 0
+	flat_profiles = 1
+	gaussian_profiles = 0
 
 	atomicZ	= [-1,2]
 	amu = [me/mi,4]
@@ -28,7 +33,7 @@
    	;		limiter,	center,		alp,	bet
 
 	nn = [	[0.0,		0.0,		9.0,	10.0],$ ; electrons are spec 0
-			[1.0d17,	2.0d19,		9.0,	10.0] ]
+			[1.0d19,	2.0d19,		9.0,	10.0] ]
 
 	tt = [	[00.5d-1,	00.5d3,		6.0,	4.0],$
 			[00.5d-1,	00.5d3,		6.0,	4.0] ]
@@ -56,7 +61,13 @@
 	zMin = -4.7*ShrinkFac
 	zMax = 4.7*ShrinkFac
 
+    rDomainBox = [rMin,rMax,rMax,rMin,rMin]
+    zDomainBox = [zMin,zMin,zMax,zMax,zMin]
+
     @ar2_coupling_common
 
-    rLim = RightSide_rLim
-    zLim = RightSide_zLim
+    rLim = LeftSide_rLim
+    zLim = LeftSide_zLim
+
+	rlcfs = rlim
+	zlcfs = zlim

@@ -55,7 +55,7 @@ pro compare_ar2_genray
 
 	eMag = sqrt(_er^2+_et^2+_ez^2)
 
-	useMaxFieldTrajectory = 0
+	useMaxFieldTrajectory = 1
 	if useMaxFieldTrajectory then begin
 		for i=0,n_elements(g)-1 do begin
 			ir = (g[i].r-_r[0])/(_r[-1]-_r[0])*(n_elements(_r)-1)

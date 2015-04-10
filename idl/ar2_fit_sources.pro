@@ -112,17 +112,17 @@ pro ar2_fit_sources, $
             r_jA_t = r.jA_t
             r_jA_z = r.jA_z
 
-            ;; Fit the E field (hard)
-            ;pos = s.r
-            ;basis_r = s_E_r
-            ;basis_t = s_E_t
-            ;basis_z = s_E_z
-            
-            ; Fit the jP field (hard)
+            ; Fit the E field (hard)
             pos = s.r
-            basis_r = s_Jp_r
-            basis_t = s_Jp_t
-            basis_z = s_Jp_z
+            basis_r = s_E_r
+            basis_t = s_E_t
+            basis_z = s_E_z
+            
+            ;; Fit the jP field (hard)
+            ;pos = s.r
+            ;basis_r = s_Jp_r
+            ;basis_t = s_Jp_t
+            ;basis_z = s_Jp_z
            
             ;; Fit the current sources (transparent) 
             ;pos = r.r
@@ -146,13 +146,13 @@ pro ar2_fit_sources, $
 
 	    ;help, amat
 
-        data_r = sFitMe.jP_r[iiFitThese]
-        data_t = sFitMe.jP_t[iiFitThese]
-        data_z = sFitMe.jP_z[iiFitThese]
+        ;data_r = sFitMe.jP_r[iiFitThese]
+        ;data_t = sFitMe.jP_t[iiFitThese]
+        ;data_z = sFitMe.jP_z[iiFitThese]
 
-        ;data_r = sFitMe.E_r[iiFitThese]
-        ;data_t = sFitMe.E_t[iiFitThese]
-        ;data_z = sFitMe.E_z[iiFitThese]
+        data_r = sFitMe.E_r[iiFitThese]
+        data_t = sFitMe.E_t[iiFitThese]
+        data_z = sFitMe.E_z[iiFitThese]
 
         if component eq 0 then b = data_r 
         if component eq 1 then b = data_t 
@@ -165,7 +165,6 @@ pro ar2_fit_sources, $
 	    coeffs = LA_LEAST_SQUARES(amat,b, status=stat,method=3,residual=residual)
         
 		if stat ne 0 then stop
-       	;print, coeffs 
 
         if component eq 0 then data = data_r 
         if component eq 1 then data = data_t 
@@ -176,7 +175,6 @@ pro ar2_fit_sources, $
         if component eq 2 then CoeffsOut_z[*] = coeffs
 
     endforeach
-
 
     iiR = IndGen(NRHS/3)*3
     iiT = iiR+1
@@ -189,8 +187,6 @@ pro ar2_fit_sources, $
 
     amat = [[amat_r],[amat_t],[amat_z]]
     b = [data_r,data_t,data_z]
-
-stop
 
     coeffs = LA_LEAST_SQUARES(amat,b, status=stat,method=0,residual=residual,/double)
 
@@ -223,9 +219,7 @@ stop
 
     endforeach
 
-stop
     ; Create the "perFileList" coefficient list
-
 
     ;p=plot(Coeffs_R,layout=[1,4,1],dimension=[600,600],title='Coeffs R')
     ;p=plot(imaginary(Coeffs_R),/over,color='b')

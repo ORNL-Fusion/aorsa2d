@@ -77,12 +77,10 @@ pro ar2_create_flux_profiles, nSpec, nn, tt, nR, nZ, PsiNorm, Mask_bbb, d_bbb, D
 					;density_m3[i,j,s] = _n * exp (eta) > _n/maxDecay
 					;temp_eV[i,j,s] = _t * exp (eta) > _t/maxDecay
 
-
 				endif
 
 			endfor
 		endfor
-		
 
 	endfor
 
