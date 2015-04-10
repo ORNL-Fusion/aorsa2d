@@ -246,9 +246,9 @@ contains
                     This_jA = (/g%jR(i,j),g%jT(i,j),g%jZ(i,j)/)
                 endif
 
-                brhs(ii+0,rhs) = -zi*omgrf*mu0*This_jA(1)
-                brhs(ii+1,rhs) = -zi*omgrf*mu0*This_jA(2)
-                brhs(ii+2,rhs) = -zi*omgrf*mu0*This_jA(3)
+                brhs(ii+0,rhs) = zi*omgrf*mu0*This_jA(1)
+                brhs(ii+1,rhs) = zi*omgrf*mu0*This_jA(2)
+                brhs(ii+2,rhs) = zi*omgrf*mu0*This_jA(3)
 
             enddo
         enddo
@@ -270,9 +270,9 @@ contains
                     This_jA = (/g%jR(i,j),g%jT(i,j),g%jZ(i,j)/)
                 endif
 
-                brhs(ii+0,jj) =  -zi*omgrf*mu0*This_jA(1)
-                brhs(ii+1,jj) =  -zi*omgrf*mu0*This_jA(2)
-                brhs(ii+2,jj) =  -zi*omgrf*mu0*This_jA(3)
+                brhs(ii+0,jj) =  zi*omgrf*mu0*This_jA(1)
+                brhs(ii+1,jj) =  zi*omgrf*mu0*This_jA(2)
+                brhs(ii+2,jj) =  zi*omgrf*mu0*This_jA(3)
 
 !#ifdef __GFORTRAN__
 !                if(ISNAN(REAL(brhs(ii+0,jj)))) stop '"re brhs(ii+0,jj)" is a NaN'

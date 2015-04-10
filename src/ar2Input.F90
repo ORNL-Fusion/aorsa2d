@@ -19,7 +19,7 @@ subroutine ReadAr2Input (AR2FileName)
 
     use netcdf
     use check_mod
-    use aorsaNamelist, only: noPoloidalField
+    use aorsaNamelist, only: noPoloidalField, useAntennaFromAR2Input
 
     implicit none
 
@@ -48,10 +48,12 @@ subroutine ReadAr2Input (AR2FileName)
     call check( nf90_inq_varId(nc_id,'bt',bt_id) )
     call check( nf90_inq_varId(nc_id,'bz',bz_id) )
 
+    if(useAntennaFromAR2Input)then 
     call check( nf90_inq_varId(nc_id,'jAnt',jant_id) )
     call check( nf90_inq_varId(nc_id,'jAnt_r',jant_r_id) )
     call check( nf90_inq_varId(nc_id,'jAnt_t',jant_t_id) )
     call check( nf90_inq_varId(nc_id,'jAnt_z',jant_z_id) )
+    endif
  
     call check( nf90_inq_dimId(nc_id,'nSpec',nS_id) )
     call check( nf90_inquire_dimension(nc_id,nS_id,len=nS) )
@@ -84,10 +86,12 @@ subroutine ReadAr2Input (AR2FileName)
     call check( nf90_get_var(nc_id,bt_id,bt) )
     call check( nf90_get_var(nc_id,bz_id,bz) )
 
+    if(useAntennaFromAR2Input)then
     call check( nf90_get_var(nc_id,jant_r_id,jant_r) )
     call check( nf90_get_var(nc_id,jant_t_id,jant_t) )
     call check( nf90_get_var(nc_id,jant_z_id,jant_z) )
     call check( nf90_get_var(nc_id,jant_id,jant) )
+    endif
 
     call check( nf90_get_var(nc_id,Density_id,Density_m3) )
     call check( nf90_get_var(nc_id,Temp_id,Temp_eV) )

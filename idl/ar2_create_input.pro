@@ -273,9 +273,6 @@ pro ar2_create_input
 		print, 'amu: ', amu
 		print, 'Z: ', atomicZ
 
-		;nn = fltArr(4,nS) 
-    	;tt = nn
-
 	endif else begin
     
 		for n=1,nSpec-1 do begin
@@ -366,9 +363,13 @@ pro ar2_create_input
     ++plotpos
 
 	p=plot(r,Density_m3[*,nZ/2,0],title='Density [1/m3]',/ylog,thick=2,layout=[layout,plotpos],/current)
+    _p = [p]
+    _c = ['b','g','r','c','m','y','k']
     for s=1,nSpec-1 do begin
-	    p=plot(r,Density_m3[*,nZ/2,s],/over)
+	    p=plot(r,Density_m3[*,nZ/2,s],/over,color=_c[s-1])
+        _p = [_p,p]
     endfor
+    l=legend(target=_p,/auto_text_color,position=[0.5,0.5],font_size=8,shadow=0)
     plotpos++	
 
 	p=plot(r,Density_m3[*,nZ/2,0],title='Density [1/m3]',thick=2,layout=[layout,plotpos],/current)
@@ -446,46 +447,39 @@ pro ar2_create_input
    p1 = plot(rlim, zlim,/over)
    ++plotpos
 
-   ;nSmooth = 5 
-    ;for s=0,nSpec-1 do begin
-    ;    for n=0,nSmooth-1 do begin
-    ;        nuOmg[*,*,s] = smooth(nuOmg[*,*,s]>MinNuOmg,min([nR,nZ])*0.05,/edge_truncate)
-    ;    endfor
-    ;endfor
-
 	; Look at the dispersion relation for these data
 
-	n_nPhi = 101 
-	nPhiMin = -n_nPhi/2
-	nPhiArray = IndGen(n_nPhi)+nPhiMin
+	;n_nPhi = 101 
+	;nPhiMin = -n_nPhi/2
+	;nPhiArray = IndGen(n_nPhi)+nPhiMin
 
-	kPerp_F = complexArr(nR,n_nPhi)
-	kPerp_S = complexArr(nR,n_nPhi)
+	;kPerp_F = complexArr(nR,n_nPhi)
+	;kPerp_S = complexArr(nR,n_nPhi)
 
-	kPerp_F2D_avg = complexArr(nR,nZ)
-	kPerp_S2D_avg = complexArr(nR,nZ)
+	;kPerp_F2D_avg = complexArr(nR,nZ)
+	;kPerp_S2D_avg = complexArr(nR,nZ)
 
-	StixP_nPhi = FltArr(nR,n_nPhi)
-	StixS_nPhi = FltArr(nR,n_nPhi)
-	StixR_nPhi = FltArr(nR,n_nPhi)
-	StixL_nPhi = FltArr(nR,n_nPhi)
+	;StixP_nPhi = FltArr(nR,n_nPhi)
+	;StixS_nPhi = FltArr(nR,n_nPhi)
+	;StixR_nPhi = FltArr(nR,n_nPhi)
+	;StixL_nPhi = FltArr(nR,n_nPhi)
 
-	;for nphi_i=0,n_nPhi-1 do begin
+	;;for nphi_i=0,n_nPhi-1 do begin
 
-	;	ar2_input_dispersion, wrf, amu, atomicZ, nn, nPhiArray[nphi_i], nSpec, nR, nZ, $
-	;		Density_m3, bMag, r2D, resonances = resonances, $
-	;		IonIonHybrid_res_freq=IonIonHybrid_res_freq, Spec1=1.0,Spec2=2.0, $
-	;		kPerSq_F=kPerpSq_F,kPerSq_S=kPerpSq_S, $
-	;		StixP=StixP,StixL=StixL,StixR=StixR,StixS=StixS
-	;	slice = nZ/4
-	;	kPerp_F[*,nphi_i] = sqrt(kPerpSq_F[*,slice])
-	;	kPerp_S[*,nphi_i] = sqrt(kPerpSq_S[*,slice])
+	;;	ar2_input_dispersion, wrf, amu, atomicZ, nn, nPhiArray[nphi_i], nSpec, nR, nZ, $
+	;;		Density_m3, bMag, r2D, resonances = resonances, $
+	;;		IonIonHybrid_res_freq=IonIonHybrid_res_freq, Spec1=1.0,Spec2=2.0, $
+	;;		kPerSq_F=kPerpSq_F,kPerSq_S=kPerpSq_S, $
+	;;		StixP=StixP,StixL=StixL,StixR=StixR,StixS=StixS
+	;;	slice = nZ/4
+	;;	kPerp_F[*,nphi_i] = sqrt(kPerpSq_F[*,slice])
+	;;	kPerp_S[*,nphi_i] = sqrt(kPerpSq_S[*,slice])
 
-	;	kPerp_F2D_avg = kPerp_F2D_avg + sqrt(kPerpSq_F)
-	;	kPerp_S2D_avg = kPerp_S2D_avg + sqrt(kPerpSq_S)
-	;endfor
-	;kPerp_F2D_avg = kPerp_F2D_avg/n_nPhi
-	;kPerp_S2D_avg = kPerp_S2D_avg/n_nPhi
+	;;	kPerp_F2D_avg = kPerp_F2D_avg + sqrt(kPerpSq_F)
+	;;	kPerp_S2D_avg = kPerp_S2D_avg + sqrt(kPerpSq_S)
+	;;endfor
+	;;kPerp_F2D_avg = kPerp_F2D_avg/n_nPhi
+	;;kPerp_S2D_avg = kPerp_S2D_avg/n_nPhi
 
 
 	; Get dispersion solution for some nPhi 

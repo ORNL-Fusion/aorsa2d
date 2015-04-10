@@ -1,5 +1,5 @@
 function ar2_read_solution, runFolderName, RHS
-
+    
 	;; This is just to ensure we get consistent files, i.e., not
 	;; relying on the order of the list of a file read.
 	;SolutionFiles = file_search(runFolderName+'/output/solution*.nc')
