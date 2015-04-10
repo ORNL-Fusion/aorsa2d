@@ -3,14 +3,31 @@ global_nuOmg = r2D*0
 ; Create a smooth absorbing layer at the boundary edge
 
 MinNuOmg = 0.00
-;absorbingNuOmg = 0.0
-;absorbing_left_r = 2.05 ; Left domain edge
-;absorbing_right_r = 2.3 
-;cos_arg_2D = -(r2D - absorbing_right_r)/(absorbing_right_r-absorbing_left_r)*!pi;-!pi
-;iiNuOmgSet1 = where(r2D gt absorbing_left_r,iiNuOmgSetCnt) 
-;global_nuOmg[iiNuOmgSet1] = (cos(cos_arg_2D[iiNuOmgSet1])+1)*0.5*absorbingNuOmg
-;iiNuOmgSet2 = where(r2D gt absorbing_right_r,iiNuOmgSetCnt) 
-;global_nuOmg[iiNuOmgSet2] = absorbingNuOmg
+
+absorbingNuOmg = 10.0
+
+left_absorber = 1
+right_absorber = 0
+
+_rMin = 1.1 
+_rMax = 1.7 
+
+if left_absorber then begin
+	cos_arg_2D = -(r2D - _rMax)/(_rMax-_rMin)*!pi-!pi
+	iiNuOmgSet1 = where(r2D lt _rMax,iiNuOmgSetCnt) 
+	global_nuOmg[iiNuOmgSet1] = (cos(cos_arg_2D[iiNuOmgSet1])+1)*0.5*absorbingNuOmg
+	iiNuOmgSet2 = where(r2D lt _rMin,iiNuOmgSetCnt) 
+	global_nuOmg[iiNuOmgSet2] = absorbingNuOmg
+endif
+
+if right_absorber then begin
+	cos_arg_2D = -(r2D - _rMax)/(_rMax-_rMin)*!pi
+	iiNuOmgSet1 = where(r2D gt _rMin,iiNuOmgSetCnt) 
+	global_nuOmg[iiNuOmgSet1] = (cos(cos_arg_2D[iiNuOmgSet1])+1)*0.5*absorbingNuOmg
+	iiNuOmgSet2 = where(r2D gt _rMax,iiNuOmgSetCnt) 
+	global_nuOmg[iiNuOmgSet2] = absorbingNuOmg
+endif
+
 
 for s=0,nSpec-1 do begin
     nuOmg[*,*,s] = global_nuOmg>MinNuOmg
