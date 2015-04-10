@@ -24,7 +24,7 @@ for n=0,nIterations-1 do begin
 endfor
 
 for s=0,nSpec-1 do begin
-    nuOmg[*,*,s] = global_nuOmg
+    nuOmg[*,*,s] = global_nuOmg>0.01
 endfor
 
 

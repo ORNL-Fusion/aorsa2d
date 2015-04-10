@@ -6,7 +6,7 @@ function ar2_read_vorpal, runFolderName=runFolderName, _2d = _2d, freq = freq
 	plotB0 = 0
 	plotDensity = 0
 	plotE = 1
-	plotSource = 0
+	plotSource = 1
 	plotjP = 1
 
     RunId = 'output/test'
@@ -192,7 +192,8 @@ function ar2_read_vorpal, runFolderName=runFolderName, _2d = _2d, freq = freq
     jP1Y_freq = complexArr(nX)
     jP1Z_freq = complexArr(nX)
 
-    iiSteadyState = where(time gt 0);3.0*max(time)/4.0)
+    iiSteadyState = where(time gt 0)
+
     for i=0,nX-1 do begin
         eEdgeX_freq[i] = ar2_time_to_freq(eEdgeX[i,iiSteadyState],time[iiSteadyState],freq,i=i)
         eEdgeY_freq[i] = ar2_time_to_freq(eEdgeY[i,iiSteadyState],time[iiSteadyState],freq,i=i)
