@@ -46,8 +46,8 @@ pro ar2_create_current_source_location_file
 	rMin = 1.85
     rMax = 2.00
     ; Left simple
-    rMin = 2.4
-    rMax = 2.45
+    rMin = 2.5
+    rMax = 2.5
 
 	zMin = 0.3
 	zMax = 0.17
