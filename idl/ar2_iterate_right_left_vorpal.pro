@@ -45,7 +45,6 @@ for NN = 0, nSubCycles-1 do begin ; full iteration loop
     endif   
     cd, right_NextDir
 
-    ;right_s = rsfwc_read_solution (right_ThisDir)
 	freq = 53.0e6
 
     ; Use the MPE solution instead of an initial Vorpal run
@@ -135,12 +134,6 @@ for NN = 0, nSubCycles-1 do begin ; full iteration loop
     p=plot(This_s.r,imaginary(This_jP_t),/over,color='r')
     p=plot(This_s.r,This_jP_z,layout=[1,3,3],/current)
     p=plot(This_s.r,imaginary(This_jP_z),/over,color='r')
-
-    ;p=plot(This_s.r,This_jA_z,layout=[1,3,3],/current,color='b')
-    ;p=plot(This_s.r,imaginary(This_jA_z),/over,color='b',linestyle='--')
-
-    ;p=plot(right_s.r,right_s.jP_z,/over,thick=2)
-    ;p=plot(right_s.r,imaginary(right_s.jP_z),/over,thick=2,color='r')
 
     R = right_s
     L = This_s

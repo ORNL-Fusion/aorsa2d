@@ -57,6 +57,7 @@ pro ar2_create_input
     parabolic_profiles = 0
     flux_profiles = 0
 	fred_namelist_input = 0
+	flat_profiles = 1
 
 	br_flat = 0.0
 	bt_flat = 1.0
@@ -340,18 +341,19 @@ pro ar2_create_input
 			Temp_eV[*,*,s] = Smooth(Temp_eV[*,*,s],SmoothWidth,/edge_mirror)
         endfor
 
-	endif else begin
+	endif else if flat_profiles then begin
 
 		for s=0,nSpec-1 do begin
 			Density_m3[*,*,s] = nn[0,s]
 			Temp_ev[*,*,s] = tt[0,s]
 		endfor
 
-	endelse
+	endif
 
     yRange = [zMin,zMax]
     xRange = [rMin,rMax]
 
+	if not flat_profiles then begin 
     s_ne = contour(density_m3[*,*,0],r,z, layout=[layout,plotpos],$
             /current,title='density',aspect_ratio=1.0, xRange=xRange, yRange=yRange )
     if bField_eqdsk then p=plot(rLim,zLim,/over)
@@ -361,21 +363,17 @@ pro ar2_create_input
             /current,title='temp',aspect_ratio=1.0, xRange=xRange, yRange=yRange)
     if bField_eqdsk then p=plot(rLim,zLim,/over)
     ++plotpos
+	endif
 
-	p=plot(r,Density_m3[*,nZ/2,0],title='Density [1/m3]',/ylog,thick=2,layout=[layout,plotpos],/current)
     _p = [p]
     _c = ['b','g','r','c','m','y','k']
+	densityRange=[min(Density_m3),max(Density_m3)]
+	p=plot(r,Density_m3[*,nZ/2,0],$
+			title='Density [1/m3]',thick=2,$
+			layout=[layout,plotpos],/current,yRange=densityRange)
     for s=1,nSpec-1 do begin
-	    p=plot(r,Density_m3[*,nZ/2,s],/over,color=_c[s-1])
+		p=plot(r,Density_m3[*,nZ/2,s],/over,color=_c[s-1])
         _p = [_p,p]
-    endfor
-    l=legend(target=_p,/auto_text_color,position=[0.5,0.5],font_size=8,shadow=0)
-    plotpos++	
-
-	yRange=[min(Density_m3),max(Density_m3)]
-	p=plot(r,Density_m3[*,nZ/2,0],title='Density [1/m3]',thick=2,layout=[layout,plotpos],/current,yRange=yRange)
-    for s=1,nSpec-1 do begin
-	    p=plot(r,Density_m3[*,nZ/2,s],/over)
     endfor
     plotpos++	
 
