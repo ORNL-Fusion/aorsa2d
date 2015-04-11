@@ -80,6 +80,35 @@ function ar2_vorpal_impedance_matrix, rSrc, rSmp, ar2RunDir=_ar2RunDir
 	_i = complex(0,1)
 	print, exp(-_i*k*dx)
 
+	format = '(f6.3)'
+	print, '$ SxxR = ', string(real_part(S[0,0]),format=format)
+	print, '$ SxxI = ', string(imaginary(S[0,0]),format=format)
+	print, '$ SxyR = ', string(real_part(S[0,1]),format=format)
+	print, '$ SxyI = ', string(imaginary(S[0,1]),format=format)
+	print, '$ SxzR = ', string(real_part(S[0,2]),format=format)
+	print, '$ SxzI = ', string(imaginary(S[0,2]),format=format)
+
+	print, '$ SyxR = ', string(real_part(S[1,0]),format=format)
+	print, '$ SyxI = ', string(imaginary(S[1,0]),format=format)
+	print, '$ SyyR = ', string(real_part(S[1,1]),format=format)
+	print, '$ SyyI = ', string(imaginary(S[1,1]),format=format)
+	print, '$ SyzR = ', string(real_part(S[1,2]),format=format)
+	print, '$ SyzI = ', string(imaginary(S[1,2]),format=format)
+
+	print, '$ SzxR = ', string(real_part(S[2,0]),format=format)
+	print, '$ SzxI = ', string(imaginary(S[2,0]),format=format)
+	print, '$ SzyR = ', string(real_part(S[2,1]),format=format)
+	print, '$ SzyI = ', string(imaginary(S[2,1]),format=format)
+	print, '$ SzzR = ', string(real_part(S[2,2]),format=format)
+	print, '$ SzzI = ', string(imaginary(S[2,2]),format=format)
+
+
+
+
+
+
+
+
 stop
 
 end
