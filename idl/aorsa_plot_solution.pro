@@ -503,10 +503,10 @@ pro aorsa_plot_solution, oneD = oneD, full = full, $
 		;term3_z = -II * w * u0 * jA_z
 
 
-		p = plot ( term1_r, layout=[1,3,1] )
-		p = plot ( imaginary(term1_r), color='red',/over )
-		p = plot ( -term2_r+term3_r, lineStyle='--', thick = 4, transp = 50, /over )
-		p = plot ( imaginary(-term2_r+term3_r), $
+        p = plot ( term1_r, layout=[1,3,1] )
+        p = plot ( imaginary(term1_r), color='red',/over )
+        p = plot ( -term2_r+term3_r, lineStyle='--', thick = 4, transp = 50, /over )
+        p = plot ( imaginary(-term2_r+term3_r), $
 				color='r',lineStyle='--' , thick = 4, transp = 50, /over )
 
 		p = plot ( term1_t, layout=[1,3,2], /current )
@@ -559,34 +559,34 @@ pro aorsa_plot_solution, oneD = oneD, full = full, $
 		device, decomposed = 0
 		!p.background = 255
 		loadct, 3
-		contour, ealphaAll, xAll, yAll, $
-			irreg = 1, $
-			levels = levels, $
-			c_colors = colors, $
-			color = 0, /fill
-		loadct, 1
-		contour, -ealphaAll, xAll, yAll, $
-			irreg = 1, $
-			levels = levels, $
-			c_colors = colors, $
-			/over, color = 0, /fill
+;contour, ealphaAll, xAll, yAll, $
+;			irreg = 1, $
+;			levels = levels, $
+;			c_colors = colors, $
+;			color = 0, /fill
+;		loadct, 1
+;		contour, -ealphaAll, xAll, yAll, $
+;			irreg = 1, $
+;			levels = levels, $
+;			c_colors = colors, $
+;			/over, color = 0, /fill
 
-		levels	= (fIndGen(nLevs)+1)/(nLevs-1) * scale3 * 0.5
-		colors	= 256-(bytScl ( levels, top = 253 )+1)
+;		levels	= (fIndGen(nLevs)+1)/(nLevs-1) * scale3 * 0.5
+;		colors	= 256-(bytScl ( levels, top = 253 )+1)
 
-		window, 1
-		loadct, 3
-		contour, eBAll, xAll, yAll, $
-			irreg = 1, $
-			levels = levels, $
-			c_colors = colors, $
-			color = 0, /fill
-		loadct, 1
-		contour, -eBAll, xAll, yAll, $
-			irreg = 1, $
-			levels = levels, $
-			c_colors = colors, $
-			/over, color = 0, /fill
+;		window, 1
+;		loadct, 3
+;		contour, eBAll, xAll, yAll, $
+;			irreg = 1, $
+;			levels = levels, $
+;			c_colors = colors, $
+;			color = 0, /fill
+;		loadct, 1
+;		contour, -eBAll, xAll, yAll, $
+;			irreg = 1, $
+;			levels = levels, $
+;			c_colors = colors, $
+;			/over, color = 0, /fill
 
 
 	endelse

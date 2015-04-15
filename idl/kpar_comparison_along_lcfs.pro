@@ -1,4 +1,4 @@
-pro compare_ar2_genray
+pro kpar_comparison_along_lcfs
 
 ;	gFileName = 'param_along_ray_nphi71.txt'
 	;gFileName = 'param_along_ray_nphi94.txt'
@@ -10,8 +10,9 @@ pro compare_ar2_genray
     freq = 30e6
 
 	;eqdskFileName = 'g122976.03021'
-    eqdskFileName = 'NSTX_130608A03_trxpl_0.410_plasma_state.geq'
-	eqdsk = readgeqdsk(eqdskFileName)
+    eqdskFileName = 'input/NSTX_130608A03_trxpl_0.410_plasma_state.geq'
+;	eqdsk = readgeqdsk(eqdskFileName)
+    eqdsk = readgeqdsk(eqdskFileName, /noTor)
 
 	;g = read_genray(gFileName)
 	;__n = n_elements(g)
@@ -27,11 +28,12 @@ pro compare_ar2_genray
  ;   traj_r = g.r
  ;   traj_z = g.z
 
-	useAR2File = 0
+	useAR2File = 1
 	if useAR2File then begin
 		a = ar2_read_solution('./',1)
-		ar2_read_ar2input,'ar2Input.nc',ar2=d
-		r = ar2_read_rundata('./',1)
+	;	ar2_read_ar2input,'ar2Input.nc',ar2=d
+        ar2_read_ar2input,'input/ar2Input.nc',ar2=d
+        r = ar2_read_rundata('./',1)
 
 		_r = a.r
 		_z = a.z
@@ -44,7 +46,7 @@ pro compare_ar2_genray
 		freq = r.freq
 	endif
 
-	useFredFile = 1	
+	useFredFile = 0
 	if useFredFile then begin
 		eLabFrameFileName = 'E_lab_frame'
 		;eLabFrameFileName = 'E_lab_frame-damp-500a'
@@ -64,10 +66,13 @@ pro compare_ar2_genray
 
 	useMaxFieldTrajectory = 1
 	if useMaxFieldTrajectory then begin
-        _ii = where(g.r gt 1.7)
-        g = g[_ii]
-        traj_r = g.r - (g.distance*0.0005)^2
-        traj_z = g.z + (g.distance*0.003)^2
+     ;   _ii = where(g.r gt 1.7)
+     ;   g = g[_ii]
+     ;   traj_r = g.r - (g.distance*0.0005)^2
+     ;   traj_z = g.z + (g.distance*0.003)^2
+
+         traj_r = eqdsk.rbbbs(5:15)
+         traj_z = eqdsk.zbbbs(5:15)
 
 	endif
 
@@ -83,8 +88,8 @@ pro compare_ar2_genray
 	
 	p=plot(eqdsk.rlim,eqdsk.zlim,/over)
 	p=plot(eqdsk.rbbbs,eqdsk.zbbbs,/over)
-	p=plot(traj_r[*],traj_z[*],/over,thick=2)
-	p=plot(g.r[*],g.z[*],/over, color='b',thick=2)
+	p=plot(traj_r[*],traj_z[*],/over,thick=2, color='blue')
+;	p=plot(g.r[*],g.z[*],/over, color='b',thick=2)
 
 	nGenRay = n_elements(traj_r)
 
@@ -172,12 +177,23 @@ pro compare_ar2_genray
 
 		_pt = [this_r,0,this_z]
 		_ds = 0.005
+;		_g = readgeqdsk(eqdskFileName,fieldLineIn=_pt,fieldLine_CYL=_line1,$
+;			B_AlongFieldLine_CYL=_line_b1,fieldLineTraceDS=_ds,$
+;			fieldLineTraceNSteps=_nf,fieldLineTraceDir=1, FieldLineTracePerp=0)
+;		_g = readgeqdsk(eqdskFileName,fieldLineIn=_pt,fieldLine_CYL=_line2,$
+;			B_AlongFieldLine_CYL=_line_b2,fieldLineTraceDS=_ds,$
+;			fieldLineTraceNSteps=_nf,fieldLineTraceDir=-1, FieldLineTracePerp=0)
+
+        print, "hello"
+
 		_g = readgeqdsk(eqdskFileName,fieldLineIn=_pt,fieldLine_CYL=_line1,$
 			B_AlongFieldLine_CYL=_line_b1,fieldLineTraceDS=_ds,$
-			fieldLineTraceNSteps=_nf,fieldLineTraceDir=1, FieldLineTracePerp=0)
+			fieldLineTraceNSteps=_nf,fieldLineTraceDir=1)
 		_g = readgeqdsk(eqdskFileName,fieldLineIn=_pt,fieldLine_CYL=_line2,$
 			B_AlongFieldLine_CYL=_line_b2,fieldLineTraceDS=_ds,$
-			fieldLineTraceNSteps=_nf,fieldLineTraceDir=-1, FieldLineTracePerp=0)
+			fieldLineTraceNSteps=_nf,fieldLineTraceDir=-1)
+
+        print, "bye"
 
 		fLine = [[reverse(_line1[*,0:-2],2)],[_line2[*,1:-2]]]
 		bLine = [[reverse(_line_b1[*,0:-2],2)],[_line_b2[*,1:-2]]]

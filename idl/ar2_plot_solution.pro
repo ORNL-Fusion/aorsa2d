@@ -401,11 +401,12 @@ pro ar2_plot_solution, full = full, $
 
 	endif else begin ; Now 2D plotting
 
-        layout = [6,3]
+   ;     layout = [6,3]
         !x.margin = !x.margin / 3
         !y.margin = !y.margin / 2
-	    ScreenSize = get_screen_size()
-	    dimensions = ScreenSize*0.8
+	;    ScreenSize = get_screen_size()
+	;    dimensions = ScreenSize*0.8
+        dimensions = [600,1300]
         plotpos = 1
         xRange = [min(r),max(r)]
         yRange = [min(z),max(z)]
@@ -417,187 +418,232 @@ pro ar2_plot_solution, full = full, $
         ;scale = 0.16
         print, 'jP scale: ', scale
 
-		nLevs = 11
-		thisField = jP_r[*,*]*LimMask
-        title = 'jP_r'+ nPhiString
-		levels = fIndGen(nLevs)/(nLevs-1)*scale
-		colors = reverse(bytScl(levels, top=253)+1)
-		c = contour ( thisField, x, y, c_value=levels, rgb_indices=colors, rgb_table=3, /fill, $
-                aspect_ratio=1.0, title=title, dimensions=dimensions,layout=[layout,plotPos], xRange=xRange, yRange=yRange )
-		c = contour ( -thisField, x, y, c_value=levels, rgb_indices=colors, rgb_table=1, /fill,/over )
-		p = plot ( rLim, zLim, /over )
-        ++PlotPos
+		nLevs = 10
 
-		thisField = jP_t[*,*]*LimMask
-        title = 'jP_t'
-		levels = fIndGen(nLevs)/(nLevs-1)*scale
-		colors = reverse(bytScl(levels, top=253)+1)
-		c = contour ( thisField, x, y, c_value=levels, rgb_indices=colors, rgb_table=3, /fill, $
-                aspect_ratio=1.0, title=title, layout=[layout,PlotPos], /current, xRange=xRange, yRange=yRange )
-		c = contour ( -thisField, x, y, c_value=levels, rgb_indices=colors, rgb_table=1, /fill,/over )
-		p = plot ( rLim, zLim, /over )
-        ++PlotPos
+;thisField = jP_r[*,*]*LimMask
+;       title = 'jP_r'+ nPhiString
+;		levels = fIndGen(nLevs)/(nLevs-1)*scale
+;		colors = reverse(bytScl(levels, top=253)+1)
+;		c = contour ( thisField, x, y, c_value=levels, rgb_indices=colors, rgb_table=3, /fill, $
+;               aspect_ratio=1.0, title=title, dimensions=dimensions,layout=[layout,plotPos], xRange=xRange, yRange=yRange )
+;		c = contour ( -thisField, x, y, c_value=levels, rgb_indices=colors, rgb_table=1, /fill,/over )
+;		p = plot ( rLim, zLim, /over )
+;       ++PlotPos
 
-		thisField = jP_z[*,*]*LimMask
-        title = 'jP_z'
-		levels = fIndGen(nLevs)/(nLevs-1)*scale
-		colors = reverse(bytScl(levels, top=253)+1)
-		c = contour ( thisField, x, y, c_value=levels, rgb_indices=colors, rgb_table=3, /fill, $
-                aspect_ratio=1.0, title=title, layout=[layout,PlotPos], /current, xRange=xRange, yRange=yRange )
-		c = contour ( -thisField, x, y, c_value=levels, rgb_indices=colors, rgb_table=1, /fill,/over )
-		p = plot ( rLim, zLim, /over )
-        ++PlotPos
+;		thisField = jP_t[*,*]*LimMask
+;       title = 'jP_t'
+;		levels = fIndGen(nLevs)/(nLevs-1)*scale
+;		colors = reverse(bytScl(levels, top=253)+1)
+;		c = contour ( thisField, x, y, c_value=levels, rgb_indices=colors, rgb_table=3, /fill, $
+;               aspect_ratio=1.0, title=title, layout=[layout,PlotPos], /current, xRange=xRange, yRange=yRange )
+;		c = contour ( -thisField, x, y, c_value=levels, rgb_indices=colors, rgb_table=1, /fill,/over )
+;		p = plot ( rLim, zLim, /over )
+;       ++PlotPos
+
+;		thisField = jP_z[*,*]*LimMask
+;       title = 'jP_z'
+;		levels = fIndGen(nLevs)/(nLevs-1)*scale
+;		colors = reverse(bytScl(levels, top=253)+1)
+;		c = contour ( thisField, x, y, c_value=levels, rgb_indices=colors, rgb_table=3, /fill, $
+;               aspect_ratio=1.0, title=title, layout=[layout,PlotPos], /current, xRange=xRange, yRange=yRange )
+;		c = contour ( -thisField, x, y, c_value=levels, rgb_indices=colors, rgb_table=1, /fill,/over )
+;		p = plot ( rLim, zLim, /over )
+;       ++PlotPos
 
 	    ;dimensions = [600,600]
-        scaleFac = 0.5
-	    scale = max(abs([e_r,e_t,e_z]))*scaleFac 
+        scaleFac = 0.2
+	    ;scale = max(abs([e_r,e_t,e_z]))*scaleFac
+        scale = 0.381946
+        print, scale
 
 		thisField = e_r[*,*]
         title = 'E_r'
 		levels = fIndGen(nLevs)/(nLevs-1)*scale
 		colors = reverse(bytScl(levels, top=253)+1)
 		PlotField = (real_part(thisField)<max(levels))>min(-levels)
+;		c = contour ( PlotField, x, y, c_value=levels, rgb_indices=colors, rgb_table=3, /fill, $
+;            aspect_ratio=1, layout=[layout,PlotPos], dimensions=dimensions, title=title,/current, xRange=xRange, yRange=yRange )
 		c = contour ( PlotField, x, y, c_value=levels, rgb_indices=colors, rgb_table=3, /fill, $
-            aspect_ratio=1.0, layout=[layout,PlotPos], dimensions=dimensions, title=title,/current, xRange=xRange, yRange=yRange )
+            aspect_ratio=1, dimensions=dimensions, title=title, xRange=xRange, yRange=yRange )
 		c = contour ( -PlotField, x, y, c_value=levels, rgb_indices=colors, rgb_table=1, /fill,/over )
-		p = plot ( rlim, zlim, /over )
-		p = plot ( rlcfs, zlcfs, /over )
-        c_zero_set = contour(ar2.kPerSq_F,ar2.r,ar2.z,/over,c_value=0.001,color='blue',C_LABEL_SHOW=0,c_thick=2)
+        p = plot ( rlim, zlim, /over, thick = 3, color='lime')
+        p = plot ( rlcfs, zlcfs, /over, thick = 4, color='yellow' )
+        c_zero_set = contour(ar2.kPerSq_F,ar2.r,ar2.z,/over,c_value=0.001,color='cyan',C_LABEL_SHOW=0,c_thick=3)
+        c_jant = contour(jA_r, x, y, /over, c_value = 0.23, color='silver', C_LABEL_SHOW=0, c_thick=5)
         ++PlotPos
+        p.Save, "Er.png", border=0, height=600
+
+        dimensions = [200,600]
 
 		thisField = abs(e_r[*,*])
         title = 'abs(E_r)'
 		levels = fIndGen(nLevs)/(nLevs-1)*scale
 		colors = reverse(bytScl(levels, top=253)+1)
 		PlotField = (real_part(thisField)<max(levels))>min(-levels)
+;		c = contour ( PlotField, x, y, c_value=levels, rgb_indices=colors, rgb_table=3, /fill, $
+;            aspect_ratio=1, layout=[layout,PlotPos], /current, title=title, xRange=xRange, yRange=yRange )
 		c = contour ( PlotField, x, y, c_value=levels, rgb_indices=colors, rgb_table=3, /fill, $
-            aspect_ratio=1.0, layout=[layout,PlotPos], /current, title=title, xRange=xRange, yRange=yRange )
+            aspect_ratio=1, title=title, xRange=xRange, yRange=yRange, dimensions=[600,1300])
 		c = contour ( -PlotField, x, y, c_value=levels, rgb_indices=colors, rgb_table=1, /fill,/over )
-		p = plot ( rlim, zlim, /over )
+		p = plot ( rlim, zlim, /over, thick = 3, color='lime')
+        p = plot ( rlcfs, zlcfs, /over, thick = 4, color='yellow' )
+        c_zero_set = contour(ar2.kPerSq_F,ar2.r,ar2.z,/over,c_value=0.001,color='cyan',C_LABEL_SHOW=0,c_thick=3)
+        c_jant = contour(jA_r, x, y, /over, c_value = 0.23, color='silver', C_LABEL_SHOW=0, c_thick=5)
         ++PlotPos
+        p.Save, "absEr.png",  border=0, height=600
 
-		thisField = e_t[*,*]
-        title = 'E_t'
-		levels = fIndGen(nLevs)/(nLevs-1)*scale
-		colors = reverse(bytScl(levels, top=253)+1)
+        dimensions = [200,600]
+
+		nLevs = 50
+
+		thisField = abs(e_r[*,*]^2 + e_t[*,*]^2 + e_z[*,*]^2)
+        print, alog(max(thisField))
+        ;scale = 1.4*0.07  ; with limiter boundary, nstx case
+        scale = 1.0
+        scale= 1.5*(6.0/nLevs)
+
+        title = 'ln(|E|)'
+;		levels = fIndGen(nLevs)/(nLevs-1)*scale
+        levels = fIndGen(nLevs)*scale - 1
+      ;  colors = reverse(bytScl(levels, top=253)+1)
+      colors = bytScl(levels, top=253)+1
 		PlotField = (real_part(thisField)<max(levels))>min(-levels)
-		c = contour ( PlotField, x, y, c_value=levels, rgb_indices=colors, rgb_table=3, /fill, $
-                aspect_ratio=1.0, layout=[layout,PlotPos], /current, title=title, xRange=xRange, yRange=yRange )
-		c = contour ( -PlotField, x, y, c_value=levels, rgb_indices=colors, rgb_table=1, /fill,/over )
-		p = plot ( rlim, zlim, /over )
+;		c = contour ( PlotField, x, y, c_value=levels, rgb_indices=colors, rgb_table=3, /fill, $
+;            aspect_ratio=1, layout=[layout,PlotPos], /current, title=title, xRange=xRange, yRange=yRange)
+		c = contour ( alog(1000*PlotField), x, y, c_value=levels, rgb_indices=colors, rgb_table=51, /fill, $
+            aspect_ratio=1, title=title, xRange=xRange, yRange=yRange, dimensions=[600,1300], font_size=16)
+        cb = colorbar(target=c, orientation=1, title='ln(V/m)', position = [0.2, 0.3, 0.25, 0.7], font_size=16, $
+        taper=0, range=[0.0,1.0], tickformat='(F6.2)', rgb_table=51)
+		p = plot ( rlim, zlim, /over, thick = 3, color='green')
+        p = plot ( rlcfs, zlcfs, /over, thick = 4, color='black', font_size=16, xtickinterval=0.2)
+        c_zero_set = contour(ar2.kPerSq_F,ar2.r,ar2.z,/over,c_value=0.001,color='blue',C_LABEL_SHOW=0,c_thick=3)
+        c_jant = contour(jA_r, x, y, /over, c_value = 0.23, color='silver', C_LABEL_SHOW=0, c_thick=5)
         ++PlotPos
+        p.Save, "modE.png",  border=0, height=600
 
-		thisField = abs(e_t[*,*])
-        title = 'abs(E_t)'
-		levels = fIndGen(nLevs)/(nLevs-1)*scale
-		colors = reverse(bytScl(levels, top=253)+1)
-		PlotField = (real_part(thisField)<max(levels))>min(-levels)
-		c = contour ( PlotField, x, y, c_value=levels, rgb_indices=colors, rgb_table=3, /fill, $
-                aspect_ratio=1.0, layout=[layout,PlotPos], /current, title=title, xRange=xRange, yRange=yRange )
-		c = contour ( -PlotField, x, y, c_value=levels, rgb_indices=colors, rgb_table=1, /fill,/over )
-		p = plot ( rlim, zlim, /over )
-        ++PlotPos
 
-		thisField = e_z[*,*]
-        title = 'E_z'
-		levels = fIndGen(nLevs)/(nLevs-1)*scale
-		colors = reverse(bytScl(levels, top=253)+1)
-		PlotField = (real_part(thisField)<max(levels))>min(-levels)
-		c = contour ( PlotField, x, y, c_value=levels, rgb_indices=colors, rgb_table=3, /fill, $
-                aspect_ratio=1.0, layout=[layout,PlotPos], /current, title=title, xRange=xRange, yRange=yRange )
-		c = contour ( -PlotField, x, y, c_value=levels, rgb_indices=colors, rgb_table=1, /fill,/over )
-		p = plot ( rlim, zlim, /over )
-        ++PlotPos
+;		thisField = e_t[*,*]
+;       title = 'E_t'
+;		levels = fIndGen(nLevs)/(nLevs-1)*scale
+;		colors = reverse(bytScl(levels, top=253)+1)
+;		PlotField = (real_part(thisField)<max(levels))>min(-levels)
+;		c = contour ( PlotField, x, y, c_value=levels, rgb_indices=colors, rgb_table=3, /fill, $
+;               aspect_ratio=1.0, layout=[layout,PlotPos], /current, title=title, xRange=xRange, yRange=yRange )
+;		c = contour ( -PlotField, x, y, c_value=levels, rgb_indices=colors, rgb_table=1, /fill,/over )
+;		p = plot ( rlim, zlim, /over )
+;       ++PlotPos
 
-		thisField = abs(e_z[*,*])
-        title = 'abs(E_z)'
-		levels = fIndGen(nLevs)/(nLevs-1)*scale
-		colors = reverse(bytScl(levels, top=253)+1)
-		PlotField = (real_part(thisField)<max(levels))>min(-levels)
-		c = contour ( PlotField, x, y, c_value=levels, rgb_indices=colors, rgb_table=3, /fill, $
-                aspect_ratio=1.0, layout=[layout,PlotPos], /current, title=title, xRange=xRange, yRange=yRange )
-		c = contour ( -PlotField, x, y, c_value=levels, rgb_indices=colors, rgb_table=1, /fill,/over )
-		p = plot ( rlim, zlim, /over )
-        ++PlotPos
+;		thisField = abs(e_t[*,*])
+;       title = 'abs(E_t)'
+;		levels = fIndGen(nLevs)/(nLevs-1)*scale
+;		colors = reverse(bytScl(levels, top=253)+1)
+;		PlotField = (real_part(thisField)<max(levels))>min(-levels)
+;		c = contour ( PlotField, x, y, c_value=levels, rgb_indices=colors, rgb_table=3, /fill, $
+;               aspect_ratio=1.0, layout=[layout,PlotPos], /current, title=title, xRange=xRange, yRange=yRange )
+;		c = contour ( -PlotField, x, y, c_value=levels, rgb_indices=colors, rgb_table=1, /fill,/over )
+;		p = plot ( rlim, zlim, /over )
+;       ++PlotPos
 
-		scale = max(abs([jA_r,jA_t,jA_z]))*scaleFac
+;		thisField = e_z[*,*]
+;       title = 'E_z'
+;		levels = fIndGen(nLevs)/(nLevs-1)*scale
+;		colors = reverse(bytScl(levels, top=253)+1)
+;		PlotField = (real_part(thisField)<max(levels))>min(-levels)
+;		c = contour ( PlotField, x, y, c_value=levels, rgb_indices=colors, rgb_table=3, /fill, $
+;               aspect_ratio=1.0, layout=[layout,PlotPos], /current, title=title, xRange=xRange, yRange=yRange )
+;		c = contour ( -PlotField, x, y, c_value=levels, rgb_indices=colors, rgb_table=1, /fill,/over )
+;		p = plot ( rlim, zlim, /over )
+;       ++PlotPos
 
-		thisField = jA_r[*,*]
-        title = 'jA_r'
-		levels = fIndGen(nLevs)/(nLevs-1)*scale
-		colors = reverse(bytScl(levels, top=253)+1)
-		PlotField = (real_part(thisField)<max(levels))>min(-levels)
-		c = contour ( PlotField, x, y, c_value=levels, rgb_indices=colors, rgb_table=3, /fill, $
-                aspect_ratio=1.0, title=title, layout=[layout,PlotPos], dimensions=dimensions,/current, xRange=xRange, yRange=yRange )
-		c = contour ( -PlotField, x, y, c_value=levels, rgb_indices=colors, rgb_table=1, /fill,/over )
-		p = plot ( rlim, zlim, /over )
-        ++PlotPos
+;		thisField = abs(e_z[*,*])
+;       title = 'abs(E_z)'
+;		levels = fIndGen(nLevs)/(nLevs-1)*scale
+;		colors = reverse(bytScl(levels, top=253)+1)
+;		PlotField = (real_part(thisField)<max(levels))>min(-levels)
+;		c = contour ( PlotField, x, y, c_value=levels, rgb_indices=colors, rgb_table=3, /fill, $
+;               aspect_ratio=1.0, layout=[layout,PlotPos], /current, title=title, xRange=xRange, yRange=yRange )
+;		c = contour ( -PlotField, x, y, c_value=levels, rgb_indices=colors, rgb_table=1, /fill,/over )
+;		p = plot ( rlim, zlim, /over )
+;       ++PlotPos
 
-		thisField = jA_t[*,*]
-        title = 'jA_t'
-		levels = fIndGen(nLevs)/(nLevs-1)*scale
-		colors = reverse(bytScl(levels, top=253)+1)
-		PlotField = (real_part(thisField)<max(levels))>min(-levels)
-		c = contour ( PlotField, x, y, c_value=levels, rgb_indices=colors, rgb_table=3, /fill, $
-                aspect_ratio=1.0, title=title, layout=[layout,PlotPos], /current, xRange=xRange, yRange=yRange )
-		c = contour ( -PlotField, x, y, c_value=levels, rgb_indices=colors, rgb_table=1, /fill,/over )
-		p = plot ( rlim, zlim, /over )
-        ++PlotPos
+;		scale = max(abs([jA_r,jA_t,jA_z]))*scaleFac
 
-		thisField = jA_z[*,*]
-        title = 'jA_z'
-		levels = fIndGen(nLevs)/(nLevs-1)*scale
-		colors = reverse(bytScl(levels, top=253)+1)
-		PlotField = (real_part(thisField)<max(levels))>min(-levels)
-		c = contour ( PlotField, x, y, c_value=levels, rgb_indices=colors, rgb_table=3, /fill, $
-                aspect_ratio=1.0, title=title, layout=[layout,PlotPos], /current, xRange=xRange, yRange=yRange )
-		c = contour ( -PlotField, x, y, c_value=levels, rgb_indices=colors, rgb_table=1, /fill,/over )
-		p = plot ( rlim, zlim, /over )
-        ++PlotPos
+;		thisField = jA_r[*,*]
+;       title = 'jA_r'
+;		levels = fIndGen(nLevs)/(nLevs-1)*scale
+;		colors = reverse(bytScl(levels, top=253)+1)
+;		PlotField = (real_part(thisField)<max(levels))>min(-levels)
+;		c = contour ( PlotField, x, y, c_value=levels, rgb_indices=colors, rgb_table=3, /fill, $
+;               aspect_ratio=1.0, title=title, layout=[layout,PlotPos], dimensions=dimensions,/current, xRange=xRange, yRange=yRange )
+;		c = contour ( -PlotField, x, y, c_value=levels, rgb_indices=colors, rgb_table=1, /fill,/over )
+;		p = plot ( rlim, zlim, /over )
+;       ++PlotPos
 
-		scale = max(abs([nuOmg]))*scaleFac
-		thisField = nuOmg[*,*]
-        title = 'nuOmg'
-		levels = fIndGen(nLevs)/(nLevs-1)*scale
-		colors = reverse(bytScl(levels, top=253)+1)
-		PlotField = (real_part(thisField)<max(levels))>min(-levels)
-		c = contour ( PlotField, x, y, c_value=levels, rgb_indices=colors, rgb_table=3, /fill, $
-                aspect_ratio=1.0, title=title, layout=[layout,PlotPos], /current, xRange=xRange, yRange=yRange )
-		c = contour ( -PlotField, x, y, c_value=levels, rgb_indices=colors, rgb_table=1, /fill,/over )
-		p = plot ( rlim, zlim, /over )
-        ++PlotPos
+;		thisField = jA_t[*,*]
+;       title = 'jA_t'
+;		levels = fIndGen(nLevs)/(nLevs-1)*scale
+;		colors = reverse(bytScl(levels, top=253)+1)
+;		PlotField = (real_part(thisField)<max(levels))>min(-levels)
+;		c = contour ( PlotField, x, y, c_value=levels, rgb_indices=colors, rgb_table=3, /fill, $
+;               aspect_ratio=1.0, title=title, layout=[layout,PlotPos], /current, xRange=xRange, yRange=yRange )
+;		c = contour ( -PlotField, x, y, c_value=levels, rgb_indices=colors, rgb_table=1, /fill,/over )
+;		p = plot ( rlim, zlim, /over )
+;       ++PlotPos
 
-		scale = max(abs([ealphak,ebetak,ebk]))*scaleFac
+;		thisField = jA_z[*,*]
+;       title = 'jA_z'
+;		levels = fIndGen(nLevs)/(nLevs-1)*scale
+;		colors = reverse(bytScl(levels, top=253)+1)
+;		PlotField = (real_part(thisField)<max(levels))>min(-levels)
+;		c = contour ( PlotField, x, y, c_value=levels, rgb_indices=colors, rgb_table=3, /fill, $
+;               aspect_ratio=1.0, title=title, layout=[layout,PlotPos], /current, xRange=xRange, yRange=yRange )
+;		c = contour ( -PlotField, x, y, c_value=levels, rgb_indices=colors, rgb_table=1, /fill,/over )
+;		p = plot ( rlim, zlim, /over )
+;       ++PlotPos
 
-		thisField = abs(ealphak[*,*])
-        title = 'abs(ealphak)'
-		levels = fIndGen(nLevs)/(nLevs-1)*scale
-		colors = reverse(bytScl(levels, top=253)+1)
-		PlotField = (real_part(thisField)<max(levels))>min(-levels)
-		c = contour ( PlotField, c_value=levels, rgb_indices=colors, rgb_table=3, /fill, $
-                aspect_ratio=1.0, title=title, layout=[layout,PlotPos], dimensions=dimensions,/current )
-		c = contour ( -PlotField, c_value=levels, rgb_indices=colors, rgb_table=1, /fill,/over )
-        ++PlotPos
+;		scale = max(abs([nuOmg]))*scaleFac
+;		thisField = nuOmg[*,*]
+;       title = 'nuOmg'
+;		levels = fIndGen(nLevs)/(nLevs-1)*scale
+;		colors = reverse(bytScl(levels, top=253)+1)
+;		PlotField = (real_part(thisField)<max(levels))>min(-levels)
+;		c = contour ( PlotField, x, y, c_value=levels, rgb_indices=colors, rgb_table=3, /fill, $
+;               aspect_ratio=1.0, title=title, layout=[layout,PlotPos], /current, xRange=xRange, yRange=yRange )
+;		c = contour ( -PlotField, x, y, c_value=levels, rgb_indices=colors, rgb_table=1, /fill,/over )
+;		p = plot ( rlim, zlim, /over )
+;       ++PlotPos
 
-		thisField = abs(ebetak[*,*])
-        title = 'abs(ebetak)'
-		levels = fIndGen(nLevs)/(nLevs-1)*scale
-		colors = reverse(bytScl(levels, top=253)+1)
-		PlotField = (real_part(thisField)<max(levels))>min(-levels)
-		c = contour ( PlotField, c_value=levels, rgb_indices=colors, rgb_table=3, /fill, $
-                aspect_ratio=1.0, title=title, layout=[layout,PlotPos], /current )
-		c = contour ( -PlotField, c_value=levels, rgb_indices=colors, rgb_table=1, /fill,/over )
-        ++PlotPos
+;		scale = max(abs([ealphak,ebetak,ebk]))*scaleFac
 
-		thisField = abs(ebk[*,*])*0.5e2
-        title = 'abs(ebk) x 0.5e2'
-		levels = fIndGen(nLevs)/(nLevs-1)*scale
-		colors = reverse(bytScl(levels, top=253)+1)
-		PlotField = (real_part(thisField)<max(levels))>min(-levels)
-		c = contour ( PlotField, c_value=levels, rgb_indices=colors, rgb_table=3, /fill, $
-                aspect_ratio=1.0, title=title, layout=[layout,PlotPos], /current )
-		c = contour ( -PlotField, c_value=levels, rgb_indices=colors, rgb_table=1, /fill,/over )
-        ++PlotPos
+;		thisField = abs(ealphak[*,*])
+;        title = 'abs(ealphak)'
+;		levels = fIndGen(nLevs)/(nLevs-1)*scale
+;		colors = reverse(bytScl(levels, top=253)+1)
+;		PlotField = (real_part(thisField)<max(levels))>min(-levels)
+;		c = contour ( PlotField, c_value=levels, rgb_indices=colors, rgb_table=3, /fill, $
+;                aspect_ratio=1.0, title=title, layout=[layout,PlotPos], dimensions=dimensions,/current )
+;		c = contour ( -PlotField, c_value=levels, rgb_indices=colors, rgb_table=1, /fill,/over )
+;        ++PlotPos
+
+;		thisField = abs(ebetak[*,*])
+;        title = 'abs(ebetak)'
+;		levels = fIndGen(nLevs)/(nLevs-1)*scale
+;		colors = reverse(bytScl(levels, top=253)+1)
+;		PlotField = (real_part(thisField)<max(levels))>min(-levels)
+;		c = contour ( PlotField, c_value=levels, rgb_indices=colors, rgb_table=3, /fill, $
+;                aspect_ratio=1.0, title=title, layout=[layout,PlotPos], /current )
+;		c = contour ( -PlotField, c_value=levels, rgb_indices=colors, rgb_table=1, /fill,/over )
+;        ++PlotPos
+
+;		thisField = abs(ebk[*,*])*0.5e2
+;        title = 'abs(ebk) x 0.5e2'
+;		levels = fIndGen(nLevs)/(nLevs-1)*scale
+;		colors = reverse(bytScl(levels, top=253)+1)
+;		PlotField = (real_part(thisField)<max(levels))>min(-levels)
+;		c = contour ( PlotField, c_value=levels, rgb_indices=colors, rgb_table=3, /fill, $
+;                aspect_ratio=1.0, title=title, layout=[layout,PlotPos], /current )
+;		c = contour ( -PlotField, c_value=levels, rgb_indices=colors, rgb_table=1, /fill,/over )
+;        ++PlotPos
 
 	endelse
 
