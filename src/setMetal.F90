@@ -98,7 +98,7 @@ contains
 
         endif ! square box defined by metalLeft, metalRight, metalTop, metalBot
 
-	if useMetalBox then 
+        if(useMetalBox)then 
             do w=1,size(g%pt)
                 i = g%pt(w)%i
                 j = g%pt(w)%j
