@@ -8,6 +8,7 @@ implicit none
     ! -----
     ! Electrons must be the first species 
 
+    logical :: useMetalBox = .false.
     logical :: AntennaJ_R = .false.
     logical :: AntennaJ_T = .false.
     logical :: AntennaJ_Z = .true.
@@ -494,7 +495,8 @@ implicit none
      &    overlap, parabolic, cosX, cosY, nZ_1D, fracOfModesInSolution, &
      &    AntennaJ_R, AntennaJ_T, AntennaJ_Z, AR2SourceLocationsFileName, &
      &    useAR2SourceLocationsFile, useAllRHSsSource, ZeroJp, &
-     &    ZeroJp_rMin, ZeroJp_rMax, ZeroJp_zMin, ZeroJp_zMax, useAntennaFromAR2Input
+     &    ZeroJp_rMin, ZeroJp_rMax, ZeroJp_zMin, ZeroJp_zMax, useAntennaFromAR2Input, &
+     &    useMetalBox
 
                 
 contains
