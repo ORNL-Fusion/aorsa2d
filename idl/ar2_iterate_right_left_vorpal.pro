@@ -17,8 +17,7 @@ pro ar2_iterate_right_left_vorpal, titan=titan
 
 for MM = 0,0 do begin ; Cyclic MPE loop
 
-
-for NN = 1, nSubCycles-1 do begin ; full iteration loop
+for NN = 0, nSubCycles-1 do begin ; full iteration loop
 
     right_ThisDir =  RightName+StrCompress(string(NN),/rem)
     right_NextDir =  RightName+StrCompress(string(NN+1),/rem)
@@ -34,7 +33,7 @@ for NN = 1, nSubCycles-1 do begin ; full iteration loop
 			if keyword_set(titan)then begin
             	spawn, './vorpal-titan-interactive.pbs'
 			endif else begin
-            	;spawn, './vorpal-osx.sh'
+            	;spawn, 'source vorpal-osx.sh'
 			endelse
     endif
 
@@ -46,7 +45,6 @@ for NN = 1, nSubCycles-1 do begin ; full iteration loop
     endif   
     cd, right_NextDir
 
-    ;right_s = rsfwc_read_solution (right_ThisDir)
 	freq = 53.0e6
 
     ; Use the MPE solution instead of an initial Vorpal run
@@ -137,12 +135,6 @@ for NN = 1, nSubCycles-1 do begin ; full iteration loop
     p=plot(This_s.r,This_jP_z,layout=[1,3,3],/current)
     p=plot(This_s.r,imaginary(This_jP_z),/over,color='r')
 
-    ;p=plot(This_s.r,This_jA_z,layout=[1,3,3],/current,color='b')
-    ;p=plot(This_s.r,imaginary(This_jA_z),/over,color='b',linestyle='--')
-
-    ;p=plot(right_s.r,right_s.jP_z,/over,thick=2)
-    ;p=plot(right_s.r,imaginary(right_s.jP_z),/over,thick=2,color='r')
-
     R = right_s
     L = This_s
 
@@ -192,10 +184,6 @@ for NN = 1, nSubCycles-1 do begin ; full iteration loop
     p=plot(L.r[iiA],This_jP_Z[iiA],/over,color='g',thick=2)
     p=plot(L.r[iiA],imaginary(This_jP_Z[iiA]),color='g',thick=1,lineStyle='-',/over)
 
-
-
-
-stop
     endif
 
 
@@ -208,9 +196,9 @@ stop
 	printf, lun, 'nX: '+string(n_elements(this_s.r), format='(i4.4)')
 	printf, lun, 'X, Re(Ex)[V/m], Im(Ex)[V/m], Re(Ey)[V/m], Im(Ey)[V/m], Re(Ez)[V/m], Im(Ez)[V/m]'
 
-	this_E_x = this_Jp_r
-	this_E_y = this_Jp_t
-	this_E_z = this_Jp_z
+	this_E_x = this_E_r 
+	this_E_y = this_E_t 
+	this_E_z = this_E_z
 
 	for i=0,n_elements(this_s.r)-1 do begin
 		printf, lun, this_s.r[i], $
@@ -220,7 +208,7 @@ stop
 			format='(7(f13.6,1x))'
 	endfor
  	close, lun
-
+stop
 endfor ; full iteration loop
 
 cd, WorkingDir

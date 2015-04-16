@@ -61,7 +61,4 @@ pro ar2_input_dispersion, wrf, amu, AtomicZ, nn, nPhi, nSpec, nR, nZ, Density_m3
 	kPerSq_1 = kPerSq_F[*,zSlice]
 	kPerSq_2 = kPerSq_S[*,zSlice]
 
-	;p=plot(r2D[*,zSlice],sqrt(kPerSq_F[*,zSlice]),color='b',/ylog)
-	;p=plot(r2D[*,zSlice],sqrt(kPerSq_S[*,zSlice]),/over,color='r',/ylog)
-
 end

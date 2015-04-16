@@ -1,45 +1,3 @@
-; GS_ORTH: recursive Gram-Schmidt orthogonalization of a set of n
-; m-components vectors. The vectors are stored as a (m*n) array,
-; to speed up the computation if virtual memory should be used.
-
-pro gs_orth, v, u, lin_indep, n, m, tol
-
-	on_error, 2
-	this = n - 1
-	if  this gt 0  then begin
-	   ; Induction case: apply the G-S orthogonalization to this vector.
-	   ; Orthogonalize the first (n - 1) vectors before
-	   gs_orth, v, u, lin_indep, n - 1, m, tol
-	   norm = total(v[*,this] * v[*,this])
-	   prod = (v[*,this] # v )[0:this-1]
-	   v[*,this] = v[*,this] - (prod * lin_indep[0:this-1]) # $
-	   						   transpose(v[*,0:this-1])
-	   u[*,this] = u[*,this] - prod # transpose(u[*,0:this-1])
-	   new_norm = total(v[*,this] * v[*,this])
-	   is_lin_indep = norm ne 0
-	   if  is_lin_indep  then  is_lin_indep = new_norm / norm gt tol
-	   if  is_lin_indep  then begin
-	      ; this vector is linearly independent
-	      lin_indep[this] = 1  &  norm = 1 / sqrt(new_norm)
-	   endif else begin
-		  ; this vector is linearly dependent
-	      prod = u[*,this] # u[*,0:this-1]
-		  v[*,this] = - (prod * lin_indep[0:this-1]) # $
-		  				transpose(v[*,0:this-1])
-	      lin_indep[this] = 0
-	      norm = 1 / sqrt(total(u[*,this] * u[*,this]))
-	   endelse
-	endif else begin
-	   ; Base case: one vector to normalize
-	   norm = sqrt(total(v[*,this] * v[*,this]))
-	   if  norm ne 0  then begin
-	      norm = 1 / norm  &  lin_indep[this] = 1
-	   endif else  lin_indep[this] = 0
-	endelse
-	v[*,this] = v[*,this] * norm  &  u[*,this] = u[*,this] * norm
-	return
-end
-
 pro ar2_fit_sources, $
     FitThis = FitThis, $
     WithTheseFiles = WithTheseFiles, $
@@ -112,17 +70,17 @@ pro ar2_fit_sources, $
             r_jA_t = r.jA_t
             r_jA_z = r.jA_z
 
-            ;; Fit the E field (hard)
-            ;pos = s.r
-            ;basis_r = s_E_r
-            ;basis_t = s_E_t
-            ;basis_z = s_E_z
-            
-            ; Fit the jP field (hard)
+            ; Fit the E field (hard)
             pos = s.r
-            basis_r = s_Jp_r
-            basis_t = s_Jp_t
-            basis_z = s_Jp_z
+            basis_r = s_E_r
+            basis_t = s_E_t
+            basis_z = s_E_z
+            
+            ;; Fit the jP field (hard)
+            ;pos = s.r
+            ;basis_r = s_Jp_r
+            ;basis_t = s_Jp_t
+            ;basis_z = s_Jp_z
            
             ;; Fit the current sources (transparent) 
             ;pos = r.r
@@ -146,13 +104,13 @@ pro ar2_fit_sources, $
 
 	    ;help, amat
 
-        data_r = sFitMe.jP_r[iiFitThese]
-        data_t = sFitMe.jP_t[iiFitThese]
-        data_z = sFitMe.jP_z[iiFitThese]
+        ;data_r = sFitMe.jP_r[iiFitThese]
+        ;data_t = sFitMe.jP_t[iiFitThese]
+        ;data_z = sFitMe.jP_z[iiFitThese]
 
-        ;data_r = sFitMe.E_r[iiFitThese]
-        ;data_t = sFitMe.E_t[iiFitThese]
-        ;data_z = sFitMe.E_z[iiFitThese]
+        data_r = sFitMe.E_r[iiFitThese]
+        data_t = sFitMe.E_t[iiFitThese]
+        data_z = sFitMe.E_z[iiFitThese]
 
         if component eq 0 then b = data_r 
         if component eq 1 then b = data_t 
@@ -165,7 +123,6 @@ pro ar2_fit_sources, $
 	    coeffs = LA_LEAST_SQUARES(amat,b, status=stat,method=3,residual=residual)
         
 		if stat ne 0 then stop
-       	;print, coeffs 
 
         if component eq 0 then data = data_r 
         if component eq 1 then data = data_t 
@@ -176,7 +133,6 @@ pro ar2_fit_sources, $
         if component eq 2 then CoeffsOut_z[*] = coeffs
 
     endforeach
-
 
     iiR = IndGen(NRHS/3)*3
     iiT = iiR+1
@@ -189,8 +145,6 @@ pro ar2_fit_sources, $
 
     amat = [[amat_r],[amat_t],[amat_z]]
     b = [data_r,data_t,data_z]
-
-stop
 
     coeffs = LA_LEAST_SQUARES(amat,b, status=stat,method=0,residual=residual,/double)
 
@@ -223,9 +177,7 @@ stop
 
     endforeach
 
-stop
     ; Create the "perFileList" coefficient list
-
 
     ;p=plot(Coeffs_R,layout=[1,4,1],dimension=[600,600],title='Coeffs R')
     ;p=plot(imaginary(Coeffs_R),/over,color='b')

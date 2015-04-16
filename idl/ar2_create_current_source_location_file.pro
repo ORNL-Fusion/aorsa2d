@@ -12,7 +12,7 @@ pro ar2_create_current_source_location_file
 
     patch2 = 0
 
-	nRSources = 12 ; x 3 for all components, real & imag
+	nRSources = 1 ; x 3 for all components, real & imag
     nZSources = 1 
     nSourcesTotal = nRSources * nZSources
 	NRHS = nSourcesTotal * 3
@@ -46,8 +46,8 @@ pro ar2_create_current_source_location_file
 	rMin = 1.85
     rMax = 2.00
     ; Left simple
-    rMin = 1.9
-    rMax = 2.1
+    rMin = 2.5
+    rMax = 2.5
 
 	zMin = 0.3
 	zMax = 0.17
@@ -156,6 +156,7 @@ pro ar2_create_current_source_location_file
 
 	print, 'Success'
 
-    p = plot( cs_r, cs_z, symbol = "s", lineStyle='none' )
+    doPlot = 0
+    if doPlot then p = plot( cs_r, cs_z, symbol = "s", lineStyle='none' )
 
 end

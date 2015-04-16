@@ -57,6 +57,7 @@ pro ar2_create_input
     parabolic_profiles = 0
     flux_profiles = 0
 	fred_namelist_input = 0
+	flat_profiles = 1
 
 	br_flat = 0.0
 	bt_flat = 1.0
@@ -94,9 +95,6 @@ pro ar2_create_input
 		bz = interpolate ( g.bz, ( r2d - min(g.r) ) / (max(g.r)-min(g.r)) * (n_elements(g.r)-1), $
 			( z2d - min ( g.z ) ) / (max(g.z)-min(g.z)) * (n_elements(g.z)-1) )
 
-		bMag = sqrt ( br^2 + bt^2 + bz^2 )
-
-
 		; Get psi (poloidal flux) for profile generation
 
 		psi = interpolate ( g.psizr, ( r2d - min(g.r) ) / (max(g.r)-min(g.r)) * (n_elements(g.r)-1), $
@@ -113,6 +111,9 @@ pro ar2_create_input
 
 		oversample_boundary, g.rbbbs, g.zbbbs, rbbbs_os, zbbbs_os 
 		oversample_boundary, g.rlim, g.zlim, rlim_os, zlim_os 
+
+		rlcfs = rbbbs_os
+		zlcfs = zbbbs_os
 
 		mypoly=obj_new('IDLanROI',rbbbs_os,zbbbs_os,type=2)
 		mask_bbb = mypoly->ContainsPoints(r2d[*],z2d[*])
@@ -157,7 +158,6 @@ pro ar2_create_input
 
 			endfor
 		endfor
-
 
 		;br = MakePeriodic ( br, mask_lim);, /look )
 		;bt = MakePeriodic ( bt, mask_lim);, /look )
@@ -236,7 +236,7 @@ pro ar2_create_input
 	if fred_namelist_input then begin
 
 		@aorsa2d.in.ejf.idl
-			
+		
 		_nRho = fred.s_nRho_n
 		_nRhoFile = n_elements(fred.s_rho_n_grid)
 		_nS = n_elements(fred.s_s_name)
@@ -272,9 +272,6 @@ pro ar2_create_input
 		print, 'nS: ', nS
 		print, 'amu: ', amu
 		print, 'Z: ', atomicZ
-
-		;nn = fltArr(4,nS) 
-    	;tt = nn
 
 	endif else begin
     
@@ -343,18 +340,19 @@ pro ar2_create_input
 			Temp_eV[*,*,s] = Smooth(Temp_eV[*,*,s],SmoothWidth,/edge_mirror)
         endfor
 
-	endif else begin
+	endif else if flat_profiles then begin
 
 		for s=0,nSpec-1 do begin
 			Density_m3[*,*,s] = nn[0,s]
 			Temp_ev[*,*,s] = tt[0,s]
 		endfor
 
-	endelse
+	endif
 
     yRange = [zMin,zMax]
     xRange = [rMin,rMax]
 
+	if not flat_profiles then begin 
     s_ne = contour(density_m3[*,*,0],r,z, layout=[layout,plotpos],$
             /current,title='density',aspect_ratio=1.0, xRange=xRange, yRange=yRange )
     if bField_eqdsk then p=plot(rLim,zLim,/over)
@@ -364,19 +362,31 @@ pro ar2_create_input
             /current,title='temp',aspect_ratio=1.0, xRange=xRange, yRange=yRange)
     if bField_eqdsk then p=plot(rLim,zLim,/over)
     ++plotpos
+	endif
 
-	p=plot(r,Density_m3[*,nZ/2,0],title='Density [1/m3]',/ylog,thick=2,layout=[layout,plotpos],/current)
+    _c = ['b','g','r','c','m','y','k']
+	densityRange=[min(Density_m3),max(Density_m3)]
+	p=plot(r,Density_m3[*,nZ/2,0],$
+			title='Density [1/m3]',thick=2,$
+			layout=[layout,plotpos],/current,yRange=densityRange,/yLog)
+    _p = [p]
     for s=1,nSpec-1 do begin
-	    p=plot(r,Density_m3[*,nZ/2,s],/over)
+		p=plot(r,Density_m3[*,nZ/2,s],/over,color=_c[s-1])
+        _p = [_p,p]
     endfor
     plotpos++	
 
-	p=plot(r,Density_m3[*,nZ/2,0],title='Density [1/m3]',thick=2,layout=[layout,plotpos],/current)
+    _c = ['b','g','r','c','m','y','k']
+	densityRange=[min(Density_m3),max(Density_m3)]
+	p=plot(r,Density_m3[*,nZ/2,0],$
+			title='Density [1/m3]',thick=2,$
+			layout=[layout,plotpos],/current,yRange=densityRange)
+    _p = [p]
     for s=1,nSpec-1 do begin
-	    p=plot(r,Density_m3[*,nZ/2,s],/over)
+		p=plot(r,Density_m3[*,nZ/2,s],/over,color=_c[s-1])
+        _p = [_p,p]
     endfor
     plotpos++	
-
 
 	p=plot(r,Temp_eV[*,nZ/2,0],title='Temp [eV]', thick=2,layout=[layout,plotpos],/current)
     for s=1,nSpec-1 do begin
@@ -395,98 +405,67 @@ pro ar2_create_input
 
 	; Set the jAnt 2-D function
 
-	if bField_eqdsk then begin	
-		rCenter = g.rcentr
-		zCenter = 0.0	
-		rlcfs = rbbbs_os
-		zlcfs = zbbbs_os
-	endif
+	if fancy_antenna then begin
 
-	;get angular points on LCFS with respect to center core
+		if bField_eqdsk then begin	
+			rCenter = g.rcentr
+			zCenter = 0.0	
+		endif
 
-	theta = atan(zlcfs-zCenter, rlcfs-rCenter)*!radeg	
+		;get angular points on LCFS with respect to center core
 
-	; Get antenna location on LCFS, the shift away from LCFS
-	ii = where(theta gt theta_ant1 and theta le theta_ant2, iiCnt)
-	if iiCnt lt 2 then begin
-			print, 'ERROR: start and end of the antenna positions are too close together'
-			stop
-	endif
-	antr = rlcfs(ii)
-	antz = zlcfs(ii)  
-	antr = antr + rshift
-	antz = antz + zshift
-	
-	n_ant = n_elements(antr)
-	; Get antenna current: A Guassian peaked at the antenna
-	_d = FltArr(nR,nZ,n_ant)
-	for k=0,n_ant-1 do begin
-	  _d[*,*,k] = sqrt ( ( r2d - antr(k) )^2 + ( z2d - antz(k) )^2 )
-	endfor
-	d = min(_d,dim=3)
-	jAnt =  exp(-(d^2)/(sigma_ant^2))
+		theta = atan(zlcfs-zCenter, rlcfs-rCenter)*!radeg	
 
-	n = floor(n_ant/2)
-	Ju_r = (antr(n) - antr(n+1))/norm([antr(n+1), antz(n+1)] - [antr(n), antz(n)])
-	Ju_z = (antz(n) - antz(n+1))/norm([antr(n+1), antz(n+1)] - [antr(n), antz(n)])
-	
-	jAnt_r = jAnt*Ju_r
-	jAnt_z = jAnt*Ju_z
-	jAnt_t = jAnt*0.0
+		; Get antenna location on LCFS, the shift away from LCFS
+		ii = where(theta gt theta_ant1 and theta le theta_ant2, iiCnt)
+		if iiCnt lt 2 then begin
+				print, 'ERROR: start and end of the antenna positions are too close together'
+				stop
+		endif
+		antr = rlcfs(ii)
+		antz = zlcfs(ii)  
+		antr = antr + rshift
+		antz = antz + zshift
+		
+		n_ant = n_elements(antr)
+		; Get antenna current: A Guassian peaked at the antenna
+		_d = FltArr(nR,nZ,n_ant)
+		for k=0,n_ant-1 do begin
+		  _d[*,*,k] = sqrt ( ( r2d - antr(k) )^2 + ( z2d - antz(k) )^2 )
+		endfor
+		d = min(_d,dim=3)
+		jAnt =  exp(-(d^2)/(sigma_ant^2))
+		
+		n = floor(n_ant/2)
+		Ju_r = (antr(n) - antr(n+1))/norm([antr(n+1), antz(n+1)] - [antr(n), antz(n)])
+		Ju_z = (antz(n) - antz(n+1))/norm([antr(n+1), antz(n+1)] - [antr(n), antz(n)])
+		
+		jAnt_r = jAnt*Ju_r
+		jAnt_z = jAnt*Ju_z
+		jAnt_t = jAnt*0.0
+
+	endif else begin
+
+		jAnt =  exp(-(  (r2d-rAnt)^2/antSig_r^2 + (z2d-zAnt)^2/antSig_z^2 ) )
+
+		jAnt_r = jAnt*jRmag
+		jAnt_t = jAnt*jTMag
+		jAnt_z = jAnt*jZMag
+
+	endelse
 
    nlevs=10
    scale = 1.1
    levels = (fIndGen(nlevs)+1)/nlevs*scale
    colors=bytscl(levels)
    c1 = contour(jant, r, z,title='Antenna Current', $
-    aspect_ratio = 1.0,layout=[layout,plotpos],/fill,/current,$
-    c_value=levels,rgb_table=51,rgb_indices=colors, xRange=xRange, yRange=yRange)
+   aspect_ratio = 1.0,layout=[layout,plotpos],/fill,/current,$
+   c_value=levels,rgb_table=51,rgb_indices=colors, xRange=xRange, yRange=yRange)
    
    p1 = plot(rlcfs, zlcfs,/over)
    p1 = plot(rlim, zlim,/over)
+   if fancy_antenna then p1 = plot(antr, antz,/over)
    ++plotpos
-
-   ;nSmooth = 5 
-    ;for s=0,nSpec-1 do begin
-    ;    for n=0,nSmooth-1 do begin
-    ;        nuOmg[*,*,s] = smooth(nuOmg[*,*,s]>MinNuOmg,min([nR,nZ])*0.05,/edge_truncate)
-    ;    endfor
-    ;endfor
-
-	; Look at the dispersion relation for these data
-
-	n_nPhi = 101 
-	nPhiMin = -n_nPhi/2
-	nPhiArray = IndGen(n_nPhi)+nPhiMin
-
-	kPerp_F = complexArr(nR,n_nPhi)
-	kPerp_S = complexArr(nR,n_nPhi)
-
-	kPerp_F2D_avg = complexArr(nR,nZ)
-	kPerp_S2D_avg = complexArr(nR,nZ)
-
-	StixP_nPhi = FltArr(nR,n_nPhi)
-	StixS_nPhi = FltArr(nR,n_nPhi)
-	StixR_nPhi = FltArr(nR,n_nPhi)
-	StixL_nPhi = FltArr(nR,n_nPhi)
-
-	;for nphi_i=0,n_nPhi-1 do begin
-
-	;	ar2_input_dispersion, wrf, amu, atomicZ, nn, nPhiArray[nphi_i], nSpec, nR, nZ, $
-	;		Density_m3, bMag, r2D, resonances = resonances, $
-	;		IonIonHybrid_res_freq=IonIonHybrid_res_freq, Spec1=1.0,Spec2=2.0, $
-	;		kPerSq_F=kPerpSq_F,kPerSq_S=kPerpSq_S, $
-	;		StixP=StixP,StixL=StixL,StixR=StixR,StixS=StixS
-	;	slice = nZ/4
-	;	kPerp_F[*,nphi_i] = sqrt(kPerpSq_F[*,slice])
-	;	kPerp_S[*,nphi_i] = sqrt(kPerpSq_S[*,slice])
-
-	;	kPerp_F2D_avg = kPerp_F2D_avg + sqrt(kPerpSq_F)
-	;	kPerp_S2D_avg = kPerp_S2D_avg + sqrt(kPerpSq_S)
-	;endfor
-	;kPerp_F2D_avg = kPerp_F2D_avg/n_nPhi
-	;kPerp_S2D_avg = kPerp_S2D_avg/n_nPhi
-
 
 	; Get dispersion solution for some nPhi 
 	ar2_input_dispersion, wrf, amu, atomicZ, nn, nPhi, nSpec, nR, nZ, $
@@ -497,8 +476,8 @@ pro ar2_create_input
 	
 	kPer_F_2D = sqrt(kPerpSq_F)
 	kPer_S_2D = sqrt(kPerpSq_S)
-	kPerp_F = kPer_F_2D[*,nZ/2]
-	kPerp_S = kPer_S_2D[*,nZ/2]
+	kPer_F = kPer_F_2D[*,nZ/2]
+	kPer_S = kPer_S_2D[*,nZ/2]
 
     ; plot up the ion cyclortron resonances
 
@@ -509,10 +488,10 @@ pro ar2_create_input
     endfor
     ++PlotPos
 
-	p = plot(r,kPerp_F, title='kPerp_F',layout=[layout,PlotPos],/current)
+	p = plot(r,kPer_F, title='kPer_F',layout=[layout,PlotPos],/current)
     ++PlotPos
 
-	p = plot(r,kPerp_S, title='kPerp_S',layout=[layout,PlotPos],/current)
+	p = plot(r,kPer_S, title='kPer_S',layout=[layout,PlotPos],/current)
     ++PlotPos
 
 	nLevs=31
@@ -524,7 +503,7 @@ pro ar2_create_input
     if nZ gt 1 then begin
 	    c = contour(kPer_F_2D,r,z,layout=[layout,plotpos],$
 			c_value=levels,rgb_indices=colors,rgb_table=1,$
-            /fill,aspect_ratio=1.0, title='kPerp_F2D_avg',/current, xRange=xRange, yRange=yRange )
+            /fill,aspect_ratio=1.0, title='kPer Fast Branch',/current, xRange=xRange, yRange=yRange )
             ++plotpos
             c_zero_set = contour(kPerpSq_F,r,z,/over,c_value=0.001,color='r',C_LABEL_SHOW=0,c_thick=2)
             p = plot(rlcfs, zlcfs,/over)
@@ -541,7 +520,7 @@ pro ar2_create_input
     if nZ gt 1 then begin
 	    c = contour(kPer_S_2D,r,z,layout=[layout,plotpos],/current,$
 			c_value=levels,rgb_indices=colors,rgb_table=3,$
-            /fill,aspect_ratio=1.0, title='kPerp_S2D_avg', xRange=xRange, yRange=yRange)
+            /fill,aspect_ratio=1.0, title='kPer Slow Branch', xRange=xRange, yRange=yRange)
         ++PlotPos
 		;c.save, plotFile, /append, /close
     endif 
@@ -709,13 +688,6 @@ pro ar2_create_input
 		Vorpal_zMax = zMax
 		Vorpal_z_grid = fIndGen(Vorpal_nZ)*(Vorpal_zMax-Vorpal_zMin)/(Vorpal_nz-1)+Vorpal_zMin
 
-		;Vx3D = rebin(Vorpal_x_grid, Vorpal_nX, Vorpal_nY, Vorpal_nZ)
-		;Vy3D = transpose(rebin(Vorpal_y_grid, Vorpal_nY, Vorpal_nZ, Vorpal_nX),[2,0,1])
-		;Vz3D = transpose(rebin(Vorpal_z_grid, Vorpal_nZ, Vorpal_nX, Vorpal_nY),[1,2,0])
-
-		;Vr3D = sqrt(Vx3D^2+Vy3D^2)
-		;Vt3D = atan(Vy3D,Vx3D)
-
 		openw, lun, VorpalFileName, /get_lun
 
 		printf, lun, 'nX: '+string(Vorpal_nX, format='(i4.4)')
@@ -723,19 +695,6 @@ pro ar2_create_input
 		printf, lun, 'nZ: '+string(Vorpal_nZ, format='(i4.4)')
 		printf, lun, 'amu: '+string(amu[s],format='(f12.10)')
 		printf, lun, 'AtomicZ: ',+string(AtomicZ[s],format='(f+6.2)')
-
-		;i3D = (Vr3D - min(r))/(max(r)-min(r))*(nR-1)
-		;j3D = (Vz3D - min(z))/(max(z)-min(z))*(nZ-1)
-
-		;V_Br = reform(interpolate(br,i3D[*],j3D[*],cubic=-0.5),Vorpal_nX,Vorpal_nY,Vorpal_nZ)
-		;V_Bt = reform(interpolate(bt,i3D[*],j3D[*],cubic=-0.5),Vorpal_nX,Vorpal_nY,Vorpal_nZ)
-		;V_Bz = reform(interpolate(bz,i3D[*],j3D[*],cubic=-0.5),Vorpal_nX,Vorpal_nY,Vorpal_nZ)
-
-		;V_Bx = cos(Vt3D)*V_Br-sin(Vt3D)*V_Bt
-		;V_By = sin(Vt3D)*V_Br+cos(Vt3D)*V_Bt
-
-		;V_T = reform(interpolate(Temp_eV[*,*,s],i3D[*],j3D[*],cubic=-0.5),Vorpal_nX,Vorpal_nY,Vorpal_nZ)
-		;V_n = reform(interpolate(Density_m3[*,*,s],i3D[*],j3D[*],cubic=-0.5),Vorpal_nX,Vorpal_nY,Vorpal_nZ)
 
 		printf, lun, 'X, Y, Z, Bx[T], By[T], Bz[T], T[eV], n[m^-3], nuOmg'
 

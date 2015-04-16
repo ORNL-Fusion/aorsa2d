@@ -262,7 +262,7 @@ pro ar2_plot_solution, full = full, $
 		p = plot (x,(total(JouleHeating,3))[*],color='b',thick=1,$
 				title='J dot E',name='jP . E (Total)',font_size=10,$
 				layout=[1,3,1],window_title='aorsa')
-        colorArr = ['blue','red','green','orange']
+		colorArr = ['b','g','r','c','m','y','k']
         for s=0,n_elements(JouleHeating[0,0,*])-1 do begin
             p = plot(x,JouleHeating[*,0,s],color=colorArr[s],/over,thick=3,linestyle='--',transparency=50)
         endfor
