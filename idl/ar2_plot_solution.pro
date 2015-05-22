@@ -225,30 +225,30 @@ pro ar2_plot_solution, full = full, $
 		wrf = freq * 2 * !pi
 
 		eRange = max(abs([e_r,e_t,e_z]))
+		eRange = 3.0 
 		p_r = plot ( x, e_r, layout=[1,3,1],$
 				title='Er',$
-                ;yRange=[-eRange,eRange],$
+                yRange=[-eRange,eRange],$
                 ytitle='Er [V/m]',$
                 name='Re',$
                 window_title='aorsa')
 		p_i = plot ( x, imaginary(e_r), color='red',/over,name='Im')
-		;l = legend(target=[p_r,p_i],position=[0.98,0.95],/norm,font_size=10,horizontal_alignment='RIGHT')
 
+		eRange = 0.4 
 		p_r = plot ( x, e_t, layout=[1,3,2],/current,$
 				title='Et',$
-                ;yRange=[-eRange,eRange],$
+                yRange=[-eRange,eRange],$
                 ytitle='Et [V/m]',$
                 name='Re')
 		p_i = plot ( x, imaginary(e_t), color='red',/over,name='Im')
-		;l = legend(target=[p_r,p_i],position=[0.98,0.62],/norm,font_size=10,horizontal_alignment='RIGHT')
 
+        eRange = 1.0
 		p_r = plot ( x, e_z, layout=[1,3,3],/current,$
 				title='Ez',$
-                ;yRange=[-eRange,eRange],$
+                yRange=[-eRange,eRange],$
                 ytitle='Ez [V/m]',$
                 name='Re')
 		p_i = plot ( x, imaginary(e_z), color='red',/over,name='Im')
-		;l = legend(target=[p_r,p_i],position=[0.98,0.28],/norm,font_size=10,horizontal_alignment='RIGHT')
 
 		nSpec	= n_elements ( jp_r[0,0,*] )
 

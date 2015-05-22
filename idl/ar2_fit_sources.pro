@@ -137,16 +137,17 @@ pro ar2_fit_sources, $
     iiR = IndGen(NRHS/3)*3
     iiT = iiR+1
     iiZ = iiR+2
-    c=contour(transpose(amat_r[iiR,*]),sFitMe.r[iiFitThese],iir,layout=[1,3,1],/fill)
-    c=contour(transpose(amat_t[iiR,*]),sFitMe.r[iiFitThese],iir,layout=[1,3,2],/fill,/current)
-    c=contour(transpose(amat_z[iiR,*]),sFitMe.r[iiFitThese],iir,layout=[1,3,3],/fill,/current)
+
+    ;c=contour(transpose(amat_r[iiR,*]),sFitMe.r[iiFitThese],iir,layout=[1,3,1],/fill)
+    ;c=contour(transpose(amat_t[iiR,*]),sFitMe.r[iiFitThese],iir,layout=[1,3,2],/fill,/current)
+    ;c=contour(transpose(amat_z[iiR,*]),sFitMe.r[iiFitThese],iir,layout=[1,3,3],/fill,/current)
 
     ; Try solving all components at once ...
 
     amat = [[amat_r],[amat_t],[amat_z]]
     b = [data_r,data_t,data_z]
 
-    coeffs = LA_LEAST_SQUARES(amat,b, status=stat,method=0,residual=residual,/double)
+    coeffs = LA_LEAST_SQUARES(amat,b, status=stat,method=2,residual=residual,/double, rcondition=1e-3)
 
     CoeffsOut_r[*] = coeffs
     CoeffsOut_t[*] = coeffs
@@ -167,7 +168,6 @@ pro ar2_fit_sources, $
         if component eq 2 then data = data_z 
 
 		fit = amat##coeffs
-        ;fit = smooth(fit,10,/edge_tr)
 		p=plot(sFitMe.r[iiFitThese],data,symbol="o",layout=[1,2,1],title="Fit vs Data")
 		p=plot(sFitMe.r[iiFitThese],fit,thick=2,/over)
 		p=plot(sFitMe.r[iiFitThese],imaginary(data),color="red",/over)
@@ -176,18 +176,6 @@ pro ar2_fit_sources, $
 		p=plot(imaginary(coeffs),color="red",/over)
 
     endforeach
-
-    ; Create the "perFileList" coefficient list
-
-    ;p=plot(Coeffs_R,layout=[1,4,1],dimension=[600,600],title='Coeffs R')
-    ;p=plot(imaginary(Coeffs_R),/over,color='b')
-    ;p=plot(Coeffs_T,layout=[1,4,2],/current,title='Coeffs T')
-    ;p=plot(imaginary(Coeffs_T),/over,color='b')
-    ;p=plot(Coeffs_Z,layout=[1,4,3],/current,title='Coeffs Z')
-    ;p=plot(imaginary(Coeffs_Z),/over,color='b')
-    ;p=plot(CoeffsOut,layout=[1,4,4],/current,title='Coeffs All')
-    ;p=plot(imaginary(CoeffsOut),/over,color='b')
-
 
     if keyword_set(TwoDim) then begin
 

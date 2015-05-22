@@ -6,7 +6,7 @@ pro ar2_iterate_right_left_vorpal, titan=titan
     	leftName = '/lustre/atlas/proj-shared/fus048/dg6/ar2_vorpal/left_simple'
     	rightName = '/lustre/atlas/proj-shared/fus048/dg6/vorpal/right_simple_'
 	endif else begin
-    	leftName = '/Users/dg6/scratch/aorsa2d/ar2_vorpal/left_simple'
+    	leftName = '/Users/dg6/scratch/aorsa2d/ar2_vorpal/right_simple_3rhs'
     	rightName = '/Users/dg6/scratch/vorpal/right_simple_'
 	endelse
 
@@ -31,8 +31,10 @@ for NN = 0, nSubCycles-1 do begin ; full iteration loop
             print, 'NN: ', NN
 			
 			if keyword_set(titan)then begin
+                spawn, 'rm output/*'
             	spawn, './vorpal-titan-interactive.pbs'
 			endif else begin
+                ;spawn, 'rm output/*'
             	;spawn, 'source vorpal-osx.sh'
 			endelse
     endif
@@ -111,14 +113,6 @@ for NN = 0, nSubCycles-1 do begin ; full iteration loop
 
 	endfor
 
-    ; Retart the iteration by scaling the magnitude of 
-    ; what AORSA feeds back ...
-
-    ;ScaleFac = 0.1
-    ;This_jP_r = This_jP_r * ScaleFac 
-    ;This_jP_t = This_jP_t * ScaleFac 
-    ;This_jP_z = This_jP_z * ScaleFac 
-
     DoPlots = 1
     if DoPlots then begin
     p=plot(This_s.r,This_E_r,layout=[1,3,1], window_title='AORSA Fit E')
@@ -141,29 +135,30 @@ for NN = 0, nSubCycles-1 do begin ; full iteration loop
     iiV = where(R.r gt RightFitLayer[0]) 
     iiA = where(L.r lt RightFitLayer[1])
 
-    FullSolutionFile = expand_path('~/scratch/vorpal/full_simple/vorpal.sav')
+    FullSolutionFile = expand_path('~/scratch/vorpal/right_simple_0/vorpal.sav')
     restore, FullSolutionFile
 
-    p=plot(R.r[iiV],R.e_R[iiV],color='b',thick=2,layout=[1,3,1],title='L/R E field')
-    p=plot(R.r[iiV],imaginary(R.e_R[iiV]),color='b',thick=1,lineStyle='-',/over)
-    p=plot(L.r[iiA],This_e_R[iiA],/over,color='g',thick=2)
-    p=plot(L.r[iiA],imaginary(This_e_R[iiA]),color='g',thick=1,lineStyle='-',/over)
+    thick = 3
+    p=plot(R.r[iiV],R.e_R[iiV],color='b',thick=thick,layout=[1,3,1],title='L/R E field')
+    p=plot(R.r[iiV],imaginary(R.e_R[iiV]),color='b',thick=thick,lineStyle='-',/over)
+    p=plot(L.r[iiA],This_e_R[iiA],/over,color='g',thick=thick)
+    p=plot(L.r[iiA],imaginary(This_e_R[iiA]),color='g',thick=thick,lineStyle='-',/over)
 
     p=plot(v.r,v.e_r,/over)
     p=plot(v.r,imaginary(v.e_r),/over,lineStyle='-')
 
-    p=plot(R.r[iiV],R.e_T[iiV],color='b',thick=2,layout=[1,3,2],/current)
-    p=plot(R.r[iiV],imaginary(R.e_T[iiV]),color='b',thick=1,lineStyle='-',/over)
-    p=plot(L.r[iiA],This_e_T[iiA],/over,color='g',thick=2)
-    p=plot(L.r[iiA],imaginary(This_e_T[iiA]),color='g',thick=1,lineStyle='-',/over)
+    p=plot(R.r[iiV],R.e_T[iiV],color='b',thick=thick,layout=[1,3,2],/current)
+    p=plot(R.r[iiV],imaginary(R.e_T[iiV]),color='b',thick=thick,lineStyle='-',/over)
+    p=plot(L.r[iiA],This_e_T[iiA],/over,color='g',thick=thick)
+    p=plot(L.r[iiA],imaginary(This_e_T[iiA]),color='g',thick=thick,lineStyle='-',/over)
 
     p=plot(v.r,v.e_t,/over)
     p=plot(v.r,imaginary(v.e_t),/over,lineStyle='-')
 
-    p=plot(R.r[iiV],R.e_Z[iiV],color='b',thick=2,layout=[1,3,3],/current)
-    p=plot(R.r[iiV],imaginary(R.e_Z[iiV]),color='b',thick=1,lineStyle='-',/over)
-    p=plot(L.r[iiA],This_e_Z[iiA],/over,color='g',thick=2)
-    p=plot(L.r[iiA],imaginary(This_e_Z[iiA]),color='g',thick=1,lineStyle='-',/over)
+    p=plot(R.r[iiV],R.e_Z[iiV],color='b',thick=thick,layout=[1,3,3],/current)
+    p=plot(R.r[iiV],imaginary(R.e_Z[iiV]),color='b',thick=thick,lineStyle='-',/over)
+    p=plot(L.r[iiA],This_e_Z[iiA],/over,color='g',thick=thick)
+    p=plot(L.r[iiA],imaginary(This_e_Z[iiA]),color='g',thick=thick,lineStyle='-',/over)
 
     p=plot(v.r,v.e_z,/over)
     p=plot(v.r,imaginary(v.e_z),/over,lineStyle='-')
