@@ -1,33 +1,33 @@
 pro compare_ar2_genray
 
-;	gFileName = 'param_along_ray_nphi71.txt'
+	gFileName = 'param_along_ray_nphi71.txt'
 	;gFileName = 'param_along_ray_nphi94.txt'
 
-	;nPhi = -71
-	;freq = 500e6
+	g = read_genray(gFileName)
+	__n = n_elements(g)
+	downSampleFac = 10
+	__i = IndGen(__n/downSampleFac)*downSampleFac
+	g = g[__i]
+   	traj_r = g.r
+    traj_z = g.z
 
-    nPhi = -21
-    freq = 30e6
+	nPhi = -71
+	;nPhi = -94
+	freq = 500e6
 
-	;eqdskFileName = 'g122976.03021'
-    eqdskFileName = 'NSTX_130608A03_trxpl_0.410_plasma_state.geq'
-	eqdsk = readgeqdsk(eqdskFileName)
+    ;nPhi = -21
+    ;freq = 30e6
 
-	;g = read_genray(gFileName)
-	;__n = n_elements(g)
-	;downSampleFac = 10
-	;__i = IndGen(__n/downSampleFac)*downSampleFac
-	;g = g[__i]
+	eqdskFileName = 'g122976.03021'
+    ;eqdskFileName = 'NSTX_130608A03_trxpl_0.410_plasma_state.geq'
+	eqdsk = readgeqdsk(eqdskFileName,bInterpS=bS)
 
 	;flipGenRayParDir = 0
 	;if flipGenRayParDir then begin
-;		g.npar = -g.npar
-;	endif
+	;	g.npar = -g.npar
+	;endif
 
- ;   traj_r = g.r
- ;   traj_z = g.z
-
-	useAR2File = 0
+ 	useAR2File = 0
 	if useAR2File then begin
 		a = ar2_read_solution('./',1)
 		ar2_read_ar2input,'ar2Input.nc',ar2=d
@@ -62,7 +62,7 @@ pro compare_ar2_genray
 
 	eMag = sqrt(_er^2+_et^2+_ez^2)
 
-	useMaxFieldTrajectory = 1
+	useMaxFieldTrajectory = 0
 	if useMaxFieldTrajectory then begin
         _ii = where(g.r gt 1.7)
         g = g[_ii]
@@ -79,11 +79,11 @@ pro compare_ar2_genray
 	c=contour(eMag,_r,_z,aspect_ratio=1.0,layout=[2,1,1], $
 			/current,xtitle='R [m]',yTitle='z [m]', $
 			c_value=levels, rgb_table=55, rgb_indices=colors, /fill,$
-			dimensions=ScreenSize*0.8,title='title: AORSA (ELab) / Genray'+' nPhi: '+string(nPhi))
+			dimensions=ScreenSize*0.8,title='AORSA |E| '+' nPhi: '+string(nPhi))
 	
 	p=plot(eqdsk.rlim,eqdsk.zlim,/over)
 	p=plot(eqdsk.rbbbs,eqdsk.zbbbs,/over)
-	p=plot(traj_r[*],traj_z[*],/over,thick=2)
+	if useMaxFieldTrajectory then p=plot(traj_r[*],traj_z[*],/over,thick=2)
 	p=plot(g.r[*],g.z[*],/over, color='b',thick=2)
 
 	nGenRay = n_elements(traj_r)
@@ -169,15 +169,14 @@ pro compare_ar2_genray
 		kPerCnt[*] = 0
 
 		; try an explicit field line trace and interp to get kPar
-
 		_pt = [this_r,0,this_z]
 		_ds = 0.005
-		_g = readgeqdsk(eqdskFileName,fieldLineIn=_pt,fieldLine_CYL=_line1,$
-			B_AlongFieldLine_CYL=_line_b1,fieldLineTraceDS=_ds,$
-			fieldLineTraceNSteps=_nf,fieldLineTraceDir=1, FieldLineTracePerp=0)
-		_g = readgeqdsk(eqdskFileName,fieldLineIn=_pt,fieldLine_CYL=_line2,$
-			B_AlongFieldLine_CYL=_line_b2,fieldLineTraceDS=_ds,$
-			fieldLineTraceNSteps=_nf,fieldLineTraceDir=-1, FieldLineTracePerp=0)
+		
+		_line1 = dlg_fieldlinetrace ( bS, _pt, direction = 1, ds = _ds, nS = _nF, $ 
+			B_FieldLine_CYL = _line_b1, perp = 0 )
+
+		_line2 = dlg_fieldlinetrace ( bS, _pt, direction = -1, ds = _ds, nS = _nF, $ 
+			B_FieldLine_CYL = _line_b2, perp = 0 )
 
 		fLine = [[reverse(_line1[*,0:-2],2)],[_line2[*,1:-2]]]
 		bLine = [[reverse(_line_b1[*,0:-2],2)],[_line_b2[*,1:-2]]]
@@ -195,12 +194,12 @@ pro compare_ar2_genray
 		; now do the same for some perp direction
 
 		_ds = 0.001
-		_g = readgeqdsk(eqdskFileName,fieldLineIn=_pt,fieldLine_CYL=_line1,$
-			B_AlongFieldLine_CYL=_line_b1,fieldLineTraceDS=_ds,$
-			fieldLineTraceNSteps=_nf,fieldLineTraceDir=1, FieldLineTracePerp=1)
-		_g = readgeqdsk(eqdskFileName,fieldLineIn=_pt,fieldLine_CYL=_line2,$
-			B_AlongFieldLine_CYL=_line_b2,fieldLineTraceDS=_ds,$
-			fieldLineTraceNSteps=_nf,fieldLineTraceDir=-1, FieldLineTracePerp=1)
+
+		_line1 = dlg_fieldlinetrace ( bS, _pt, direction = 1, ds = _ds, nS = _nF, $ 
+			B_FieldLine_CYL = _line_b1, perp = 1 )
+
+		_line2 = dlg_fieldlinetrace ( bS, _pt, direction = -1, ds = _ds, nS = _nF, $ 
+			B_FieldLine_CYL = _line_b2, perp = 1 )
 
 		fLine = [[reverse(_line1[*,0:-2],2)],[_line2[*,1:-2]]]
 		bLine = [[reverse(_line_b1[*,0:-2],2)],[_line_b2[*,1:-2]]]
@@ -255,6 +254,11 @@ pro compare_ar2_genray
 	w = 2*!pi*freq
 	_c = 3e8
 	nLevs = 31
+	k2n = _c / w
+	n2k = 1.0 / k2n
+
+	__nPar = __kPar * k2n
+	__nPer = __kPer * k2n
 
 	;scale = max(ppar)/1.5
 	;levels = (fIndGen(nLevs)+1)/(nLevs)*scale
@@ -265,33 +269,34 @@ pro compare_ar2_genray
 
     margin=[0.05,0.05,0.05,0.05]*2
 
-	range = 150
+	range = 150*k2n
 	plotThis = alog(__ppar)
 	scale = max(plotThis)/1.0
 	levels = (fIndGen(nLevs)+1)/(nLevs)*scale
 	colors = bytScl(levels,top=253)+1
-	c=contour(plotThis,g.distance,__kpar,layout=[2,3,2], $
-			/current,xtitle='Genray Distance',yTitle='kPar [1/m]', $
+	c=contour(plotThis,g.distance*1e-2,__nPar,layout=[2,3,2], $
+			/current,xtitle='Distance along GENRAY ray [m]',yTitle='nPar', $
 			c_value=levels, rgb_table=55, rgb_indices=colors, /fill,$
-			yRange=[-1,1]*range,title=gFileName,margin=margin)
+			yRange=[-1,1]*range,xRange=[0,2],title=gFileName,margin=margin)
 	
-	p=plot(g.distance,g.nPar*w/_c,/over,color='b',thick=2)
+	p=plot(g.distance*1e-2,g.nPar,/over,color='b',thick=2,xRange=[0,2])
 
-	ppower=plot(g.distance,g.power,/current,layout=[2,3,4],$
-            ytitle='Power',xTitle='Genray Distance',margin=margin)
+	ppower=plot(g.distance*1e-2,g.power,/current,layout=[2,3,4],$
+            ytitle='Power',xTitle='Distance along GENRAY ray [m]',$
+			margin=margin,xRange=[0,2])
 
-	range = 1200
+	range = 1200*k2n
 	plotThis = alog(__pper)
 	scale = max(PlotThis)/1.
 	levels = (fIndGen(nLevs)+1)/(nLevs)*scale
 	colors = bytScl(levels,top=253)+1
-	c=contour(PlotThis,g.distance,__kper,layout=[2,3,6], $
-			/current,xtitle='Genray Distance',yTitle='kPer [1/m]', $
+	c=contour(PlotThis,g.distance*1e-2,__nPer,layout=[2,3,6], $
+			/current,xtitle='Distance along GENRAY ray [m]',yTitle='nPer', $
 			c_value=levels, rgb_table=55, rgb_indices=colors, /fill, $
-			yRange=[-1,1]*range,margin=margin)
-	p=plot(g.distance,g.nPer*w/_c,/over,color='b',thick=2)
+			yRange=[-1,1]*range,margin=margin,xRange=[0,2])
+	p=plot(g.distance*1e-2,g.nPer,/over,color='b',thick=2)
 
-    p.save, 'aorsa-genray-comp.eps', /bitmap, resolution=100
+    p.save, 'aorsa-genray-comp.eps'
     p.save, 'aorsa-genray-comp.pdf', /bitmap, resolution=100
 
 stop
