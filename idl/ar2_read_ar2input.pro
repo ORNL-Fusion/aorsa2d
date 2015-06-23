@@ -25,11 +25,25 @@ pro ar2_read_ar2input, ar2InFileName, $
 	nCdf_varGet, cdfid, 'Lim_r', rlim 
 	nCdf_varGet, cdfid, 'Lim_z', zlim 
 
-	nCdf_varGet, cdfid, 'rlcfs', rlcfs 
-	nCdf_varGet, cdfid, 'zlcfs', zlcfs
+    if ncdf_varid(cdfid,'rlcfs') lt 0 then begin
+        print, 'WARNING: arrInput.nc file missing lcfs varible'
+        print, 'Setting default'
+        rlcfs = [0,5,5,0,0]
+        zlcfs = [-2,-2,2,2,-2]
+    endif else begin 
+	    nCdf_varGet, cdfid, 'rlcfs', rlcfs 
+	    nCdf_varGet, cdfid, 'zlcfs', zlcfs
+    endelse
 
-	nCdf_varGet, cdfid, 'kPerSq_F', kPerSq_F 
-	nCdf_varGet, cdfid, 'kPerSq_S', kPerSq_S 
+    if ncdf_varid(cdfid,'kPerSq_F') lt 0 then begin
+        print, 'WARNING: arrInput.nc file missing kPerSq varible'
+        print, 'Setting default'
+        kPerSq_F = mask_lim*0 
+        kPerSq_S = mask_lim*0 
+    endif else begin
+	    nCdf_varGet, cdfid, 'kPerSq_F', kPerSq_F 
+	    nCdf_varGet, cdfid, 'kPerSq_S', kPerSq_S 
+    endelse
 	
 	ncdf_close, cdfId
 
