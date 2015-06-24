@@ -102,33 +102,8 @@ pro ar2_create_input
 		psiNorm = (psi-g.simag) / (g.siBry - g.siMag)
 
 
-		; Create masks for outside the LCFS and Limiting structure
-
-		print, 'Creating masks (may take a while) ...'
-
         rlim = g.rlim[*]
         zlim = g.zlim[*]
-
-		oversample_boundary, g.rbbbs, g.zbbbs, rbbbs_os, zbbbs_os 
-		oversample_boundary, g.rlim, g.zlim, rlim_os, zlim_os 
-
-		rlcfs = rbbbs_os
-		zlcfs = zbbbs_os
-
-		mypoly=obj_new('IDLanROI',rbbbs_os,zbbbs_os,type=2)
-		mask_bbb = mypoly->ContainsPoints(r2d[*],z2d[*])
-		mask_bbb = reform(mask_bbb,nR,nZ)
-		iiMaskIn_bbb = where ( mask_bbb eq 1 )
-		iiMaskOut_bbb = where ( mask_bbb eq 0 )
-
-		mypoly=obj_new('IDLanROI',rlim_os,zlim_os,type=2)
-		mask_lim = mypoly->ContainsPoints(r2d[*],z2d[*])
-		mask_lim = reform(mask_lim,nR,nZ)
-		iiMaskIn_lim = where ( mask_lim eq 1 )
-		iiMaskOut_lim = where ( mask_lim eq 0 )
-
-		print, 'DONE'
-
 
 		; Create a distance from these surfaces
 
@@ -165,22 +140,11 @@ pro ar2_create_input
 
 	endif else if bField_flat eq 1 then begin
 
-		mask_bbb = FltArr(nR,nZ)+1	
-		mask_lim = FltArr(nR,nZ)+1	
-
 		br = fltArr(nR,nZ)+br_flat
 		bt = fltArr(nR,nZ)+bt_flat
 		bz = fltArr(nR,nZ)+bz_flat
 
 	endif else if bField_gaussian eq 1 then begin
-
-		oversample_boundary, rlim, zlim, rlim_os, zlim_os 
-
-		mypoly=obj_new('IDLanROI',rlim_os,zlim_os,type=2)
-		mask_lim = mypoly->ContainsPoints(r2d[*],z2d[*])
-		mask_lim = reform(mask_lim,nR,nZ)
-		iiMaskIn_lim = where ( mask_lim eq 1 )
-		iiMaskOut_lim = where ( mask_lim eq 0 )
 
 		bt = r0 * b0 / r2d
 
@@ -207,14 +171,25 @@ pro ar2_create_input
 
 	endif else begin
 
-		mask_bbb = FltArr(nR,nZ)+1	
-		mask_lim = FltArr(nR,nZ)+1	
-
 		bt = r0 * b0 / r2d
 		br = bt * br_frac
 		bz = bt * bz_frac
 
 	endelse
+
+	; Create masks for outside the LCFS and Limiting structure
+
+	print, 'Creating masks (may take a while) ...'
+
+	oversample_boundary, rlim, zlim, rlim_os, zlim_os 
+
+	mypoly=obj_new('IDLanROI',rlim_os,zlim_os,type=2)
+	mask_lim = mypoly->ContainsPoints(r2d[*],z2d[*])
+	mask_lim = reform(mask_lim,nR,nZ)<1
+	iiMaskIn_lim = where ( mask_lim eq 1 )
+	iiMaskOut_lim = where ( mask_lim eq 0 )
+
+	print, 'DONE'
 
     layout = [5,3]
     !x.margin = !x.margin / 3
@@ -462,7 +437,6 @@ pro ar2_create_input
    aspect_ratio = 1.0,layout=[layout,plotpos],/fill,/current,$
    c_value=levels,rgb_table=51,rgb_indices=colors, xRange=xRange, yRange=yRange)
    
-   p1 = plot(rlcfs, zlcfs,/over)
    p1 = plot(rlim, zlim,/over)
    if fancy_antenna then p1 = plot(antr, antz,/over)
    ++plotpos
@@ -506,7 +480,6 @@ pro ar2_create_input
             /fill,aspect_ratio=1.0, title='kPer Fast Branch',/current, xRange=xRange, yRange=yRange )
             ++plotpos
             c_zero_set = contour(kPerpSq_F,r,z,/over,c_value=0.001,color='r',C_LABEL_SHOW=0,c_thick=2)
-            p = plot(rlcfs, zlcfs,/over)
     endif 
 
 	if bfield_eqdsk then p=plot(g.rlim,g.zlim,/over,thick=2)
@@ -525,7 +498,7 @@ pro ar2_create_input
 		;c.save, plotFile, /append, /close
     endif 
 
-    if bfield_eqdsk eq 0 then begin
+    if bfield_eqdsk eq 0 and size(rLim,/type) eq 0 then begin
             rLim = [rMin, rMax, rMax, rMin, rMin]
             zLim = [zMin, zMin, zMax, zMax, zMin]
     endif
@@ -582,7 +555,6 @@ pro ar2_create_input
 	nz_id	= nCdf_dimDef ( nc_id, 'nZ', nZ )
 	nSpec_id = nCdf_dimDef ( nc_id, 'nSpec', nSpec )
 	nlim_id	= nCdf_dimDef ( nc_id, 'nlim', n_elements(rlim) )
-	nlcfs_id = nCdf_dimDef ( nc_id, 'nlcfs', n_elements(rlcfs) )
 
 	scalar_id	= nCdf_dimDef ( nc_id, 'scalar', 1 )
 
@@ -610,13 +582,9 @@ pro ar2_create_input
 	jant_t_id = nCdf_varDef ( nc_id, 'jAnt_t', [nR_id, nz_id], /float )
 
 	LimMask_id = nCdf_varDef ( nc_id, 'LimMask', [nR_id,nz_id], /short )
-	;BbbMask_id = nCdf_varDef ( nc_id, 'BbbMask', [nR_id,nz_id], /short )
 
 	Lim_r_id = nCdf_varDef ( nc_id, 'Lim_r', [nlim_id], /float )
 	Lim_z_id = nCdf_varDef ( nc_id, 'Lim_z', [nlim_id], /float )
-
-	rlcfs_id = nCdf_varDef ( nc_id, 'rlcfs', [nlcfs_id], /float )
-	zlcfs_id = nCdf_varDef ( nc_id, 'zlcfs', [nlcfs_id], /float )
 
 	kPerSq_F_id = nCdf_varDef ( nc_id, 'kPerSq_F', [nR_id, nz_id], /float )
 	kPerSq_S_id = nCdf_varDef ( nc_id, 'kPerSq_S', [nR_id, nz_id], /float )
@@ -647,7 +615,6 @@ pro ar2_create_input
     nCdf_varPut, nc_id, jant_t_id, jAnt_t
 
 	nCdf_varPut, nc_id, LimMask_id, mask_lim 
-	;nCdf_varPut, nc_id, BbbMask_id, mask_bbb
 
     nCdf_varPut, nc_id, kPerSq_F_id, kPerpSq_F
     nCdf_varPut, nc_id, kPerSq_S_id, kPerpSq_S
@@ -655,8 +622,6 @@ pro ar2_create_input
 	nCdf_varPut, nc_id, Lim_r_id, rlim
 	nCdf_varPut, nc_id, Lim_z_id, zlim
 
-	nCdf_varPut, nc_id, rlcfs_id, rlcfs
-	nCdf_varPut, nc_id, zlcfs_id, zlcfs
 
 	nCdf_close, nc_id
 

@@ -225,7 +225,8 @@ pro ar2_plot_solution, full = full, $
 		wrf = freq * 2 * !pi
 
 		eRange = max(abs([e_r,e_t,e_z]))
-		eRange = 3.0 
+		eRange = max(abs([e_r]))
+		;eRange = 3.0 
 		p_r = plot ( x, e_r, layout=[1,3,1],$
 				title='Er',$
                 yRange=[-eRange,eRange],$
@@ -234,7 +235,8 @@ pro ar2_plot_solution, full = full, $
                 window_title='aorsa')
 		p_i = plot ( x, imaginary(e_r), color='red',/over,name='Im')
 
-		eRange = 0.4 
+		eRange = max(abs([e_t]))
+		;eRange = 0.4 
 		p_r = plot ( x, e_t, layout=[1,3,2],/current,$
 				title='Et',$
                 yRange=[-eRange,eRange],$
@@ -242,7 +244,8 @@ pro ar2_plot_solution, full = full, $
                 name='Re')
 		p_i = plot ( x, imaginary(e_t), color='red',/over,name='Im')
 
-        eRange = 1.0
+    	eRange = max(abs([e_z]))
+        ;eRange = 1.0
 		p_r = plot ( x, e_z, layout=[1,3,3],/current,$
 				title='Ez',$
                 yRange=[-eRange,eRange],$
