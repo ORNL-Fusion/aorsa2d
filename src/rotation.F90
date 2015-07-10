@@ -557,6 +557,8 @@ contains
 !            g%drzUzt(w) = d2fdxy(2,3)
 !            g%drzUzz(w) = d2fdxy(3,3)
 
+!!!
+
             g%drUrr(w) = dfdx(1,1)
             g%drUrt(w) = dfdx(1,2)
             g%drUrz(w) = dfdx(1,3)

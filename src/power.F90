@@ -168,6 +168,16 @@ subroutine current ( g, rhs )
                         ek_nm(2) = g%eBetak(g%wl(w)%n,g%wl(w)%m,rhs)
                         ek_nm(3) = g%eBk(g%wl(w)%n,g%wl(w)%m,rhs) 
 
+#if PRINT_SIGMA_ABP>=1
+                        if(g%wl(w)%n.eq.g%nMin.and.s.eq.2)then
+
+                            write(*,*) 
+                            write(*,*) g%wl(w)%n, g%wl(w)%n, g%r(g%wl(w)%i)
+                            write(*,*) thisSigma(1,1), thisSigma(1,2), thisSigma(1,3)
+                            write(*,*) thisSigma(2,1), thisSigma(2,2), thisSigma(2,3)
+                            write(*,*) thisSigma(3,1), thisSigma(3,2), thisSigma(3,3)
+                        endif
+#endif
                         jVec = matMul ( thisSigma, ek_nm ) 
                         !thisSigma = transpose(thisSigma)
                         !jVec(1) = thisSigma(1,1)*ek_nm(1)+thisSigma(2,1)*ek_nm(2)+thisSigma(3,1)*ek_nm(3)

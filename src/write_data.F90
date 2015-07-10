@@ -9,7 +9,7 @@ contains
     subroutine write_runData ( g, rid, rhs )
  
         use aorsaNamelist, &
-        only: nSpec, nPhi, freqcy, nZ_1D
+        only: nSpec, nPhi, freq=>freqcy, nZ_1D
         use bField
         use grid
         use constants
@@ -181,7 +181,7 @@ contains
 
         if(iAm==0)then
             nc_stat = nf90_put_var ( nc_id, nPhi_id, nPhi ) 
-            nc_stat = nf90_put_var ( nc_id, freq_id, freqcy ) 
+            nc_stat = nf90_put_var ( nc_id, freq_id, freq ) 
             nc_stat = nf90_put_var ( nc_id, x_id, g%R ) 
             nc_stat = nf90_put_var ( nc_id, y_id, g%Z )    
             nc_stat = nf90_put_var ( nc_id, nZ_1D_id, nZ_1D )    
@@ -420,7 +420,7 @@ contains
 
         use grid
         use aorsaNamelist, &
-            only: nSpec, nPhi, freqcy
+            only: nSpec, nPhi, freq=>freqcy
         use parallel
 
         implicit none
@@ -454,7 +454,7 @@ contains
             jP_r_re_id, jP_r_im_id, &
             jP_t_re_id, jP_t_im_id, &
             jP_z_re_id, jP_z_im_id
-        integer :: r_id, z_id,nPhi_id,freqcy_id,scalar_id
+        integer :: r_id, z_id,nPhi_id,freq_id,scalar_id
         integer :: stat
 
         integer :: jouleHeating_id
@@ -544,7 +544,7 @@ contains
  
         stat = nf90_def_var(nc_id,"r",NF90_REAL,(/nx_id/),r_id)
         stat = nf90_def_var(nc_id,"z",NF90_REAL,(/ny_id/),z_id)
-        stat = nf90_def_var(nc_id,"freqcy",NF90_REAL,(/scalar_id/),freqcy_id)
+        stat = nf90_def_var(nc_id,"freq",NF90_REAL,(/scalar_id/),freq_id)
         stat = nf90_def_var(nc_id,"nPhi",NF90_INT,(/scalar_id/),nPhi_id)
 
         call check ( nf90_enddef ( nc_id ) )
@@ -588,7 +588,7 @@ contains
 
         stat = nf90_put_var(nc_id,r_id,g%r)
         stat = nf90_put_var(nc_id,z_id,g%z)
-        stat = nf90_put_var(nc_id,freqcy_id,freqcy)
+        stat = nf90_put_var(nc_id,freq_id,freq)
         stat = nf90_put_var(nc_id,nPhi_id,nPhi)
 
         call check ( nf90_close ( nc_id ) )

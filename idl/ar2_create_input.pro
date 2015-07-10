@@ -101,9 +101,14 @@ pro ar2_create_input
 			( z2d - min ( g.z ) ) / (max(g.z)-min(g.z)) * (n_elements(g.z)-1) )
 		psiNorm = (psi-g.simag) / (g.siBry - g.siMag)
 
+        rbbbs = g.rbbbs[*]
+        zbbbs = g.zbbbs[*]
 
         rlim = g.rlim[*]
         zlim = g.zlim[*]
+	    
+        oversample_boundary, rbbbs, zbbbs, rbbbs_os, zbbbs_os 
+        oversample_boundary, rlim, zlim, rlim_os, zlim_os 
 
 		; Create a distance from these surfaces
 
@@ -264,6 +269,14 @@ pro ar2_create_input
 
 	if flux_profiles eq 1 then begin
 
+	        oversample_boundary, rbbbs, zbbbs, rbbbs_os, zbbbs_os 
+
+	        mypoly=obj_new('IDLanROI',rbbbs_os,zbbbs_os,type=2)
+	        mask_bbb = mypoly->ContainsPoints(r2d[*],z2d[*])
+	        mask_bbb = reform(mask_bbb,nR,nZ)<1
+	        iiMaskIn_bbb = where ( mask_bbb eq 1 )
+	        iiMaskOut_bbb = where ( mask_bbb eq 0 )
+
 			ar2_create_flux_profiles, nSpec, nn, tt, nR, nZ, PsiNorm, Mask_bbb, d_bbb, $
 			Density_m3, Temp_eV, DensityMin = DensityMin, TempMin = TempMin, $
             NumericProfiles = Numeric_flux_profiles, NumericData_n_m3 = NumericData_n_m3, $
@@ -385,6 +398,7 @@ pro ar2_create_input
 		if bField_eqdsk then begin	
 			rCenter = g.rcentr
 			zCenter = 0.0	
+            oversample_boundary, g.rbbbs, g.zbbbs, rlcfs, zlcfs 
 		endif
 
 		;get angular points on LCFS with respect to center core

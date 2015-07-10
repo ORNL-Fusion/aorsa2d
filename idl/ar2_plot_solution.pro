@@ -1,11 +1,10 @@
 pro ar2_plot_solution, full = full, $
 		scale1 = scale1, scale2 = scale2, scale3_ = scale3_, $
 		sav = sav, NoRunData=NoRunData, $
-		nPhi = _nPhi, RHS=_RHS, spec = _ThisSPEC, $
+		nPhi = _nPhi, RHS=_RHS, $ 
         sumSpecies = sumSpecies
 
 	if keyword_set(_RHS) then ThisRHS = _RHS else ThisRHS = 1
-	if keyword_set(_ThisSPEC) then ThisSPEC = _ThisSPEC else ThisSPEC = 0
 
 	ar2Input = ar2_read_namelist()
 	ar2InputFile = ar2Input['AR2InputFileName']
@@ -71,8 +70,6 @@ pro ar2_plot_solution, full = full, $
 	xx	= complex ( xx_re, xx_im )
 	yy	= complex ( yy_re, yy_im )
 
-    nuOmg = nuOmg[*,*,ThisSpec]
-
 	jA_r = complex ( jr_re[*,*], jr_im[*,*] )
 	jA_t = complex ( jt_re[*,*], jt_im[*,*] )
 	jA_z = complex ( jz_re[*,*], jz_im[*,*] )
@@ -88,7 +85,7 @@ pro ar2_plot_solution, full = full, $
 		nCdf_varGet, cdfId, 'r', r
 		nCdf_varGet, cdfId, 'z', z
 		nCdf_varGet, cdfId, 'nPhi', nPhi 
-		nCdf_varGet, cdfId, 'freqcy', freq 
+		nCdf_varGet, cdfId, 'freq', freq 
 	
 		nCdf_varGet, cdfId, 'ealpha_re', ealpha_re 
 		ealpha_re = temporary(ealpha_re[*,*])
@@ -133,44 +130,20 @@ pro ar2_plot_solution, full = full, $
 		ez_im = temporary(ez_im[*,*])
 
 		nCdf_varGet, cdfId, 'jalpha_re', jalpha_re 
-        if keyword_set(sumSpecies) then $
-                jalpha_re = (total(jalpha_re,3))[*] else jalpha_re = temporary(jalpha_re[*,*,ThisSPEC])
 		nCdf_varGet, cdfId, 'jbeta_re', jbeta_re 
-        if keyword_set(sumSpecies) then $
-                jbeta_re = (total(jbeta_re,3))[*] else jbeta_re = temporary(jbeta_re[*,*,ThisSPEC])
 		nCdf_varGet, cdfId, 'jB_re', jB_re 
-        if keyword_set(sumSpecies) then $
-                jb_re = (total(jb_re,3))[*] else jb_re = temporary(jb_re[*,*,ThisSPEC])
 
 		nCdf_varGet, cdfId, 'jalpha_im', jalpha_im 
-        if keyword_set(sumSpecies) then $
-                jalpha_im = (total(jalpha_im,3))[*] else jalpha_im = temporary(jalpha_im[*,*,ThisSPEC])
 		nCdf_varGet, cdfId, 'jbeta_im', jbeta_im 
-        if keyword_set(sumSpecies) then $
-                jbeta_im = (total(jbeta_im,3))[*] else jbeta_im = temporary(jbeta_im[*,*,ThisSPEC])
 		nCdf_varGet, cdfId, 'jB_im', jB_im 
-        if keyword_set(sumSpecies) then $
-                jb_im = (total(jb_im,3))[*] else jb_im = temporary(jb_im[*,*,ThisSPEC])
 
 		nCdf_varGet, cdfId, 'jP_r_re', jPr_re 
-        if keyword_set(sumSpecies) then $
-                jpr_re = (total(jpr_re,3))[*] else jpr_re = temporary(jpr_re[*,*,ThisSPEC])
 		nCdf_varGet, cdfId, 'jP_t_re', jPt_re 
-        if keyword_set(sumSpecies) then $
-                jpt_re = (total(jpt_re,3))[*] else jpt_re = temporary(jpt_re[*,*,ThisSPEC])
 		nCdf_varGet, cdfId, 'jP_z_re', jPz_re 
-        if keyword_set(sumSpecies) then $
-                jpz_re = (total(jpz_re,3))[*] else jpz_re = temporary(jpz_re[*,*,ThisSPEC])
 	
 		nCdf_varGet, cdfId, 'jP_r_im', jPr_im 
-        if keyword_set(sumSpecies) then $
-                jpr_im = (total(jpr_im,3))[*] else jpr_im = temporary(jpr_im[*,*,ThisSPEC])
 		nCdf_varGet, cdfId, 'jP_t_im', jPt_im 
-        if keyword_set(sumSpecies) then $
-                jpt_im = (total(jpt_im,3))[*] else jpt_im = temporary(jpt_im[*,*,ThisSPEC])
 		nCdf_varGet, cdfId, 'jP_z_im', jPz_im 
-        if keyword_set(sumSpecies) then $
-                jpz_im = (total(jpz_im,3))[*] else jpz_im = temporary(jpz_im[*,*,ThisSPEC])
 	
 		nCdf_varGet, cdfId, 'jouleHeating', jouleHeating 
 
@@ -186,14 +159,22 @@ pro ar2_plot_solution, full = full, $
 		e_t	= complex ( et_re, et_im )
 		e_z	= complex ( ez_re, ez_im )
 
-		jP_r	= complex ( jPr_re, jPr_im )
-		jP_t	= complex ( jPt_re, jPt_im )
-		jP_z	= complex ( jPz_re, jPz_im )
+		jP_r_s	= complex ( jPr_re, jPr_im )
+		jP_t_s	= complex ( jPt_re, jPt_im )
+		jP_z_s	= complex ( jPz_re, jPz_im )
 
-		jPAlpha = complex ( jAlpha_re, jAlpha_im )
-		jPBeta = complex ( jBeta_re, jBeta_im )
-		jPB = complex ( jB_re, jB_im )
+        jP_r = total(jP_r_s,3)
+        jP_t = total(jP_t_s,3)
+        jP_z = total(jP_z_s,3)
 
+		jP_a_s = complex ( jAlpha_re, jAlpha_im )
+		jP_b_s = complex ( jBeta_re, jBeta_im )
+		jP_p_s = complex ( jB_re, jB_im )
+
+        jP_a = total(jP_a_s,3)
+        jP_b = total(jP_b_s,3)
+        jP_p = total(jP_p_s,3)
+        
 	ncdf_close, cdfId
 
 
@@ -210,6 +191,34 @@ pro ar2_plot_solution, full = full, $
 	endif else begin
 		y2D = fltArr(1)+z
 	endelse
+
+	nSpec	= n_elements ( jp_r_s[0,0,*] )
+
+	; jDotE
+	; -----
+
+	this_jDotE	= jp_r_s[*,*,0] * conj(e_r) $
+				+ jp_t_s[*,*,0] * conj(e_t) $
+				+ jp_z_s[*,*,0] * conj(e_z)
+
+    jDotE_s = jP_r_s*0
+    jDotE_s[*,*,0] = this_jDotE
+
+	for s=1,nSpec-1 do begin
+
+		this_jDotE	= jp_r_s[*,*,s] * conj(e_r) $
+				+ jp_t_s[*,*,s] * conj(e_t) $
+				+ jp_z_s[*,*,s] * conj(e_z)
+
+        jDotE_s[*,*,s] = this_jDotE
+
+	endfor
+
+    for s=0,nSpec-1 do begin
+        print, 'amu: ',round(ar2.amu[s]),' Z: ',round(ar2.atomicZ[s]),' Total(jDotE)['+string(s,format='(i1.1)')+']: ',$
+            string(total(real_part(jDotE_s[*,*,s]))/total(real_part(jDotE_s))*100,format='(f4.1)')+'%'
+    endfor
+
 
 	; 1D catch
 	; --------
@@ -253,15 +262,6 @@ pro ar2_plot_solution, full = full, $
                 name='Re')
 		p_i = plot ( x, imaginary(e_z), color='red',/over,name='Im')
 
-		nSpec	= n_elements ( jp_r[0,0,*] )
-
-		; jDotE
-		; -----
-
-		jDotE	= jp_r[*,*,0] * conj(e_r) $
-					+ jp_t[*,*,0] * conj(e_t) $
-					+ jp_z[*,*,0] * conj(e_z)
-
 		p = plot (x,(total(JouleHeating,3))[*],color='b',thick=1,$
 				title='J dot E',name='jP . E (Total)',font_size=10,$
 				layout=[1,3,1],window_title='aorsa')
@@ -273,14 +273,8 @@ pro ar2_plot_solution, full = full, $
 		p_array = [p_array,p]
 
 		for s=1,nSpec-1 do begin
-
-			jDotE	= jp_r[*,*,s] * conj(e_r) $
-					+ jp_t[*,*,s] * conj(e_t) $
-					+ jp_z[*,*,s] * conj(e_z)
-
 			p = plot ( x, jDotE, /over,name='jDotE_'+strTrim(string(s),2) )
 			p_array = [p_array,p]
-
 		endfor
 
         p = plot(x,jA_r,thick=2,/current,layout=[1,3,2],title='jA components')
@@ -298,60 +292,92 @@ pro ar2_plot_solution, full = full, $
 		; jP
 		; --
 
-		jpRange = max(abs([abs(jp_r),abs(jp_t),abs(jp_z)]))
-        jpRange = 1 
+    	yRange = max(abs(jp_r))
 
-        if keyword_set(sumSpecies) then SpecStr = 'Total' $
-                else $
-                SpecStr = 'SingleSpec  amu:'+string(ar2.amu[ThisSPEC])+'  Z: '+string(ar2.atomicZ[ThisSPEC])
-        
-		s = 0
-		;p_array = !NULL
-		p = plot (x,jp_r,thick=2,transparency=50,$
-				title='jPr - '+SpecStr,name='jPr_re_'+strTrim(string(s),2),font_size=10,$
-				layout=[1,3,1],yRange=[-jpRange,jpRange],window_title='aorsa')
-		;p_array = [p_array,p]
-		p = plot (x,imaginary(jp_r),/over,name='jPr_im_'+strTrim(string(s),2),color='r',thick=2)
-		;p_array = [p_array,p]
-		;for s=1,nSpec-1 do begin
-		;	p = plot ( x, jp_r[*,0,s],/over,name='jPr_re_'+strTrim(string(s),2),thick=2,lineStyle=s)
-		;	;p_array = [p_array,p]
-		;	p = plot ( x, imaginary(jp_r[*,0,s]),/over,name='jPr_im_'+strTrim(string(s),2),thick=2,lineStyle=s,color='r')
-		;	;p_array = [p_array,p]
-		;endfor
-	   	;l = legend(target=p_array,position=[0.99,0.9],/norm,font_size=10,horizontal_alignment='RIGHT')
+        plotJp_rtz = 1
+    	if plotJp_rtz then begin
+    
+            nS = n_elements(jP_r_s[0,0,*])
+   
+            p=plot([0,0],[0,0],/noData, layout=[nS,3,1],window_title='aorsa_1d - jP_rtz',dimensions=[1200,800])
+    
+            for s=0,nS-1 do begin
+                This_amu_str = ', amu: '+string(ar2.amu[s],format='(i1.1)')
+                This_Z_str = ', Z: '+string(ar2.atomicZ[s],format='(i+2.1)')
 
-		s = 0
-		;p_array = !null
-		p = plot (x,jp_t,thick=2,transparency=50,$
-				title='jPt',name='jPt_re_'+strtrim(string(s),2),font_size=10,$
-				layout=[1,3,2],yrange=[-jPrange,jPrange],/current)
-		;p_array = [p_array,p]
-		p = plot (x,imaginary(jp_t),/over,name='jPt_im_'+strtrim(string(s),2),color='r',thick=2)
-		;p_array = [p_array,p]
-		;for s=1,nspec-1 do begin
-		;	p = plot ( x, jp_t[*,0,s],/over,name='jPt_re_'+strtrim(string(s),2),thick=2,linestyle=s)
-		;	;p_array = [p_array,p]
-		;	p = plot ( x, imaginary(jp_t[*,0,s]),/over,name='jPt_im_'+strtrim(string(s),2),thick=2,linestyle=s,color='r')
-		;	;p_array = [p_array,p]
-		;endfor
-	   	;l = legend(target=p_array,position=[0.99,0.6],/norm,font_size=10,horizontal_alignment='right')
+    		    p_re = plot (r,jP_r_s[*,0,s],thick=2,$
+    		    		title='jP_r'+This_amu_str+This_Z_str,name='Jp_re',font_size=10,$
+    		    		layout=[nS,3,1+s],yRange=yRange,transparency=50,/current)
+    		    p_im = plot (r,imaginary(jP_r_s[*,0,s]),color='r',thick=2,transparency=50,$
+    		    		name='Ja_re',font_size=10,/over)
+    
+    		    p_re = plot (r,jP_t_s[*,0,s],thick=2,$
+    		    		title='jP_t',name='Jp_re',font_size=10,$
+    		    		layout=[nS,3,1+1*nS+s],/current,yRange=yRange,transparency=50)
+    		    p_im = plot (r,imaginary(jP_t_s[*,0,s]),color='r',thick=2,transparency=50,$
+    		    		name='Jp_re',font_size=10,/over)
+    
+    		    p_re = plot (r,jP_z_s[*,0,s],thick=2,$
+    		    		title='jP_z',name='Jp_re',font_size=10,$
+    		    		layout=[nS,3,1+2*nS+s],/current,yRange=yRange,transparency=50)
+    		    p_im = plot (r,imaginary(jP_z_s[*,0,s]),color='r',thick=2,transparency=50,$
+    		    		name='Jp_re',font_size=10,/over)
+            endfor
+    
+            p=plot(r,jP_a,layout=[1,3,1], title='jP_rtz (summed over species)')
+            p=plot(r,imaginary(jP_r),color='r',/over)
+    
+            p=plot(r,jP_t,layout=[1,3,2], /current)
+            p=plot(r,imaginary(jP_t),color='r',/over)
+    
+            p=plot(r,jP_z,layout=[1,3,3], /current)
+            p=plot(r,imaginary(jP_z),color='r',/over)
+    
+    	endif
 
-		s = 0
-		;p_array = !null
-		p = plot (x,jP_z,thick=2,transparency=50,$
-				title='jPz',name='jPz_re_'+strtrim(string(s),2),font_size=10,$
-				layout=[1,3,3],yrange=[-jPrange,jPrange],/current)
-		;p_array = [p_array,p]
-		p = plot (x,imaginary(jP_z),/over,name='jPz_im_'+strtrim(string(s),2),color='r',thick=2)
-		;p_array = [p_array,p]
-		;for s=1,nspec-1 do begin
-		;	p = plot ( x, jP_z[*,0,s],/over,name='jPz_re_'+strtrim(string(s),2),thick=2,linestyle=s)
-		;	;p_array = [p_array,p]
-		;	p = plot ( x, imaginary(jP_z[*,0,s]),/over,name='jPz_im_'+strtrim(string(s),2),thick=2,linestyle=s,color='r')
-		;	;p_array = [p_array,p]
-		;endfor
-	   	;l = legend(target=p_array,position=[0.99,0.25],/norm,font_size=10,horizontal_alignment='right')
+
+        plotJp_abp = 1
+    	if plotJp_abp then begin
+    
+            nS = n_elements(jP_r_s[0,0,*])
+   
+            p=plot([0,0],[0,0],/noData, layout=[nS,3,1],window_title='aorsa_1d - jP_abp',dimensions=[1200,800])
+    
+            for s=0,nS-1 do begin
+                This_amu_str = ', amu: '+string(ar2.amu[s],format='(i1.1)')
+                This_Z_str = ', Z: '+string(ar2.atomicZ[s],format='(i+2.1)')
+
+    		    p_re = plot (r,jP_a_s[*,0,s],thick=2,$
+    		    		title='jP_a'+This_amu_str+This_Z_str,name='Jp_re',font_size=10,$
+    		    		layout=[nS,3,1+s],yRange=yRange,transparency=50,/current)
+    		    p_im = plot (r,imaginary(jP_a_s[*,0,s]),color='r',thick=2,transparency=50,$
+    		    		name='Ja_re',font_size=10,/over)
+    
+    		    p_re = plot (r,jP_b_s[*,0,s],thick=2,$
+    		    		title='jP_b',name='Jp_re',font_size=10,$
+    		    		layout=[nS,3,1+1*nS+s],/current,yRange=yRange,transparency=50)
+    		    p_im = plot (r,imaginary(jP_b_s[*,0,s]),color='r',thick=2,transparency=50,$
+    		    		name='Jp_re',font_size=10,/over)
+    
+    		    p_re = plot (r,jP_p_s[*,0,s],thick=2,$
+    		    		title='jP_p',name='Jp_re',font_size=10,$
+    		    		layout=[nS,3,1+2*nS+s],/current,yRange=yRange,transparency=50)
+    		    p_im = plot (r,imaginary(jP_p_s[*,0,s]),color='r',thick=2,transparency=50,$
+    		    		name='Jp_re',font_size=10,/over)
+            endfor
+    
+            p=plot(r,jP_a,layout=[1,3,1], title='jP_abp (summed over species)')
+            p=plot(r,imaginary(jP_a),color='r',/over)
+    
+            p=plot(r,jP_t,layout=[1,3,2], /current)
+            p=plot(r,imaginary(jP_b),color='r',/over)
+    
+            p=plot(r,jP_z,layout=[1,3,3], /current)
+            p=plot(r,imaginary(jP_p),color='r',/over)
+    
+    	endif
+
+
 
         ; Calculate the H vector & the Poynting vector
 
@@ -404,75 +430,43 @@ pro ar2_plot_solution, full = full, $
 
 	endif else begin ; Now 2D plotting
 
-   ;     layout = [6,3]
         !x.margin = !x.margin / 3
         !y.margin = !y.margin / 2
-	;    ScreenSize = get_screen_size()
-	;    dimensions = ScreenSize*0.8
         dimensions = [600,1300]
         plotpos = 1
         xRange = [min(r),max(r)]
         yRange = [min(z),max(z)]
 
+        LimColor = 'black'
+        AntColor = 'black'
+        AntCLevel = 0.1
+        lcfsColor = 'black'
+        cutoffColor = 'black'
+
         scaleFac = 0.5
         nPhiString = ' (nPhi: '+string(ThisNPHI,format='(i+4.3)')+')'
 
 		scale = max(abs([jP_r,jP_t,jP_z]))*scaleFac
-        ;scale = 0.16
         print, 'jP scale: ', scale
 
 		nLevs = 10
 
-;thisField = jP_r[*,*]*LimMask
-;       title = 'jP_r'+ nPhiString
-;		levels = fIndGen(nLevs)/(nLevs-1)*scale
-;		colors = reverse(bytScl(levels, top=253)+1)
-;		c = contour ( thisField, x, y, c_value=levels, rgb_indices=colors, rgb_table=3, /fill, $
-;               aspect_ratio=1.0, title=title, dimensions=dimensions,layout=[layout,plotPos], xRange=xRange, yRange=yRange )
-;		c = contour ( -thisField, x, y, c_value=levels, rgb_indices=colors, rgb_table=1, /fill,/over )
-;		p = plot ( rLim, zLim, /over )
-;       ++PlotPos
-
-;		thisField = jP_t[*,*]*LimMask
-;       title = 'jP_t'
-;		levels = fIndGen(nLevs)/(nLevs-1)*scale
-;		colors = reverse(bytScl(levels, top=253)+1)
-;		c = contour ( thisField, x, y, c_value=levels, rgb_indices=colors, rgb_table=3, /fill, $
-;               aspect_ratio=1.0, title=title, layout=[layout,PlotPos], /current, xRange=xRange, yRange=yRange )
-;		c = contour ( -thisField, x, y, c_value=levels, rgb_indices=colors, rgb_table=1, /fill,/over )
-;		p = plot ( rLim, zLim, /over )
-;       ++PlotPos
-
-;		thisField = jP_z[*,*]*LimMask
-;       title = 'jP_z'
-;		levels = fIndGen(nLevs)/(nLevs-1)*scale
-;		colors = reverse(bytScl(levels, top=253)+1)
-;		c = contour ( thisField, x, y, c_value=levels, rgb_indices=colors, rgb_table=3, /fill, $
-;               aspect_ratio=1.0, title=title, layout=[layout,PlotPos], /current, xRange=xRange, yRange=yRange )
-;		c = contour ( -thisField, x, y, c_value=levels, rgb_indices=colors, rgb_table=1, /fill,/over )
-;		p = plot ( rLim, zLim, /over )
-;       ++PlotPos
-
-	    ;dimensions = [600,600]
         scaleFac = 0.2
-	    ;scale = max(abs([e_r,e_t,e_z]))*scaleFac
-        scale = 0.381946
         print, scale
 
 		thisField = e_r[*,*]
+        scale = max(abs(thisField))/5
         title = 'E_r'
 		levels = fIndGen(nLevs)/(nLevs-1)*scale
 		colors = reverse(bytScl(levels, top=253)+1)
 		PlotField = (real_part(thisField)<max(levels))>min(-levels)
-;		c = contour ( PlotField, x, y, c_value=levels, rgb_indices=colors, rgb_table=3, /fill, $
-;            aspect_ratio=1, layout=[layout,PlotPos], dimensions=dimensions, title=title,/current, xRange=xRange, yRange=yRange )
 		c = contour ( PlotField, x, y, c_value=levels, rgb_indices=colors, rgb_table=3, /fill, $
             aspect_ratio=1, dimensions=dimensions, title=title, xRange=xRange, yRange=yRange )
 		c = contour ( -PlotField, x, y, c_value=levels, rgb_indices=colors, rgb_table=1, /fill,/over )
-        p = plot ( rlim, zlim, /over, thick = 3, color='lime')
-        p = plot ( rlcfs, zlcfs, /over, thick = 4, color='yellow' )
-        c_zero_set = contour(ar2.kPerSq_F,ar2.r,ar2.z,/over,c_value=0.001,color='cyan',C_LABEL_SHOW=0,c_thick=3)
-        c_jant = contour(jA_r, x, y, /over, c_value = 0.23, color='silver', C_LABEL_SHOW=0, c_thick=5)
+        p = plot ( rlim, zlim, /over, thick = 3, color=LimColor)
+        p = plot ( rlcfs, zlcfs, /over, thick = 4, color=lcfsColor )
+        c_zero_set = contour(ar2.kPerSq_F,ar2.r,ar2.z,/over,c_value=0.001,color=cutoffColor,C_LABEL_SHOW=0,c_thick=3)
+        c_jant = contour(jA_r, x, y, /over, c_value = AntCLevel, color=AntColor, C_LABEL_SHOW=0, c_thick=5)
         ++PlotPos
         p.Save, "Er.png", border=0, height=600
 
@@ -483,15 +477,13 @@ pro ar2_plot_solution, full = full, $
 		levels = fIndGen(nLevs)/(nLevs-1)*scale
 		colors = reverse(bytScl(levels, top=253)+1)
 		PlotField = (real_part(thisField)<max(levels))>min(-levels)
-;		c = contour ( PlotField, x, y, c_value=levels, rgb_indices=colors, rgb_table=3, /fill, $
-;            aspect_ratio=1, layout=[layout,PlotPos], /current, title=title, xRange=xRange, yRange=yRange )
 		c = contour ( PlotField, x, y, c_value=levels, rgb_indices=colors, rgb_table=3, /fill, $
             aspect_ratio=1, title=title, xRange=xRange, yRange=yRange, dimensions=[600,1300])
 		c = contour ( -PlotField, x, y, c_value=levels, rgb_indices=colors, rgb_table=1, /fill,/over )
-		p = plot ( rlim, zlim, /over, thick = 3, color='lime')
-        p = plot ( rlcfs, zlcfs, /over, thick = 4, color='yellow' )
-        c_zero_set = contour(ar2.kPerSq_F,ar2.r,ar2.z,/over,c_value=0.001,color='cyan',C_LABEL_SHOW=0,c_thick=3)
-        c_jant = contour(jA_r, x, y, /over, c_value = 0.23, color='silver', C_LABEL_SHOW=0, c_thick=5)
+        p = plot ( rlim, zlim, /over, thick = 3, color=LimColor)
+        p = plot ( rlcfs, zlcfs, /over, thick = 4, color=lcfsColor )
+        c_zero_set = contour(ar2.kPerSq_F,ar2.r,ar2.z,/over,c_value=0.001,color=cutoffColor,C_LABEL_SHOW=0,c_thick=3)
+        c_jant = contour(jA_r, x, y, /over, c_value = AntCLevel, color=AntColor, C_LABEL_SHOW=0, c_thick=5)
         ++PlotPos
         p.Save, "absEr.png",  border=0, height=600
 
@@ -499,154 +491,21 @@ pro ar2_plot_solution, full = full, $
 
 		nLevs = 50
 
-		thisField = abs(e_r[*,*]^2 + e_t[*,*]^2 + e_z[*,*]^2)
-        print, alog(max(thisField))
-        ;scale = 1.4*0.07  ; with limiter boundary, nstx case
-        scale = 1.0
-        scale= 1.5*(6.0/nLevs)
-
-        title = 'ln(|E|)'
-;		levels = fIndGen(nLevs)/(nLevs-1)*scale
-        levels = fIndGen(nLevs)*scale - 1
-      ;  colors = reverse(bytScl(levels, top=253)+1)
-      colors = bytScl(levels, top=253)+1
+		thisField = real_part(jDotE_s[*,*,0])
+        title = 'jDotE (e)'
+        scale = 2e9
+        levels = fIndGen(nLevs)/(nLevs-1)*scale
+        colors = reverse(bytScl(levels, top=253)+1)
 		PlotField = (real_part(thisField)<max(levels))>min(-levels)
-;		c = contour ( PlotField, x, y, c_value=levels, rgb_indices=colors, rgb_table=3, /fill, $
-;            aspect_ratio=1, layout=[layout,PlotPos], /current, title=title, xRange=xRange, yRange=yRange)
-		c = contour ( alog(1000*PlotField), x, y, c_value=levels, rgb_indices=colors, rgb_table=51, /fill, $
+		c = contour ( PlotField, x, y, c_value=levels, rgb_indices=colors, rgb_table=3, /fill, $
             aspect_ratio=1, title=title, xRange=xRange, yRange=yRange, dimensions=[600,1300], font_size=16)
-        cb = colorbar(target=c, orientation=1, title='ln(V/m)', position = [0.2, 0.3, 0.25, 0.7], font_size=16, $
-        taper=0, range=[0.0,1.0], tickformat='(F6.2)', rgb_table=51)
-		p = plot ( rlim, zlim, /over, thick = 3, color='green')
-        p = plot ( rlcfs, zlcfs, /over, thick = 4, color='black', font_size=16, xtickinterval=0.2)
-        c_zero_set = contour(ar2.kPerSq_F,ar2.r,ar2.z,/over,c_value=0.001,color='blue',C_LABEL_SHOW=0,c_thick=3)
-        c_jant = contour(jA_r, x, y, /over, c_value = 0.23, color='silver', C_LABEL_SHOW=0, c_thick=5)
+		c = contour ( -PlotField, x, y, c_value=levels, rgb_indices=colors, rgb_table=1, /fill,/over )
+        p = plot ( rlim, zlim, /over, thick = 3, color=LimColor)
+        p = plot ( rlcfs, zlcfs, /over, thick = 4, color=lcfsColor )
+        c_zero_set = contour(ar2.kPerSq_F,ar2.r,ar2.z,/over,c_value=0.001,color=cutoffColor,C_LABEL_SHOW=0,c_thick=3)
+        c_jant = contour(jA_r, x, y, /over, c_value = AntCLevel, color=AntColor, C_LABEL_SHOW=0, c_thick=5)
         ++PlotPos
         p.Save, "modE.png",  border=0, height=600
-
-
-;		thisField = e_t[*,*]
-;       title = 'E_t'
-;		levels = fIndGen(nLevs)/(nLevs-1)*scale
-;		colors = reverse(bytScl(levels, top=253)+1)
-;		PlotField = (real_part(thisField)<max(levels))>min(-levels)
-;		c = contour ( PlotField, x, y, c_value=levels, rgb_indices=colors, rgb_table=3, /fill, $
-;               aspect_ratio=1.0, layout=[layout,PlotPos], /current, title=title, xRange=xRange, yRange=yRange )
-;		c = contour ( -PlotField, x, y, c_value=levels, rgb_indices=colors, rgb_table=1, /fill,/over )
-;		p = plot ( rlim, zlim, /over )
-;       ++PlotPos
-
-;		thisField = abs(e_t[*,*])
-;       title = 'abs(E_t)'
-;		levels = fIndGen(nLevs)/(nLevs-1)*scale
-;		colors = reverse(bytScl(levels, top=253)+1)
-;		PlotField = (real_part(thisField)<max(levels))>min(-levels)
-;		c = contour ( PlotField, x, y, c_value=levels, rgb_indices=colors, rgb_table=3, /fill, $
-;               aspect_ratio=1.0, layout=[layout,PlotPos], /current, title=title, xRange=xRange, yRange=yRange )
-;		c = contour ( -PlotField, x, y, c_value=levels, rgb_indices=colors, rgb_table=1, /fill,/over )
-;		p = plot ( rlim, zlim, /over )
-;       ++PlotPos
-
-;		thisField = e_z[*,*]
-;       title = 'E_z'
-;		levels = fIndGen(nLevs)/(nLevs-1)*scale
-;		colors = reverse(bytScl(levels, top=253)+1)
-;		PlotField = (real_part(thisField)<max(levels))>min(-levels)
-;		c = contour ( PlotField, x, y, c_value=levels, rgb_indices=colors, rgb_table=3, /fill, $
-;               aspect_ratio=1.0, layout=[layout,PlotPos], /current, title=title, xRange=xRange, yRange=yRange )
-;		c = contour ( -PlotField, x, y, c_value=levels, rgb_indices=colors, rgb_table=1, /fill,/over )
-;		p = plot ( rlim, zlim, /over )
-;       ++PlotPos
-
-;		thisField = abs(e_z[*,*])
-;       title = 'abs(E_z)'
-;		levels = fIndGen(nLevs)/(nLevs-1)*scale
-;		colors = reverse(bytScl(levels, top=253)+1)
-;		PlotField = (real_part(thisField)<max(levels))>min(-levels)
-;		c = contour ( PlotField, x, y, c_value=levels, rgb_indices=colors, rgb_table=3, /fill, $
-;               aspect_ratio=1.0, layout=[layout,PlotPos], /current, title=title, xRange=xRange, yRange=yRange )
-;		c = contour ( -PlotField, x, y, c_value=levels, rgb_indices=colors, rgb_table=1, /fill,/over )
-;		p = plot ( rlim, zlim, /over )
-;       ++PlotPos
-
-;		scale = max(abs([jA_r,jA_t,jA_z]))*scaleFac
-
-;		thisField = jA_r[*,*]
-;       title = 'jA_r'
-;		levels = fIndGen(nLevs)/(nLevs-1)*scale
-;		colors = reverse(bytScl(levels, top=253)+1)
-;		PlotField = (real_part(thisField)<max(levels))>min(-levels)
-;		c = contour ( PlotField, x, y, c_value=levels, rgb_indices=colors, rgb_table=3, /fill, $
-;               aspect_ratio=1.0, title=title, layout=[layout,PlotPos], dimensions=dimensions,/current, xRange=xRange, yRange=yRange )
-;		c = contour ( -PlotField, x, y, c_value=levels, rgb_indices=colors, rgb_table=1, /fill,/over )
-;		p = plot ( rlim, zlim, /over )
-;       ++PlotPos
-
-;		thisField = jA_t[*,*]
-;       title = 'jA_t'
-;		levels = fIndGen(nLevs)/(nLevs-1)*scale
-;		colors = reverse(bytScl(levels, top=253)+1)
-;		PlotField = (real_part(thisField)<max(levels))>min(-levels)
-;		c = contour ( PlotField, x, y, c_value=levels, rgb_indices=colors, rgb_table=3, /fill, $
-;               aspect_ratio=1.0, title=title, layout=[layout,PlotPos], /current, xRange=xRange, yRange=yRange )
-;		c = contour ( -PlotField, x, y, c_value=levels, rgb_indices=colors, rgb_table=1, /fill,/over )
-;		p = plot ( rlim, zlim, /over )
-;       ++PlotPos
-
-;		thisField = jA_z[*,*]
-;       title = 'jA_z'
-;		levels = fIndGen(nLevs)/(nLevs-1)*scale
-;		colors = reverse(bytScl(levels, top=253)+1)
-;		PlotField = (real_part(thisField)<max(levels))>min(-levels)
-;		c = contour ( PlotField, x, y, c_value=levels, rgb_indices=colors, rgb_table=3, /fill, $
-;               aspect_ratio=1.0, title=title, layout=[layout,PlotPos], /current, xRange=xRange, yRange=yRange )
-;		c = contour ( -PlotField, x, y, c_value=levels, rgb_indices=colors, rgb_table=1, /fill,/over )
-;		p = plot ( rlim, zlim, /over )
-;       ++PlotPos
-
-;		scale = max(abs([nuOmg]))*scaleFac
-;		thisField = nuOmg[*,*]
-;       title = 'nuOmg'
-;		levels = fIndGen(nLevs)/(nLevs-1)*scale
-;		colors = reverse(bytScl(levels, top=253)+1)
-;		PlotField = (real_part(thisField)<max(levels))>min(-levels)
-;		c = contour ( PlotField, x, y, c_value=levels, rgb_indices=colors, rgb_table=3, /fill, $
-;               aspect_ratio=1.0, title=title, layout=[layout,PlotPos], /current, xRange=xRange, yRange=yRange )
-;		c = contour ( -PlotField, x, y, c_value=levels, rgb_indices=colors, rgb_table=1, /fill,/over )
-;		p = plot ( rlim, zlim, /over )
-;       ++PlotPos
-
-;		scale = max(abs([ealphak,ebetak,ebk]))*scaleFac
-
-;		thisField = abs(ealphak[*,*])
-;        title = 'abs(ealphak)'
-;		levels = fIndGen(nLevs)/(nLevs-1)*scale
-;		colors = reverse(bytScl(levels, top=253)+1)
-;		PlotField = (real_part(thisField)<max(levels))>min(-levels)
-;		c = contour ( PlotField, c_value=levels, rgb_indices=colors, rgb_table=3, /fill, $
-;                aspect_ratio=1.0, title=title, layout=[layout,PlotPos], dimensions=dimensions,/current )
-;		c = contour ( -PlotField, c_value=levels, rgb_indices=colors, rgb_table=1, /fill,/over )
-;        ++PlotPos
-
-;		thisField = abs(ebetak[*,*])
-;        title = 'abs(ebetak)'
-;		levels = fIndGen(nLevs)/(nLevs-1)*scale
-;		colors = reverse(bytScl(levels, top=253)+1)
-;		PlotField = (real_part(thisField)<max(levels))>min(-levels)
-;		c = contour ( PlotField, c_value=levels, rgb_indices=colors, rgb_table=3, /fill, $
-;                aspect_ratio=1.0, title=title, layout=[layout,PlotPos], /current )
-;		c = contour ( -PlotField, c_value=levels, rgb_indices=colors, rgb_table=1, /fill,/over )
-;        ++PlotPos
-
-;		thisField = abs(ebk[*,*])*0.5e2
-;        title = 'abs(ebk) x 0.5e2'
-;		levels = fIndGen(nLevs)/(nLevs-1)*scale
-;		colors = reverse(bytScl(levels, top=253)+1)
-;		PlotField = (real_part(thisField)<max(levels))>min(-levels)
-;		c = contour ( PlotField, c_value=levels, rgb_indices=colors, rgb_table=3, /fill, $
-;                aspect_ratio=1.0, title=title, layout=[layout,PlotPos], /current )
-;		c = contour ( -PlotField, c_value=levels, rgb_indices=colors, rgb_table=1, /fill,/over )
-;        ++PlotPos
 
 	endelse
 
