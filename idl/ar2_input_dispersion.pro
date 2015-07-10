@@ -2,7 +2,9 @@ pro ar2_input_dispersion, wrf, amu, AtomicZ, nn, nPhi, nSpec, nR, nZ, Density_m3
 		r2D, resonances = resonances, $
 		IonIonHybrid_res_freq=IonIonHybrid_res_freq, $
 		IonIonHybrid_cut_freq=IonIonHybrid_cut_freq, $
-		Spec1=Spec1,Spec2=Spec2
+		Spec1=Spec1,Spec2=Spec2, $
+		kPerSq_F=kPerSq_F, kPerSq_S=kPerSq_S, $
+		StixP=StixP,StixL=StixL,StixR=StixR,StixS=StixS
 
 	@constants
 
@@ -34,7 +36,7 @@ pro ar2_input_dispersion, wrf, amu, AtomicZ, nn, nPhi, nSpec, nR, nZ, Density_m3
 	endfor
 
 	if keyword_set(Spec1) and keyword_set(Spec2) and nSpec gt 2 then begin
-		print, 'Calculating Ion-Ion Hybrid Resonance Freq.'
+		;print, 'Calculating Ion-Ion Hybrid Resonance Freq.'
 		; Ion-Ion Hybrid Freq (pg. 248 Brambilla)
 		nuSpec1 	= Density_m3[*,*,Spec1] / Density_m3[*,*,0]
 		nuSpec2 	= Density_m3[*,*,Spec2] / Density_m3[*,*,0]
@@ -58,8 +60,5 @@ pro ar2_input_dispersion, wrf, amu, AtomicZ, nn, nPhi, nSpec, nR, nZ, Density_m3
 	zSlice = nZ/2
 	kPerSq_1 = kPerSq_F[*,zSlice]
 	kPerSq_2 = kPerSq_S[*,zSlice]
-
-	p=plot(r2D[*,zSlice],sqrt(kPerSq_F[*,zSlice]),color='b')
-	p=plot(r2D[*,zSlice],sqrt(kPerSq_S[*,zSlice]),/over,color='r')
 
 end

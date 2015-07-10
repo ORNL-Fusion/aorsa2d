@@ -1,0 +1,2 @@
+#/bin/bash
+rsync -avuz --exclude '*.mod' --exclude '*.o' --exclude 'xaorsa*' --exclude 'core' dvk@dlg-macpro@ornl.gov:/scratch/ ~/scratch

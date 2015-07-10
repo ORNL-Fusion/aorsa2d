@@ -2,12 +2,13 @@ module power
 
 contains
 
-subroutine current ( g )
+subroutine current ( g, rhs )
 
     use grid
     use read_data
     use aorsaNamelist, &
-        only: nSpec, iSigma, fracOfModesInSolution
+        only: nSpec, iSigma, fracOfModesInSolution, ZeroJp, &
+        ZeroJp_rMin, ZeroJp_rMax, ZeroJp_zMin, ZeroJp_zMax
     use sigma
     use parallel
     use profiles, &
@@ -17,12 +18,12 @@ subroutine current ( g )
     implicit none
    
     type(gridBlock), intent(inout) :: g 
+    integer, intent(in) :: rhs
 
-    complex, allocatable :: sigmaAll(:,:,:,:,:,:,:)
     complex :: ek_nm(3), jVec(3), thisSigma(3,3)
     complex :: bFn
 
-    integer :: i, j, n, m, iStat, s, w
+    integer :: s, w
     real :: kr, kz, kVec_stix(3)
     complex, allocatable :: jAlphaTmp(:,:), jBetaTmp(:,:), jBTmp(:,:)
 
@@ -30,8 +31,9 @@ subroutine current ( g )
 #if __noU__==1
     real :: R_(3,3)
 #endif
+    real :: R, z
 
-    allocate ( &
+    if (.not.allocated(g%jAlpha)) allocate ( &
         g%jAlpha(g%nR,g%nZ,nSpec), &
         g%jBeta(g%nR,g%nZ,nSpec), &
         g%jB(g%nR,g%nZ,nSpec) )
@@ -57,11 +59,6 @@ subroutine current ( g )
     species: &
     do s=1,nSpec
 
-        !do i=1,g%nR
-        !    do j=1,g%nZ
-        !        do n=g%nS,g%nF
-        !            do m=g%mS,g%mF
-
         workList: &
         do w=1,size(g%wl)
 
@@ -71,11 +68,6 @@ subroutine current ( g )
 
             
                         bFn = g%xx(g%wl(w)%n,g%wl(w)%i) * g%yy(g%wl(w)%m,g%wl(w)%j)
-                        !bFn = xBasis(n,g%rNorm(i)) * yBasis(m,g%zNorm(j))
-
-                        ek_nm(1) = g%eAlphak(g%wl(w)%n,g%wl(w)%m)
-                        ek_nm(2) = g%eBetak(g%wl(w)%n,g%wl(w)%m)
-                        ek_nm(3) = g%eBk(g%wl(w)%n,g%wl(w)%m) 
 
 #if __sigma__ != 2
                         thisSigma = sigmaAll(g%wl(w)%i,g%wl(w)%j,g%wl(w)%n,g%wl(w)%m,:,:,s)
@@ -118,7 +110,7 @@ subroutine current ( g )
                                 g%sinTh(g%wl(w)%iPt), &
                                 g%bPol(g%wl(w)%iPt), g%bMag(g%wl(w)%iPt), &
                                 g%gradPrlB(g%wl(w)%iPt), &
-                                g%nuOmg(g%wl(w)%iPt) )
+                                g%nuOmg(g%wl(w)%iPt,s) )
 
                         endif hotPlasma
 
@@ -129,12 +121,8 @@ subroutine current ( g )
                                 g%omgc(g%wl(w)%iPt,s), &
                                 g%omgp2(g%wl(w)%iPt,s), &
                                 omgrf, &
-                                g%nuOmg(g%wl(w)%iPt) )
+                                g%nuOmg(g%wl(w)%iPt,s) )
 
-                            !thisSigma = sigmaCold_stix &
-                            !    ( g%omgc(g%wl(w)%i,g%wl(w)%j,s), &
-                            !    g%omgp2(g%wl(w)%i,g%wl(w)%j,s), omgrf, &
-                            !    g%nuOmg(g%wl(w)%i,g%wl(w)%j) )
                             thisSigma = sigmaCold_stix ( sigmaIn_cold )
 
 
@@ -151,44 +139,74 @@ subroutine current ( g )
                         if (g%isMetal(g%wl(w)%iPt)) then 
 
                             thisSigma = 0
-                            thisSigma(1,1) = metal 
-                            thisSigma(2,2) = metal
-                            thisSigma(3,3) = metal
+                            thisSigma(1,1) = 0!metal 
+                            thisSigma(2,2) = 0!metal
+                            thisSigma(3,3) = 0!metal
 
                         endif
 
+                        ! This will zero the plasma current in regions
+                        ! where we want to specify it manually in the
+                        ! RHS.
+
+                        if(ZeroJp)then 
+                            R = g%R(g%wl(w)%i)
+                            z = g%z(g%wl(w)%j)
+                            if(R>=ZeroJp_rMin &
+                                    .and.R<=ZeroJp_rMax &
+                                    .and.z>=ZeroJp_zMin &
+                                    .and.z<=ZeroJp_zMax) then
+
+                                thisSigma = 0
+
+                            endif
+                        endif
+
+
+#endif
+                        ek_nm(1) = g%eAlphak(g%wl(w)%n,g%wl(w)%m,rhs)
+                        ek_nm(2) = g%eBetak(g%wl(w)%n,g%wl(w)%m,rhs)
+                        ek_nm(3) = g%eBk(g%wl(w)%n,g%wl(w)%m,rhs) 
+
+#if PRINT_SIGMA_ABP>=1
+                        if(g%wl(w)%n.eq.g%nMin.and.s.eq.2)then
+
+                            write(*,*) 
+                            write(*,*) g%wl(w)%n, g%wl(w)%n, g%r(g%wl(w)%i)
+                            write(*,*) thisSigma(1,1), thisSigma(1,2), thisSigma(1,3)
+                            write(*,*) thisSigma(2,1), thisSigma(2,2), thisSigma(2,3)
+                            write(*,*) thisSigma(3,1), thisSigma(3,2), thisSigma(3,3)
+                        endif
 #endif
                         jVec = matMul ( thisSigma, ek_nm ) 
+                        !thisSigma = transpose(thisSigma)
+                        !jVec(1) = thisSigma(1,1)*ek_nm(1)+thisSigma(2,1)*ek_nm(2)+thisSigma(3,1)*ek_nm(3)
+                        !jVec(2) = thisSigma(1,2)*ek_nm(1)+thisSigma(2,2)*ek_nm(2)+thisSigma(3,2)*ek_nm(3)
+                        !jVec(3) = thisSigma(1,3)*ek_nm(1)+thisSigma(2,3)*ek_nm(2)+thisSigma(3,3)*ek_nm(3)
 
                         g%jAlpha(g%wl(w)%i,g%wl(w)%j,s) = g%jAlpha(g%wl(w)%i,g%wl(w)%j,s) + jVec(1) * bFn
                         g%jBeta(g%wl(w)%i,g%wl(w)%j,s) = g%jBeta(g%wl(w)%i,g%wl(w)%j,s) + jVec(2) * bFn
                         g%jB(g%wl(w)%i,g%wl(w)%j,s) = g%jB(g%wl(w)%i,g%wl(w)%j,s) + jVec(3) * bFn
 
-                        !g%jAlpha(i,j,s) = g%jAlpha(i,j,s) &
-                        !    + ( sigma(i,j,n,m,1,1,s) * g%eAlphak(n,m) &
-                        !    + sigma(i,j,n,m,1,2,s) * g%eBetak(n,m) &
-                        !    + sigma(i,j,n,m,1,3,s) * g%eBk(n,m) ) * bFn 
-
-                        !g%jBeta(i,j,s) = g%jBeta(i,j,s) &
-                        !    + ( sigma(i,j,n,m,2,1,s) * g%eAlphak(n,m) &
-                        !    + sigma(i,j,n,m,2,2,s) * g%eBetak(n,m) &
-                        !    + sigma(i,j,n,m,2,3,s) * g%eBk(n,m) ) * bFn 
-
-                        !g%jB(i,j,s) = g%jB(i,j,s) &
-                        !    + ( sigma(i,j,n,m,3,1,s) * g%eAlphak(n,m) &
-                        !    + sigma(i,j,n,m,3,2,s) * g%eBetak(n,m) &
-                        !    + sigma(i,j,n,m,3,3,s) * g%eBk(n,m) ) * bFn 
-
-        !            enddo
-        !        enddo
-        !    enddo
-        !enddo
-
             endif twoThirdsRule
+
+
+            ! Where E=0 at the boundary, also set J=0 to avoid
+            ! tiny E values combining with sigma to give anomolous
+            ! J values in the output.
+
+            if (g%label(g%wl(w)%iPt)==888) then
+
+                g%jAlpha(g%wl(w)%i,g%wl(w)%j,s) = 0
+                g%jBeta(g%wl(w)%i,g%wl(w)%j,s) = 0
+                g%jB(g%wl(w)%i,g%wl(w)%j,s) = 0
+
+            endif
 
         enddo workList
 
     enddo species
+
 #if __sigma__ != 2
     deallocate ( sigmaAll )
 #else
@@ -213,39 +231,35 @@ subroutine current ( g )
         g%jB(:,:,s) = jBTmp
 
     enddo
+
+        deallocate(jAlphaTmp,jBetaTmp,jBTmp)
+
 #endif
 #endif
 
 end subroutine current 
 
 
-subroutine jDotE ( g )
+subroutine jDotE ( g, rhs)
 
     use grid
     use aorsaNamelist, &
-    only: nSpec
+        only: nSpec
 
     implicit none
    
     type(gridBlock), intent(inout) :: g 
+    integer, intent(in) :: rhs
 
     integer :: i, j, s
-    complex :: eHere(3), jHere(3)
 
-    allocate ( &
-        g%jouleHeating(g%nR,g%nZ,nSpec) )
+    if(.not.allocated(g%jouleHeating))allocate ( g%jouleHeating(g%nR,g%nZ,nSpec) )
 
     species: &
     do s=1,nSpec
 
         do i=1,g%nR
             do j=1,g%nZ
-
-                !eHere = (/ g%eAlpha(i,j), g%eBeta(i,j), g%eB(i,j) /)
-                !jHere = (/ g%jAlpha(i,j,s), g%jBeta(i,j,s), g%jB(i,j,s) /)
-
-                !g%jouleHeating(i,j,s) = &
-                !    0.5 * realpart ( dot_product ( eHere, jHere ) )
 
                 g%jouleHeating(i,j,s) = &
                     0.5 * real(real( conjg(g%eAlpha(i,j)) * g%jAlpha(i,j,s) &

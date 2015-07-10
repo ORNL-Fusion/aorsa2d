@@ -48,7 +48,8 @@ endif
 
 i = nZ/2
 
-p=plot(r,Density_m3[*,i,0],title='Density_m3')
+yRange = [0,1.2]*median(Density_m3[*,i,0])
+p=plot(r,Density_m3[*,i,0],title='Density_m3',yRange=yRange)
 for s=1,nS-1 do begin
 		p=plot(r,Density_m3[*,i,s],/over)
 endfor

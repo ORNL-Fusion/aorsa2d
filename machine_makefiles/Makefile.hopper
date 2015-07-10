@@ -1,0 +1,18 @@
+# Overwrite variables for franklin XT4 @ NERSC
+
+HDF :=
+BLAS := 
+LAPACK :=  
+SCALAPACK := 
+PAPI_INC := ${PAPI_INCLUDE_OPTS}  
+PAPI_LINK := ${PAPI_POST_LINK_OPTS} 
+BLACS := 
+NETCDF := ${NETCDF_INCLUDE_OPTS} ${NETCDF_POST_LINK_OPTS} -lnetcdf 
+BOUNDS := 
+WARN := 
+DEBUG  := 
+F90 := ftn #-fast #-gopt -Mbounds -Mchkfpstk -Mchkptr
+LIBS := ${HDF} ${NETCDF} ${BLAS} ${LAPACK}
+LIBS := ${SCALAPACK} ${BLACS} ${LIBS}
+
+

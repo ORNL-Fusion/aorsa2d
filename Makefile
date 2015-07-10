@@ -44,7 +44,7 @@ CPP_DIRECTIVES += -DzFunHammett
 
 # use papi, set to "-Dusepapi"
 # ----------------------------
-CPP_DIRECTIVES += -Dusepapi 
+CPP_DIRECTIVES += #-Dusepapi 
 
 # caculate sigma as part of the fill (=2) or standalone with file write (=1)
 # --------------------------------------------------------------------------
@@ -65,6 +65,7 @@ CPP_DIRECTIVES += -D__debugSigma__=0
 CPP_DIRECTIVES += -D__DebugSetMetal__=0
 CPP_DIRECTIVES += -D__DebugBField__=0
 CPP_DIRECTIVES += -D_DEBUG_ROTATION=0
+CPP_DIRECTIVES += -DPRINT_SIGMA_ABP=0
 
 # compile flags
 # -------------
@@ -92,9 +93,21 @@ ifeq (${PARALLEL},1)
 endif
 
 
+# Machine specific stuff
+# ----------------------
 ThisMachine := $(shell uname -n)
-include Makefile.$(ThisMachine)
 
+ifneq (,$(findstring titan,$(ThisMachine)))
+ThisMachine := titan
+endif
+ifneq (,$(findstring hopper,$(ThisMachine)))
+ThisMachine := hopper
+endif
+ifneq (,$(findstring edison,$(ThisMachine)))
+ThisMachine := edison
+endif
+
+include machine_makefiles/Makefile.${ThisMachine}
 
 ifeq (${DDT},1)
     LIBS+=-Bddt
@@ -159,6 +172,6 @@ include Makefile.double
 include Makefile.deps
 
 clean:
-	rm ${AORSA1D} ${AORSA2D} $(OBJ_DIR)/*.o $(MOD_DIR)/*.mod aorsa.o
+	rm -f ${AORSA1D} ${AORSA2D} $(OBJ_DIR)/*.o $(MOD_DIR)/*.mod aorsa.o *.mod
 
 

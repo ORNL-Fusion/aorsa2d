@@ -7,7 +7,7 @@ contains
         use grid
         use aorsaNamelist, only : &
             metalLeft, metalRight, metalTop, metalBot, &
-            limiter_boundary, useEqdsk, UseAR2Input, lcfs_boundary
+            limiter_boundary, useEqdsk, UseAR2Input, lcfs_boundary, useMetalBox
         use ar2Input, only: ar2_BbbMask=>BbbMask, ar2_LimMask=>LimMask, &
            ar2_nR=>nR, ar2_nZ=>nZ, ar2_r=>r, ar2_z=>z, ar2_LCFSMask=>bbbMask
         use parallel, only: iAm
@@ -70,19 +70,11 @@ contains
                 endif
 #endif 
 
-             !do i=1,g%nR
-             !   do j=1,g%nZ
-                    if(i>1.and.i<g%nR.and.j>1.and.j<g%nZ)then
-                        if(any( (/  ar2_LimMask(floor(iTmp),floor(jTmp)),&
-                                    ar2_LimMask(ceiling(iTmp),floor(jTmp)),&
-                                    ar2_LimMask(ceiling(iTmp),ceiling(jTmp)),&
-                                    ar2_LimMask(floor(iTmp),ceiling(jTmp)) /)==0 ) ) g%isMetal(w) = .true.
-                    else
-                            g%isMetal(w) = .true.
-                    endif
-                    !g%isMetal(w) = .not. IsInsideOf ( g%R(i), g%z(j), ar2_rLim, ar2_zLim )
-             !   enddo
-             !enddo
+                if(any( (/  ar2_LimMask(floor(iTmp),floor(jTmp)),&
+                            ar2_LimMask(ceiling(iTmp),floor(jTmp)),&
+                            ar2_LimMask(ceiling(iTmp),ceiling(jTmp)),&
+                            ar2_LimMask(floor(iTmp),ceiling(jTmp)) /)==0 ) ) g%isMetal(w) = .true.
+
              enddo
 
         elseif(lcfs_boundary .and. UseAR2Input)then
@@ -104,18 +96,15 @@ contains
                     endif
              enddo
 
-        else ! square box defined by metalLeft, metalRight, metalTop, metalBot
+        endif ! square box defined by metalLeft, metalRight, metalTop, metalBot
 
+        if(useMetalBox)then 
             do w=1,size(g%pt)
                 i = g%pt(w)%i
                 j = g%pt(w)%j
-            !do i=1,g%nR
-            !    do j=1,g%nZ
                     if ( g%R(i) < metalLeft .or. g%R(i) > metalRight &
                             .or. g%Z(j) > metalTop .or. g%Z(j) < metalBot ) &
                         g%isMetal(w) = .true.
-            !    enddo
-            !enddo
             enddo
 
         endif

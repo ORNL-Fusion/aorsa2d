@@ -8,9 +8,11 @@ implicit none
     ! -----
     ! Electrons must be the first species 
 
+    logical :: useMetalBox = .false.
     logical :: AntennaJ_R = .false.
     logical :: AntennaJ_T = .false.
     logical :: AntennaJ_Z = .true.
+    logical :: useAntennaFromAR2Input = .true.
     integer, parameter :: nSpecMax  = 5 
     integer :: zSpecIn(nSpecMax)    = (/ -1, 2, 0, 0, 0 /)
     integer :: amuSpecIn(nSpecMax)  = (/  0, 4, 0, 0, 0 /) 
@@ -71,7 +73,15 @@ implicit none
       CHARACTER*128 :: eqdsk = 'g1080408021.txt'               ! eqdsk name
       logical :: useEqdsk = .false.
       logical :: useAr2Input = .false.
+      logical :: useAR2SourceLocationsFile = .false.
+      logical :: useAllRHSsSource = .true.
+      logical :: ZeroJp = .false.
+      real :: ZeroJp_rMin = 0.0
+      real :: ZeroJp_rMax = 100.0
+      real :: ZeroJp_zMin = -100.0
+      real :: ZeroJp_zMax = 100.00
       character(len=100) :: AR2InputFileName = 'ar2Input.nc'
+      character(len=100) :: AR2SourceLocationsFileName = 'AR2SourceLocations.nc'
       CHARACTER*128 :: netCDF_file1 = 'phillips_nstx3.5.2.nc'  !cql3d distribution file name 1
       CHARACTER*128 :: netCDF_file2 = 'phillips_nstx3.5.2.nc'  !cql3d distribution file name 2
 
@@ -109,8 +119,8 @@ implicit none
       real :: amu_slo = 4.0
       real :: z_slo = 2.0
       real :: eta_slo = 0.0
-      real :: xnuomg = 0.0             !-----xnuomg is the collison rate used in hot and cold plasma dielectrics
-      real :: xnuOmgOutside = 0.0
+      !real :: xnuomg = 0.0             !-----xnuomg is the collison rate used in hot and cold plasma dielectrics
+      !real :: xnuOmgOutside = 0.0
       real :: xnuead = 0.0000E+00      !-----xnuead = ad hoc collision frequency for electron in sec-1
       real :: xnu1ad = 0.0000E+00      !-----nu1ad=ad hoc collision frequency for majority ions in sec-1                                      
       real :: xnu2ad = 0.0000E+00      !-----nu2ad=ad hoc collision frequency for minority ions in sec-1
@@ -119,6 +129,7 @@ implicit none
       real :: zAnt = 0.0               !-----zAnt = location of antenna center in Z (m)
       real :: antSigX = 0.1
       real :: antSigY = 0.3
+      real :: antSigUnit = 0.1
 
       real :: dthetant0 = 40.
       real :: dpsiant0 = .05
@@ -421,7 +432,7 @@ implicit none
                    
       namelist/aorsa2din/ nwdot, lmax, ibessel, &
      &    ti01, xnuead, xnu1ad, xnu2ad, rant, te0, zAnt,  &
-     &    antSigX, antSigY, &
+     &    antSigX, antSigY, antSigUnit, &
      &    ti02, ti03, ti2lim, ti3lim, nuper, nupar, &
      &    ti04, ti05, ti06, ti4lim, ti5lim, ti6lim,  &
      &    inu, iprint, iexact, delta0, xwall, xnwall,  &
@@ -451,7 +462,7 @@ implicit none
      &    alphan4, alphan5, alphan6,  &
      &    alphate,  alphati, alphati2, alphati3,  &
      &    alphati4, alphati5, alphati6,  &
-     &    ekappa, rwleft, rwright, xnuomg, xNuOmgOutside, &
+     &    ekappa, rwleft, rwright, & !xnuomg, xNuOmgOutside, &
      &    nboundary, eta_slo, amu_slo, z_slo, eslowev, nnode_local,  &
      &    nnode_overlap, iprofile, ftrap, isolve, &
      &    betan, betan2, betan3, betan_slo, betate, betati, betati2,  &
@@ -482,7 +493,10 @@ implicit none
      &    kPrlEffLimit, nGrid, useAr2Input, AR2InputFileName, &
      &    nRAll, nZAll, rMinAll, rMaxAll, zMinAll, zMaxAll, &
      &    overlap, parabolic, cosX, cosY, nZ_1D, fracOfModesInSolution, &
-     &    AntennaJ_R, AntennaJ_T, AntennaJ_Z
+     &    AntennaJ_R, AntennaJ_T, AntennaJ_Z, AR2SourceLocationsFileName, &
+     &    useAR2SourceLocationsFile, useAllRHSsSource, ZeroJp, &
+     &    ZeroJp_rMin, ZeroJp_rMax, ZeroJp_zMin, ZeroJp_zMax, useAntennaFromAR2Input, &
+     &    useMetalBox
 
                 
 contains

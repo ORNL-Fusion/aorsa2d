@@ -72,7 +72,7 @@ type :: gridBlock
     ! -----------------------------------
     real, allocatable, dimension(:) :: bR_unit, bT_unit, bZ_unit, bMag, rho
     logical, allocatable, dimension(:) :: mask
-    real, allocatable :: nuOmg(:)
+    real, allocatable :: nuOmg(:,:)
     real(kind=dbl), allocatable, dimension(:,:) :: densitySpec, ktSpec
     real(kind=dbl), allocatable, dimension(:,:) :: omgc, omgp2
 
@@ -90,7 +90,7 @@ type :: gridBlock
 
     ! E field solution
     ! ----------------
-    complex, allocatable, dimension(:,:) :: &
+    complex, allocatable, dimension(:,:,:) :: &
         ealphak, ebetak, eBk
     complex, allocatable, dimension(:,:) :: &
        ealpha,  ebeta, eB 
@@ -156,7 +156,7 @@ type :: gridBlock
     real, allocatable :: &
         spline_omgC(:,:), &
         spline_omgP2(:,:), &
-        spline_nuOmg(:)
+        spline_nuOmg(:,:)
 
 end type gridBlock
 
@@ -468,7 +468,7 @@ contains
         implicit none
 
         type(gridBlock), intent(inout) :: gAll(:)
-        integer(kind=long), intent(in) :: nPts_tot
+        integer, intent(in) :: nPts_tot
 
         integer :: wMe, iMe, jMe, me, nbr, offSet, label
 

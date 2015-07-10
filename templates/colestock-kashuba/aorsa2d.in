@@ -1,0 +1,69 @@
+&aorsa2din
+
+useAR2Input = .true.,
+AR2InputFileName = 'input/ar2Input.nc',
+
+!Magnetic Field
+!--------------
+
+!Run Parameters
+!--------------
+
+nPhi = 13,
+damping = 0.0,
+delta0 = 0.0e-5,
+prfin = 1.0e+00,
+freqcy = 42.0E+06,
+lmax = 9,
+zeffcd = 2.23,
+upshift = 1,
+isigma = 1,
+xkPerp_cutoff = 0.90,
+xkx_cutOff = 0.9,
+xky_cutOff = 0.9,
+toroidalBroadening = .true.,
+limiter_boundary = .false.,
+fracOfModesInSolution = 1.00,
+kPrlEffLimit = 1d-1,
+
+!Grids
+!-----
+nGrid = 1,
+overlap = 0,
+nRAll(1) = 512, 
+nZAll(1) = 1, 
+nZ_1D = 0,
+rMinAll(1) = 0.92,
+rMaxAll(1) = 1.72,
+zMinAll(1) = 0.1,
+zMaxAll(1) = -0.1,
+npRow = 4,
+npCol = 6,
+square = .true.,
+chebyShevX = .false., 
+chebyShevY = .false.,
+cosX = .false.,
+cosY = .false.,
+
+metalLeft 	= 0.0,
+metalRight 	= 1e6,
+metalTop 	= 1e6,
+metalBot 	= -1e6,
+
+
+!Antenna
+!-------
+
+useAntennaFromAR2Input = .false.,
+useAR2SourceLocationsFile = .false.,
+AR2SourceLocationsFileName = 'ar2SourceLocations.nc',
+useAllRHSsSource = .true.,
+
+AntennaJ_R = .false.,
+AntennaJ_T = .false.,
+AntennaJ_Z = .true.,
+rAnt = 1.6,
+antSigX = 0.02,
+
+
+/

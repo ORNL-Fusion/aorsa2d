@@ -4,7 +4,7 @@
 #PBS -m e
 #PBS -j oe
 #PBS -q debug
-#PBS -l walltime=0:30:00
+#PBS -l walltime=0:10:00
 #PBS -l mppwidth=256
 #PBS -V
 

@@ -61,16 +61,9 @@ contains
                bHere = dlg_interpB ( (/g%R(i),0.0,g%z(j)/), &
                             bMagHere = g%bMag(w) )  
 
-               if(noPoloidalField)then
-                    g%bMag(w) = abs(bHere(2))
-                    g%bR_unit(w) = 0.0 / g%bMag(w)
-                    g%bT_unit(w) = bHere(2) / g%bMag(w)
-                    g%bZ_unit(w) = 0.0 / g%bMag(w)
-               else
-                    g%bR_unit(w) = bHere(1) / g%bMag(w)
-                    g%bT_unit(w) = bHere(2) / g%bMag(w)
-                    g%bZ_unit(w) = bHere(3) / g%bMag(w)
-               endif
+               g%bR_unit(w) = bHere(1) / g%bMag(w)
+               g%bT_unit(w) = bHere(2) / g%bMag(w)
+               g%bZ_unit(w) = bHere(3) / g%bMag(w)
 
         !    enddo
         !enddo

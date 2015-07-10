@@ -6,10 +6,10 @@ use check_mod
 
 contains
 
-    subroutine write_runData ( g, rid )
+    subroutine write_runData ( g, rid, rhs )
  
         use aorsaNamelist, &
-        only: nSpec, nPhi, freqcy
+        only: nSpec, nPhi, freq=>freqcy, nZ_1D
         use bField
         use grid
         use constants
@@ -19,10 +19,14 @@ contains
         implicit none
 
         type(gridBlock), intent(in) :: g
+        integer, intent(in) :: rhs
+
         character(len=100) :: fName 
         character(len=20) :: rid
+        character(len=6) :: rhs_string
+        character(len=4) :: nPhi_string
 
-        integer :: nc_id, nX_id, nY_id, nc_stat
+        integer :: nc_id, nX_id, nY_id, nc_stat, NRHS_id
         integer :: nModesX_id, nModesY_id, nSpec_id
         integer :: &
             x_id, y_id, &
@@ -30,10 +34,11 @@ contains
             jr_re_id, jr_im_id, jt_re_id, jt_im_id, &
             jz_re_id, jz_im_id, kx_id, ky_id, &
             dens_id, temp_id, omgc_id, omgp2_id, &
-            scalar_id, nPhi_id, freq_id
+            scalar_id, nPhi_id, freq_id, nuOmg_id
         integer :: &
             xx_re_id, yy_re_id, xx_im_id, yy_im_id, &
-            drBfn_re_id, dzBfn_re_id, drbFn_im_id, dzbFn_im_id
+            drBfn_re_id, dzBfn_re_id, drbFn_im_id, dzbFn_im_id, &
+            LimMask_id, nZ_1D_id
 
         integer :: drUrrid, drUrtid, drUrzid
         integer :: drUtrid, drUttid, drUtzid
@@ -48,11 +53,15 @@ contains
             Uzrid, Uztid, Uzzid
 
         real, allocatable :: RealTmp(:,:),RealTmp3(:,:,:)
+        integer, allocatable :: IntTmp(:,:)
         complex, allocatable :: ComplexTmp2(:,:)
         integer :: p,i,j,s
         integer, allocatable :: Cnt(:,:)
 
-        fName = trim(rid)//'runData'//g%fNumber//'.nc'
+        write(nPhi_string,'(sp,i4.3)'), int(nPhi)
+        write(rhs_string,'(i6.6)'), rhs
+
+        fName = trim(rid)//'output/runData_'//g%fNumber//'_'//nPhi_string//'_'//rhs_string//'.nc'
 
         if(iAm==0)then
             call check ( nf90_create ( fName, nf90_clobber, nc_id ) )
@@ -62,11 +71,15 @@ contains
             call check ( nf90_def_dim ( nc_id, "nModesY", g%nModesZ, nModesY_id ) )
             call check ( nf90_def_dim ( nc_id, "nSpec", nSpec, nSpec_id ) )
             call check ( nf90_def_dim ( nc_id, "scalar", 1, scalar_id ) )
+            call check ( nf90_def_dim ( nc_id, "NRHS", NRHS, NRHS_id ) )
 
             call check ( nf90_def_var ( nc_id, "nPhi", NF90_INT, &
                 scalar_id, nPhi_id ) )
             call check ( nf90_def_var ( nc_id, "freq", NF90_REAL, &
                 scalar_id, freq_id ) )
+            call check ( nf90_def_var ( nc_id, "nZ_1D", NF90_REAL, &
+                scalar_id, nZ_1D_id ) )
+
 
             call check ( nf90_def_var ( nc_id, "capR", NF90_REAL, &
                 (/nX_id/), x_id ) ) 
@@ -121,6 +134,7 @@ contains
 
             nc_stat = nf90_def_var ( nc_id, "densitySpec", NF90_REAL, (/nX_id,nY_id,nSpec_id/), dens_id ) 
             nc_stat = nf90_def_var ( nc_id, "tempSpec", NF90_REAL, (/nX_id,nY_id,nSpec_id/), temp_id ) 
+            nc_stat = nf90_def_var ( nc_id, "nuOmg", NF90_REAL, (/nX_id,nY_id,nSpec_id/), nuOmg_id ) 
             nc_stat = nf90_def_var ( nc_id, "omgc", NF90_REAL, (/nX_id,nY_id,nSpec_id/), omgc_id ) 
             nc_stat = nf90_def_var ( nc_id, "omgp2", NF90_REAL, (/nX_id,nY_id,nSpec_id/), omgp2_id ) 
 
@@ -160,18 +174,51 @@ contains
             nc_stat = nf90_def_var ( nc_id, "Uzt", NF90_REAL, (/nX_id,nY_id/), Uztid ) 
             nc_stat = nf90_def_var ( nc_id, "Uzz", NF90_REAL, (/nX_id,nY_id/), Uzzid ) 
 
+            nc_stat = nf90_def_var ( nc_id, "LimMask", NF90_INT, (/nX_id,nY_id/), LimMask_id ) 
+
             call check ( nf90_enddef ( nc_id ) )
         endif
-       
 
         if(iAm==0)then
             nc_stat = nf90_put_var ( nc_id, nPhi_id, nPhi ) 
-            nc_stat = nf90_put_var ( nc_id, freq_id, freqcy ) 
+            nc_stat = nf90_put_var ( nc_id, freq_id, freq ) 
             nc_stat = nf90_put_var ( nc_id, x_id, g%R ) 
-            nc_stat = nf90_put_var ( nc_id, y_id, g%Z )
+            nc_stat = nf90_put_var ( nc_id, y_id, g%Z )    
+            nc_stat = nf90_put_var ( nc_id, nZ_1D_id, nZ_1D )    
+
+        endif
+
+        allocate(IntTmp(g%nR,g%nZ)) 
+        allocate(Cnt(g%nR,g%nZ))
+        IntTmp = 0
+        Cnt = 0
+
+        do p=1,size(g%pt)
+            i = g%pt(p)%i
+            j = g%pt(p)%j
+            IntTmp(i,j) = g%isMetal(p)
+            Cnt(i,j) = Cnt(i,j)+1
+        enddo
+        
+#ifdef par
+        call iGSUM2D ( iContext, 'All', ' ', g%nR, g%nZ, IntTmp, g%nR, -1, -1 )
+        call iGSUM2D ( iContext, 'All', ' ', g%nR, g%nZ, Cnt, g%nR, -1, -1 )
+#endif
+        IntTmp = IntTmp/Cnt
+        IntTmp = abs(IntTmp-1)
+
+        if(iAm==0)then
+
+            nc_stat = nf90_put_var ( nc_id, LimMask_id, IntTmp )
+            if(nc_stat.ne.0)then
+                    write(*,*) 'ERROR: nc_stat: ', nc_stat
+                    stop
+            endif
         endif   
 
-        allocate(RealTmp(g%nR,g%nZ),Cnt(g%nR,g%nZ))
+        deallocate(IntTmp)
+
+        allocate(RealTmp(g%nR,g%nZ))
 
         !bR_unit 
         RealTmp = 0 
@@ -265,68 +312,102 @@ contains
         if(iAm==0)nc_stat = nf90_put_var ( nc_id, dens_id, RealTmp3 )
         RealTmp3 = 0
 
-        !JAntr
+        !omgc
+        RealTmp3 = 0
+        do s=1,nSpec
+            RealTmp = 0 
+            Cnt = 0 
+            do p=1,size(g%pt)
+                i = g%pt(p)%i
+                j = g%pt(p)%j
+                RealTmp(i,j) = g%omgc(p,s)
+                Cnt(i,j) = Cnt(i,j)+1
+            enddo
+#ifdef par
+            call sGSUM2D ( iContext, 'All', ' ', g%nR, g%nZ, RealTmp, g%nR, -1, -1 )
+            call sGSUM2D ( iContext, 'All', ' ', g%nR, g%nZ, Cnt, g%nR, -1, -1 )
+#endif
+            RealTmp3(:,:,s) = RealTmp/Cnt
+            RealTmp = 0
+            Cnt = 0
+        enddo
+        if(iAm==0)nc_stat = nf90_put_var ( nc_id, omgc_id, RealTmp3 )
+        RealTmp3 = 0
+
+        !omgp2
+        RealTmp3 = 0
+        do s=1,nSpec
+            RealTmp = 0 
+            Cnt = 0 
+            do p=1,size(g%pt)
+                i = g%pt(p)%i
+                j = g%pt(p)%j
+                RealTmp(i,j) = g%omgp2(p,s)
+                Cnt(i,j) = Cnt(i,j)+1
+            enddo
+#ifdef par
+            call sGSUM2D ( iContext, 'All', ' ', g%nR, g%nZ, RealTmp, g%nR, -1, -1 )
+            call sGSUM2D ( iContext, 'All', ' ', g%nR, g%nZ, Cnt, g%nR, -1, -1 )
+#endif
+            RealTmp3(:,:,s) = RealTmp/Cnt
+            RealTmp = 0
+            Cnt = 0
+        enddo
+        if(iAm==0)nc_stat = nf90_put_var ( nc_id, omgp2_id, RealTmp3 )
+        RealTmp3 = 0
+
+
+        !nuOmg
+        RealTmp3 = 0
+        do s=1,nSpec
+            RealTmp = 0 
+            Cnt = 0 
+            do p=1,size(g%pt)
+                i = g%pt(p)%i
+                j = g%pt(p)%j
+                RealTmp(i,j) = g%nuOmg(p,s)
+                Cnt(i,j) = Cnt(i,j)+1
+            enddo
+#ifdef par
+            call sGSUM2D ( iContext, 'All', ' ', g%nR, g%nZ, RealTmp, g%nR, -1, -1 )
+            call sGSUM2D ( iContext, 'All', ' ', g%nR, g%nZ, Cnt, g%nR, -1, -1 )
+#endif
+            RealTmp3(:,:,s) = RealTmp/Cnt
+            RealTmp = 0
+            Cnt = 0
+        enddo
+        if(iAm==0)nc_stat = nf90_put_var ( nc_id, nuOmg_id, RealTmp3 )
+        RealTmp3 = 0
+
+        !Temp_eV
+        RealTmp3 = 0
+        do s=1,nSpec
+            RealTmp = 0 
+            Cnt = 0 
+            do p=1,size(g%pt)
+                i = g%pt(p)%i
+                j = g%pt(p)%j
+                RealTmp(i,j) = g%ktSpec(p,s)/q
+                Cnt(i,j) = Cnt(i,j)+1
+            enddo
+#ifdef par
+            call sGSUM2D ( iContext, 'All', ' ', g%nR, g%nZ, RealTmp, g%nR, -1, -1 )
+            call sGSUM2D ( iContext, 'All', ' ', g%nR, g%nZ, Cnt, g%nR, -1, -1 )
+#endif
+            RealTmp3(:,:,s) = RealTmp/Cnt
+            RealTmp = 0
+            Cnt = 0
+        enddo
+        if(iAm==0)nc_stat = nf90_put_var ( nc_id, temp_id, RealTmp3 )
+        RealTmp3 = 0
+
+        !JAnt
         if(iAm==0)nc_stat = nf90_put_var ( nc_id, jr_re_id, real(g%jR) )
         if(iAm==0)nc_stat = nf90_put_var ( nc_id, jr_im_id, aimag(g%jR) )
         if(iAm==0)nc_stat = nf90_put_var ( nc_id, jt_re_id, real(g%jT) )
         if(iAm==0)nc_stat = nf90_put_var ( nc_id, jt_im_id, aimag(g%jT) )
         if(iAm==0)nc_stat = nf90_put_var ( nc_id, jz_re_id, real(g%jZ) )
         if(iAm==0)nc_stat = nf90_put_var ( nc_id, jz_im_id, aimag(g%jZ) )
-
-        !nc_stat = nf90_put_var ( nc_id, dens_id, g%densitySpec )
-
-        !call check ( nf90_put_var ( nc_id, jr_re_id, real(g%jR) ) )
-        !call check ( nf90_put_var ( nc_id, jr_im_id, aimag(g%jR) ) )
-
-        !nc_stat = nf90_put_var ( nc_id, temp_id, g%ktSpec / q )
-        !nc_stat = nf90_put_var ( nc_id, omgc_id, g%omgc )
-        !nc_stat = nf90_put_var ( nc_id, omgp2_id, g%omgp2 )
-
-        !call check ( nf90_put_var ( nc_id, xx_re_id, real ( g%xx ) ) )
-        !call check ( nf90_put_var ( nc_id, yy_re_id, real ( g%yy ) ) )
-        !call check ( nf90_put_var ( nc_id, xx_im_id, aimag ( g%xx ) ) )
-        !call check ( nf90_put_var ( nc_id, yy_im_id, aimag ( g%yy ) ) )
-
-        !call check ( nf90_put_var ( nc_id, drBfn_re_id, real ( g%dRbFn_bFn ) ) )
-        !call check ( nf90_put_var ( nc_id, dzBfn_re_id, real ( g%dZbFn_bFn ) ) )
-        !call check ( nf90_put_var ( nc_id, drBfn_im_id, aimag ( g%dRbFn_bFn ) ) )
-        !call check ( nf90_put_var ( nc_id, dzBfn_im_id, aimag ( g%dZbFn_bFn ) ) )
-
-        !call check ( nf90_put_var ( nc_id, drUrrid, g%drUrr ) )
-        !call check ( nf90_put_var ( nc_id, drUrtid, g%drUrt ) )
-        !call check ( nf90_put_var ( nc_id, drUrzid, g%drUrz ) )
-
-        !call check ( nf90_put_var ( nc_id, drUtrid, g%drUtr ) )
-        !call check ( nf90_put_var ( nc_id, drUttid, g%drUtt ) )
-        !call check ( nf90_put_var ( nc_id, drUtzid, g%drUtz ) )
-
-        !call check ( nf90_put_var ( nc_id, drUzrid, g%drUzr ) )
-        !call check ( nf90_put_var ( nc_id, drUztid, g%drUzt ) )
-        !call check ( nf90_put_var ( nc_id, drUzzid, g%drUzz ) )
-
-        !call check ( nf90_put_var ( nc_id, dzUrrid, g%dzUrr ) )
-        !call check ( nf90_put_var ( nc_id, dzUrtid, g%dzUrt ) )
-        !call check ( nf90_put_var ( nc_id, dzUrzid, g%dzUrz ) )
-
-        !call check ( nf90_put_var ( nc_id, dzUtrid, g%dzUtr ) )
-        !call check ( nf90_put_var ( nc_id, dzUttid, g%dzUtt ) )
-        !call check ( nf90_put_var ( nc_id, dzUtzid, g%dzUtz ) )
-
-        !call check ( nf90_put_var ( nc_id, dzUzrid, g%dzUzr ) )
-        !call check ( nf90_put_var ( nc_id, dzUztid, g%dzUzt ) )
-        !call check ( nf90_put_var ( nc_id, dzUzzid, g%dzUzz ) )
-
-        !call check ( nf90_put_var ( nc_id, Urrid, g%Urr ) )
-        !call check ( nf90_put_var ( nc_id, Urtid, g%Urt ) )
-        !call check ( nf90_put_var ( nc_id, Urzid, g%Urz ) )
-
-        !call check ( nf90_put_var ( nc_id, Utrid, g%Utr ) )
-        !call check ( nf90_put_var ( nc_id, Uttid, g%Utt ) )
-        !call check ( nf90_put_var ( nc_id, Utzid, g%Utz ) )
-
-        !call check ( nf90_put_var ( nc_id, Uzrid, g%Uzr ) )
-        !call check ( nf90_put_var ( nc_id, Uztid, g%Uzt ) )
-        !call check ( nf90_put_var ( nc_id, Uzzid, g%Uzz ) )
 
         if(iAm==0)call check ( nf90_close ( nc_id ) )
 
@@ -335,19 +416,24 @@ contains
     end subroutine write_runData
 
 
-    subroutine write_solution ( g, rid )
+    subroutine write_solution ( g, rid, rhs )
 
         use grid
         use aorsaNamelist, &
-        only: nSpec, nPhi, freqcy
- 
+            only: nSpec, nPhi, freq=>freqcy
+        use parallel
+
         implicit none
 
         type(gridBlock), intent(in) :: g
+        integer, intent(in) :: rhs
+
         character(len=100) :: fName 
         character(len=20) :: rid
+        character(len=6) :: rhs_string
+        character(len=4) :: nPhi_string
 
-        integer :: nc_id, nX_id, nY_id, nModesX_id, nModesY_id, nSpec_id
+        integer :: nc_id, nX_id, nY_id, nModesX_id, nModesY_id, nSpec_id, NRHS_id, nR_id
         integer :: &
             e1_re_id, e1_im_id, &
             e2_re_id, e2_im_id, &
@@ -368,20 +454,25 @@ contains
             jP_r_re_id, jP_r_im_id, &
             jP_t_re_id, jP_t_im_id, &
             jP_z_re_id, jP_z_im_id
-        integer :: r_id, z_id,nPhi_id,freqcy_id,scalar_id
+        integer :: r_id, z_id,nPhi_id,freq_id,scalar_id
         integer :: stat
 
         integer :: jouleHeating_id
 
-        fName = trim(rid)//'solution'//g%fNumber//'.nc'
+        write(nPhi_string,'(sp,i4.3)'), int(nPhi)
+        write(rhs_string,'(i6.6)'), rhs
+
+        fName = trim(rid)//'output/solution_'//g%fNumber//'_'//nPhi_string//'_'//rhs_string//'.nc'
 
         call check ( nf90_create ( fName, nf90_clobber, nc_id ) )
         stat=nf90_def_dim(nc_id,"scalar",1,scalar_id)
         call check ( nf90_def_dim ( nc_id, "nX", g%nR, nX_id ) )
+        call check ( nf90_def_dim ( nc_id, "nR", g%nR, nR_id ) )
         call check ( nf90_def_dim ( nc_id, "nY", g%nZ, nY_id ) )
         call check ( nf90_def_dim ( nc_id, "nModesX", g%nModesR, nModesX_id ) )
         call check ( nf90_def_dim ( nc_id, "nModesY", g%nModesZ, nModesY_id ) )
         call check ( nf90_def_dim ( nc_id, "nSpec", nSpec, nSpec_id ) )
+        call check ( nf90_def_dim ( nc_id, "NRHS", NRHS, NRHS_id ) )
 
         call check ( nf90_def_var ( nc_id, "ealpha_re", NF90_REAL, &
             (/nX_id,nY_id/), e1_re_id ) ) 
@@ -453,7 +544,7 @@ contains
  
         stat = nf90_def_var(nc_id,"r",NF90_REAL,(/nx_id/),r_id)
         stat = nf90_def_var(nc_id,"z",NF90_REAL,(/ny_id/),z_id)
-        stat = nf90_def_var(nc_id,"freqcy",NF90_REAL,(/scalar_id/),freqcy_id)
+        stat = nf90_def_var(nc_id,"freq",NF90_REAL,(/scalar_id/),freq_id)
         stat = nf90_def_var(nc_id,"nPhi",NF90_INT,(/scalar_id/),nPhi_id)
 
         call check ( nf90_enddef ( nc_id ) )
@@ -465,12 +556,12 @@ contains
         call check ( nf90_put_var ( nc_id, e3_re_id, real(real(g%eB)) ) )
         call check ( nf90_put_var ( nc_id, e3_im_id, real(aimag(g%eB)) ) )
 
-        call check ( nf90_put_var ( nc_id, e1k_re_id, real(real(g%ealphak)) ) )
-        call check ( nf90_put_var ( nc_id, e1k_im_id, real(aimag(g%ealphak)) ) )
-        call check ( nf90_put_var ( nc_id, e2k_re_id, real(real(g%ebetak)) ) )
-        call check ( nf90_put_var ( nc_id, e2k_im_id, real(aimag(g%ebetak)) ) )
-        call check ( nf90_put_var ( nc_id, e3k_re_id, real(real(g%eBk)) ) )
-        call check ( nf90_put_var ( nc_id, e3k_im_id, real(aimag(g%eBk)) ) )
+        call check ( nf90_put_var ( nc_id, e1k_re_id, real(real(g%ealphak(:,:,rhs))) ) )
+        call check ( nf90_put_var ( nc_id, e1k_im_id, real(aimag(g%ealphak(:,:,rhs))) ) )
+        call check ( nf90_put_var ( nc_id, e2k_re_id, real(real(g%ebetak(:,:,rhs))) ) )
+        call check ( nf90_put_var ( nc_id, e2k_im_id, real(aimag(g%ebetak(:,:,rhs))) ) )
+        call check ( nf90_put_var ( nc_id, e3k_re_id, real(real(g%eBk(:,:,rhs))) ) )
+        call check ( nf90_put_var ( nc_id, e3k_im_id, real(aimag(g%eBk(:,:,rhs))) ) )
 
         call check ( nf90_put_var ( nc_id, er_re_id, real(real(g%eR)) ) )
         call check ( nf90_put_var ( nc_id, er_im_id, real(aimag(g%eR)) ) )
@@ -497,9 +588,8 @@ contains
 
         stat = nf90_put_var(nc_id,r_id,g%r)
         stat = nf90_put_var(nc_id,z_id,g%z)
-        stat = nf90_put_var(nc_id,freqcy_id,freqcy)
+        stat = nf90_put_var(nc_id,freq_id,freq)
         stat = nf90_put_var(nc_id,nPhi_id,nPhi)
-
 
         call check ( nf90_close ( nc_id ) )
 

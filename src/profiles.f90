@@ -6,12 +6,12 @@ implicit none
 
 real(kind=dbl) :: omgrf, k0
 real(kind=dbl), allocatable, dimension(:) :: mSpec, qSpec, tSpec, dSpec
-integer, allocatable, dimension(:) :: zSpec, amuSpec
+real(kind=dbl), allocatable, dimension(:) :: zSpec, amuSpec
 real(kind=dbl), allocatable, dimension(:,:,:) :: &
     omgc, omgp2
 real, allocatable, dimension(:) :: &
     tLim, dLim, dAlpha, dBeta, tAlpha, tBeta
-real, allocatable :: nuOmg2D(:,:)
+!real, allocatable :: nuOmg2D(:,:)
 
 contains
 
@@ -20,10 +20,10 @@ contains
         use AR2Input, only: &
             ar2_nS=>nS,ar2_amu=>amu,ar2_AtomicZ=>AtomicZ, &
             ar2_nR=>nR, ar2_nZ=>nZ, ar2_r=>r, ar2_z=>z, &
-            Density_m3, Temp_eV
+            Density_m3, Temp_eV, nuOmg, jant_r, jant_t, jant_z
         use grid
         use aorsaNameList, only: &
-            nSpec,freqcy,xNuOmg
+            nSpec,freqcy
         use parallel, only: iAm
 
         use fitpack
@@ -95,11 +95,12 @@ contains
         allocate ( &
             g%densitySpec (size(g%pt), nSpec ), & 
             g%ktSpec (size(g%pt), nSpec ), &
-            g%nuOmg(size(g%pt)) )
+            g%nuOmg(size(g%pt), nSpec) )
  
         do s=1,nSpec
 
             ! Density interpolation
+
             Tmp2DArr = Density_m3(:,:,s) 
 
             call surf1 ( ar2_nR, ar2_nZ, ar2_r_dp, ar2_z_dp, Tmp2DArr, ar2_nR, zx1, zxm, &
@@ -110,20 +111,16 @@ contains
                 i=g%pt(w)%i
                 j=g%pt(w)%j
 
-            !do i=1,g%nR
-            !    do j=1,g%nZ
+                ThisR = g%r(i)
+                ThisZ = g%z(j)
 
-                    ThisR = g%r(i)
-                    ThisZ = g%z(j)
+                g%DensitySpec(w,s) = surf2 ( ThisR, ThisZ, ar2_nR, ar2_nZ, ar2_r_dp, ar2_z_dp, &
+                    Tmp2DArr, ar2_nR, zp_tmp, sigma_dp )
 
-                    g%DensitySpec(w,s) = surf2 ( ThisR, ThisZ, ar2_nR, ar2_nZ, ar2_r_dp, ar2_z_dp, &
-                        Tmp2DArr, ar2_nR, zp_tmp, sigma_dp )
-                    !write(*,*) g%DensitySpec(i,j,s)
-            !    enddo
-            !enddo
             enddo
 
             ! Temp interpolation
+
             Tmp2DArr = Temp_eV(:,:,s) 
 
             call surf1 ( ar2_nR, ar2_nZ, ar2_r_dp, ar2_z_dp, Tmp2DArr, ar2_nR, zx1, zxm, &
@@ -134,19 +131,81 @@ contains
                 i=g%pt(w)%i
                 j=g%pt(w)%j
 
-            !do i=1,g%nR
-            !    do j=1,g%nZ
+                ThisR = g%r(i)
+                ThisZ = g%z(j)
 
-                    ThisR = g%r(i)
-                    ThisZ = g%z(j)
-
-                    g%kTSpec(w,s) = surf2 ( ThisR, ThisZ, ar2_nR, ar2_nZ, ar2_r_dp, ar2_z_dp, &
-                        Tmp2DArr, ar2_nR, zp_tmp, sigma_dp ) * q
-                    !write(*,*) i, j, ThisR, ThisZ, g%kTSpec(i,j,s)
-            !    enddo
-            !enddo
+                g%kTSpec(w,s) = surf2 ( ThisR, ThisZ, ar2_nR, ar2_nZ, ar2_r_dp, ar2_z_dp, &
+                    Tmp2DArr, ar2_nR, zp_tmp, sigma_dp ) * q
+            
             enddo
-         
+
+            ! nuOmg (artificial absorption) interpolation
+
+            Tmp2DArr = nuOmg(:,:,s) 
+
+            call surf1 ( ar2_nR, ar2_nZ, ar2_r_dp, ar2_z_dp, Tmp2DArr, ar2_nR, zx1, zxm, &
+                zy1, zyn, zxy11, zxym1, zxy1n, zxymn, islpsw, &
+                zp_tmp, temp, sigma_dp, iErr)
+
+            do w=1,size(g%pt)
+                i=g%pt(w)%i
+                j=g%pt(w)%j
+
+                ThisR = g%r(i)
+                ThisZ = g%z(j)
+
+                g%nuOmg(w,s) = surf2 ( ThisR, ThisZ, ar2_nR, ar2_nZ, ar2_r_dp, ar2_z_dp, &
+                    Tmp2DArr, ar2_nR, zp_tmp, sigma_dp )
+            enddo
+        enddo
+
+        ! JAnt interpolation
+
+        if(.not.allocated(g%jR))allocate ( &
+            g%jR(g%nR,g%nZ), &
+            g%jT(g%nR,g%nZ), &
+            g%jZ(g%nR,g%nZ) )
+
+        Tmp2DArr = jant_r(:,:) 
+        call surf1 ( ar2_nR, ar2_nZ, ar2_r_dp, ar2_z_dp, Tmp2DArr, ar2_nR, zx1, zxm, &
+            zy1, zyn, zxy11, zxym1, zxy1n, zxymn, islpsw, &
+            zp_tmp, temp, sigma_dp, iErr)
+
+        do i=1,g%nR
+            do j=1,g%nZ
+                ThisR = g%r(i)
+                ThisZ = g%z(j)
+                g%jR(i,j) = surf2 ( ThisR, ThisZ, ar2_nR, ar2_nZ, ar2_r_dp, ar2_z_dp, &
+                    Tmp2DArr, ar2_nR, zp_tmp, sigma_dp )
+            enddo
+        enddo
+
+        Tmp2DArr = jant_t(:,:) 
+        call surf1 ( ar2_nR, ar2_nZ, ar2_r_dp, ar2_z_dp, Tmp2DArr, ar2_nR, zx1, zxm, &
+            zy1, zyn, zxy11, zxym1, zxy1n, zxymn, islpsw, &
+            zp_tmp, temp, sigma_dp, iErr)
+
+        do i=1,g%nR
+            do j=1,g%nZ
+                ThisR = g%r(i)
+                ThisZ = g%z(j)
+                g%jT(i,j) = surf2 ( ThisR, ThisZ, ar2_nR, ar2_nZ, ar2_r_dp, ar2_z_dp, &
+                    Tmp2DArr, ar2_nR, zp_tmp, sigma_dp )
+            enddo
+        enddo
+
+        Tmp2DArr = jant_z(:,:) 
+        call surf1 ( ar2_nR, ar2_nZ, ar2_r_dp, ar2_z_dp, Tmp2DArr, ar2_nR, zx1, zxm, &
+            zy1, zyn, zxy11, zxym1, zxy1n, zxymn, islpsw, &
+            zp_tmp, temp, sigma_dp, iErr)
+
+         do i=1,g%nR
+            do j=1,g%nZ
+                ThisR = g%r(i)
+                ThisZ = g%z(j)
+                g%jZ(i,j) = surf2 ( ThisR, ThisZ, ar2_nR, ar2_nZ, ar2_r_dp, ar2_z_dp, &
+                    Tmp2DArr, ar2_nR, zp_tmp, sigma_dp )
+            enddo
         enddo
 
         ! Santiy checking
@@ -155,6 +214,7 @@ contains
                 write(*,*) 'ERROR: -ve temp'
                 stop
         endif
+
         if(count(g%DensitySpec<=0)>0)then
                 write(*,*) 'ERROR: -ve density'
                 write(*,*) '    This is possibly due to a bad interpolation.'
@@ -162,8 +222,9 @@ contains
                 stop
         endif
 
-
-        g%nuOmg = xNuOmg
+        if(count(g%nuOmg<0)>0)then
+                where(g%nuOmg<0.0) g%nuOmg = 0.0
+        endif
 
         call omega_freqs ( g )
 

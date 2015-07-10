@@ -4,13 +4,13 @@ LIBS += ${BLAS}
 LAPACK := ${HOME}/code/lapack/lapack-3.1.1/lapack_LINUX.a 
 LIBS += ${LAPACK}
 
-HDF_DIR := ${HOME}/code/hdf/gnu_4.3.2
+HDF_DIR := /usr/lib64/openmpi
 LIBS += -L ${HDF_DIR}/lib -lhdf5 -lhdf5_hl
 INC_DIR += -I ${HDF_DIR}/include
 
-NETCDF_DIR := ${HOME}/code/netcdf/gnu_4.3.2
-LIBS +=-L ${NETCDF_DIR}/lib -lnetcdf -lnetcdff
-INC_DIR += -I ${NETCDF_DIR}/include 
+NETCDF_DIR := /usr/lib
+LIBS += -L ${NETCDF_DIR}/lib -lnetcdf -lnetcdff
+INC_DIR += -I /usr/include 
 
 ifeq (${PARALLEL},1)
 	BLACS = \
@@ -21,7 +21,7 @@ ifeq (${PARALLEL},1)
 	LIBS := ${SCALAPACK} ${BLACS} ${LIBS}
 endif
 
-PAPI_DIR := /home/dg6/code/papi/gnu_4.3.2
+PAPI_DIR := ${HOME}/code/papi/gnu_4.7.3
 PAPI_INC := -I${PAPI_DIR}/include/
 PAPI_LINK := -L${PAPI_DIR}/lib -lpapi
 LIBS += ${PAPI_LINK}
