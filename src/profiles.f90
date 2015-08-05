@@ -212,6 +212,9 @@ contains
 
         if(count(g%kTSpec<=0)>0)then
                 write(*,*) 'ERROR: -ve temp'
+                write(*,*) '    This is possibly due to a bad interpolation.'
+                write(*,*) '    Try creating the ar2Input file with higher res.'
+                write(*,*) '    Really need to fix this crap.'
                 stop
         endif
 
@@ -219,6 +222,7 @@ contains
                 write(*,*) 'ERROR: -ve density'
                 write(*,*) '    This is possibly due to a bad interpolation.'
                 write(*,*) '    Try creating the ar2Input file with higher res.'
+                write(*,*) '    Really need to fix this crap.'
                 stop
         endif
 

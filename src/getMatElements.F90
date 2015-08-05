@@ -30,7 +30,8 @@ function get3by3Block( g, w)!, r, z)
         sigPrlAlp, sigPrlBet, sigPrlPrl
 
     type(dBfnArg) :: d
-    complex(kind=dbl) :: sigma_tmp(3,3), sigma_tmp_neg(3,3), sigmaHere(3,3)
+    complex(kind=dbl) :: sigma_tmp(3,3), sigma_tmp_neg(3,3), sigmaHere(3,3), &
+            sigma_tmp2(3,3),sigma_tmp3(3,3)
 
     real :: r, z, kr, kt, kz, kVec_stix(3)
 
@@ -84,11 +85,6 @@ function get3by3Block( g, w)!, r, z)
     kt  = nPhi!g%kPhi(i)
     omgRFc = omgRF * (1d0 + zi * g%nuOmg(g%wl(w)%iPt,1))
 
-    !interior: &
-    !!if(g%label(g%wl(w)%i,g%wl(w)%j)==0)then
-    !if(biLinearInterp(r,z,g,g%label)==0)then
-
-    
         !   interior plasma region:
         !   ----------------------
         
@@ -123,26 +119,6 @@ function get3by3Block( g, w)!, r, z)
         endif
         
         
-        !! Short of k's above the xkPerp_cutOff 
-        !! ------------------------------------
-        
-        !if ( abs(kxSav(n))> kx_cutOff &
-        !    .or. abs(kySav(m))> ky_cutOff ) then 
-        !      
-        !    sigAlpAlp = metal 
-        !    sigAlpBet = 0
-        !    sigAlpPrl = 0 
-        !            
-        !    sigBetAlp = 0 
-        !    sigBetBet = metal 
-        !    sigBetPrl = 0 
-        !            
-        !    sigPrlAlp = 0 
-        !    sigPrlBet = 0 
-        !    sigPrlPrl = metal 
-        
-        !endif
-
 #if __sigma__ == 2
 
         sigmaHere = 0
@@ -152,11 +128,8 @@ function get3by3Block( g, w)!, r, z)
             hotPlasma:& 
             if (iSigma==1 .and. (.not. g%isMetal(g%wl(w)%iPt)) ) then        
 
-                !kVec_stix = matMul( g%U_RTZ_to_ABb(g%wl(w)%i,g%wl(w)%j,:,:), &
-                !    (/ kr, nPhi/r, kz /) ) 
                 kVec_stix = matMul( g%U_RTZ_to_ABb(g%wl(w)%iPt,:,:), &
                     (/ kr, g%kPhi(g%wl(w)%i), kz /) ) 
-                !kVec_stix(3) = sign(g%kPhi(g%wl(w)%i),kVec_stix(3))
                 sigma_tmp = sigmaHot_maxwellian &
                     ( mSpec(s), &
                     g%ktSpec(g%wl(w)%iPt,s), &
@@ -172,8 +145,6 @@ function get3by3Block( g, w)!, r, z)
 
             endif hotPlasma
 
-
-            ! NEED TO FIX THIS 'isMetal' to an interp
             coldPlasma: &
             if (iSigma==0 .and. (.not. g%isMetal(g%wl(w)%iPt)) ) then 
 
@@ -183,32 +154,28 @@ function get3by3Block( g, w)!, r, z)
                     omgrf, &
                     g%nuOmg(g%wl(w)%iPt,s) )
 
-                !sigmaIn_cold = getSigmaInputHere ( g%r(g%wl(w)%i), g%z(g%wl(w)%j), g, s )
-                !sigmaIn_cold = getSigmaInputHere ( r, z, g, s )
-
-                !sigma_tmp = sigmaCold_stix &
-                !    ( g%omgc(g%wl(w)%i,g%wl(w)%j,s), &
-                !    g%omgp2(g%wl(w)%i,g%wl(w)%j,s), omgrf, &
-                !    g%nuOmg(g%wl(w)%i,g%wl(w)%j) )
                 sigma_tmp = sigmaCold_stix ( sigmaIn_cold )
-                !R_ = g%U_RTZ_to_ABb(g%wl(w)%iPt,:,:)
-                !sigma_tmp = matmul(transpose(R_),matmul(sigma_tmp,R_))
-                
-                !if(g%wl(w)%m==0.and.g%wl(w)%n==0) &
-                !write(*,*) '(3,3)', s, g%R(g%wl(w)%i), &
-                !    g%z(g%wl(w)%j),sigma_tmp(3,3)!, g%omgp2(g%wl(w)%iPt,s), omgRFc
 
-                !R_ = transpose(g%U_RTZ_to_ABb(g%wl(w)%iPt,:,:))
-                !sigma_tmp = matmul(R_,matmul(sigma_tmp,transpose(R_)))
-                !write(*,*) 'Species: ', s
-                !write(*,*) 'r: ', g%R(g%wl(w)%i)
-                !write(*,'(3(f9.5,2x,f9.5,5x))') sigma_tmp(:,1)
-                !write(*,'(3(f9.5,2x,f9.5,5x))') sigma_tmp(:,2)
-                !write(*,'(3(f9.5,2x,f9.5,5x))') sigma_tmp(:,3)
-                !write(*,*)
+#if PRINT_SIGMA==1
+                if(g%wl(w)%i==256)then 
 
-                !if(s==nSpec) stop
+                    R_ = transpose(g%U_RTZ_to_ABb(g%wl(w)%iPt,:,:))
+                    sigma_tmp2 = sigma_tmp
+                    sigma_tmp3 = matmul(R_,matmul(sigma_tmp,transpose(R_)))
+                    write(*,*) 'Species: ', s
+                    write(*,*) 'r: ', g%R(g%wl(w)%i)
+                    write(*,*) 'abp :'
+                    write(*,'(3(f11.5,2x,f11.5,5x))') sigma_tmp2(:,1)
+                    write(*,'(3(f11.5,2x,f11.5,5x))') sigma_tmp2(:,2)
+                    write(*,'(3(f11.5,2x,f11.5,5x))') sigma_tmp2(:,3)
+                    write(*,*) 'rtz :'
+                    write(*,'(3(f11.5,2x,f11.5,5x))') sigma_tmp3(:,1)
+                    write(*,'(3(f11.5,2x,f11.5,5x))') sigma_tmp3(:,2)
+                    write(*,'(3(f11.5,2x,f11.5,5x))') sigma_tmp3(:,3)
+                    write(*,*)
 
+                endif
+#endif
             endif coldPlasma
 
             ! Sum sigma over species
@@ -235,8 +202,6 @@ function get3by3Block( g, w)!, r, z)
         sigPrlAlp = sigmaHere(3,1)
         sigPrlBet = sigmaHere(3,2)
         sigPrlPrl = sigmaHere(3,3)
-        !write(*,*) g%wl(w)%i,g%wl(w)%j,g%wl(w)%n,g%wl(w)%m,sigBetAlp
-
 
 #else 
 ! __sigma__ == 2
@@ -263,7 +228,6 @@ function get3by3Block( g, w)!, r, z)
         ! -----
 
         if (g%isMetal(g%wl(w)%iPt)) then 
-        !if (biLinearInterp(r,z,g,g%isMetal)>0.5) then 
 
             sigAlpAlp = metal 
             sigAlpBet = 0
@@ -353,18 +317,6 @@ function get3by3Block( g, w)!, r, z)
         Uzz = g%Uzz(g%wl(w)%iPt)
 #endif
        
-        !Urr = biLinearInterp(r,z,g,g%Urr)
-        !Urt = biLinearInterp(r,z,g,g%Urt)
-        !Urz = biLinearInterp(r,z,g,g%Urz)
-
-        !Utr = biLinearInterp(r,z,g,g%Utr)
-        !Utt = biLinearInterp(r,z,g,g%Utt)
-        !Utz = biLinearInterp(r,z,g,g%Utz)
-
-        !Uzr = biLinearInterp(r,z,g,g%Uzr)
-        !Uzt = biLinearInterp(r,z,g,g%Uzt)
-        !Uzz = biLinearInterp(r,z,g,g%Uzz)
-
 #if __noU__==1
         drUrr = 0 
         drUrt = 0 
@@ -536,19 +488,6 @@ function get3by3Block( g, w)!, r, z)
         drzUzt = g%drzUzt(g%wl(w)%iPt)
         drzUzz = g%drzUzz(g%wl(w)%iPt)
 #endif
-
-        !drzUrr = biLinearInterp(r,z,g,g%drzUrr)
-        !drzUrt = biLinearInterp(r,z,g,g%drzUrt)
-        !drzUrz = biLinearInterp(r,z,g,g%drzUrz)
-
-        !drzUtr = biLinearInterp(r,z,g,g%drzUtr)
-        !drzUtt = biLinearInterp(r,z,g,g%drzUtt)
-        !drzUtz = biLinearInterp(r,z,g,g%drzUtz)
-        !
-        !drzUzr = biLinearInterp(r,z,g,g%drzUzr)
-        !drzUzt = biLinearInterp(r,z,g,g%drzUzt)
-        !drzUzz = biLinearInterp(r,z,g,g%drzUzz)
- 
 
         ! Matrix elements. See mathematica worksheet for calculation of 
         ! these. They are for a general basis set.

@@ -1,9 +1,10 @@
 pro ar2_plot_solution, full = full, $
-		scale1 = scale1, scale2 = scale2, scale3_ = scale3_, $
+		scale = scale, $
 		sav = sav, NoRunData=NoRunData, $
 		nPhi = _nPhi, RHS=_RHS, $ 
         sumSpecies = sumSpecies
 
+    if keyword_set(scale) then ScaleFac = scale else ScaleFac = 1
 	if keyword_set(_RHS) then ThisRHS = _RHS else ThisRHS = 1
 
 	ar2Input = ar2_read_namelist()
@@ -233,9 +234,7 @@ pro ar2_plot_solution, full = full, $
 		iix = n_elements(x)/2
 		wrf = freq * 2 * !pi
 
-		eRange = max(abs([e_r,e_t,e_z]))
 		eRange = max(abs([e_r]))
-		;eRange = 3.0 
 		p_r = plot ( x, e_r, layout=[1,3,1],$
 				title='Er',$
                 yRange=[-eRange,eRange],$
@@ -245,7 +244,6 @@ pro ar2_plot_solution, full = full, $
 		p_i = plot ( x, imaginary(e_r), color='red',/over,name='Im')
 
 		eRange = max(abs([e_t]))
-		;eRange = 0.4 
 		p_r = plot ( x, e_t, layout=[1,3,2],/current,$
 				title='Et',$
                 yRange=[-eRange,eRange],$
@@ -254,7 +252,6 @@ pro ar2_plot_solution, full = full, $
 		p_i = plot ( x, imaginary(e_t), color='red',/over,name='Im')
 
     	eRange = max(abs([e_z]))
-        ;eRange = 1.0
 		p_r = plot ( x, e_z, layout=[1,3,3],/current,$
 				title='Ez',$
                 yRange=[-eRange,eRange],$
@@ -273,7 +270,7 @@ pro ar2_plot_solution, full = full, $
 		p_array = [p_array,p]
 
 		for s=1,nSpec-1 do begin
-			p = plot ( x, jDotE, /over,name='jDotE_'+strTrim(string(s),2) )
+			p = plot ( x, jDotE_s[*,*,0], /over,title='jDotE_0' )
 			p_array = [p_array,p]
 		endfor
 
@@ -443,19 +440,12 @@ pro ar2_plot_solution, full = full, $
         lcfsColor = 'black'
         cutoffColor = 'black'
 
-        scaleFac = 0.5
         nPhiString = ' (nPhi: '+string(ThisNPHI,format='(i+4.3)')+')'
-
-		scale = max(abs([jP_r,jP_t,jP_z]))*scaleFac
-        print, 'jP scale: ', scale
 
 		nLevs = 10
 
-        scaleFac = 0.2
-        print, scale
-
 		thisField = e_r[*,*]
-        scale = max(abs(thisField))/5
+        scale = max(abs(thisField))*scaleFac
         title = 'E_r'
 		levels = fIndGen(nLevs)/(nLevs-1)*scale
 		colors = reverse(bytScl(levels, top=253)+1)
@@ -473,6 +463,7 @@ pro ar2_plot_solution, full = full, $
         dimensions = [200,600]
 
 		thisField = abs(e_r[*,*])
+        scale = max(abs(thisField))*scaleFac
         title = 'abs(E_r)'
 		levels = fIndGen(nLevs)/(nLevs-1)*scale
 		colors = reverse(bytScl(levels, top=253)+1)
@@ -493,7 +484,7 @@ pro ar2_plot_solution, full = full, $
 
 		thisField = real_part(jDotE_s[*,*,0])
         title = 'jDotE (e)'
-        scale = 2e9
+        scale = max(abs(thisField))*ScaleFac
         levels = fIndGen(nLevs)/(nLevs-1)*scale
         colors = reverse(bytScl(levels, top=253)+1)
 		PlotField = (real_part(thisField)<max(levels))>min(-levels)
@@ -505,7 +496,24 @@ pro ar2_plot_solution, full = full, $
         c_zero_set = contour(ar2.kPerSq_F,ar2.r,ar2.z,/over,c_value=0.001,color=cutoffColor,C_LABEL_SHOW=0,c_thick=3)
         c_jant = contour(jA_r, x, y, /over, c_value = AntCLevel, color=AntColor, C_LABEL_SHOW=0, c_thick=5)
         ++PlotPos
-        p.Save, "modE.png",  border=0, height=600
+        p.Save, "jDotE_e.png",  border=0, height=600
+
+		thisField = nuOmg[*,*,0]
+        title = 'nuOmg (e)'
+        scale = max(abs(thisField))*ScaleFac
+        levels = fIndGen(nLevs)/(nLevs-1)*scale
+        colors = reverse(bytScl(levels, top=253)+1)
+		PlotField = (real_part(thisField)<max(levels))>min(-levels)
+		c = contour ( PlotField, x, y, c_value=levels, rgb_indices=colors, rgb_table=3, /fill, $
+            aspect_ratio=1, title=title, xRange=xRange, yRange=yRange, dimensions=[600,1300], font_size=16)
+		c = contour ( -PlotField, x, y, c_value=levels, rgb_indices=colors, rgb_table=1, /fill,/over )
+        p = plot ( rlim, zlim, /over, thick = 3, color=LimColor)
+        p = plot ( rlcfs, zlcfs, /over, thick = 4, color=lcfsColor )
+        c_zero_set = contour(ar2.kPerSq_F,ar2.r,ar2.z,/over,c_value=0.001,color=cutoffColor,C_LABEL_SHOW=0,c_thick=3)
+        c_jant = contour(jA_r, x, y, /over, c_value = AntCLevel, color=AntColor, C_LABEL_SHOW=0, c_thick=5)
+        ++PlotPos
+        p.Save, "nuOmg_e.png",  border=0, height=600
+
 
 	endelse
 

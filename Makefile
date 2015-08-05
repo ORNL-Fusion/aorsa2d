@@ -66,6 +66,7 @@ CPP_DIRECTIVES += -D__DebugSetMetal__=0
 CPP_DIRECTIVES += -D__DebugBField__=0
 CPP_DIRECTIVES += -D_DEBUG_ROTATION=0
 CPP_DIRECTIVES += -DPRINT_SIGMA_ABP=0
+CPP_DIRECTIVES += -DPRINT_SIGMA=0
 
 # compile flags
 # -------------

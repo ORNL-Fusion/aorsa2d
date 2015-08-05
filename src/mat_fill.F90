@@ -172,82 +172,6 @@ contains
                             aMatBlock(2,2) = -(coeffL*bFn_iL + coeffR*bFn_iR)
                             aMatBlock(3,3) = -(coeffL*bFn_iL + coeffR*bFn_iR)
 
-                            !!write(*,*) n, aMatBlock(1,1)
-                            !! clamped cubic spline interpolation
-                            !! ----------------------------------
-
-                            !! need 3 pts 
-                            !iiRR = iiR + 1
-                            !bFn_iRR =me%xx(n, iiRR) * me%yy(m, j)
-                            !splines = spline ( me%R(iiL:iiRR), &
-                            !    realPart((/ bFn_iL, bFn_iR, bFn_iRR /)), &
-                            !    realPart(me%dRbfn_bFn(n,iiL)*bFn_iL), &
-                            !    realPart(me%dRbFn_bFn(n,iiRR)*bFn_iRR) )
-
-                            !aMatBlock(1,1) = -( &
-                            !    splines(1,1) &
-                            !    + splines(1,2) * ( nbr%R(i) - me%R(iiL) ) &
-                            !    + splines(1,3) * ( nbr%R(i) - me%R(iiL) )**2 &
-                            !    + splines(1,4) * ( nbr%R(i) - me%R(iiL) )**3 )
-
-                            !aMatBlock(2,2) = aMatBlock(1,1)
-                            !aMatBlock(3,3) = aMatBlock(1,1)
-                            !!write(*,*) n, aMatBlock(1,1)
-
-
-                            !! direct fn evaluation
-                            !! --------------------
-
-                            !if(chebyshevX)then
-                            !    rNorm = (nbr%R(i)-me%rMin)/me%rRange*2-1
-                            !    if(nbr%nR==1) rNorm = nbR%rNorm(1)
-                            !    bFn_R = xBasis(n,rNorm)
-                            !else
-                            !    rNorm = (nbr%R(i)-me%rMin)/me%rRange*2*pi
-                            !    if(nbr%nR==1) rNorm = nbR%rNorm(1)
-                            !    bFn_R = xBasis(n,rNorm)
-                            !endif
-
-                            !if(chebyshevY)then
-                            !    zNorm = (nbr%z(j)-me%zMin)/me%zRange*2-1
-                            !    if(nbr%nZ==1) zNorm = nbr%zNorm(1)
-                            !    bFn_Z = yBasis(m,zNorm)
-                            !else
-                            !    zNorm = (nbr%z(j)-me%zMin)/me%zRange*2*pi
-                            !    if(nbr%nZ==1) zNorm = nbr%zNorm(1)
-                            !    bFn_Z = yBasis(m,zNorm)
-                            !endif
-
-                            !bFn_0 = bFn_R * bFn_Z 
-
-                            !aMatBlock(1,1) = -(bFn_0)
-                            !aMatBlock(2,2) = -(bFn_0)
-                            !aMatBlock(3,3) = -(bFn_0)
-
-                            !!write(*,*) n, aMatBlock(1,1)
-                            !!write(*,*)
-
-                            !! Match single (or subset) basis functions
-                            !! ----------------------------------------
-
-                            !if(mod(abs(bndryType(ii)),2)==1) then 
-                            !    i = me%nR-overlap
-                            !else
-                            !    i = 1+overlap
-                            !endif
-                            !j = bndryBlockID(2,ii)
-
-                            !if(n<=me%nR/(abs(bndryType(ii))+1))then
-                            !!if(n==abs(bndryType(ii))+1)then
-                            !    bFn = me%xx(n, i) * me%yy(m, j)
-                            !else
-                            !    bFn = 0
-                            !endif
-
-                            !aMatBlock(1,1) = -(bFn)
-                            !aMatBlock(2,2) = -(bFn)
-                            !aMatBlock(3,3) = -(bFn)
-
                         endif
 
                         ! but couple with the neighbour block
@@ -528,21 +452,6 @@ contains
                                     g%sinTh(i,j), g%bPol(i,j), g%bMag(i,j), g%gradPrlB(i,j), &
                                     g%nuOmg(i,j) )
 
-                                !if(cosX)then
-                                !kVec_stix = matMul( g%U_RTZ_to_ABb(i,j,:,:), (/ -kr, g%kPhi(i), kz /) ) 
-
-                                !sigma_tmp_neg = sigmaHot_maxwellian&
-                                !    ( mSpec(s), &
-                                !    g%ktSpec(i,j,s), g%omgc(i,j,s), g%omgp2(i,j,s), &
-                                !    kVec_stix, g%R(i), &
-                                !    omgrf, k0, &
-                                !    g%k_cutoff, s, &
-                                !    g%sinTh(i,j), g%bPol(i,j), g%bMag(i,j), g%gradPrlB(i,j), &
-                                !    g%nuOmg(i,j) )
-
-                                !sigma_tmp = ( sigma_tmp + sigma_tmp_neg ) / 2
-                                !endif
-
                             endif hotPlasma
 
 
@@ -603,31 +512,10 @@ contains
 
             bFn = g%xx(g%wl(w)%n, g%wl(w)%i) * g%yy(g%wl(w)%m, g%wl(w)%j)
 
-            ! This is where the anti-aliasing will go. i.e.,
-            ! call this multiple times and average the result.
-            ! REMEMBER that the "bfn" multiplication will have
-            ! to come up here into the average too. No problem
-            ! though. Or will it?
-
             interior: &
             if(g%label(g%wl(w)%iPt)==0)then
    
-                !mat3by3Block = 0 
-
-                !aa_rPts = (/-0.5,0.5,0.5,-0.5 /)*(g%r(2)-g%r(1))+g%r(g%wl(w)%i)
-                !aa_zPts = (/-0.5,-0.5,0.5,0.5 /)*(g%z(2)-g%z(1))+g%z(g%wl(w)%j)
-
-                !antiAlias: &
-                !do aa=1,4
-                !    if(aa_rPts(aa)>g%rMax) aa_rPts(aa)=g%rMax
-                !    if(aa_rPts(aa)<g%rMin) aa_rPts(aa)=g%rMin
-                !    if(aa_zPts(aa)>g%zMax) aa_zPts(aa)=g%zMax
-                !    if(aa_zPts(aa)<g%zMin) aa_zPts(aa)=g%zMin
-
-                !   mat3by3Block = mat3by3Block + get3by3Block ( g, w, aa_rPts(aa), aa_zPts(aa) )
-                !enddo antiAlias
-                !mat3by3Block = mat3by3Block / 4
-                mat3by3Block = get3by3Block ( g, w)!, g%r(g%wl(w)%i), g%z(g%wl(w)%j))
+                mat3by3Block = get3by3Block ( g, w)
 
             endif interior
 
@@ -690,22 +578,17 @@ contains
 
                         if (g%label(g%wl(w)%iPt)==999) then
 
-                            !iOL = 1+overlap
-                            !jOL = j
-                        
-                            !bFnHere = g%xx(n, iOL) * g%yy(m, jOL)
-
-                            if (ii==0 .and. jj==0) aMat(localRow,localCol) = bFn!Here
+                            if (ii==0 .and. jj==0) aMat(localRow,localCol) = bFn
                             if (ii==0 .and. jj==1) aMat(localRow,localCol) = 0  
                             if (ii==0 .and. jj==2) aMat(localRow,localCol) = 0  
                         
                             if (ii==1 .and. jj==0) aMat(localRow,localCol) = 0  
-                            if (ii==1 .and. jj==1) aMat(localRow,localCol) = bFn!Here
+                            if (ii==1 .and. jj==1) aMat(localRow,localCol) = bFn
                             if (ii==1 .and. jj==2) aMat(localRow,localCol) = 0   
                         
                             if (ii==2 .and. jj==0) aMat(localRow,localCol) = 0   
                             if (ii==2 .and. jj==1) aMat(localRow,localCol) = 0   
-                            if (ii==2 .and. jj==2) aMat(localRow,localCol) = bFn!Here
+                            if (ii==2 .and. jj==2) aMat(localRow,localCol) = bFn
 
                         endif
 
@@ -715,21 +598,6 @@ contains
 
                         if (g%label(g%wl(w)%iPt)>=1 .and. g%label(g%wl(w)%iPt)<=20) then
 
-                            !if(mod(g%label(i,j),2)==1) then 
-                            !    iOL = 1+overlap
-                            !else
-                            !    iOL = g%nR-overlap
-                            !endif
- 
-                            !jOL = j
-                        
-                            !if(n<=g%nR/(g%label(i,j)+1))then 
-                            !!if(n==(g%label(i,j)+1))then 
-                            !    bFnHere = g%xx(n, iOL) * g%yy(m, jOL)
-                            !else
-                            !    bFnHere = 0
-                            !endif
-                         
                             if (ii==0 .and. jj==0) aMat(localRow,localCol) = bFn!Here 
                             if (ii==0 .and. jj==1) aMat(localRow,localCol) = 0  
                             if (ii==0 .and. jj==2) aMat(localRow,localCol) = 0  
