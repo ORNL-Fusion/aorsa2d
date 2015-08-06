@@ -53,7 +53,7 @@ contains
             antSigUnit, useAR2SourceLocationsFile, &
             useAllRHSsSource, ZeroJp, &
             ZeroJp_rMin, ZeroJp_rMax, ZeroJp_zMin, ZeroJp_zMax, &
-            useAntennaFromAR2Input
+            useAntennaFromAR2Input, useJPFromFile
         use grid
         use profiles, only: omgrf
         use constants
@@ -90,13 +90,6 @@ contains
             !   2 -> z
 
             DoThisPoint = .true.
-            !if(ZeroJp)then
-            !        DoThisPoint = .false.
-            !        if(g%R(i)>=ZeroJp_rMin &
-            !                .and.g%R(i)<=ZeroJp_rMax &
-            !                .and.g%z(j)>=ZeroJp_zMin &
-            !                .and.g%z(j)<=ZeroJp_zMax) DoThisPoint = .true.
-            !endif
       
             if(DoThisPoint)then 
                 if(CurrentSource_ComponentID(rhs).eq.0) &
@@ -122,7 +115,12 @@ contains
         if(useAntennaFromAR2Input)then 
                 ! nothing to do since these data are read in with the profile read :) 
         endif
-        
+       
+        if(useJpFromFile)then
+            get_jA = get_jA + (/g%file_JpR(i,j),g%file_JpT(i,j),g%file_JpZ(i,j)/)
+        endif
+
+
         !   boundary conditions
         !   -------------------
         
@@ -138,13 +136,6 @@ contains
         endif
         endif
         
-        !if ( capR(i) < metalLeft .or. capR(i) > metalRight &
-        !        .or. y(j) > metalTop .or. y(j) < metalBot ) then 
-        !    jR(i,j)    = 0
-        !    jT(i,j)    = 0
-        !    jZ(i,j)    = 0
-        !endif
-
     end function get_jA
 
     subroutine fill_jA ( g, rhs )
@@ -233,9 +224,6 @@ contains
 #ifndef par
         do ii = 1,nPts_tot*3,3
             do rhs = 1,NRHS 
-
-                !iRow = (j-1) * 3 + (i-1) * g%nZ * 3 + 1
-                !iRow = iRow + ( g%startRow-1 )
 
                 i = (ii-1)/(3*g%nZ)+1
                 j = (mod(ii-1,3*g%nZ)+1-1)/3+1

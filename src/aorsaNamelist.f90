@@ -13,6 +13,7 @@ implicit none
     logical :: AntennaJ_T = .false.
     logical :: AntennaJ_Z = .true.
     logical :: useAntennaFromAR2Input = .true.
+    logical :: useJpFromFile = .false.
     integer, parameter :: nSpecMax  = 5 
     integer :: zSpecIn(nSpecMax)    = (/ -1, 2, 0, 0, 0 /)
     integer :: amuSpecIn(nSpecMax)  = (/  0, 4, 0, 0, 0 /) 
@@ -81,6 +82,7 @@ implicit none
       real :: ZeroJp_zMin = -100.0
       real :: ZeroJp_zMax = 100.00
       character(len=100) :: AR2InputFileName = 'ar2Input.nc'
+      character(len=100) :: JpInputFileName = 'jp.nc'
       character(len=100) :: AR2SourceLocationsFileName = 'AR2SourceLocations.nc'
       CHARACTER*128 :: netCDF_file1 = 'phillips_nstx3.5.2.nc'  !cql3d distribution file name 1
       CHARACTER*128 :: netCDF_file2 = 'phillips_nstx3.5.2.nc'  !cql3d distribution file name 2
@@ -496,7 +498,7 @@ implicit none
      &    AntennaJ_R, AntennaJ_T, AntennaJ_Z, AR2SourceLocationsFileName, &
      &    useAR2SourceLocationsFile, useAllRHSsSource, ZeroJp, &
      &    ZeroJp_rMin, ZeroJp_rMax, ZeroJp_zMin, ZeroJp_zMax, useAntennaFromAR2Input, &
-     &    useMetalBox
+     &    useMetalBox, useJpFromFile, JpInputFileName
 
                 
 contains

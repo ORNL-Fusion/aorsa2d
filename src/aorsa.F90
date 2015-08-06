@@ -22,6 +22,7 @@ program aorsa2dMain
     use ar2Input
     use AR2SourceLocationsInput, NRHS_FromInputFile=>NRHS
     use Performance
+    use read_jp_from_file
 
     implicit none
 
@@ -383,6 +384,17 @@ program aorsa2dMain
 
     if(iAm==0) &
     write(*,*) '    Time to generate aMat offsets: ', end_timer ( tOffset ),  'seconds'
+
+
+!   Load plasma current Jp from file if working with Kinetic-J
+!   ----------------------------------------------------------
+
+    if(useJpFromFile)then
+        call ReadJpFromFile(JpInputFileName)    
+        do i=1,nGrid
+            call init_JpFromFile( allGrids(i) )
+        enddo
+    endif
 
 
 !   Antenna current

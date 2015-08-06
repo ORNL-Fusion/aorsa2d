@@ -88,6 +88,11 @@ type :: gridBlock
     complex, allocatable, dimension(:,:) :: &
         jR, jT, jZ
 
+    ! From file additional Jp (ala Kinetic-J) 
+    ! ---------------------------------------
+    complex, allocatable, dimension(:,:) :: &
+        file_JpR, file_JpT, file_JpZ
+
     ! E field solution
     ! ----------------
     complex, allocatable, dimension(:,:,:) :: &

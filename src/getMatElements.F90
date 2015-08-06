@@ -7,7 +7,8 @@ function get3by3Block( g, w)!, r, z)
     use grid
     use aorsaNamelist, only: &
        chebyshevX, chebyshevY, iSigma, nSpec, nPhi, ZeroJp, &
-       ZeroJp_rMin, ZeroJp_rMax, ZeroJp_zMin, ZeroJp_zMax
+       ZeroJp_rMin, ZeroJp_rMax, ZeroJp_zMin, ZeroJp_zMax, &
+       useJpFromFile
 
     use constants
     use profiles, only: k0, omgrf, mSpec
@@ -266,6 +267,22 @@ function get3by3Block( g, w)!, r, z)
                 sigPrlPrl = 0
 
             endif
+        endif
+
+        if(useJpFromFile)then
+
+            sigAlpAlp = 0
+            sigAlpBet = 0
+            sigAlpPrl = 0
+                     
+            sigBetAlp = 0
+            sigBetBet = 0
+            sigBetPrl = 0
+                     
+            sigPrlAlp = 0
+            sigPrlBet = 0
+            sigPrlPrl = 0
+
         endif
 
         kAlpAlp = 1.0 + zi / (eps0 * omgrf) * sigAlpAlp
