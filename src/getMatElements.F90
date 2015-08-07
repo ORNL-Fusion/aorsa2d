@@ -13,14 +13,12 @@ function get3by3Block( g, w)!, r, z)
     use constants
     use profiles, only: k0, omgrf, mSpec
     use sigma
-    !use sigmaInputGeneration, only: getSigmaInputHere
     use generic_biLinearInterp
 
     implicit none
 
     type(gridBlock), intent(in) :: g
     integer, intent(in) :: w
-    !real, intent(in) :: r, z
     
     complex :: get3by3Block(3,3)
     complex(kind=dbl) :: omgRFc

@@ -88,11 +88,6 @@ type :: gridBlock
     complex, allocatable, dimension(:,:) :: &
         jR, jT, jZ
 
-    ! From file additional Jp (ala Kinetic-J) 
-    ! ---------------------------------------
-    complex, allocatable, dimension(:,:) :: &
-        file_JpR, file_JpT, file_JpZ
-
     ! E field solution
     ! ----------------
     complex, allocatable, dimension(:,:,:) :: &
@@ -111,6 +106,13 @@ type :: gridBlock
     complex, allocatable, dimension(:,:,:) :: &
         jAlpha, jBeta, jB, &
         jP_r, jP_t, jP_z
+
+    ! From file additional Jp (ala Kinetic-J) 
+    ! ---------------------------------------
+    complex, allocatable, dimension(:,:) :: &
+        file_JpR, file_JpT, file_JpZ
+    complex, allocatable, dimension(:,:,:) :: &
+        file_JpR_s, file_JpT_s, file_JpZ_s
 
     ! Power absorption
     ! ----------------

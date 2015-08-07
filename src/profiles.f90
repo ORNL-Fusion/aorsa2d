@@ -49,8 +49,11 @@ contains
     subroutine init_JpFromFile( g )
 
         use read_jp_from_file, only: &
-            jp_nS=>nS, jp_nR=>nR, jp_nZ=>nZ, jp_r=>r, jp_z=>z, &
-            file_Jp_r=>Jp_r, file_Jp_t=>Jp_t, file_Jp_z=>Jp_z
+            file_nS=>nS, file_nR=>nR, file_nZ=>nZ, file_r=>r, file_z=>z, &
+            file_Jp_r=>Jp_r, file_Jp_t=>Jp_t, file_Jp_z=>Jp_z, &
+            file_Jp_r_s=>Jp_r_s, file_Jp_t_s=>Jp_t_s, file_Jp_z_s=>Jp_z_s
+
+        use aorsaNameList, only: nSpec
         use grid
         use parallel, only: iAm
         use fitpack
@@ -71,7 +74,7 @@ contains
 
         real, allocatable :: zp_tmp(:), zp_tmp_im(:)
         real :: sigma_dp
-        real, allocatable :: Jp_r_dp(:), Jp_z_dp(:)
+        real, allocatable :: file_r_dp(:), file_z_dp(:)
         real :: ThisR,ThisZ
         real :: re_, im_, i_
         integer :: iL, iR
@@ -80,33 +83,38 @@ contains
             g%file_JpR(g%nR,g%nZ), &
             g%file_JpT(g%nR,g%nZ), &
             g%file_JpZ(g%nR,g%nZ) )
+
+        if(.not.allocated(g%file_JpR_s))allocate ( &
+            g%file_JpR_s(g%nR,g%nZ,nSpec), &
+            g%file_JpT_s(g%nR,g%nZ,nSpec), &
+            g%file_JpZ_s(g%nR,g%nZ,nSpec) )
     
-        if(Jp_nZ.gt.1)then
+        if(file_nZ.gt.1)then
 
             sigma_dp = 1.0
             islpsw  = 255 
 
-            allocate(temp(Jp_nZ+Jp_nZ+Jp_nR))
-            allocate(zp_tmp(3*Jp_nZ*Jp_nR) )
-            allocate(zx1(Jp_nZ), zxm(Jp_nZ), zy1(Jp_nR), zyn(Jp_nR))
+            allocate(temp(file_nZ+file_nZ+file_nR))
+            allocate(zp_tmp(3*file_nZ*file_nR) )
+            allocate(zx1(file_nZ), zxm(file_nZ), zy1(file_nR), zyn(file_nR))
 
-            allocate(temp_im(Jp_nZ+Jp_nZ+Jp_nR))
-            allocate(zp_tmp_im(3*Jp_nZ*Jp_nR) )
-            allocate(zx1_im(Jp_nZ), zxm_im(Jp_nZ), zy1_im(Jp_nR), zyn_im(Jp_nR))
+            allocate(temp_im(file_nZ+file_nZ+file_nR))
+            allocate(zp_tmp_im(3*file_nZ*file_nR) )
+            allocate(zx1_im(file_nZ), zxm_im(file_nZ), zy1_im(file_nR), zyn_im(file_nR))
 
-            allocate(Tmp2DArr_re(Jp_nR,Jp_nZ), Tmp2DArr_im(Jp_nR,Jp_nZ))
-            allocate(Jp_r_dp(Jp_nR),Jp_z_dp(Jp_nZ))
+            allocate(Tmp2DArr_re(file_nR,file_nZ), Tmp2DArr_im(file_nR,file_nZ))
+            allocate(file_r_dp(file_nR),file_z_dp(file_nZ))
 
-            Jp_r_dp = Jp_r
-            Jp_z_dp = Jp_z
+            file_r_dp = file_r
+            file_z_dp = file_z
 
             Tmp2DArr_re = real(real(file_Jp_r)) 
-            call surf1 ( Jp_nR, Jp_nZ, Jp_r, Jp_z, Tmp2DArr_re, Jp_nR, zx1, zxm, &
+            call surf1 ( file_nR, file_nZ, file_r, file_z, Tmp2DArr_re, file_nR, zx1, zxm, &
                 zy1, zyn, zxy11, zxym1, zxy1n, zxymn, islpsw, &
                 zp_tmp, temp, sigma_dp, iErr)
 
             Tmp2DArr_im = real(aimag(file_Jp_r)) 
-            call surf1 ( Jp_nR, Jp_nZ, Jp_r_dp, Jp_z_dp, Tmp2DArr_im, Jp_nR, zx1_im, zxm_im, &
+            call surf1 ( file_nR, file_nZ, file_r_dp, file_z_dp, Tmp2DArr_im, file_nR, zx1_im, zxm_im, &
                 zy1_im, zyn_im, zxy11_im, zxym1_im, zxy1n_im, zxymn_im, islpsw, &
                 zp_tmp_im, temp_im, sigma_dp, iErr)
 
@@ -116,10 +124,10 @@ contains
                     ThisR = g%r(i)
                     ThisZ = g%z(j)
 
-                    re_ = surf2 ( ThisR, ThisZ, Jp_nR, Jp_nZ, Jp_r, Jp_z, &
-                        Tmp2DArr_re, Jp_nR, zp_tmp, sigma_dp )
-                    im_ = surf2 ( ThisR, ThisZ, Jp_nR, Jp_nZ, Jp_r_dp, Jp_z_dp, &
-                        Tmp2DArr_im, Jp_nR, zp_tmp_im, sigma_dp )
+                    re_ = surf2 ( ThisR, ThisZ, file_nR, file_nZ, file_r, file_z, &
+                        Tmp2DArr_re, file_nR, zp_tmp, sigma_dp )
+                    im_ = surf2 ( ThisR, ThisZ, file_nR, file_nZ, file_r_dp, file_z_dp, &
+                        Tmp2DArr_im, file_nR, zp_tmp_im, sigma_dp )
 
                     g%file_JpR(i,j) = cmplx(re_,im_)
 
@@ -134,9 +142,15 @@ contains
 
                     ThisR = g%r(i)
 
-                    g%file_JpR(i,1) = interp1d(Jp_r,file_Jp_r(:,1),ThisR)
-                    g%file_JpT(i,1) = interp1d(Jp_r,file_Jp_t(:,1),ThisR)
-                    g%file_JpZ(i,1) = interp1d(Jp_r,file_Jp_z(:,1),ThisR)
+                    g%file_JpR(i,1) = interp1d(file_r,file_Jp_r(:,1),ThisR)
+                    g%file_JpT(i,1) = interp1d(file_r,file_Jp_t(:,1),ThisR)
+                    g%file_JpZ(i,1) = interp1d(file_r,file_Jp_z(:,1),ThisR)
+
+                    do s=1,nSpec
+                        g%file_JpR_s(i,1,s) = interp1d(file_r,file_Jp_r_s(:,1,s),ThisR)
+                        g%file_JpT_s(i,1,s) = interp1d(file_r,file_Jp_t_s(:,1,s),ThisR)
+                        g%file_JpZ_s(i,1,s) = interp1d(file_r,file_Jp_z_s(:,1,s),ThisR)
+                    enddo
       
             enddo
 

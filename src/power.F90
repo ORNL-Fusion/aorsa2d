@@ -8,12 +8,17 @@ subroutine current ( g, rhs )
     use read_data
     use aorsaNamelist, &
         only: nSpec, iSigma, fracOfModesInSolution, ZeroJp, &
-        ZeroJp_rMin, ZeroJp_rMax, ZeroJp_zMin, ZeroJp_zMax
+        ZeroJp_rMin, ZeroJp_rMax, ZeroJp_zMin, ZeroJp_zMax, &
+        useJpFromFile
     use sigma
     use parallel
     use profiles, &
         only: k0, omgrf, mSpec
     use constants
+    use read_jp_from_file, only: &
+        file_nS=>nS, file_nR=>nR, file_nZ=>nZ, file_r=>r, file_z=>z, &
+        file_Jp_r=>Jp_r, file_Jp_t=>Jp_t, file_Jp_z=>Jp_z, &
+        file_Jp_r_s=>Jp_r_s, file_Jp_t_s=>Jp_t_s, file_Jp_z_s=>Jp_z_s
 
     implicit none
    
@@ -62,11 +67,16 @@ subroutine current ( g, rhs )
         workList: &
         do w=1,size(g%wl)
 
-            twoThirdsRule: &
-            if(g%wl(w)%m >= g%mMin*fracOfModesInSolution .and. g%wl(w)%m <= g%mMax*fracOfModesInSolution &
-                .and. g%wl(w)%n >= g%nMin*fracOfModesInSolution .and. g%wl(w)%n <= g%nMax*fracOfModesInSolution ) then
+            ReplaceWithJpFromFile: &
+            if(useJpFromFile)then
 
-            
+            else
+
+                twoThirdsRule: &
+                if(g%wl(w)%m >= g%mMin*fracOfModesInSolution .and. g%wl(w)%m <= g%mMax*fracOfModesInSolution &
+                    .and. g%wl(w)%n >= g%nMin*fracOfModesInSolution .and. g%wl(w)%n <= g%nMax*fracOfModesInSolution ) then
+
+                
                         bFn = g%xx(g%wl(w)%n,g%wl(w)%i) * g%yy(g%wl(w)%m,g%wl(w)%j)
 
 #if __sigma__ != 2
@@ -188,8 +198,9 @@ subroutine current ( g, rhs )
                         g%jBeta(g%wl(w)%i,g%wl(w)%j,s) = g%jBeta(g%wl(w)%i,g%wl(w)%j,s) + jVec(2) * bFn
                         g%jB(g%wl(w)%i,g%wl(w)%j,s) = g%jB(g%wl(w)%i,g%wl(w)%j,s) + jVec(3) * bFn
 
-            endif twoThirdsRule
+                    endif twoThirdsRule
 
+            endif ReplaceWithJpFromFile
 
             ! Where E=0 at the boundary, also set J=0 to avoid
             ! tiny E values combining with sigma to give anomolous

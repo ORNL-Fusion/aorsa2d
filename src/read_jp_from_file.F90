@@ -6,6 +6,7 @@ implicit none
 
 integer :: nR,nZ,nS
 complex, allocatable :: Jp_r(:,:),Jp_t(:,:),Jp_z(:,:)
+complex, allocatable :: Jp_r_s(:,:,:),Jp_t_s(:,:,:),Jp_z_s(:,:,:)
 real, allocatable :: r(:),z(:)
 
 contains
@@ -52,6 +53,7 @@ subroutine ReadJpFromFile (FileName)
     allocate(Jp_r_re(nR,nZ,nS),Jp_t_re(nR,nZ,nS),Jp_z_re(nR,nZ,nS))
     allocate(Jp_r_im(nR,nZ,nS),Jp_t_im(nR,nZ,nS),Jp_z_im(nR,nZ,nS))
     allocate(Jp_r(nR,nZ),Jp_t(nR,nZ),Jp_z(nR,nZ))
+    allocate(Jp_r_s(nR,nZ,nS),Jp_t_s(nR,nZ,nS),Jp_z_s(nR,nZ,nS))
     allocate(r(nR),z(nZ))
 
     call check( nf90_get_var(nc_id,r_id,r) )
@@ -70,6 +72,10 @@ subroutine ReadJpFromFile (FileName)
     Jp_r = sum(cmplx(Jp_r_re,Jp_r_im),3)
     Jp_t = sum(cmplx(Jp_t_re,Jp_t_im),3)
     Jp_z = sum(cmplx(Jp_z_re,Jp_z_im),3)
+
+    Jp_r_s = cmplx(Jp_r_re,Jp_r_im)
+    Jp_t_s = cmplx(Jp_t_re,Jp_t_im)
+    Jp_z_s = cmplx(Jp_z_re,Jp_z_im)
 
     deallocate(Jp_r_re,Jp_t_re,Jp_z_re)
     deallocate(Jp_r_im,Jp_t_im,Jp_z_im)

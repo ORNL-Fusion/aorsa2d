@@ -8,8 +8,12 @@ subroutine rotate_E_to_lab ( g, rhs )
     use rotation
     use grid
     use aorsaNamelist, &
-        only: nSpec
+        only: nSpec, UseJpFromFile
     use interp, only: dlg_interpB 
+    use read_jp_from_file, only: &
+        file_nS=>nS, file_nR=>nR, file_nZ=>nZ, file_r=>r, file_z=>z, &
+        file_Jp_r=>Jp_r, file_Jp_t=>Jp_t, file_Jp_z=>Jp_z, &
+        file_Jp_r_s=>Jp_r_s, file_Jp_t_s=>Jp_t_s, file_Jp_z_s=>Jp_z_s
 
     implicit none
 
@@ -96,9 +100,21 @@ subroutine rotate_E_to_lab ( g, rhs )
             !jPLab_RTZ(3) = R_inv(3,1)*jP1 + R_inv(3,2)*jP2 + R_inv(3,3)*jP3
 
 #endif 
-                g%jP_r(i,j,s) = jPLab_RTZ(1)
-                g%jP_t(i,j,s) = jPLab_RTZ(2)
-                g%jP_z(i,j,s) = jPLab_RTZ(3)
+
+                ReplaceWithJpFromFile: &
+                if(UseJpFromFile)then
+
+                    g%jP_r(i,j,s) = g%file_JpR_s(i,j,s)
+                    g%jP_t(i,j,s) = g%file_JpT_s(i,j,s)
+                    g%jP_z(i,j,s) = g%file_JpZ_s(i,j,s)
+
+                else
+
+                    g%jP_r(i,j,s) = jPLab_RTZ(1)
+                    g%jP_t(i,j,s) = jPLab_RTZ(2)
+                    g%jP_z(i,j,s) = jPLab_RTZ(3)
+
+                endif ReplaceWithJpFromFile
 
             enddo    
 
