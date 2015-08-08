@@ -467,6 +467,26 @@ pro ar2_create_input
 	kPer_F = kPer_F_2D[*,nZ/2]
 	kPer_S = kPer_S_2D[*,nZ/2]
 
+	; Calculate the vTh
+
+	_kT_joule = Temp_eV * _e
+	__m0 = amu * _mi
+	__m0 = transpose(rebin(__m0,nS,nR,nZ),[1,2,0])
+	__Z = transpose(rebin(atomicZ,nS,nR,nZ),[1,2,0])
+	__vTh0 = sqrt ( 2.0*_kT_joule / __m0)
+	_lambdaD = sqrt((e0 * _kB / _e^2) / (Density_m3[*,*,0]/Temp_eV[*,*,0] $
+			+ total(__Z[*,*,1:-1]^2*Density_m3[*,*,1:-1]/Temp_eV[*,*,1:-1],3) ))
+
+	; Estimate the vPhsPar/vTh_e
+	print, 'Estimating vPhsPar/vTh_e'
+
+	_kPar_2D = nPhi/r2D
+	vPhasePar = wrf / _kPar_2D
+
+	p=plot(r,vPhasePar[*,nZ/2]/__vTh0[*,nZ/2,0],$
+			title='vPhsPar/vTh_e',layout=[layout,PlotPos],/current)
+	++PlotPos
+
     ; plot up the ion cyclortron resonances
 
     for s=1,nSpec-1 do begin
