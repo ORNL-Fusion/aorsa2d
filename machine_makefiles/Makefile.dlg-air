@@ -1,5 +1,5 @@
 BLAS := /opt/local/lib -pthread
-LIBS += -L ${BLAS} -latlas -lblas
+LIBS += -L ${BLAS} -lblas
 
 LAPACK := /opt/local/lib 
 LIBS += -L ${LAPACK} -llapack
