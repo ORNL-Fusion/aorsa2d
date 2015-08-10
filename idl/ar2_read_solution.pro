@@ -40,7 +40,7 @@ function ar2_read_solution, runFolderName, RHS
 		nCdf_varGet, cdfId, 'r', r
 		nCdf_varGet, cdfId, 'z', z
 		nCdf_varGet, cdfId, 'nPhi', nPhi 
-		nCdf_varGet, cdfId, 'freqcy', freq 
+		nCdf_varGet, cdfId, 'freq', freq 
 	
 		nCdf_varGet, cdfId, 'ealpha_re', ealpha_re 
 		ealpha_re = temporary(ealpha_re[*,*])

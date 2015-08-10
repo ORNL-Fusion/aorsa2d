@@ -106,6 +106,8 @@ pro ar2_create_input
 
         rlim = g.rlim[*]
         zlim = g.zlim[*]
+
+        rlim =rlim>0.9
 	    
         oversample_boundary, rbbbs, zbbbs, rbbbs_os, zbbbs_os 
         oversample_boundary, rlim, zlim, rlim_os, zlim_os 

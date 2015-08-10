@@ -120,5 +120,4 @@ pro ar2_create_kj_input
 
 	nCdf_close, nc_id
 
-    stop
 end
