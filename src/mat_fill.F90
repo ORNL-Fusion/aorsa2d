@@ -52,8 +52,8 @@ contains
             write(*,*) '    nSpatialPts_tot: ', nPts_tot
             write(*,*) '    nRowLocal: ', LM_A
             write(*,*) '    nColLocal: ', LN_A
-            write(*,*) '    nRowGlobal: ', desc_A(M_)
-            write(*,*) '    nColGlobal: ', desc_A(N_) 
+            write(*,*) '    nRowGlobal: ', DESCA(M_)
+            write(*,*) '    nColGlobal: ', DESCA(N_) 
 
             LocalSizeMB = LM_A*LN_A*2.0*8.0 / 1024.0**2
             GlobalSizeMB = nPts_tot*3.0*nPts_tot*3.0*2.0*8.0 / 1024.0**2.0
@@ -205,7 +205,8 @@ contains
     subroutine createWorkList ( g )
 
         use grid
-        use parallel
+        use parallel, only : iAm, ICTXT, NRHS, LM_A, LN_A, &
+                MYROW, MYCOL, DESCA, DESCB
         use aorsaNamelist, &
             only: npRow, npCol
         use scalapack_mod
@@ -263,8 +264,8 @@ contains
         do ii=1,LM_A,3
             do jj=1,LN_A,3
        
-                iRow = IndxL2G ( ii, desc_A(MB_), MyRow, 0, NpRow )
-                iCol = IndxL2G ( jj, desc_A(NB_), MyCol, 0, NpCol )
+                iRow = IndxL2G ( ii, DESCA(MB_), MyRow, 0, NpRow )
+                iCol = IndxL2G ( jj, DESCA(NB_), MyCol, 0, NpCol )
 
                 i = (iRow-1)/(3*g%nZ)+1
                 j = (mod(iRow-1,3*g%nZ)+1-1)/3+1
@@ -334,7 +335,7 @@ contains
         use rotation
         use profiles
         use bField
-        use parallel
+        use parallel, only : iAm, ICTXT, NRHS, DESCA, DESCB
         use chebyshev_mod
         use write_data
         use getMatElements
@@ -524,14 +525,14 @@ contains
                 jj_loop: &
                 do jj=0,2
 #ifdef par
-                    pr_sp = IndxG2P ( iRow, desc_A(MB_), Dummy, 0, NpRow )
-                    pc_sp = IndxG2P ( iCol, desc_A(NB_), Dummy, 0, NpCol )
+                    pr_sp = IndxG2P ( iRow, DESCA(MB_), Dummy, 0, NpRow )
+                    pc_sp = IndxG2P ( iCol, DESCA(NB_), Dummy, 0, NpCol )
 #if __CheckParallelLocation__==1
                     myProc: &
                     if ( myRow==pr_sp .and. myCol==pc_sp ) then
 #endif
-                        LocalRow = IndxG2L ( iRow+ii, desc_A(MB_), Dummy, Dummy, NpRow )
-                        LocalCol = IndxG2L ( iCol+jj, desc_A(NB_), Dummy, Dummy, NpCol )
+                        LocalRow = IndxG2L ( iRow+ii, DESCA(MB_), Dummy, Dummy, NpRow )
+                        LocalCol = IndxG2L ( iCol+jj, DESCA(NB_), Dummy, Dummy, NpCol )
 #else
                         LocalRow    = iRow+ii
                         LocalCol    = iCol+jj

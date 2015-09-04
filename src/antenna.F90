@@ -31,7 +31,7 @@ contains
 
 #ifdef par
         allocate ( brhs(LM_B,LN_B) )
-        allocate ( brhs_global(M_B,N_B) )
+        allocate ( brhs_global(N,NRHS) )
 #else
         allocate ( brhs(nPts_tot*3,NRHS) )
         allocate ( brhs_global(nPts_tot*3,NRHS) )
@@ -246,8 +246,8 @@ contains
         do ii=1,LM_B,3
             do jj=1,LN_B
         
-                iRow = IndxL2G ( ii, desc_B(MB_), myRow, 0, NpRow )
-                rhs = IndxL2G ( jj, desc_B(NB_), myCol, 0, NpCol )
+                iRow = IndxL2G ( ii, DESCB(MB_), myRow, 0, NpRow )
+                rhs = IndxL2G ( jj, DESCB(NB_), myCol, 0, NpCol )
 
                 i = (iRow-1)/(3*g%nZ)+1
                 j = (mod(iRow-1,3*g%nZ)+1-1)/3+1

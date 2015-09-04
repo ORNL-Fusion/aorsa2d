@@ -7,14 +7,9 @@ LIBS +=-L${NETCDFDIR} -L${NETCDFFDIR} -lnetcdf -lnetcdff
 INC_DIR += -I ${NETCDFFINCLUDE}
 
 ifeq (${PARALLEL},1)
-	#BLACS = \
-	#	${HOME}/code/blacs/blacs_gnu64/LIB/blacs_MPI-LINUX-0.a \
-	#	${HOME}/code/blacs/blacs_gnu64/LIB/blacsF77init_MPI-LINUX-0.a \
-	#	${HOME}/code/blacs/blacs_gnu64/LIB/blacs_MPI-LINUX-0.a
-	#SCALAPACK = ${HOME}/code/scalapack/scalapack_gnu64/libscalapack.a
-    BLACS = -L${BLACS_HOME}/lib64 -lblacs -lblacsF77init -lblacs 
+    BLACS = -L${BLACS_HOME}/lib64 -lblacsF77init -lblacs 
     SCALAPACK = -L${SCALAPACK_HOME} -lscalapack
-    LIBS := ${BLACS} ${SCALAPACK} ${LIBS} ${BLACS} ${SCALAPACK} 
+    LIBS := ${SCALAPACK} ${LIBS} ${BLACS} ${SCALAPACK} 
 endif
 
 #PAPI_DIR := /Users/dg6/code/papi/gnu-4.8.2

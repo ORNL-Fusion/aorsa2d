@@ -155,7 +155,7 @@ program aorsa2dMain
 #endif
 
 #ifdef par
-    call blacs_barrier ( iContext, 'All' ) 
+    call blacs_barrier ( ICTXT, 'All' ) 
 #endif
 
     if(iAm==0) &
@@ -184,7 +184,7 @@ program aorsa2dMain
     enddo
 
 #ifdef par
-    call blacs_barrier ( iContext, 'All' ) 
+    call blacs_barrier ( ICTXT, 'All' ) 
 #endif
 
     if(iAm==0) &
@@ -208,7 +208,7 @@ program aorsa2dMain
     enddo
 
 #ifdef par
-    call blacs_barrier ( iContext, 'All' ) 
+    call blacs_barrier ( ICTXT, 'All' ) 
 #endif
 
     Perf%TimeWorkList = end_timer ( tWorkList )
@@ -260,7 +260,7 @@ program aorsa2dMain
 
     enddo
 #ifdef par
-    call blacs_barrier ( iContext, 'All' ) 
+    call blacs_barrier ( ICTXT, 'All' ) 
 #endif
 
     if(iAm==0) &
@@ -278,7 +278,7 @@ program aorsa2dMain
         if(iAm==0) write(*,*) '    DONE'
     enddo
 #ifdef par
-    call blacs_barrier ( iContext, 'All' ) 
+    call blacs_barrier ( ICTXT, 'All' ) 
 #endif
 
     if(iAm==0) &
@@ -317,7 +317,7 @@ program aorsa2dMain
     endif
 
 #ifdef par
-    call blacs_barrier ( iContext, 'All' ) 
+    call blacs_barrier ( ICTXT, 'All' ) 
 #endif
 
     if(iAm==0) &
@@ -354,7 +354,7 @@ program aorsa2dMain
     enddo
 
 #ifdef par
-    call blacs_barrier ( iContext, 'All' ) 
+    call blacs_barrier ( ICTXT, 'All' ) 
 #endif
 
     if(iAm==0) &
@@ -379,7 +379,7 @@ program aorsa2dMain
     enddo
 
 #ifdef par
-    call blacs_barrier ( iContext, 'All' ) 
+    call blacs_barrier ( ICTXT, 'All' ) 
 #endif
 
     if(iAm==0) &
@@ -425,7 +425,7 @@ program aorsa2dMain
     do rhs=1,NRHS
 
 #ifdef par
-        call blacs_barrier ( iContext, 'All' ) 
+        call blacs_barrier ( ICTXT, 'All' ) 
 #endif
     
         if (iAm==0.and.NRHS<=1) &
@@ -437,7 +437,7 @@ program aorsa2dMain
         enddo
 
 #ifdef par
-        call blacs_barrier ( iContext, 'All' ) 
+        call blacs_barrier ( ICTXT, 'All' ) 
 #endif
    
     enddo RHS_PreProcessing_loop
@@ -448,7 +448,7 @@ program aorsa2dMain
     call start_timer ( tAllocAMat )
     call alloc_total_aMat ( nPts_tot )
 #ifdef par
-    call blacs_barrier ( iContext, 'All' ) 
+    call blacs_barrier ( ICTXT, 'All' ) 
 #endif
     if(iAm==0) &
     write(*,*) '    Time to allocate aMat: ', end_timer ( tAllocAMat ),  'seconds'
@@ -460,7 +460,7 @@ program aorsa2dMain
     call start_timer ( tLabel )
     call labelPts ( allGrids, nPts_tot )
 #ifdef par
-    call blacs_barrier ( iContext, 'All' ) 
+    call blacs_barrier ( ICTXT, 'All' ) 
 #endif
     if(iAm==0) &
     write(*,*) '    Time to label points: ', end_timer ( tLabel ),  'seconds'
@@ -507,7 +507,7 @@ program aorsa2dMain
 #endif
 
 #ifdef par
-    call blacs_barrier ( iContext, 'All' ) 
+    call blacs_barrier ( ICTXT, 'All' ) 
 #endif
 
     Perf%TimeFill = end_timer ( tFill )
@@ -522,7 +522,7 @@ program aorsa2dMain
     papi_mflops_global  = papi_mflops
 
 #ifdef par
-    call sgSum2D ( iContext, 'All', ' ', 1, 1, &
+    call sgSum2D ( ICTXT, 'All', ' ', 1, 1, &
                 papi_mflops_global, 1, -1, -1 )
 #endif
 
@@ -543,7 +543,7 @@ program aorsa2dMain
 #endif
 
 #ifdef par
-    call blacs_barrier ( iContext, 'All' ) 
+    call blacs_barrier ( ICTXT, 'All' ) 
 #endif
     if(iAm==0) &
     write(*,*) '    Time to sum flops 1: ', end_timer ( tSumFlops1 ),  'seconds'
@@ -565,7 +565,7 @@ program aorsa2dMain
 #endif
 
 #ifdef par
-    call blacs_barrier ( iContext, 'All' ) 
+    call blacs_barrier ( ICTXT, 'All' ) 
 #endif
     if(iAm==0) &
     write(*,*) '    Time to init descriptors: ', end_timer ( tInitDescriptors ),  'seconds'
@@ -593,7 +593,7 @@ program aorsa2dMain
 #endif
 
 #ifdef par
-    call blacs_barrier ( iContext, 'All' ) 
+    call blacs_barrier ( ICTXT, 'All' ) 
 #endif
 
     Perf%TimeSolve = end_timer ( tSolve )
@@ -608,7 +608,7 @@ program aorsa2dMain
     papi_mflops_global  = papi_mflops
 
 #ifdef par
-    call sgSum2D ( iContext, 'All', ' ', 1, 1, &
+    call sgSum2D ( ICTXT, 'All', ' ', 1, 1, &
                 papi_mflops_global, 1, -1, -1 )
 #endif
 
@@ -629,7 +629,7 @@ program aorsa2dMain
 #endif
 
 #ifdef par
-    call blacs_barrier ( iContext, 'All' ) 
+    call blacs_barrier ( ICTXT, 'All' ) 
 #endif
     if(iAm==0) &
     write(*,*) '    Time to sum flops 2: ', end_timer ( tSumFlops2 ),  'seconds'
@@ -639,7 +639,7 @@ program aorsa2dMain
         call extract_coeffs ( allGrids(i) )    
     enddo
 #ifdef par
-    call blacs_barrier ( iContext, 'All' ) 
+    call blacs_barrier ( ICTXT, 'All' ) 
 #endif
     if(iAm==0) &
     write(*,*) '    Time to extract coeffs: ', end_timer ( tExtractCoeffs ),  'seconds'
@@ -660,7 +660,7 @@ program aorsa2dMain
         enddo
 
 #ifdef par
-        call blacs_barrier ( iContext, 'All' ) 
+        call blacs_barrier ( ICTXT, 'All' ) 
 #endif
         if(iAm==0.and.NRHS<=1) &
         write(*,*) '    Time to inverse Fourier transform the fields: ', end_timer ( tInvFourier ),  'seconds'
@@ -685,7 +685,7 @@ program aorsa2dMain
         enddo
     
 #ifdef par
-        call blacs_barrier ( iContext, 'All' ) 
+        call blacs_barrier ( ICTXT, 'All' ) 
 #endif
 
         Perf%TimeCurrent = end_timer ( tCurrent )
@@ -705,7 +705,7 @@ program aorsa2dMain
         papi_mflops_global  = papi_mflops
     
 #ifdef par
-        call sgSum2D ( iContext, 'All', ' ', 1, 1, &
+        call sgSum2D ( ICTXT, 'All', ' ', 1, 1, &
                     papi_mflops_global, 1, -1, -1 )
 #endif
 
@@ -724,7 +724,7 @@ program aorsa2dMain
         endif
 #endif
 #ifdef par
-        call blacs_barrier ( iContext, 'All' ) 
+        call blacs_barrier ( ICTXT, 'All' ) 
 #endif
         if(iAm==0.and.NRHS<=1) &
         write(*,*) '    Time to sum flops 3: ', end_timer ( tSumFlops3 ),  'seconds'
@@ -744,7 +744,7 @@ program aorsa2dMain
     
         endif
 #ifdef par
-        call blacs_barrier ( iContext, 'All' ) 
+        call blacs_barrier ( ICTXT, 'All' ) 
 #endif
         if(iAm==0.and.NRHS<=1) &
         write(*,*) '    Time to rotate solution to lab frame: ', end_timer ( tCurrent ),  'seconds'
@@ -764,7 +764,7 @@ program aorsa2dMain
     
         endif
 #ifdef par
-        call blacs_barrier ( iContext, 'All' ) 
+        call blacs_barrier ( ICTXT, 'All' ) 
 #endif
         if(iAm==0.and.NRHS<=1) &
         write(*,*) '    Time to calculate Joule heating: ', end_timer ( tJDotE ),  'seconds'
@@ -785,7 +785,7 @@ program aorsa2dMain
     
         endif
 #ifdef par
-        call blacs_barrier ( iContext, 'All' ) 
+        call blacs_barrier ( ICTXT, 'All' ) 
 #endif
         if(iAm==0.and.NRHS<=1) &
         write(*,*) '    Time to write solution: ', end_timer ( tWriteSolution ),  'seconds'
@@ -828,8 +828,8 @@ program aorsa2dMain
         Perf%nSpatialPoints = nPts_tot
         Perf%nRowLocal = LM_A
         Perf%nColLocal = LN_A
-        Perf%nRowGlobal = M_A
-        Perf%nColGlobal = N_A
+        Perf%nRowGlobal = M
+        Perf%nColGlobal = N
         Perf%MatSizeLocal_GB = LocalSizeGB
         Perf%MatSizeGlobal_GB = GlobalSizeGB
         Perf%TimeTotal = end_timer ( tTotal )

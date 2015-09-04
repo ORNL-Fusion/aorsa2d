@@ -231,11 +231,11 @@ subroutine current ( g, rhs )
         jBetaTmp = g%jBeta(:,:,s)
         jBTmp = g%jB(:,:,s)
 
-        call cGSUM2D ( iContext, 'All', ' ', g%nR, g%nZ, jAlphaTmp, g%nR, -1, -1 )
-        call cGSUM2D ( iContext, 'All', ' ', g%nR, g%nZ, jBetaTmp, g%nR, -1, -1 )
-        call cGSUM2D ( iContext, 'All', ' ', g%nR, g%nZ, jBTmp, g%nR, -1, -1 )
+        call cGSUM2D ( ICTXT, 'All', ' ', g%nR, g%nZ, jAlphaTmp, g%nR, -1, -1 )
+        call cGSUM2D ( ICTXT, 'All', ' ', g%nR, g%nZ, jBetaTmp, g%nR, -1, -1 )
+        call cGSUM2D ( ICTXT, 'All', ' ', g%nR, g%nZ, jBTmp, g%nR, -1, -1 )
 
-        call blacs_barrier ( iContext, 'All' ) 
+        call blacs_barrier ( ICTXT, 'All' ) 
 
         g%jAlpha(:,:,s) = jAlphaTmp
         g%jBeta(:,:,s) = jBetaTmp

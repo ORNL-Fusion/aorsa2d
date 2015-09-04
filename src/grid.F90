@@ -193,7 +193,7 @@ contains
             only : nPhi, xkPerp_cutOff, overlap, &
             rMinAll, rMaxAll, zMinAll, zMaxAll, nGrid, &
             nZ_1D
-        use parallel
+        use parallel, only : iAm
 
         implicit none
 

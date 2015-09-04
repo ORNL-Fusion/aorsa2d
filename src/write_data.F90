@@ -201,8 +201,8 @@ contains
         enddo
         
 #ifdef par
-        call iGSUM2D ( iContext, 'All', ' ', g%nR, g%nZ, IntTmp, g%nR, -1, -1 )
-        call iGSUM2D ( iContext, 'All', ' ', g%nR, g%nZ, Cnt, g%nR, -1, -1 )
+        call iGSUM2D ( ICTXT, 'All', ' ', g%nR, g%nZ, IntTmp, g%nR, -1, -1 )
+        call iGSUM2D ( ICTXT, 'All', ' ', g%nR, g%nZ, Cnt, g%nR, -1, -1 )
 #endif
         IntTmp = IntTmp/Cnt
         IntTmp = abs(IntTmp-1)
@@ -230,8 +230,8 @@ contains
             Cnt(i,j) = Cnt(i,j)+1
         enddo
 #ifdef par
-        call sGSUM2D ( iContext, 'All', ' ', g%nR, g%nZ, RealTmp, g%nR, -1, -1 )
-        call sGSUM2D ( iContext, 'All', ' ', g%nR, g%nZ, Cnt, g%nR, -1, -1 )
+        call sGSUM2D ( ICTXT, 'All', ' ', g%nR, g%nZ, RealTmp, g%nR, -1, -1 )
+        call sGSUM2D ( ICTXT, 'All', ' ', g%nR, g%nZ, Cnt, g%nR, -1, -1 )
 #endif
         if(iAm==0)nc_stat = nf90_put_var ( nc_id, brU_id, RealTmp/Cnt )
         RealTmp = 0
@@ -247,8 +247,8 @@ contains
             Cnt(i,j) = Cnt(i,j)+1
         enddo
 #ifdef par
-        call sGSUM2D ( iContext, 'All', ' ', g%nR, g%nZ, RealTmp, g%nR, -1, -1 )
-        call sGSUM2D ( iContext, 'All', ' ', g%nR, g%nZ, Cnt, g%nR, -1, -1 )
+        call sGSUM2D ( ICTXT, 'All', ' ', g%nR, g%nZ, RealTmp, g%nR, -1, -1 )
+        call sGSUM2D ( ICTXT, 'All', ' ', g%nR, g%nZ, Cnt, g%nR, -1, -1 )
 #endif
         if(iAm==0)nc_stat = nf90_put_var ( nc_id, btU_id, RealTmp/Cnt )
         RealTmp = 0
@@ -264,8 +264,8 @@ contains
             Cnt(i,j) = Cnt(i,j)+1
         enddo
 #ifdef par
-        call sGSUM2D ( iContext, 'All', ' ', g%nR, g%nZ, RealTmp, g%nR, -1, -1 )
-        call sGSUM2D ( iContext, 'All', ' ', g%nR, g%nZ, Cnt, g%nR, -1, -1 )
+        call sGSUM2D ( ICTXT, 'All', ' ', g%nR, g%nZ, RealTmp, g%nR, -1, -1 )
+        call sGSUM2D ( ICTXT, 'All', ' ', g%nR, g%nZ, Cnt, g%nR, -1, -1 )
 #endif
         if(iAm==0)nc_stat = nf90_put_var ( nc_id, bzU_id, RealTmp/Cnt )
         RealTmp = 0
@@ -281,8 +281,8 @@ contains
             Cnt(i,j) = Cnt(i,j)+1
         enddo
 #ifdef par
-        call sGSUM2D ( iContext, 'All', ' ', g%nR, g%nZ, RealTmp, g%nR, -1, -1 )
-        call sGSUM2D ( iContext, 'All', ' ', g%nR, g%nZ, Cnt, g%nR, -1, -1 )
+        call sGSUM2D ( ICTXT, 'All', ' ', g%nR, g%nZ, RealTmp, g%nR, -1, -1 )
+        call sGSUM2D ( ICTXT, 'All', ' ', g%nR, g%nZ, Cnt, g%nR, -1, -1 )
 #endif
         if(iAm==0)nc_stat = nf90_put_var ( nc_id, bmod_id, RealTmp/Cnt )
         RealTmp = 0
@@ -302,8 +302,8 @@ contains
                 Cnt(i,j) = Cnt(i,j)+1
             enddo
 #ifdef par
-            call sGSUM2D ( iContext, 'All', ' ', g%nR, g%nZ, RealTmp, g%nR, -1, -1 )
-            call sGSUM2D ( iContext, 'All', ' ', g%nR, g%nZ, Cnt, g%nR, -1, -1 )
+            call sGSUM2D ( ICTXT, 'All', ' ', g%nR, g%nZ, RealTmp, g%nR, -1, -1 )
+            call sGSUM2D ( ICTXT, 'All', ' ', g%nR, g%nZ, Cnt, g%nR, -1, -1 )
 #endif
             RealTmp3(:,:,s) = RealTmp/Cnt
             RealTmp = 0
@@ -324,8 +324,8 @@ contains
                 Cnt(i,j) = Cnt(i,j)+1
             enddo
 #ifdef par
-            call sGSUM2D ( iContext, 'All', ' ', g%nR, g%nZ, RealTmp, g%nR, -1, -1 )
-            call sGSUM2D ( iContext, 'All', ' ', g%nR, g%nZ, Cnt, g%nR, -1, -1 )
+            call sGSUM2D ( ICTXT, 'All', ' ', g%nR, g%nZ, RealTmp, g%nR, -1, -1 )
+            call sGSUM2D ( ICTXT, 'All', ' ', g%nR, g%nZ, Cnt, g%nR, -1, -1 )
 #endif
             RealTmp3(:,:,s) = RealTmp/Cnt
             RealTmp = 0
@@ -346,8 +346,8 @@ contains
                 Cnt(i,j) = Cnt(i,j)+1
             enddo
 #ifdef par
-            call sGSUM2D ( iContext, 'All', ' ', g%nR, g%nZ, RealTmp, g%nR, -1, -1 )
-            call sGSUM2D ( iContext, 'All', ' ', g%nR, g%nZ, Cnt, g%nR, -1, -1 )
+            call sGSUM2D ( ICTXT, 'All', ' ', g%nR, g%nZ, RealTmp, g%nR, -1, -1 )
+            call sGSUM2D ( ICTXT, 'All', ' ', g%nR, g%nZ, Cnt, g%nR, -1, -1 )
 #endif
             RealTmp3(:,:,s) = RealTmp/Cnt
             RealTmp = 0
@@ -369,8 +369,8 @@ contains
                 Cnt(i,j) = Cnt(i,j)+1
             enddo
 #ifdef par
-            call sGSUM2D ( iContext, 'All', ' ', g%nR, g%nZ, RealTmp, g%nR, -1, -1 )
-            call sGSUM2D ( iContext, 'All', ' ', g%nR, g%nZ, Cnt, g%nR, -1, -1 )
+            call sGSUM2D ( ICTXT, 'All', ' ', g%nR, g%nZ, RealTmp, g%nR, -1, -1 )
+            call sGSUM2D ( ICTXT, 'All', ' ', g%nR, g%nZ, Cnt, g%nR, -1, -1 )
 #endif
             RealTmp3(:,:,s) = RealTmp/Cnt
             RealTmp = 0
@@ -391,8 +391,8 @@ contains
                 Cnt(i,j) = Cnt(i,j)+1
             enddo
 #ifdef par
-            call sGSUM2D ( iContext, 'All', ' ', g%nR, g%nZ, RealTmp, g%nR, -1, -1 )
-            call sGSUM2D ( iContext, 'All', ' ', g%nR, g%nZ, Cnt, g%nR, -1, -1 )
+            call sGSUM2D ( ICTXT, 'All', ' ', g%nR, g%nZ, RealTmp, g%nR, -1, -1 )
+            call sGSUM2D ( ICTXT, 'All', ' ', g%nR, g%nZ, Cnt, g%nR, -1, -1 )
 #endif
             RealTmp3(:,:,s) = RealTmp/Cnt
             RealTmp = 0
@@ -421,7 +421,7 @@ contains
         use grid
         use aorsaNamelist, &
             only: nSpec, nPhi, freq=>freqcy
-        use parallel
+        use parallel, only : iAm, ICTXT, NRHS
 
         implicit none
 
