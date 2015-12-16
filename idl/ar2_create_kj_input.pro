@@ -82,12 +82,12 @@ pro ar2_create_kj_input
 	nCdf_varPut, nc_id, e_z_re_id, real_part(s.e_z) 
 	nCdf_varPut, nc_id, e_z_im_id, imaginary(s.e_z) 
 
-	nCdf_varPut, nc_id, b_r_re_id, real_part(s.e_r*0) 
-	nCdf_varPut, nc_id, b_r_im_id, imaginary(s.e_r*0) 
-	nCdf_varPut, nc_id, b_p_re_id, real_part(s.e_t*0) 
-	nCdf_varPut, nc_id, b_p_im_id, imaginary(s.e_t*0) 
-	nCdf_varPut, nc_id, b_z_re_id, real_part(s.e_z*0) 
-	nCdf_varPut, nc_id, b_z_im_id, imaginary(s.e_z*0) 
+	nCdf_varPut, nc_id, b_r_re_id, real_part(s.b1_r) 
+	nCdf_varPut, nc_id, b_r_im_id, imaginary(s.b1_r) 
+	nCdf_varPut, nc_id, b_p_re_id, real_part(s.b1_t) 
+	nCdf_varPut, nc_id, b_p_im_id, imaginary(s.b1_t) 
+	nCdf_varPut, nc_id, b_z_re_id, real_part(s.b1_z) 
+	nCdf_varPut, nc_id, b_z_im_id, imaginary(s.b1_z) 
 
 	nCdf_varPut, nc_id, jP_r_re_id, real_part(total(s.jP_r,3))
 	nCdf_varPut, nc_id, jP_r_im_id, imaginary(total(s.jP_r,3)) 

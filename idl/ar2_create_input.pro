@@ -178,7 +178,11 @@ pro ar2_create_input
 
 	endif else begin
 
-		bt = r0 * b0 / r2d
+        if size(cartesian_offset,/type) ne 0 then begin
+		    bt = (r0-cartesian_offset) * b0 / (r2d-cartesian_offset)
+        endif else begin
+		    bt = r0 * b0 / r2d
+        endelse
 		br = bt * br_frac
 		bz = bt * bz_frac
 
@@ -292,7 +296,7 @@ pro ar2_create_input
 		for s=1,nSpec-1 do begin
 
 			Density_m3[*,*,s] = nn[1,s]*exp(-((x2d-x0)^2/Density_xsig^2+(y2d-y0)^2/Density_ysig^2 ))
-			Density_m3[*,*,s] = Density_m3[*,*,s]>DensityMin
+			Density_m3[*,*,s] = Density_m3[*,*,s]>DensityMin[s]
 			Density_m3[*,*,s] = Smooth(Density_m3[*,*,s],SmoothWidth,/edge_mirror)
 
 			Density_m3[*,*,0] = Density_m3[*,*,0]+Density_m3[*,*,s]*atomicZ[s]

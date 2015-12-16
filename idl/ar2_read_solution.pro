@@ -1,5 +1,7 @@
 function ar2_read_solution, runFolderName, RHS
-    
+   
+    @constants
+
 	;; This is just to ensure we get consistent files, i.e., not
 	;; relying on the order of the list of a file read.
 	;SolutionFiles = file_search(runFolderName+'/output/solution*.nc')
@@ -135,6 +137,45 @@ function ar2_read_solution, runFolderName, RHS
 		y2D = fltArr(1)+z
 	endelse
 
+    if nY gt 1 then begin
+            print, 'NOT CALCULATING B1 ... yet to implement in 2-D'
+    endif else begin
+
+        ; Calculate the H vector & the Poynting vector
+
+         
+        h_r = complexArr(nX)
+        h_t = complexArr(nX)
+        h_z = complexArr(nX)
+
+        k_z = nZ_1D*0 ; this is NOT right, fix for non-zero nZ
+
+        dr = r[1]-r[0]
+        for i=2,nX-3 do begin
+
+            dEz_dr = (1.0/12.0*e_z[i-2] - 2.0/3.0*e_z[i-1]$
+                    +2.0/3.0*e_z[i+1] - 1.0/12.0*e_z[i+2])/dr
+            drEt_dr = (1.0/12.0*r[i-2]*e_t[i-2] - 2.0/3.0*r[i-1]*e_t[i-1]$
+                    +2.0/3.0*r[i+1]*e_t[i+1] - 1.0/12.0*r[i+2]*e_t[i+2])/dr
+
+            h_r[i] = -II*k_z*e_t[i] + II*nPhi*e_z[i]/r[i]
+            h_t[i] = II*k_z*e_r[i] - dEz_dr 
+            h_z[i] = (-II*nPhi*e_r[i] + drEt_dr )/r[i]
+
+        endfor
+
+        wrf = 2 * !pi * freq
+        
+        h_r = h_r / (II*wRF*u0)
+        h_t = h_t / (II*wRF*u0)
+        h_z = h_z / (II*wRF*u0)
+
+        b_r = u0 * h_r
+        b_t = u0 * h_t
+        b_z = u0 * h_z
+
+    endelse
+
     solution = { $
                 r: r, $
                 z: z, $
@@ -151,6 +192,9 @@ function ar2_read_solution, runFolderName, RHS
                 e_r: e_r, $
                 e_t: e_t, $
                 e_z: e_z, $
+                b1_r: b_r, $
+                b1_t: b_t, $
+                b1_z: b_z, $
                 jA_r: complex(jr_re,jr_im), $
                 jA_t: complex(jt_re,jt_im), $
                 jA_z: complex(jz_re,jz_im) }
