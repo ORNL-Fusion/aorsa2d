@@ -52,6 +52,7 @@ pro ar2_create_input
 	bField_eqdsk = 1
 	bField_gaussian = 0
     bField_flat = 0
+    bField_linear = 0
 
     gaussian_profiles = 0
     parabolic_profiles = 0
@@ -150,6 +151,12 @@ pro ar2_create_input
 		br = fltArr(nR,nZ)+br_flat
 		bt = fltArr(nR,nZ)+bt_flat
 		bz = fltArr(nR,nZ)+bz_flat
+
+	endif else if bField_linear eq 1 then begin
+
+		br = brLeft + (r2D-r[0]) * brSlope 
+		bt = btLeft + (r2D-r[0]) * btSlope 
+		bz = bzLeft + (r2D-r[0]) * bzSlope 
 
 	endif else if bField_gaussian eq 1 then begin
 
@@ -447,6 +454,14 @@ pro ar2_create_input
 		jAnt_t = jAnt*jTMag
 		jAnt_z = jAnt*jZMag
 
+        jAThreshold = 0.01
+        iiZero = where(jAnt_r lt jRmag * jAThreshold,iiCnt)
+        if iiCnt gt 0 then jAnt_r[iiZero] = 0
+        iiZero = where(jAnt_t lt jTmag * jAThreshold,iiCnt)
+        if iiCnt gt 0 then jAnt_t[iiZero] = 0
+        iiZero = where(jAnt_z lt jZmag * jAThreshold,iiCnt)
+        if iiCnt gt 0 then jAnt_z[iiZero] = 0
+
 	endelse
 
    nlevs=10
@@ -475,9 +490,9 @@ pro ar2_create_input
 
     ; plot up the ion cyclortron resonances
 
-    for s=1,nSpec-1 do begin
-        if s eq 1 then p=plot(r,resonances[*,nZ/2,s], $
-                title='Ion cyclotron resonsances',layout=[layout,PlotPos],/current) $
+    for s=0,nSpec-1 do begin
+        if s eq 0 then p=plot(r,resonances[*,nZ/2,s], $
+                title='Cyclotron resonsances',layout=[layout,PlotPos],/current,yRange=[-10,10]) $
                 else p=plot(r,resonances[*,nZ/2,s],/over)
     endfor
     ++PlotPos

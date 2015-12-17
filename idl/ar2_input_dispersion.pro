@@ -25,7 +25,7 @@ pro ar2_input_dispersion, wrf, amu, AtomicZ, nn, nPhi, nSpec, nR, nZ, Density_m3
 
 		for i=0,nR-1 do begin
 			for j=0,nZ-1 do begin
-				resonances[i,j,s] = (wc[i,j] mod wrf)/wrf
+				resonances[i,j,s] = wrf/wc[i,j]
 			endfor
 		endfor
 
