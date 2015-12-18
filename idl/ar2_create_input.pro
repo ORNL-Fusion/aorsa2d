@@ -53,6 +53,7 @@ pro ar2_create_input
 	bField_gaussian = 0
     bField_flat = 0
     bField_linear = 0
+    bField_numeric = 0
 
     gaussian_profiles = 0
     parabolic_profiles = 0
@@ -67,7 +68,7 @@ pro ar2_create_input
     generate_vorpal_input = 0
 
 	@constants
-    @ar2run
+    @'input/ar2run.pro'
 
 	wrf	= freq * 2d0 * !dpi
 
@@ -158,6 +159,12 @@ pro ar2_create_input
 		bt = btLeft + (r2D-r[0]) * btSlope 
 		bz = bzLeft + (r2D-r[0]) * bzSlope 
 
+	endif else if bField_numeric eq 1 then begin
+
+		br = reform(interpol(bField_br,bField_r,r2d[*]),nr,nz)
+		bt = br*0 
+		bz = br*0
+
 	endif else if bField_gaussian eq 1 then begin
 
 		bt = r0 * b0 / r2d
@@ -228,7 +235,7 @@ pro ar2_create_input
 
 	if fred_namelist_input then begin
 
-		@aorsa2d.in.ejf.idl
+		@'input/aorsa2d.in.ejf.idl'
 		
 		_nRho = fred.s_nRho_n
 		_nRhoFile = n_elements(fred.s_rho_n_grid)
@@ -397,12 +404,12 @@ pro ar2_create_input
 
     ; Create nuOmg profiles
 
-    @ar2nuomg
+    @'input/ar2nuomg.pro'
 
     p=plot(r,nuOmg[*,nZ/2,0],title='nuOmg [electrons]',layout=[layout,plotpos],/current)
     ++plotpos
 
-   	@ar2jant
+   	@'input/ar2jant.pro'
 
 	; Set the jAnt 2-D function
 
@@ -416,7 +423,12 @@ pro ar2_create_input
 
 		;get angular points on LCFS with respect to center core
 
-		theta = atan(zlcfs-zCenter, rlcfs-rCenter)*!radeg	
+        normr = (rlcfs-rCenter)
+        normr = normr / max(abs(normr))
+        normz = (zlcfs-zCenter)
+        normz = normz / max(abs(normz))
+	
+		theta = atan(normz, normr)*!radeg	
 
 		; Get antenna location on LCFS, the shift away from LCFS
 		ii = where(theta gt theta_ant1 and theta le theta_ant2, iiCnt)
@@ -582,7 +594,7 @@ pro ar2_create_input
 	;save, freq, nphi, bField_eqdsk, eqdskFileName, flux_profiles, atomicZ, amu, $
 	;		nn, tt, nR, nZ, rMin, rMax, zMin, zMax, fileName = 'ar2RunCreationParameters.sav'
 
-	outFileName	= 'ar2Input.nc'
+	outFileName	= 'input/ar2Input.nc'
 	nc_id	= nCdf_create ( outFileName, /clobber )
 	nCdf_control, nc_id, /fill
 	
