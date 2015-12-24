@@ -60,6 +60,7 @@ pro ar2_create_input
     flux_profiles = 0
 	fred_namelist_input = 0
 	flat_profiles = 1
+    numeric_profiles = 0
 
 	br_flat = 0.0
 	bt_flat = 1.0
@@ -311,7 +312,7 @@ pro ar2_create_input
 
 			Density_m3[*,*,s] = nn[1,s]*exp(-((x2d-x0)^2/Density_xsig^2+(y2d-y0)^2/Density_ysig^2 ))
 			Density_m3[*,*,s] = Density_m3[*,*,s]>DensityMin[s]
-			Density_m3[*,*,s] = Smooth(Density_m3[*,*,s],SmoothWidth,/edge_mirror)
+			;Density_m3[*,*,s] = Smooth(Density_m3[*,*,s],SmoothWidth,/edge_mirror)
 
 			Density_m3[*,*,0] = Density_m3[*,*,0]+Density_m3[*,*,s]*atomicZ[s]
 
@@ -348,6 +349,13 @@ pro ar2_create_input
 			Temp_eV[*,*,s] = Smooth(Temp_eV[*,*,s],SmoothWidth,/edge_mirror)
         endfor
 
+	endif else if numeric_profiles eq 1 then begin
+
+		for s=0,nSpec-1 do begin
+            radius = sqrt((r2d-r0)^2 + (z2d)^2)
+		    Density_m3[*,*,s] = reform(interpol(numeric_ne,numeric_r,radius[*]),nr,nz)
+        endfor
+
 	endif else if flat_profiles then begin
 
 		for s=0,nSpec-1 do begin
@@ -372,6 +380,7 @@ pro ar2_create_input
     ++plotpos
 	endif
 
+    plotPos = plotPos+1
     _c = ['b','g','r','c','m','y','k']
 	densityRange=[min(Density_m3),max(Density_m3)]
 	p=plot(r,Density_m3[*,nZ/2,0],$
@@ -500,20 +509,22 @@ pro ar2_create_input
 	kPer_F = kPer_F_2D[*,nZ/2]
 	kPer_S = kPer_S_2D[*,nZ/2]
 
-    ; plot up the ion cyclortron resonances
+    ;; plot up the ion cyclortron resonances
 
-    for s=0,nSpec-1 do begin
-        if s eq 0 then p=plot(r,resonances[*,nZ/2,s], $
-                title='Cyclotron resonsances',layout=[layout,PlotPos],/current,yRange=[-10,10]) $
-                else p=plot(r,resonances[*,nZ/2,s],/over)
-    endfor
-    ++PlotPos
+    ;for s=0,nSpec-1 do begin
+    ;    if s eq 0 then p=plot(r,resonances[*,nZ/2,s], $
+    ;            title='Cyclotron resonsances',layout=[layout,PlotPos],/current,yRange=[-10,10]) $
+    ;            else p=plot(r,resonances[*,nZ/2,s],/over)
+    ;endfor
+    ;++PlotPos
 
 	p = plot(r,kPer_F, title='kPer_F',layout=[layout,PlotPos],/current)
     ++PlotPos
 
 	p = plot(r,kPer_S, title='kPer_S',layout=[layout,PlotPos],/current)
     ++PlotPos
+
+    PlotPos = PlotPos+3
 
 	nLevs=31
 	range=20

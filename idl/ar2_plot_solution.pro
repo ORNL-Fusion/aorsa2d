@@ -452,13 +452,14 @@ pro ar2_plot_solution, full = full, $
 		levels = fIndGen(nLevs)/(nLevs-1)*scale
 		colors = reverse(bytScl(levels, top=253)+1)
 		PlotField = (real_part(thisField)<max(levels))>min(-levels)
+        aspect = 1.0
 		c = contour ( PlotField, x, y, c_value=levels, rgb_indices=colors, rgb_table=3, /fill, $
             aspect_ratio=aspect, dimensions=dimensions, title=title, xRange=xRange, yRange=yRange, layout=[[Layout,PlotPos]] )
 		c = contour ( -PlotField, x, y, c_value=levels, rgb_indices=colors, rgb_table=1, /fill,/over )
         p = plot ( rlim, zlim, /over, thick = 3, color=LimColor)
         p = plot ( rlcfs, zlcfs, /over, thick = 4, color=lcfsColor )
-        c_zero_set = contour(ar2.kPerSq_F,ar2.r,ar2.z,/over,c_value=0.001,color=cutoffColor,C_LABEL_SHOW=0,c_thick=3)
-        c_jant = contour(jA_z, x, y, /over, c_value = AntCLevel, color=AntColor, C_LABEL_SHOW=0, c_thick=5)
+        ;c_zero_set = contour(ar2.kPerSq_F,ar2.r,ar2.z,/over,c_value=0.001,color=cutoffColor,C_LABEL_SHOW=0,c_thick=3)
+        ;c_jant = contour(jA_z, x, y, /over, c_value = AntCLevel, color=AntColor, C_LABEL_SHOW=0, c_thick=5)
         ++PlotPos
         p.Save, "Er.png", border=0, height=600
 
