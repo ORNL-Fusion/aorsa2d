@@ -8,7 +8,7 @@ function get3by3Block( g, w)!, r, z)
     use aorsaNamelist, only: &
        chebyshevX, chebyshevY, iSigma, nSpec, nPhi, ZeroJp, &
        ZeroJp_rMin, ZeroJp_rMax, ZeroJp_zMin, ZeroJp_zMax, &
-       useJpFromFile
+       useJpFromFile, coldIons
 
     use constants
     use profiles, only: k0, omgrf, mSpec
@@ -19,7 +19,9 @@ function get3by3Block( g, w)!, r, z)
 
     type(gridBlock), intent(in) :: g
     integer, intent(in) :: w
-    
+
+    logical :: HotSpecies
+
     complex :: get3by3Block(3,3)
     complex(kind=dbl) :: omgRFc
 
@@ -124,8 +126,14 @@ function get3by3Block( g, w)!, r, z)
 
         do s=1,nSpec
 
+            if(coldIons.and.s>1) then
+                HotSpecies = .false. 
+            else
+                HotSpecies = iSigma
+            endif
+
             hotPlasma:& 
-            if (iSigma==1 .and. (.not. g%isMetal(g%wl(w)%iPt)) ) then        
+            if (HotSpecies .and. (.not. g%isMetal(g%wl(w)%iPt)) ) then        
 
                 kVec_stix = matMul( g%U_RTZ_to_ABb(g%wl(w)%iPt,:,:), &
                     (/ kr, g%kPhi(g%wl(w)%i), kz /) ) 
@@ -145,7 +153,7 @@ function get3by3Block( g, w)!, r, z)
             endif hotPlasma
 
             coldPlasma: &
-            if (iSigma==0 .and. (.not. g%isMetal(g%wl(w)%iPt)) ) then 
+            if ((.not.HotSpecies) .and. (.not. g%isMetal(g%wl(w)%iPt)) ) then 
 
                 sigmaIn_cold = spatialSigmaInput_cold( &
                     g%omgc(g%wl(w)%iPt,s), &

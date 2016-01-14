@@ -9,7 +9,7 @@ subroutine current ( g, rhs )
     use aorsaNamelist, &
         only: nSpec, iSigma, fracOfModesInSolution, ZeroJp, &
         ZeroJp_rMin, ZeroJp_rMax, ZeroJp_zMin, ZeroJp_zMax, &
-        useJpFromFile
+        useJpFromFile, ColdIons
     use sigma
     use parallel
     use profiles, &
@@ -123,7 +123,7 @@ subroutine current ( g, rhs )
                                 g%nuOmg(g%wl(w)%iPt,s) )
 
                         endif hotPlasma
-
+    
                         coldPlasma: &
                         if (iSigma==0 .and. (.not. g%isMetal(g%wl(w)%iPt)) ) then 
 
@@ -134,7 +134,6 @@ subroutine current ( g, rhs )
                                 g%nuOmg(g%wl(w)%iPt,s) )
 
                             thisSigma = sigmaCold_stix ( sigmaIn_cold )
-
 
                         endif coldPlasma
 #if __noU__==1
@@ -172,8 +171,6 @@ subroutine current ( g, rhs )
                             endif
                         endif
 
-
-#endif
                         ek_nm(1) = g%eAlphak(g%wl(w)%n,g%wl(w)%m,rhs)
                         ek_nm(2) = g%eBetak(g%wl(w)%n,g%wl(w)%m,rhs)
                         ek_nm(3) = g%eBk(g%wl(w)%n,g%wl(w)%m,rhs) 
@@ -218,9 +215,6 @@ subroutine current ( g, rhs )
 
     enddo species
 
-#if __sigma__ != 2
-    deallocate ( sigmaAll )
-#else
 #ifdef par
 
     ! Switch to individual 2D arrays for the sum over processors

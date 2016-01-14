@@ -327,7 +327,7 @@ contains
 
         use aorsaNamelist, only: &
             delta0, nSpec, &
-            iSigma, npRow, npCol, &
+            npRow, npCol, &
             nPhi, square, lsWeightFac, &
             useEqdsk, overlap
         use grid
@@ -378,126 +378,6 @@ contains
 
 
         if(square) lsWeightFac = 1
-
-#if __sigma__ != 2
-
-        ! Initialize grid sigma file
-        ! --------------------------
-
-        if(iAm==0) &
-        call init_sigma_file ( g, 'sigma'//g%fNumber//'.nc', &
-            sigma_nc_id, sigma_re_id, sigma_im_id, nSpec )
-
-        allocate ( sigma_write(g%nR,g%nZ,g%nMin:g%nMax,g%mMin:g%mMax,3,3,nSpec), stat = iStat )
-        if(iStat/=0)then
-                write(*,*) 'ERROR src/mat_fill.f90 - allocation failed :('
-                stop
-        endif
-
-        sigma_write = 0
-
-        ! Calculate sigma seperately outside main loop
-        ! --------------------------------------------
-
-        do s=1,nSpec
-
-        if(iAm==0) &
-        write(*,*) 'Calculating sigma for species ', s, ' of', nSpec
-
-            do m=g%mMin,g%mMax
-                do n=g%nMin,g%nMax
-!#ifndef par
-!                !   progress indicator
-!                !   ------------------
-!                do p=1,7 
-!                    write(*,'(a)',advance='no') char(8)
-!                enddo
-!                write(*,'(1x,f5.1,a)',advance='no') &
-!                    real((m-g%mMin)*g%nR+(n-g%nMin))/(g%nR*g%nZ)*100, '%'
-!#endif
-                    do j=1,g%nZ
-                        do i=1,g%nR
-
-                            if(chebyshevX) then
-                                if(n>1) then
-                                    kr = n / sqrt ( sin ( pi * (g%rNorm(i)+1)/2  ) ) * g%normFacR 
-                                else
-                                    kr = n * g%normFacR
-                                endif
-                            else
-                                kr = n * g%normFacR
-                            endif
-
-                            if(chebyshevY) then
-                                if(m>1) then
-                                    kz = m / sqrt ( sin ( pi * (g%zNorm(j)+1)/2 ) ) * g%normFacZ 
-                                else
-                                    kz = m * g%normFacZ
-                                endif
-                            else
-                                kz = m * g%normFacZ
-                            endif
-
-  
-                            hotPlasma:& 
-                            if (iSigma==1 .and. (.not. g%isMetal(i,j)) ) then        
-
-                                kVec_stix = matMul( g%U_RTZ_to_ABb(i,j,:,:), (/ kr, g%kPhi(i), kz /) ) 
-
-                                sigma_tmp = sigmaHot_maxwellian&
-                                    ( mSpec(s), &
-                                    g%ktSpec(i,j,s), g%omgc(i,j,s), g%omgp2(i,j,s), &
-                                    kVec_stix, g%R(i), &
-                                    omgrf, k0, &
-                                    g%k_cutoff, s, &
-                                    g%sinTh(i,j), g%bPol(i,j), g%bMag(i,j), g%gradPrlB(i,j), &
-                                    g%nuOmg(i,j) )
-
-                            endif hotPlasma
-
-
-                            coldPlasma: &
-                            if (iSigma==0 .and. (.not. g%isMetal(i,j)) ) then 
-
-                                sigma_tmp = sigmaCold_stix &
-                                    ( g%omgc(i,j,s), g%omgp2(i,j,s), omgrf, &
-                                    g%nuOmg(i,j) )
-
-                            endif coldPlasma
-
-                            sigma_write(i,j,n,m,:,:,s) = sigma_tmp
-
-                        enddo
-                    enddo
-
-                enddo
-            enddo
-
-        enddo
-#ifndef par
-        write(*,*)
-#endif
-
-        ! Write sigma
-        ! -----------
-        if(iAm==0) &
-        write(*,*) 'Writing sigma ...'
-        if(iAm==0) &
-        call write_sigma_pt ( sigma_write, &
-            sigma_nc_id, sigma_re_id, sigma_im_id )
-        if(iAm==0) &
-        write(*,*) 'DONE'
-
-        ! Close sigma file
-        ! ----------------
-
-        if(iAm==0) &
-        call close_sigma_file ( sigma_nc_id )
-
-#endif 
-! __sigma__ != 2
-
-
 
         ! Begin loop
         ! ----------
