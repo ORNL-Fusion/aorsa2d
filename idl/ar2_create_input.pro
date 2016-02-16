@@ -227,7 +227,6 @@ pro ar2_create_input
 	p=plot(r,br[*,nZ/2],/over,color='b')
 	p=plot(r,bz[*,nZ/2],/over,color='r')
     ++plotpos
-	plotFile = 'inputCreationPlots.pdf'
 
 	bMag = sqrt ( br^2 + bt^2 + bz^2 )
 	nSpec = n_elements ( amu )
@@ -758,7 +757,13 @@ pro ar2_create_input
 	endfor
 
     endif
+
+	plotFile = 'inputs.pdf'
 	p.save, plotFile
+
+	plotFile = 'inputs.png'
+	p.save, plotFile
+
 	stop
 exit ; this is here for OMFit - don't remove
 end
