@@ -8,9 +8,9 @@ HDF_DIR := /usr/lib64/openmpi
 LIBS += -L ${HDF_DIR}/lib -lhdf5 -lhdf5_hl
 INC_DIR += -I ${HDF_DIR}/include
 
-NETCDF_DIR := /usr/lib
+NETCDF_DIR := /usr/lib64/openmpi
 LIBS += -L ${NETCDF_DIR}/lib -lnetcdf -lnetcdff
-INC_DIR += -I /usr/include 
+INC_DIR += -I ${NETCDF_DIR}/../gfortran/modules 
 
 ifeq (${PARALLEL},1)
 	BLACS = \
@@ -22,8 +22,8 @@ ifeq (${PARALLEL},1)
 endif
 
 PAPI_DIR := ${HOME}/code/papi/gnu_4.7.3
-PAPI_INC := -I${PAPI_DIR}/include/
-PAPI_LINK := -L${PAPI_DIR}/lib -lpapi
+PAPI_INC := -I${PAPI_DIR}/include
+PAPI_LINK := -L${PAPI_DIR}/lib -lpapi 
 LIBS += ${PAPI_LINK}
 INC_DIR += ${PAPI_INC}
 
