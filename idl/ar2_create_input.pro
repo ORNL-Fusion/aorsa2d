@@ -589,6 +589,7 @@ pro ar2_create_input
 	nz_id	= nCdf_dimDef ( nc_id, 'nZ', nZ )
 	nSpec_id = nCdf_dimDef ( nc_id, 'nSpec', nSpec )
 	nlim_id	= nCdf_dimDef ( nc_id, 'nlim', n_elements(rlim) )
+	nLCFS_id= nCdf_dimDef ( nc_id, 'nLCFS', n_elements(rbbbs) )
 
 	scalar_id	= nCdf_dimDef ( nc_id, 'scalar', 1 )
 
@@ -619,6 +620,9 @@ pro ar2_create_input
 
 	Lim_r_id = nCdf_varDef ( nc_id, 'Lim_r', [nlim_id], /float )
 	Lim_z_id = nCdf_varDef ( nc_id, 'Lim_z', [nlim_id], /float )
+
+	LCFS_r_id = nCdf_varDef ( nc_id, 'LCFS_r', [nLCFS_id], /float )
+	LCFS_z_id = nCdf_varDef ( nc_id, 'LCFS_z', [nLCFS_id], /float )
 
 	kPerSq_F_id = nCdf_varDef ( nc_id, 'kPerSq_F', [nR_id, nz_id], /float )
 	kPerSq_S_id = nCdf_varDef ( nc_id, 'kPerSq_S', [nR_id, nz_id], /float )
@@ -656,6 +660,8 @@ pro ar2_create_input
 	nCdf_varPut, nc_id, Lim_r_id, rlim
 	nCdf_varPut, nc_id, Lim_z_id, zlim
 
+	nCdf_varPut, nc_id, LCFS_r_id, rbbbs
+	nCdf_varPut, nc_id, LCFS_z_id, zbbbs
 
 	nCdf_close, nc_id
 
