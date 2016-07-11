@@ -48,11 +48,6 @@ subroutine rotate_E_to_lab ( g, rhs )
             bZu = bTmp(3)/bMagTmp
             R_ = RotMatHere(bRu,bTu,bZu)
             R_inv = transpose(R_)
-            if(i.eq.g%nR/2)then
-                write(*,*) bRu, bTu, bZu
-                write(*,*) 'rot: ', R_
-                write(*,*) 'inv(rot): ', R_inv
-            endif
 
 #if __noU__==1
             ELab_RTZ = (/ g%eAlpha(i,j), g%eBeta(i,j), g%eb(i,j) /)

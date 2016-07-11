@@ -162,9 +162,13 @@ pro ar2_create_input
 
 	endif else if bField_numeric eq 1 then begin
 
-		br = reform(interpol(bField_br,bField_r,r2d[*]),nr,nz)
-		bt = br*0 
-		bz = br*0
+		;br = reform(interpol(bField_br,bField_r,r2d[*]),nr,nz)
+		;bt = br*0 
+		;bz = br*0
+
+		br = br2D_numeric
+		bt = bt2D_numeric
+		bz = bz2D_numeric
 
 	endif else if bField_gaussian eq 1 then begin
 
@@ -301,6 +305,23 @@ pro ar2_create_input
 			Density_m3, Temp_eV, DensityMin = DensityMin, TempMin = TempMin, $
             NumericProfiles = Numeric_flux_profiles, NumericData_n_m3 = NumericData_n_m3, $
             NumericData_T_eV = NumericData_T_eV, r2d=r2d, z2d=z2d
+
+	endif else if mpex_profiles eq 1 then begin
+
+		Density_m3[*] = 0
+
+		for s=1,nSpec-1 do begin
+
+			Density_m3[*,*,s] = neMPEX
+			Density_m3[*,*,0] = Density_m3[*,*,0]+Density_m3[*,*,s]*atomicZ[s]
+
+		endfor
+
+		for s=0,nSpec-1 do begin
+
+			Temp_eV[*,*,s] = teMPEX 
+
+		endfor
 
 	endif else if gaussian_profiles eq 1 then begin
 
@@ -457,7 +478,10 @@ pro ar2_create_input
 		endfor
 		d = min(_d,dim=3)
 		jAnt =  exp(-(d^2)/(sigma_ant^2))
-		
+
+        iiZeroOut = where(jAnt lt 0.05,iiZeroOutCnt)
+        if iiZeroOutCnt gt 0 then jAnt[iiZeroOut] = 0
+
 		n = floor(n_ant/2)
 		Ju_r = (antr(n) - antr(n+1))/norm([antr(n+1), antz(n+1)] - [antr(n), antz(n)])
 		Ju_z = (antz(n) - antz(n+1))/norm([antr(n+1), antz(n+1)] - [antr(n), antz(n)])

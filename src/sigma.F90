@@ -47,7 +47,8 @@ contains
         real, intent(in) :: k_cutOff, nuOmg
         real, intent(in) :: kVec(:), capr
 
-        real(kind=dbl), intent(in) :: omgc, omgp2, omgrf
+        real(kind=dbl), intent(in) :: omgc, omgp2
+        real(kind=dbl), intent(in) :: omgrf
         real(kind=dbl), intent(in) :: kt, k0
 
         integer :: labs, i, j
@@ -418,8 +419,6 @@ contains
 
         implicit none
 
-        !real(kind=dbl), intent(in) :: omgc, omgp2, omgrf
-        !real, intent(in) :: nuOmg
         type(spatialSigmaInput_cold) :: a 
 
         complex(kind=DBL) :: omgrfc
@@ -431,9 +430,10 @@ contains
         real(kind=DBL) :: e_swan
         complex :: sigmaCold_swan(3,3),epsilonCold_swan(3,3)
         integer :: IdentMat(3,3)
+        real(kind=DBL) :: nu
 
         zieps0 = zi * eps0
-        omgRFc = a%omgRF * (1.0 + zi * a%nuOmg)
+        nu = a%nuOmg * a%omgRF
 
         sig1 = zieps0 * omgRFc * a%omgP2 / (omgRFc**2 - a%omgC**2) ! Stix_S
         sig2 = eps0 * a%omgC   * a%omgP2 / (a%omgC**2 - omgRFc**2) ! Stix_D
@@ -451,13 +451,12 @@ contains
         sigmaCold_stix(3,2) = 0 
         sigmaCold_stix(3,3) = sig3
 
-
         ! Swanson version
 
-        e_swan = sign(1d0,a%omgc) ! this is q/|q|
-        K1_swan = 1d0 - a%omgP2 / (omgRFc**2-a%omgC**2)
-        K2_swan = e_swan*a%omgC*a%omgP2/(omgRFc*(omgRFc**2-a%omgC**2))/zi
-        K3_swan = 1d0-a%omgP2/omgRFc**2
+        e_swan = sign(1d0,a%omgC) ! this is q/|q|
+        K1_swan = 1d0 - a%omgP2*(a%omgRF+zi*nu) / ( a%omgRF * ( a%omgRF * (a%omgRF+zi*nu)**2-a%omgC**2) )
+        K2_swan = e_swan*a%omgC*a%omgP2 / ( a%omgRF * ( (a%omgRF+zi*nu)**2 - a%omgC**2 ) ) / zi
+        K3_swan = 1d0 - a%omgP2/(a%omgRF*(a%omgRF+zi*nu))
 
         EpsilonCold_swan = (0,0)
         EpsilonCold_swan(1,1) = +K1_swan
@@ -471,9 +470,8 @@ contains
         IdentMat(2,2) = 1
         IdentMat(3,3) = 1
 
-        !SigmaCold_swan = -(EpsilonCold_swan-IdentMat)*omgrfc*eps0*zi
-        !SigmaCold_stix = SigmaCold_swan
-        !SigmaCold_stix = EpsilonCold_swan
+        SigmaCold_swan = -(EpsilonCold_swan-IdentMat)*a%omgRF*eps0*zi
+        SigmaCold_stix = SigmaCold_swan
 
 !        write(*,*) '1,1  ', SigmaCold_stix(1,1), SigmaCold_swan(1,1)
 !        write(*,*) '2,2  ', SigmaCold_stix(2,2), SigmaCold_swan(2,2)

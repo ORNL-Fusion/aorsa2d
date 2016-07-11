@@ -23,7 +23,6 @@ function get3by3Block( g, w)!, r, z)
     logical :: HotSpecies
 
     complex :: get3by3Block(3,3)
-    complex(kind=dbl) :: omgRFc
 
     complex(kind=dbl) :: &
         sigAlpAlp, sigAlpBet, sigAlpPrl, &
@@ -84,7 +83,6 @@ function get3by3Block( g, w)!, r, z)
     z   = g%z(g%wl(w)%j)
     r   = g%R(g%wl(w)%i)
     kt  = nPhi!g%kPhi(i)
-    omgRFc = omgRF * (1d0 + zi * g%nuOmg(g%wl(w)%iPt,1))
 
         !   interior plasma region:
         !   ----------------------
@@ -101,7 +99,7 @@ function get3by3Block( g, w)!, r, z)
         
         if(chebyshevX) then
             if(g%wl(w)%n>1) then
-                kr = g%wl(w)%n / sqrt ( sin ( pi * (g%rNorm(g%wl(w)%i)+1)/2  ) ) * g%normFacR 
+                kr = g%wl(w)%n / sqrt ( sin ( real(pi) * (g%rNorm(g%wl(w)%i)+1)/2  ) ) * g%normFacR 
             else
                 kr = g%wl(w)%n * g%normFacR
             endif
@@ -111,14 +109,13 @@ function get3by3Block( g, w)!, r, z)
         
         if(chebyshevY) then
             if(g%wl(w)%m>1) then
-                kz = g%wl(w)%m / sqrt ( sin ( pi * (g%zNorm(g%wl(w)%j)+1)/2 ) ) * g%normFacZ 
+                kz = g%wl(w)%m / sqrt ( sin ( real(pi) * (g%zNorm(g%wl(w)%j)+1)/2 ) ) * g%normFacZ 
             else
                 kz = g%wl(w)%m * g%normFacZ
             endif
         else
             kz = g%wl(w)%m * g%normFacZ
         endif
-        
         
 #if __sigma__ == 2
 
@@ -164,21 +161,23 @@ function get3by3Block( g, w)!, r, z)
                 sigma_tmp = sigmaCold_stix ( sigmaIn_cold )
 
 #if PRINT_SIGMA==1
-                if(g%wl(w)%i==256)then 
+                if(g%wl(w)%i==5)then 
 
                     R_ = transpose(g%U_RTZ_to_ABb(g%wl(w)%iPt,:,:))
                     sigma_tmp2 = sigma_tmp
                     sigma_tmp3 = matmul(R_,matmul(sigma_tmp,transpose(R_)))
                     write(*,*) 'Species: ', s
                     write(*,*) 'r: ', g%R(g%wl(w)%i)
+
                     write(*,*) 'abp :'
-                    write(*,'(3(f11.5,2x,f11.5,5x))') sigma_tmp2(:,1)
-                    write(*,'(3(f11.5,2x,f11.5,5x))') sigma_tmp2(:,2)
-                    write(*,'(3(f11.5,2x,f11.5,5x))') sigma_tmp2(:,3)
+                    write(*,'(3(e11.5,2x,e11.5,5x))') sigma_tmp2(:,1)
+                    write(*,'(3(e11.5,2x,e11.5,5x))') sigma_tmp2(:,2)
+                    write(*,'(3(e11.5,2x,e11.5,5x))') sigma_tmp2(:,3)
+
                     write(*,*) 'rtz :'
-                    write(*,'(3(f11.5,2x,f11.5,5x))') sigma_tmp3(:,1)
-                    write(*,'(3(f11.5,2x,f11.5,5x))') sigma_tmp3(:,2)
-                    write(*,'(3(f11.5,2x,f11.5,5x))') sigma_tmp3(:,3)
+                    write(*,'(3(e11.5,2x,e11.5,5x))') sigma_tmp3(:,1)
+                    write(*,'(3(e11.5,2x,e11.5,5x))') sigma_tmp3(:,2)
+                    write(*,'(3(e11.5,2x,e11.5,5x))') sigma_tmp3(:,3)
                     write(*,*)
 
                 endif

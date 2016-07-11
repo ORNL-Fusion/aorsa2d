@@ -227,7 +227,6 @@ contains
         endif
 
         mSpec       = amuSpec * xmh
-        mSpec(1)    = xme  
         qSpec       = zSpec * q 
 
         ! Interpolate the ar2Input data to the grid.
@@ -378,7 +377,7 @@ contains
     subroutine omega_freqs ( g )
 
         use aorsaNamelist, &
-        only: nSpec
+            only: nSpec
         use bField
         use grid
 

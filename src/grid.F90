@@ -74,7 +74,7 @@ type :: gridBlock
     logical, allocatable, dimension(:) :: mask
     real, allocatable :: nuOmg(:,:)
     real(kind=dbl), allocatable, dimension(:,:) :: densitySpec, ktSpec
-    real(kind=dbl), allocatable, dimension(:,:) :: omgc, omgp2
+    real(kind=dbl), allocatable, dimension(:,:) :: omgC, omgP2
 
     ! Toroidal broadening variables
     ! -----------------------------
