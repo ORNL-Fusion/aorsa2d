@@ -448,7 +448,6 @@ pro ar2_plot_solution, full = full, $
 
 		thisField = e_r[*,*]
         scale = max(abs(real_part(thisField)))*scaleFac
-        scale = 1
         print, 'E_r scale: ', scale
         title = 'E_r'
 		levels = fIndGen(nLevs)/(nLevs-1)*scale
@@ -464,24 +463,6 @@ pro ar2_plot_solution, full = full, $
         c_jant = contour(jA_z, x, y, /over, c_value = AntCLevel, color=AntColor, C_LABEL_SHOW=0, c_thick=5)
         ++PlotPos
         p.Save, "Er.png", border=0, height=600
-
-		thisField = e_t[*,*]
-        scale = max(abs(real_part(thisField)))*scaleFac
-        title = 'E_t'
-        print, 'E_t scale: ', scale
-		levels = fIndGen(nLevs)/(nLevs-1)*scale
-		colors = reverse(bytScl(levels, top=253)+1)
-		PlotField = (real_part(thisField)<max(levels))>min(-levels)
-        aspect = 1.0
-		c = contour ( PlotField, x, y, c_value=levels, rgb_indices=colors, rgb_table=3, /fill, $
-            aspect_ratio=aspect, dimensions=dimensions, title=title, xRange=xRange, yRange=yRange, layout=[[Layout,PlotPos]], /current )
-		c = contour ( -PlotField, x, y, c_value=levels, rgb_indices=colors, rgb_table=1, /fill,/over )
-        p = plot ( rlim, zlim, /over, thick = 3, color=LimColor)
-        p = plot ( rlcfs, zlcfs, /over, thick = 4, color=lcfsColor )
-        c_zero_set = contour(ar2.kPerSq_F,ar2.r,ar2.z,/over,c_value=0.001,color=cutoffColor,C_LABEL_SHOW=0,c_thick=3)
-        c_jant = contour(jA_z, x, y, /over, c_value = AntCLevel, color=AntColor, C_LABEL_SHOW=0, c_thick=5)
-        ++PlotPos
-        p.Save, "Et.png", border=0, height=600
 
 		thisField = e_t[*,*]
         scale = max(abs(real_part(thisField)))*scaleFac
@@ -536,6 +517,40 @@ pro ar2_plot_solution, full = full, $
         ++PlotPos
         p.Save, "absEr.png",  border=0, height=600
 
+		thisField = abs(e_t[*,*])
+        scale = max(abs(thisField))*scaleFac
+        title = 'abs(E_t)'
+		levels = fIndGen(nLevs)/(nLevs-1)*scale
+		colors = reverse(bytScl(levels, top=253)+1)
+		PlotField = (real_part(thisField)<max(levels))>min(-levels)
+		c = contour ( PlotField, x, y, c_value=levels, rgb_indices=colors, rgb_table=3, /fill, $
+            aspect_ratio=aspect, title=title, xRange=xRange, yRange=yRange, $
+            layout=[[Layout,PlotPos]],/current)
+		c = contour ( -PlotField, x, y, c_value=levels, rgb_indices=colors, rgb_table=1, /fill,/over )
+        p = plot ( rlim, zlim, /over, thick = 3, color=LimColor)
+        p = plot ( rlcfs, zlcfs, /over, thick = 4, color=lcfsColor )
+        c_zero_set = contour(ar2.kPerSq_F,ar2.r,ar2.z,/over,c_value=0.001,color=cutoffColor,C_LABEL_SHOW=0,c_thick=3)
+        c_jant = contour(jA_r, x, y, /over, c_value = AntCLevel, color=AntColor, C_LABEL_SHOW=0, c_thick=5)
+        ++PlotPos
+        p.Save, "absEt.png",  border=0, height=600
+
+		thisField = abs(e_z[*,*])
+        scale = max(abs(thisField))*scaleFac
+        title = 'abs(E_z)'
+		levels = fIndGen(nLevs)/(nLevs-1)*scale
+		colors = reverse(bytScl(levels, top=253)+1)
+		PlotField = (real_part(thisField)<max(levels))>min(-levels)
+		c = contour ( PlotField, x, y, c_value=levels, rgb_indices=colors, rgb_table=3, /fill, $
+            aspect_ratio=aspect, title=title, xRange=xRange, yRange=yRange, $
+            layout=[[Layout,PlotPos]],/current)
+		c = contour ( -PlotField, x, y, c_value=levels, rgb_indices=colors, rgb_table=1, /fill,/over )
+        p = plot ( rlim, zlim, /over, thick = 3, color=LimColor)
+        p = plot ( rlcfs, zlcfs, /over, thick = 4, color=lcfsColor )
+        c_zero_set = contour(ar2.kPerSq_F,ar2.r,ar2.z,/over,c_value=0.001,color=cutoffColor,C_LABEL_SHOW=0,c_thick=3)
+        c_jant = contour(jA_r, x, y, /over, c_value = AntCLevel, color=AntColor, C_LABEL_SHOW=0, c_thick=5)
+        ++PlotPos
+        p.Save, "absEz.png",  border=0, height=600
+
 		nLevs = 50
 
 		thisField = real_part(jDotE_s[*,*,0])
@@ -555,24 +570,6 @@ pro ar2_plot_solution, full = full, $
         ++PlotPos
         p.Save, "jDotE_e.png",  border=0, height=600
 
-		thisField = real_part(jDotE_s[*,*,1])
-        title = 'jDotE (1)'
-        scale = max(abs(thisField))*ScaleFac
-        levels = fIndGen(nLevs)/(nLevs-1)*scale
-        colors = reverse(bytScl(levels, top=253)+1)
-		PlotField = (real_part(thisField)<max(levels))>min(-levels)
-		c = contour ( PlotField, x, y, c_value=levels, rgb_indices=colors, rgb_table=3, /fill, $
-            aspect_ratio=aspect, title=title, xRange=xRange, yRange=yRange, $
-            font_size=16, Layout=[[Layout,PlotPos]],/current)
-		c = contour ( -PlotField, x, y, c_value=levels, rgb_indices=colors, rgb_table=1, /fill,/over )
-        p = plot ( rlim, zlim, /over, thick = 3, color=LimColor)
-        p = plot ( rlcfs, zlcfs, /over, thick = 4, color=lcfsColor )
-        c_zero_set = contour(ar2.kPerSq_F,ar2.r,ar2.z,/over,c_value=0.001,color=cutoffColor,C_LABEL_SHOW=0,c_thick=3)
-        c_jant = contour(jA_r, x, y, /over, c_value = AntCLevel, color=AntColor, C_LABEL_SHOW=0, c_thick=5)
-        ++PlotPos
-        p.Save, "jDotE_1.png",  border=0, height=600
-
-
 		thisField = nuOmg[*,*,0]
         title = 'nuOmg (e)'
         scale = max(abs(thisField))*ScaleFac
@@ -589,23 +586,6 @@ pro ar2_plot_solution, full = full, $
         c_jant = contour(jA_r, x, y, /over, c_value = AntCLevel, color=AntColor, C_LABEL_SHOW=0, c_thick=5)
         ++PlotPos
         p.Save, "nuOmg_e.png",  border=0, height=600
-
-		thisField = nuOmg[*,*,1]
-        title = 'nuOmg (1)'
-        scale = max(abs(thisField))*ScaleFac
-        levels = fIndGen(nLevs)/(nLevs-1)*scale
-        colors = reverse(bytScl(levels, top=253)+1)
-		PlotField = (real_part(thisField)<max(levels))>min(-levels)
-		c = contour ( PlotField, x, y, c_value=levels, rgb_indices=colors, rgb_table=3, /fill, $
-            aspect_ratio=aspect, title=title, xRange=xRange, yRange=yRange, $
-            font_size=16, Layout=[[Layout,PlotPos]],/current)
-		c = contour ( -PlotField, x, y, c_value=levels, rgb_indices=colors, rgb_table=1, /fill,/over )
-        p = plot ( rlim, zlim, /over, thick = 3, color=LimColor)
-        p = plot ( rlcfs, zlcfs, /over, thick = 4, color=lcfsColor )
-        c_zero_set = contour(ar2.kPerSq_F,ar2.r,ar2.z,/over,c_value=0.001,color=cutoffColor,C_LABEL_SHOW=0,c_thick=3)
-        c_jant = contour(jA_r, x, y, /over, c_value = AntCLevel, color=AntColor, C_LABEL_SHOW=0, c_thick=5)
-        ++PlotPos
-        p.Save, "nuOmg_1.png",  border=0, height=600
 
 	endelse
 

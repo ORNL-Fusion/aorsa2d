@@ -486,8 +486,8 @@ pro ar2_create_input
 		Ju_r = (antr(n) - antr(n+1))/norm([antr(n+1), antz(n+1)] - [antr(n), antz(n)])
 		Ju_z = (antz(n) - antz(n+1))/norm([antr(n+1), antz(n+1)] - [antr(n), antz(n)])
 		
-		jAnt_r = jAnt*Ju_r
-		jAnt_z = jAnt*Ju_z
+		jAnt_r = jAnt*Ju_z
+		jAnt_z = jAnt*Ju_r
 		jAnt_t = jAnt*0.0
 
 	endif else begin
