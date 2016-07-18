@@ -446,8 +446,10 @@ pro ar2_plot_solution, full = full, $
 
 		nLevs = 10
 
+        scale = 0.5
+
 		thisField = e_r[*,*]
-        scale = max(abs(real_part(thisField)))*scaleFac
+        ;scale = max(abs(real_part(thisField)))*scaleFac
         print, 'E_r scale: ', scale
         title = 'E_r'
 		levels = fIndGen(nLevs)/(nLevs-1)*scale
@@ -465,7 +467,7 @@ pro ar2_plot_solution, full = full, $
         p.Save, "Er.png", border=0, height=600
 
 		thisField = e_t[*,*]
-        scale = max(abs(real_part(thisField)))*scaleFac
+        ;scale = max(abs(real_part(thisField)))*scaleFac
         title = 'E_t'
         print, 'E_t scale: ', scale
 		levels = fIndGen(nLevs)/(nLevs-1)*scale
@@ -483,7 +485,7 @@ pro ar2_plot_solution, full = full, $
         p.Save, "Et.png", border=0, height=600
 
 		thisField = e_z[*,*]
-        scale = max(abs(real_part(thisField)))*scaleFac
+        ;scale = max(abs(real_part(thisField)))*scaleFac
         print, 'E_z scale: ', scale
         title = 'E_z'
 		levels = fIndGen(nLevs)/(nLevs-1)*scale
@@ -501,7 +503,7 @@ pro ar2_plot_solution, full = full, $
         p.Save, "Ez.png", border=0, height=600
 
 		thisField = abs(e_r[*,*])
-        scale = max(abs(thisField))*scaleFac
+        ;scale = max(abs(thisField))*scaleFac
         title = 'abs(E_r)'
 		levels = fIndGen(nLevs)/(nLevs-1)*scale
 		colors = reverse(bytScl(levels, top=253)+1)
@@ -518,7 +520,7 @@ pro ar2_plot_solution, full = full, $
         p.Save, "absEr.png",  border=0, height=600
 
 		thisField = abs(e_t[*,*])
-        scale = max(abs(thisField))*scaleFac
+        ;scale = max(abs(thisField))*scaleFac
         title = 'abs(E_t)'
 		levels = fIndGen(nLevs)/(nLevs-1)*scale
 		colors = reverse(bytScl(levels, top=253)+1)
@@ -535,7 +537,7 @@ pro ar2_plot_solution, full = full, $
         p.Save, "absEt.png",  border=0, height=600
 
 		thisField = abs(e_z[*,*])
-        scale = max(abs(thisField))*scaleFac
+        ;scale = max(abs(thisField))*scaleFac
         title = 'abs(E_z)'
 		levels = fIndGen(nLevs)/(nLevs-1)*scale
 		colors = reverse(bytScl(levels, top=253)+1)
