@@ -158,21 +158,21 @@ function ar2_read_solution, runFolderName, RHS
             drEt_dr = (1.0/12.0*r[i-2]*e_t[i-2] - 2.0/3.0*r[i-1]*e_t[i-1]$
                     +2.0/3.0*r[i+1]*e_t[i+1] - 1.0/12.0*r[i+2]*e_t[i+2])/dr
 
-            h_r[i] = -II*k_z*e_t[i] + II*nPhi*e_z[i]/r[i]
-            h_t[i] = II*k_z*e_r[i] - dEz_dr 
-            h_z[i] = (-II*nPhi*e_r[i] + drEt_dr )/r[i]
+            h_r[i] = -_ii*k_z*e_t[i] + _ii*nPhi*e_z[i]/r[i]
+            h_t[i] = _ii*k_z*e_r[i] - dEz_dr 
+            h_z[i] = (-_ii*nPhi*e_r[i] + drEt_dr )/r[i]
 
         endfor
 
         wrf = 2 * !pi * freq
         
-        h_r = h_r / (II*wRF*u0)
-        h_t = h_t / (II*wRF*u0)
-        h_z = h_z / (II*wRF*u0)
+        h_r = h_r / (_ii*wRF*_u0)
+        h_t = h_t / (_ii*wRF*_u0)
+        h_z = h_z / (_ii*wRF*_u0)
 
-        b_r = u0 * h_r
-        b_t = u0 * h_t
-        b_z = u0 * h_z
+        b_r = _u0 * h_r
+        b_t = _u0 * h_t
+        b_z = _u0 * h_z
 
     endelse
 

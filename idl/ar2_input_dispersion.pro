@@ -20,8 +20,8 @@ pro ar2_input_dispersion, wrf, amu, AtomicZ, nn, nPhi, nSpec, nR, nZ, Density_m3
 
 		;	these are in si not cgs units (i think)
 		
-		wp	= sqrt ( Density_m3[*,*,s] * (AtomicZ[s]*e)^2 / ( amu[s]*mi * e0 ) )
-		wc	=  AtomicZ[s]*e * bMag / ( amu[s]*mi )
+		wp	= sqrt ( Density_m3[*,*,s] * (AtomicZ[s]*_e)^2 / ( amu[s]*_amu * _e0 ) )
+		wc	=  AtomicZ[s]*_e * bMag / ( amu[s]*_amu )
 
 		for i=0,nR-1 do begin
 			for j=0,nZ-1 do begin
@@ -52,10 +52,10 @@ pro ar2_input_dispersion, wrf, amu, AtomicZ, nn, nPhi, nSpec, nR, nZ, Density_m3
 	StixS	= 0.5d0 * ( StixR + StixL )
 
 	kPar2D	= nPhi / r2D
-	nPar2D	= kPar2D * c / wrf
+	nPar2D	= kPar2D * _c / wrf
 
-	kPerSq_F    = complex(-(nPar2D^2 - stixR)*(nPar2D^2 - stixL) / (nPar2D^2 - stixS ) * wrf^2/c^2,nPar2D*0)
-	kPerSq_S    = complex(-(nPar2D^2 - stixS) * stixP / stixS * wrf^2/c^2,nPar2D*0)
+	kPerSq_F    = complex(-(nPar2D^2 - stixR)*(nPar2D^2 - stixL) / (nPar2D^2 - stixS ) * wrf^2/_c^2,nPar2D*0)
+	kPerSq_S    = complex(-(nPar2D^2 - stixS) * stixP / stixS * wrf^2/_c^2,nPar2D*0)
 
 	zSlice = nZ/2
 	kPerSq_1 = kPerSq_F[*,zSlice]
