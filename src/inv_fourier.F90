@@ -76,6 +76,9 @@ contains
                 g%eBeta(i,j) = g%eBeta(i,j) + g%eBetak(n,m,rhs) * bFn
                 g%eB(i,j) = g%eB(i,j) + g%eBk(n,m,rhs) * bFn
 
+                write(*,*) 'Ea: ', m, n, i, j, g%eAlphak(n,m,rhs)
+                write(*,*) 'Eb: ', m, n, i, j, g%eBk(n,m,rhs)
+
             endif twoThirdsRule
 
         enddo

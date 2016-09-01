@@ -448,7 +448,7 @@ pro ar2_plot_solution, full = full, $
 
         scale = 0.01
 
-		thisField = e_r[*,*]
+		thisField = ealpha[*,*]
         ;scale = max(abs(real_part(thisField)))*scaleFac
         print, 'E_r scale: ', scale
         title = 'E_r'
@@ -466,7 +466,7 @@ pro ar2_plot_solution, full = full, $
         ++PlotPos
         p.Save, "Er.png", border=0, height=600
 
-		thisField = e_t[*,*]
+		thisField = eb[*,*]
         ;scale = max(abs(real_part(thisField)))*scaleFac
         title = 'E_t'
         print, 'E_t scale: ', scale
