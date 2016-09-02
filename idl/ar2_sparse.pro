@@ -7,18 +7,14 @@ readOnly = 1
 ; Test application of sparse grids to AORSA
 
 d = 2
-l = 5
+l = 6
 lMin = 2
 
-levels = 2^(indgen(l)+lMin)
+nX = [256,128,128,64,64,32,32,16,16,8,8,4,4]
+nY = [4,4,8,8,16,16,32,32,64,64,128,128,256]
+sgn = [+1,-1,+1,-1,+1,-1,+1,-1,+1,-1,+1,-1,+1]
 
-; Get max resolution to run at
-
-if l mod 2 gt 0 then begin
-    maxRes = levels[l/2]^2
-endif else begin
-    maxRes = levels[l/2] * levels[l/2-1]
-endelse
+nRuns = n_elements(nX)
 
 stop
 template = expand_path("~/scratch/aorsa2d/sparse-template")
@@ -27,48 +23,44 @@ cd, current = rootDir
 
 runAR2Cmd = 'mpirun -n 24 ~/code/aorsa2d/xaorsa2d'
 
+runList = []
+
 ; Setup and run AORSA instances
 
-if not readOnly then begin
-for i=0,l-1 do begin
+for run=0,nRuns-1 do begin
 
-    for j=0,l-1 do begin
+    ; Stage run
+    
+    thisRun = "sparse-test-"+string(run,format='(i3.3)')
+    runList = [runList,thisRun]
 
-        if levels[i] * levels[j] le maxRes then begin
+    if not readOnly then begin
 
-            ; Stage run
+        print, 'Staging run ... '+thisRun
+        file_copy, template, thisRun, /recursive
+        
+        ; Set the grid resolution for this run
+        
+        cd, thisRun
+        
+        this_nR = nX[run] 
+        sedCmd = "sed -i .in-bak 's/nRAll(1) = 16/nRAll(1) = "+string(this_nR,format='(i3.3)')+"/' aorsa2d.in"
+        spawn, sedCmd
+        this_nZ = nY[run] 
+        sedCmd = "sed -i .in-bak 's/nZAll(1) = 128/nZAll(1) = "+string(this_nZ,format='(i3.3)')+"/' aorsa2d.in"
+        spawn, sedCmd
+        
+        spawn, runAR2Cmd
+        
+        cd, rootDir
 
-            thisRun = "sparse-test-"+string(i,format='(i3.3)')+'-'+string(j,format='(i3.3)')
-            print, 'Staging run ... '+thisRun
-            file_copy, template, thisRun, /recursive
-
-            ; Set the grid resolution for this run
-
-            cd, thisRun
-            
-            this_nR = levels[i] 
-            sedCmd = "sed -i .in-bak 's/nRAll(1) = 16/nRAll(1) = "+string(this_nR,format='(i3.3)')+"/' aorsa2d.in"
-            spawn, sedCmd
-            this_nZ = levels[j] 
-            sedCmd = "sed -i .in-bak 's/nZAll(1) = 128/nZAll(1) = "+string(this_nZ,format='(i3.3)')+"/' aorsa2d.in"
-            spawn, sedCmd
-
-            spawn, runAR2Cmd
-
-            cd, rootDir
-
-        endif
-
-    endfor
+    endif
 
 endfor
-endif
 
 ; Read solutions
 
-runList = file_search('*',/test_directory,count=nRuns)
-
-nRGrid = 4 
+nRGrid = 64 
 nZGrid = 64 
 
 eAlpha = complexArr(nRGrid,nZGrid)
@@ -111,8 +103,8 @@ for run=0,nRuns-1 do begin
 
     if (nN mod 2) eq 0 then nMin = nMin+1
 
-    eAlpha[*] = 0
-    eB[*] = 0
+    ;eAlpha[*] = 0
+    ;eB[*] = 0
 
     normFacX = 2*!pi/rRng
     normFacY = 2*!pi/zRng
@@ -131,11 +123,11 @@ for run=0,nRuns-1 do begin
             for m=mMin,mMax do begin
                 for n=nMin,nMax do begin
 
-                                xx = exp( _ii * m * rNorm )
+                    xx = exp( _ii * m * rNorm )
                     yy = exp( _ii * n * zNorm )
 
-                    eAlpha[i,j] += eAlphak[m-mMin,n-nMin] * xx * yy 
-                    eB[i,j] += eBk[m-mMin,n-nMin] * xx * yy 
+                    eAlpha[i,j] += sgn[run] * eAlphak[m-mMin,n-nMin] * xx * yy 
+                    eB[i,j] += sgn[run] * eBk[m-mMin,n-nMin] * xx * yy 
 
                 endfor
             endfor
@@ -149,7 +141,7 @@ for run=0,nRuns-1 do begin
 
         nLevs = 10
 
-        scale = 0.01
+        scale = 0.1
 
 		thisField = ealpha[*,*]
         title = 'E_alpha'
@@ -170,9 +162,6 @@ for run=0,nRuns-1 do begin
 		c = contour ( PlotField, rGrid, zGrid, c_value=levels, rgb_indices=colors, rgb_table=3, /fill, $
             aspect_ratio=aspect, dimensions=dimensions, title=title, xRange=xRange, yRange=yRange )
 		c = contour ( -PlotField, rGrid, zGrid, c_value=levels, rgb_indices=colors, rgb_table=1, /fill,/over )
-
-
-    stop
 
 endfor
 
