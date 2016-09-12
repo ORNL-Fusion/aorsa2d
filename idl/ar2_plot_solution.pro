@@ -446,7 +446,7 @@ pro ar2_plot_solution, full = full, $
 
 		nLevs = 10
 
-        scale = 0.01
+        scale = 0.1
 
 		thisField = ealpha[*,*]
         ;scale = max(abs(real_part(thisField)))*scaleFac
