@@ -8,6 +8,10 @@ use scalapack_mod
 use pgesvr_mod
 #endif
 
+#ifdef writeserialmatrix
+use netcdf
+#endif
+
 use timer_mod
 implicit none
 
@@ -25,6 +29,11 @@ contains
         use parallel, only: NRHS
 
         implicit none
+
+#ifdef writeserialmatrix
+        character(len=100) :: fName 
+        integer :: N_id, nc_stat, reA_id, imA_id, nc_id
+#endif
 
         integer :: info, nRow, nCol
         integer, allocatable, dimension(:) :: ipiv, IPVT
@@ -67,6 +76,19 @@ contains
 #else            
             write(*,*) 'Using standard ZGESV for square system'
             call zgesv ( N, NRHS, A, LDA, IPVT, B, LDB, info )
+
+#ifdef writeserialmatrix
+            fname = 'matrix.nc'
+            nc_stat = nf90_create ( fName, nf90_clobber, nc_id )
+            nc_stat = nf90_def_dim ( nc_id, "N", int(N), N_id )
+            nc_stat = nf90_def_var ( nc_id, "reA", NF90_REAL, (/N_id,N_id/), reA_id )
+            nc_stat = nf90_def_var ( nc_id, "imA", NF90_REAL, (/N_id,N_id/), imA_id )
+            nc_stat = nf90_enddef ( nc_id ) 
+            nc_stat = nf90_put_var ( nc_id, reA_id, real(A) )
+            nc_stat = nf90_put_var ( nc_id, imA_id, aimag(A) )
+            nc_stat = nf90_close ( nc_id ) 
+#endif              
+
 #endif
         else
 
