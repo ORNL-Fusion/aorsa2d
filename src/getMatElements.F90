@@ -11,7 +11,7 @@ function get3by3Block( g, w)!, r, z)
        useJpFromFile, coldIons
 
     use constants
-    use profiles, only: k0, omgrf, mSpec
+    use profiles, only: omgrf, mSpec
     use sigma
     use generic_biLinearInterp
 
@@ -79,9 +79,11 @@ function get3by3Block( g, w)!, r, z)
 
     type(spatialSigmaInput_cold) :: sigmaIn_cold
     real :: R_(3,3)
+    complex(kind=dbl) :: k0
 
     z   = g%z(g%wl(w)%j)
     r   = g%R(g%wl(w)%i)
+    k0  = g%k0(g%wl(w)%iPt)
     kt  = nPhi!g%kPhi(i)
 
         !   interior plasma region:

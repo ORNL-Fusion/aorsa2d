@@ -3,7 +3,7 @@ program test_sigma
 use constants
 use sigma
 use aorsaNameList, &
-only: nPhi, damping, delta0, lMax, nzfun, xnuomg, upshift, &
+only: nPhi, damping, delta0, lMax, nzfun, upshift, &
     read_nameList, xkPerp_cutOff
 use netcdf
 use check_mod
@@ -41,21 +41,22 @@ integer :: nc_id, n_id, nK_id, &
 
 real, allocatable :: kArr(:)
 real :: kPhi
+real :: xNuOmg = 0.00
 
 fileName = 'test_sigma.in'
 
 call read_nameList ( fileName = fileName )
 
-nPts    = 256
-rLeft   = 0.4
-rRigh   = 0.95
+nPts    = 2 
+rLeft   = 1.0 
+rRigh   = 1.000001 
 dr      = (rRigh-rLeft)/(nPts-1)
 
 allocate ( r(nPts),b(nPts),omgc(nPts) )
 
 r       = [ (i*dr,i=1,nPts) ] + rLeft
 
-b0  = 5.55
+b0  = 1.0
 b   = b0 / r
 mSpec   = (/ xme, 2*xmh /)
 ktSpec  = 1e3 * q
@@ -70,7 +71,6 @@ omgrf = 2.0 * pi * freq
 k0 = omgrf / clight
 U_xyz   = real( reshape ( (/1,0,0,0,1,0,0,0,1/) , (/3,3/) ) )
 U_cyl   = real( reshape ( (/1,0,0,0,1,0,0,0,1/) , (/3,3/) ) )
-xNuOmg = 0.00
 
 nK = 256 
 
@@ -111,7 +111,7 @@ do i=1,nPts
     kVec = (/ kx, ky, kPhi /)
 
     sigma_tmp = sigmaHot_maxwellian&
-        ( real(mSpec(s)), &
+        ( real(mSpec(s),kind=dbl), &
         ktSpec, omgc(i), omgp2, &
         kVec, r(i), &
         omgrf, k0, &

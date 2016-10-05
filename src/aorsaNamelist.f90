@@ -8,6 +8,7 @@ implicit none
     ! -----
     ! Electrons must be the first species 
 
+    logical :: dampVacuumWave = .false.
     logical :: coldIons = .false.
     logical :: useMetalBox = .false.
     logical :: AntennaJ_R = .false.
@@ -499,7 +500,7 @@ implicit none
      &    AntennaJ_R, AntennaJ_T, AntennaJ_Z, AR2SourceLocationsFileName, &
      &    useAR2SourceLocationsFile, useAllRHSsSource, ZeroJp, &
      &    ZeroJp_rMin, ZeroJp_rMax, ZeroJp_zMin, ZeroJp_zMax, useAntennaFromAR2Input, &
-     &    useMetalBox, useJpFromFile, JpInputFileName, coldIons
+     &    useMetalBox, useJpFromFile, JpInputFileName, coldIons, dampVacuumWave
 
                 
 contains

@@ -13,7 +13,7 @@ subroutine current ( g, rhs )
     use sigma
     use parallel
     use profiles, &
-        only: k0, omgrf, mSpec
+        only: omgrf, mSpec
     use constants
     use read_jp_from_file, only: &
         file_nS=>nS, file_nR=>nR, file_nZ=>nZ, file_r=>r, file_z=>z, &
@@ -37,6 +37,7 @@ subroutine current ( g, rhs )
     real :: R_(3,3)
 #endif
     real :: R, z
+    complex(kind=dbl) :: k0
 
     if (.not.allocated(g%jAlpha)) allocate ( &
         g%jAlpha(g%nR,g%nZ,nSpec), &
@@ -66,6 +67,8 @@ subroutine current ( g, rhs )
 
         workList: &
         do w=1,size(g%wl)
+
+            k0  = g%k0(g%wl(w)%iPt)
 
             ReplaceWithJpFromFile: &
             if(useJpFromFile)then

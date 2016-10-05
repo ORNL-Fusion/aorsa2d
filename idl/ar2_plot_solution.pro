@@ -231,6 +231,9 @@ pro ar2_plot_solution, full = full, $
 
 	if size(y,/dim) eq 0 then begin
 
+        margin = [0.2,0.2,0.1,0.2]
+        thick = 2
+
 		iix = n_elements(x)/2
 		wrf = freq * 2 * !pi
 
@@ -240,28 +243,28 @@ pro ar2_plot_solution, full = full, $
                 yRange=[-eRange,eRange],$
                 ytitle='Er [V/m]',$
                 name='Re',$
-                window_title='aorsa')
-		p_i = plot ( x, imaginary(e_r), color='red',/over,name='Im')
+                window_title='aorsa',margin=margin,thick=thick)
+		p_i = plot ( x, imaginary(e_r), color='red',/over,name='Im',thick=thick)
 
 		eRange = max(abs([e_t]))
 		p_r = plot ( x, e_t, layout=[1,3,2],/current,$
 				title='Et',$
                 yRange=[-eRange,eRange],$
                 ytitle='Et [V/m]',$
-                name='Re')
-		p_i = plot ( x, imaginary(e_t), color='red',/over,name='Im')
+                name='Re',margin=margin,thick=thick)
+		p_i = plot ( x, imaginary(e_t), color='red',/over,name='Im',thick=thick)
 
     	eRange = max(abs([e_z]))
 		p_r = plot ( x, e_z, layout=[1,3,3],/current,$
 				title='Ez',$
                 yRange=[-eRange,eRange],$
                 ytitle='Ez [V/m]',$
-                name='Re')
-		p_i = plot ( x, imaginary(e_z), color='red',/over,name='Im')
+                name='Re',margin=margin,thick=thick,xtitle="r [m]")
+		p_i = plot ( x, imaginary(e_z), color='red',/over,name='Im',thick=thick)
 
 		p = plot (x,(total(JouleHeating,3))[*],color='b',thick=1,$
 				title='J dot E',name='jP . E (Total)',font_size=10,$
-				layout=[1,3,1],window_title='aorsa')
+				layout=[1,3,1],window_title='aorsa',xtitle="r [m]")
 		colorArr = ['b','g','r','c','m','y','k']
         for s=0,n_elements(JouleHeating[0,0,*])-1 do begin
             p = plot(x,JouleHeating[*,0,s],color=colorArr[s],/over,thick=3,linestyle='--',transparency=50)

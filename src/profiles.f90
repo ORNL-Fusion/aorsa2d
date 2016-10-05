@@ -4,7 +4,7 @@ use constants
 
 implicit none
 
-real(kind=dbl) :: omgrf, k0
+real(kind=dbl) :: omgrf
 real(kind=dbl), allocatable, dimension(:) :: mSpec, qSpec, tSpec, dSpec
 real(kind=dbl), allocatable, dimension(:) :: zSpec, amuSpec
 real(kind=dbl), allocatable, dimension(:,:,:) :: &
@@ -167,7 +167,7 @@ contains
             Density_m3, Temp_eV, nuOmg, jant_r, jant_t, jant_z
         use grid
         use aorsaNameList, only: &
-            nSpec,freqcy
+            nSpec,freqcy,dampVacuumWave
         use parallel, only: iAm
 
         use fitpack
@@ -205,8 +205,8 @@ contains
         ! and I should change it to get done somewhere else.
 
         omgrf = 2.0 * pi * freqcy
-        k0 = omgrf / clight
- 
+
+
         ! Overwrite some nameList varibles with those from 
         ! the ar2Input file.
 
@@ -234,7 +234,8 @@ contains
         allocate ( &
             g%densitySpec (size(g%pt), nSpec ), & 
             g%ktSpec (size(g%pt), nSpec ), &
-            g%nuOmg(size(g%pt), nSpec) )
+            g%nuOmg(size(g%pt), nSpec), &
+            g%k0(size(g%pt)) )
  
         do s=1,nSpec
 
@@ -295,8 +296,25 @@ contains
 
                 g%nuOmg(w,s) = surf2 ( ThisR, ThisZ, ar2_nR, ar2_nZ, ar2_r_dp, ar2_z_dp, &
                     Tmp2DArr, ar2_nR, zp_tmp, sigma_dp )
+
+
             enddo
         enddo
+
+        do w=1,size(g%pt)
+
+            if(dampVacuumWave)then ! Useful for EC frequency problems where damping Jp doesn't kill the vacuum wave.
+
+                g%k0(w) = (omgrf + complex(0,1)*g%nuOmg(w,1)*omgrf) / clight
+
+            else
+
+                g%k0(w) = omgrf / clight
+
+            endif
+ 
+        enddo
+ 
 
         ! JAnt interpolation
 
@@ -368,6 +386,7 @@ contains
         if(count(g%nuOmg<0)>0)then
                 where(g%nuOmg<0.0) g%nuOmg = 0.0
         endif
+
 
         call omega_freqs ( g )
 

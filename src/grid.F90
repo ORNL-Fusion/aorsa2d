@@ -73,6 +73,7 @@ type :: gridBlock
     real, allocatable, dimension(:) :: bR_unit, bT_unit, bZ_unit, bMag, rho
     logical, allocatable, dimension(:) :: mask
     real, allocatable :: nuOmg(:,:)
+    complex(kind=dbl), allocatable :: k0(:)
     real(kind=dbl), allocatable, dimension(:,:) :: densitySpec, ktSpec
     real(kind=dbl), allocatable, dimension(:,:) :: omgC, omgP2
 

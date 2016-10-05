@@ -49,7 +49,8 @@ contains
 
         real(kind=dbl), intent(in) :: omgc, omgp2
         real(kind=dbl), intent(in) :: omgrf
-        real(kind=dbl), intent(in) :: kt, k0
+        real(kind=dbl), intent(in) :: kt
+        complex(kind=dbl), intent(in) :: k0
 
         integer :: labs, i, j
         integer :: l
