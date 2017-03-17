@@ -1,10 +1,10 @@
 pro ar2_estimate_time
 
-nR = 256 * 128d0
-nZ = 512d0 
+nR = 200d0
+nZ = 200d0 
 
-npRow = 12d0
-npCol = 12d0
+npRow = 72d0
+npCol = 72d0
 
 nSpec = 5
 lMax =  30

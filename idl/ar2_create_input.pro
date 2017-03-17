@@ -47,7 +47,9 @@ function MakePeriodic, Arr, MaskIn, look = look
 
 end
 
-pro ar2_create_input
+pro ar2_create_input, _r1=_r1, _z1=_z1, _angle=_angle, doPlots = _doPlots, _len=_len
+
+    if keyword_set(_doPlots) then doPlots = _doPlots else doPlots = 1
 
 	bField_eqdsk = 1
 	bField_gaussian = 0
@@ -225,10 +227,12 @@ pro ar2_create_input
 	ScreenSize = get_screen_size()
 	dimensions = ScreenSize*0.8
     plotpos = 1
+if doPlots then begin
 	p=plot(r,bt[*,nZ/2],layout=[layout,plotpos], title='bField',dimensions=dimensions)
 	p=plot(r,br[*,nZ/2],/over,color='b')
 	p=plot(r,bz[*,nZ/2],/over,color='r')
     ++plotpos
+endif
 
 	bMag = sqrt ( br^2 + bt^2 + bz^2 )
 	nSpec = n_elements ( amu )
@@ -387,6 +391,7 @@ pro ar2_create_input
     xRange = [rMin,rMax]
 
 	if not flat_profiles then begin 
+if doPlots then begin
     s_ne = contour(density_m3[*,*,0],r,z, layout=[layout,plotpos],$
             /current,title='density',aspect_ratio=1.0, xRange=xRange, yRange=yRange )
     if bField_eqdsk then p=plot(rLim,zLim,/over)
@@ -396,7 +401,10 @@ pro ar2_create_input
             /current,title='temp',aspect_ratio=1.0, xRange=xRange, yRange=yRange)
     if bField_eqdsk then p=plot(rLim,zLim,/over)
     ++plotpos
+endif
 	endif
+
+if doPlots then begin
 
     plotPos = plotPos+1
     _c = ['b','g','r','c','m','y','k']
@@ -429,18 +437,49 @@ pro ar2_create_input
     endfor
     plotpos++	
 
+endif
+
     ; Create nuOmg profiles
 
     @'input/ar2nuomg.pro'
 
+if doPlots then begin
     p=plot(r,nuOmg[*,nZ/2,0],title='nuOmg [electrons]',layout=[layout,plotpos],/current)
     ++plotpos
+endif
+
+    fancy_antenna = 0
+    line_antenna = 0
 
    	@'input/ar2jant.pro'
 
 	; Set the jAnt 2-D function
 
-	if fancy_antenna then begin
+    if line_antenna then begin
+
+        n_ant = 40
+
+        antr = fIndGen(n_ant)/(n_ant-1)*(line1X-line0X)+line0X
+        antz = fIndGen(n_ant)/(n_ant-1)*(line1Y-line0Y)+line0Y
+
+		; Get antenna current: A Guassian peaked at the antenna
+
+		_d = FltArr(nR,nZ,n_ant)
+		for k=0,n_ant-1 do begin
+		  _d[*,*,k] = sqrt ( ( r2d - antr(k) )^2 + ( z2d - antz(k) )^2 )
+		endfor
+		d = min(_d,dim=3)
+		jAnt =  exp(-(d^2)/(sigma_ant^2))
+
+        iiZeroOut = where(jAnt lt 0.05,iiZeroOutCnt)
+        if iiZeroOutCnt gt 0 then jAnt[iiZeroOut] = 0
+
+		jAnt_r = jAnt*Ju_r
+		jAnt_t = jAnt*Ju_t
+		jAnt_z = jAnt*Ju_z
+
+    endif else if fancy_antenna then begin
+
 
 		if bField_eqdsk then begin	
 			rCenter = g.rcentr
@@ -506,6 +545,7 @@ pro ar2_create_input
 
 	endelse
 
+if doPlots then begin
    nlevs=10
    scale = 1.1
    levels = (fIndGen(nlevs)+1)/nlevs*scale
@@ -517,6 +557,7 @@ pro ar2_create_input
    p1 = plot(rlim, zlim,/over)
    if fancy_antenna then p1 = plot(antr, antz,/over)
    ++plotpos
+endif
 
 	; Get dispersion solution for some nPhi 
 	ar2_input_dispersion, wrf, amu, atomicZ, nn, nPhi, nSpec, nR, nZ, $
@@ -532,6 +573,7 @@ pro ar2_create_input
 
     ;; plot up the ion cyclortron resonances
 
+if doPlots then begin
     ;for s=0,nSpec-1 do begin
     ;    if s eq 0 then p=plot(r,resonances[*,nZ/2,s], $
     ;            title='Cyclotron resonsances',layout=[layout,PlotPos],/current,yRange=[-10,10]) $
@@ -620,6 +662,8 @@ pro ar2_create_input
 
 
     endif
+
+endif
 
 	; Write netCdf file
 
@@ -780,12 +824,12 @@ pro ar2_create_input
 
     endif
 
+if doPlots then begin
 	plotFile = 'inputs.pdf'
 	p.save, plotFile
 
 	plotFile = 'inputs.png'
 	p.save, plotFile
+endif
 
-	stop
-exit ; this is here for OMFit - don't remove
 end

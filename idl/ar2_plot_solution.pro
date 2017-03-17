@@ -262,6 +262,33 @@ pro ar2_plot_solution, full = full, $
                 name='Re',margin=margin,thick=thick,xtitle="r [m]")
 		p_i = plot ( x, imaginary(e_z), color='red',/over,name='Im',thick=thick)
 
+		p_r = plot ( x, ealpha, layout=[1,3,1],$
+				title='Ealpha',$
+                yRange=[-eRange,eRange],$
+                ytitle='Ealpha [V/m]',$
+                name='Re',$
+                window_title='aorsa',margin=margin,thick=thick)
+		p_i = plot ( x, imaginary(ealpha), color='red',/over,name='Im',thick=thick)
+
+		eRange = max(abs([eBeta]))
+		p_r = plot ( x, eBeta, layout=[1,3,2],/current,$
+				title='Ebeta',$
+                yRange=[-eRange,eRange],$
+                ytitle='Ebeta [V/m]',$
+                name='Re',margin=margin,thick=thick)
+		p_i = plot ( x, imaginary(eBeta), color='red',/over,name='Im',thick=thick)
+
+    	eRange = max(abs([eb]))
+		p_r = plot ( x, eb, layout=[1,3,3],/current,$
+				title='Eb',$
+                yRange=[-eRange,eRange],$
+                ytitle='Eb [V/m]',$
+                name='Re',margin=margin,thick=thick,xtitle="r [m]")
+		p_i = plot ( x, imaginary(eb), color='red',/over,name='Im',thick=thick)
+
+        p_r.save, 'plot1.png', res=300
+
+
 		p = plot (x,(total(JouleHeating,3))[*],color='b',thick=1,$
 				title='J dot E',name='jP . E (Total)',font_size=10,$
 				layout=[1,3,1],window_title='aorsa',xtitle="r [m]")
@@ -402,9 +429,9 @@ pro ar2_plot_solution, full = full, $
 
         endfor
 
-        h_r = h_r / (II*wRFc*u0)
-        h_t = h_t / (II*wRFc*u0)
-        h_z = h_z / (II*wRFc*u0)
+        h_r = h_r / (II*wRFc*_u0)
+        h_t = h_t / (II*wRFc*_u0)
+        h_z = h_z / (II*wRFc*_u0)
 
         p=plot(r,h_r,layout=[1,3,1],title='h_r',window_title='aorsa')
         p=plot(r,imaginary(h_r),/over,color='r')
@@ -449,7 +476,7 @@ pro ar2_plot_solution, full = full, $
 
 		nLevs = 10
 
-        scale = 0.1
+        scale = 0.4
 
 		thisField = ealpha[*,*]
         ;scale = max(abs(real_part(thisField)))*scaleFac
@@ -469,7 +496,7 @@ pro ar2_plot_solution, full = full, $
         ++PlotPos
         p.Save, "Er.png", border=0, height=600
 
-		thisField = eb[*,*]
+		thisField = ebeta[*,*]
         ;scale = max(abs(real_part(thisField)))*scaleFac
         title = 'E_t'
         print, 'E_t scale: ', scale
@@ -487,7 +514,7 @@ pro ar2_plot_solution, full = full, $
         ++PlotPos
         p.Save, "Et.png", border=0, height=600
 
-		thisField = e_z[*,*]
+		thisField = eb[*,*]
         ;scale = max(abs(real_part(thisField)))*scaleFac
         print, 'E_z scale: ', scale
         title = 'E_z'
