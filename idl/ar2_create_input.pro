@@ -63,6 +63,7 @@ pro ar2_create_input, _r1=_r1, _z1=_z1, _angle=_angle, doPlots = _doPlots, _len=
 	fred_namelist_input = 0
 	flat_profiles = 1
     numeric_profiles = 0
+    mpex_profiles = 0
 
 	br_flat = 0.0
 	bt_flat = 1.0

@@ -1,10 +1,60 @@
+function testSparse, nx, ny, xMin, xMax, yMin, yMax, x2d=x, y2d=y
+
+    xRng = (xMax-xMin)
+    xGrid = fIndGen(nx)/(nx-1)*xRng+xMin 
+
+    yRng = (yMax-yMin)
+    yGrid = fIndGen(ny)/(ny-1)*yRng+yMin 
+
+    x = rebin(xGrid,nx,ny)
+    y = transpose(rebin(yGrid,ny,nx))
+
+    sigx = 0.1
+    sigy = 0.1
+    x0 = 0
+    y0 = 0
+    A = 0.1
+
+    return, A * exp( -( (x-x0)^2/(2*sigx^2) + (y-y0)^2/(2*sigy^2) ) ) 
+
+end
+
+function testSparse2, nx, ny, xMin, xMax, yMin, yMax, x2d=x, y2d=y
+
+    referenceSolution = expand_path("~/scratch/aorsa2d/sparse-template-128x128")
+    refSolutionRaw = ar2_read_solution(referenceSolution,1) 
+
+    xRng = (xMax-xMin)
+    xGrid = fIndGen(nx)/(nx-1)*xRng+xMin 
+
+    yRng = (yMax-yMin)
+    yGrid = fIndGen(ny)/(ny-1)*yRng+yMin 
+
+    x = rebin(xGrid,nx,ny)
+    y = transpose(rebin(yGrid,ny,nx))
+
+    ii = (x - refSolutionRaw.r[0]) / (refSolutionRaw.r[-1]-refSolutionRaw.r[0]) * (n_elements(refSolutionRaw.r)-1)
+    jj = (y - refSolutionRaw.z[0]) / (refSolutionRaw.z[-1]-refSolutionRaw.z[0]) * (n_elements(refSolutionRaw.z)-1)
+
+    refSolution = interpolate(refSolutionRaw.e_t,ii,jj)
+
+    return, refSolution 
+
+end
+
 pro ar2_sparse
 
 @constants
 
 readOnly = 1
+testFunction = 0
+testFunction2 = 0
 
-scale = 0.1 
+if testFunction then begin
+    scale = 0.1 
+endif else begin
+    scale = 10.0
+endelse
 
 ; Test application of sparse grids to AORSA
 
@@ -12,13 +62,14 @@ d = 2
 l = 6
 lMin = 2
 
-nX = [256,128,128,64,64,32,32,16,16, 8,  8,  4,  4]
-nY = [  4,  4,  8, 8,16,16,32,32,64,64,128,128,256]
-sgn = -[+1,-1,+1,-1,+1,-1,+1,-1,+1,-1,+1,-1,+1]
+nX = [256,128,128,64,64,32,32,16,16, 8,  8,  4,  4]-1
+nY = [  4,  4,  8, 8,16,16,32,32,64,64,128,128,256]-1
+i = alog2(nX+1)
+j = alog2(nY+1)
+sgn = [+1,-1,+1,-1,+1,-1,+1,-1,+1,-1,+1,-1,+1]
 
-nRuns = n_elements(nX)
+nEval = n_elements(nX)
 
-stop
 template = expand_path("~/scratch/aorsa2d/sparse-template")
 referenceSolution = expand_path("~/scratch/aorsa2d/sparse-template-128x128")
 
@@ -30,7 +81,7 @@ runList = []
 
 ; Setup and run AORSA instances
 
-for run=0,nRuns-1 do begin
+for run=0,nEval-1 do begin
 
     ; Stage run
     
@@ -61,157 +112,190 @@ for run=0,nRuns-1 do begin
 
 endfor
 
-; Read solutions
+; Build the desired grid
 
-nRGrid = 64 
-nZGrid = 64 
+nRGrid = 256 
+nZGrid = 256
 
-eAlpha = complexArr(nRGrid,nZGrid)
-eB = complexArr(nRGrid,nZGrid)
+if testFunction then begin
 
-e_r = complexArr(nRGrid,nZGrid)
-e_z = complexArr(nRGrid,nZGrid)
+    rMin = -1.0      
+    rMax = +1.0
+    rRng = (rMax-rMin)
+    rGrid = fIndGen(nRGrid)/(nRGrid-1)*rRng+rMin 
 
-for run=0,nRuns-1 do begin
+    zMin = -1.0      
+    zMax = +1.0
+    zRng = (zMax-zMin)
+    zGrid = fIndGen(nZGrid)/(nZGrid-1)*zRng+zMin 
 
-    thisSolution = ar2_read_solution(runList[run],1) 
+    r2D = rebin(rGrid,nRGrid,nZGrid)
+    z2D = transpose(rebin(zGrid,nZGrid,nRGrid))
 
-    if size(RGrid,/type) eq 0 then begin
+endif else begin
+
+    thisSolution = ar2_read_solution(runList[0],1) 
         
-        rMin = thisSolution.r[0]      
-        rMax = thisSolution.r[-1]
-        rRng = (rMax-rMin)
-        rGrid = fIndGen(nRGrid)/(nRGrid-1)*rRng+rMin 
+    rMin = thisSolution.r[0]      
+    rMax = thisSolution.r[-1]
+    rRng = (rMax-rMin)
+    rGrid = fIndGen(nRGrid)/(nRGrid-1)*rRng+rMin 
 
-        zMin = thisSolution.z[0]      
-        zMax = thisSolution.z[-1]
-        zRng = (zMax-zMin)
-        zGrid = fIndGen(nZGrid)/(nZGrid-1)*zRng+zMin 
+    zMin = thisSolution.z[0]      
+    zMax = thisSolution.z[-1]
+    zRng = (zMax-zMin)
+    zGrid = fIndGen(nZGrid)/(nZGrid-1)*zRng+zMin 
 
-        r2D = rebin(rGrid,nRGrid,nZGrid)
-        z2D = transpose(rebin(zGrid,nZGrid,nRGrid))
+    r2D = rebin(rGrid,nRGrid,nZGrid)
+    z2D = transpose(rebin(zGrid,nZGrid,nRGrid))
 
-    endif
+endelse
 
-    eAlphak = thisSolution.eAlphak
-    eBk = thisSolution.eBk
+; Evaluate reference solution
 
-    nM = n_elements(ealphak[*,0])
-    nN = n_elements(ealphak[0,*])
-
-    mMin = -nM/2
-    mMax =  nM/2
-
-    if (nM mod 2) eq 0 then mMin = mMin+1
-
-    nMin = -nN/2
-    nMax =  nN/2
-
-    if (nN mod 2) eq 0 then nMin = nMin+1
-
-    ;eAlpha[*] = 0
-    ;eB[*] = 0
-
-    normFacX = 2*!pi/rRng
-    normFacY = 2*!pi/zRng
-
-    InterpFromGrid = 1
-
-    if InterpFromGrid then begin
-
-        ii = (r2D - rGrid[0]) / (rMax-rMin) * (n_elements(thisSolution.r)-1)
-        jj = (z2D - zGrid[0]) / (zMax-zMin) * (n_elements(thisSolution.z)-1)
-
-        thisSolutionFullGrid_r = interpolate(thisSolution.e_r,ii,jj)
-        thisSolutionFullGrid_z = interpolate(thisSolution.e_z,ii,jj)
-
-        e_r += sgn[run] * thisSolutionFullGrid_r
-        e_z += sgn[run] * thisSolutionFullGrid_z
-
-        eAlpha = e_r
-        eB = e_z
+    if testFunction then begin
+       
+        refSolution = testSparse(nRGrid,nZGrid,rMin,rMax,zMin,zMax) 
 
     endif else begin
 
-        for i=0,nRGrid-1 do begin
-            for j=0,nZGrid-1 do begin
+        refSolutionRaw = ar2_read_solution(referenceSolution,1) 
+    
+        ;scaleFac = max(abs(refSolutionRaw.e_r))
+        ;print, 'ref scalefac: ',scaleFac
 
-                ;rNorm = (rGrid[i]-rMin)*normFacX
-                ;zNorm = (zGrid[j]-zMin)*normFacY
+        ;refSolutionRaw.e_r = refSolutionRaw.e_r / scaleFac
 
-                ; WHY is this not nRGrid-1 in AORSA?
+        ii = (r2D - refSolutionRaw.r[0]) / (refSolutionRaw.r[-1]-refSolutionRaw.r[0]) * (n_elements(refSolutionRaw.r)-1)
+        jj = (z2D - refSolutionRaw.z[0]) / (refSolutionRaw.z[-1]-refSolutionRaw.z[0]) * (n_elements(refSolutionRaw.z)-1)
 
-                rNorm = i * 2 * !pi / ( nRGrid )
-                zNorm = j * 2 * !pi / ( nZGrid )
-
-                for m=mMin,mMax do begin
-                    for n=nMin,nMax do begin
-
-                        xx = exp( _ii * m * rNorm )
-                        yy = exp( _ii * n * zNorm )
-
-                        eAlpha[i,j] += sgn[run] * eAlphak[m-mMin,n-nMin] * xx * yy 
-                        eB[i,j] += sgn[run] * eBk[m-mMin,n-nMin] * xx * yy 
-
-                    endfor
-                endfor
-
-            endfor
-        endfor
+        refSolution = interpolate(refSolutionRaw.e_t,ii,jj)
 
     endelse
 
-    print, runList[run]
-    print, 'M: ', mMin, mMax
-    print, 'N: ', nMin, nMax
+; Evaluate the function on the sparse grid
 
-        nLevs = 10
+f = complexArr(nRGrid,nZGrid)
 
+for thisEval=0,nEval-1 do begin
 
-		thisField = ealpha[*,*]
-        title = 'E_alpha'
-		levels = fIndGen(nLevs)/(nLevs-1)*scale
-		colors = reverse(bytScl(levels, top=253)+1)
-		PlotField = (real_part(thisField)<max(levels))>min(-levels)
-        aspect = 1.0
-		c = contour ( PlotField, rGrid, zGrid, c_value=levels, rgb_indices=colors, rgb_table=3, /fill, $
-            aspect_ratio=aspect, dimensions=dimensions, title=title, xRange=xRange, yRange=yRange )
-		c = contour ( -PlotField, rGrid, zGrid, c_value=levels, rgb_indices=colors, rgb_table=1, /fill,/over )
+    if testFunction then begin
 
-		thisField = eB[*,*]
-        title = 'E_b'
-		levels = fIndGen(nLevs)/(nLevs-1)*scale
-		colors = reverse(bytScl(levels, top=253)+1)
-		PlotField = (real_part(thisField)<max(levels))>min(-levels)
-        aspect = 1.0
-		c = contour ( PlotField, rGrid, zGrid, c_value=levels, rgb_indices=colors, rgb_table=3, /fill, $
-            aspect_ratio=aspect, dimensions=dimensions, title=title, xRange=xRange, yRange=yRange )
-		c = contour ( -PlotField, rGrid, zGrid, c_value=levels, rgb_indices=colors, rgb_table=1, /fill,/over )
+        this_nx = nX[thisEval]
+        this_ny = nY[thisEval]       
 
-		thisField = thisSolutionFullGrid_z[*,*]
-        title = 'this E_b'
-		levels = fIndGen(nLevs)/(nLevs-1)*scale
-		colors = reverse(bytScl(levels, top=253)+1)
-		PlotField = (real_part(thisField)<max(levels))>min(-levels)
-        aspect = 1.0
-		c = contour ( PlotField, rGrid, zGrid, c_value=levels, rgb_indices=colors, rgb_table=3, /fill, $
-            aspect_ratio=aspect, dimensions=dimensions, title=title, xRange=xRange, yRange=yRange )
-		c = contour ( -PlotField, rGrid, zGrid, c_value=levels, rgb_indices=colors, rgb_table=1, /fill,/over )
+        this_f = testSparse(this_nx,this_ny,rMin,rMax,zMin,zMax,x2d=this_r2D,y2d=this_z2D) 
+        this_r = (this_r2D[*,0])[*]
+        this_z = (this_z2D[0,*])[*]
 
+    endif else if testFunction2 then begin
+
+        this_nx = nX[thisEval]
+        this_ny = nY[thisEval]       
+
+        this_f = testSparse2(this_nx,this_ny,rMin,rMax,zMin,zMax,x2d=this_r2D,y2d=this_z2D) 
+        this_r = (this_r2D[*,0])[*]
+        this_z = (this_z2D[0,*])[*]
+
+    endif else begin
+
+        thisSolution = ar2_read_solution(runList[thisEval],1) 
+
+        ;scaleFac = max(abs(thisSolution.e_r))
+        ;print, 'this scalefac: ',scaleFac
+
+        ;thisSolution.e_r = thisSolution.e_r / scaleFac
+
+        this_f = thisSolution.e_t
+        this_r = thisSolution.r
+        this_z = thisSolution.z
+
+        print, runList[thisEval]
+
+    endelse
+
+    ; Interpolate to full grid
+
+    this_nR = n_elements(this_f[*,0])
+    this_nZ = n_elements(this_f[0,*])
+
+    ii = (r2D - rGrid[0]) / (rMax-rMin) * (this_nR-1)
+    jj = (z2D - zGrid[0]) / (zMax-zMin) * (this_nZ-1)
+
+    thisSolutionFullGrid = interpolate(this_f,ii,jj)
+
+    f = f + sgn[thisEval] * thisSolutionFullGrid
+
+    nLevs = 10
+
+	thisField = this_f[*,*]
+    title = 'f (eval)'
+	levels = fIndGen(nLevs)/(nLevs-1)*scale
+	colors = reverse(bytScl(levels, top=253)+1)
+	PlotField = (real_part(thisField)<max(levels))>min(-levels)
+    aspect = 1.0
+    wTitle = string(thisEval)+', '+string(sgn[thisEval])+', '+string(i[thisEval])+', '+string(j[thisEval])
+    if testFunction then begin
+	    s = surface ( PlotField, this_r, this_z, style=1, aspect_ratio=aspect, title=title, layout=[3,2,1], $
+           window_title=wTitle )
+    endif else begin
+	    c = contour ( PlotField, this_r, this_z, c_value=levels, rgb_indices=colors, rgb_table=3, $
+            aspect_ratio=aspect, dimensions=dimensions, title=title, layout=[3,2,1], c_label_show=0, window_title=wTitle, /fill )
+	    c = contour ( -PlotField, this_r, this_z, c_value=levels, rgb_indices=colors, rgb_table=1, /over, c_label_show=0, /fill  )
+    endelse
+
+	thisField = thisSolutionFullGrid[*,*]
+    title = 'f (interp)'
+	PlotField = (real_part(thisField)<max(levels))>min(-levels)
+    if testFunction then begin 
+        s = surface ( PlotField, rGrid, zGrid, style=1, aspect_ratio=aspect, title=title, layout=[3,2,2],/current )
+    endif else begin
+	    c = contour ( PlotField, rGrid, zGrid, c_value=levels, rgb_indices=colors, rgb_table=3, $
+            aspect_ratio=aspect, dimensions=dimensions, title=title, xRange=xRange, yRange=yRange, $
+            layout=[3,2,2], /current, c_label_show=0, /fill  )
+	    c = contour ( -PlotField, rGrid, zGrid, c_value=levels, rgb_indices=colors, rgb_table=1, /over, c_label_show=0, /fill  )
+    endelse
+
+    p=plot(this_r,this_f[*,this_nZ/2],layout=[3,2,5],/current)
+    p=plot(rGrid,thisField[*,nZGrid/2],layout=[3,2,5],/current,/over,color='r')
+
+    thisField = f[*,*]
+    title = 'f (sparse)'
+	PlotField = (real_part(thisField)<max(levels))>min(-levels)
+    if testFunction then begin
+        s = surface ( PlotField, rGrid, zGrid, style=1, aspect_ratio=aspect, title=title, layout=[3,2,3],/current )
+    endif else begin
+	    c = contour ( PlotField, rGrid, zGrid, c_value=levels, rgb_indices=colors, rgb_table=3, $
+            aspect_ratio=aspect, dimensions=dimensions, title=title, xRange=xRange, yRange=yRange, $
+            layout=[3,2,3], /current, c_label_show=0, /fill  )
+	    c = contour ( -PlotField, rGrid, zGrid, c_value=levels, rgb_indices=colors, rgb_table=1, /over, c_label_show=0, /fill  )
+    endelse
+
+    thisField = refSolution-f 
+    title = 'fRef - fSparse'
+	PlotField = (real_part(thisField)<max(levels))>min(-levels)
+    if testFunction then begin
+        s = surface ( PlotField, rGrid, zGrid, style=1, aspect_ratio=aspect, title=title, layout=[3,2,4],/current )
+    endif else begin
+	    c = contour ( PlotField, rGrid, zGrid, c_value=levels, rgb_indices=colors, rgb_table=3, $
+            aspect_ratio=aspect, dimensions=dimensions, title=title, xRange=xRange, yRange=yRange, $
+            layout=[3,2,4], /current, c_label_show=0, /fill  )
+	    c = contour ( -PlotField, rGrid, zGrid, c_value=levels, rgb_indices=colors, rgb_table=1, /over, c_label_show=0, /fill )
+    endelse
+
+    thisField = refSolution
+    title = 'fRef'
+	PlotField = (real_part(thisField)<max(levels))>min(-levels)
+    if testFunction then begin
+        s = surface ( PlotField, rGrid, zGrid, style=1, aspect_ratio=aspect, title=title, layout=[3,2,6],/current )
+    endif else begin
+	    c = contour ( PlotField, rGrid, zGrid, c_value=levels, rgb_indices=colors, rgb_table=3, $
+            aspect_ratio=aspect, dimensions=dimensions, title=title, xRange=xRange, yRange=yRange, $
+            layout=[3,2,6], /current, c_label_show=0, /fill  )
+	    c = contour ( -PlotField, rGrid, zGrid, c_value=levels, rgb_indices=colors, rgb_table=1, /over, c_label_show=0, /fill )
+    endelse
 
 endfor
-
-refSolution = ar2_read_solution(referenceSolution,1) 
-
-thisField = refSolution.e_z
-title = 'Reference E_b'
-levels = fIndGen(nLevs)/(nLevs-1)*scale
-colors = reverse(bytScl(levels, top=253)+1)
-PlotField = (real_part(thisField)<max(levels))>min(-levels)
-aspect = 1.0
-c = contour ( PlotField, refSolution.r, refSolution.z, c_value=levels, rgb_indices=colors, rgb_table=3, /fill, $
-    aspect_ratio=aspect, dimensions=dimensions, title=title, xRange=xRange, yRange=yRange )
-c = contour ( -PlotField, refSolution.r, refSolution.z, c_value=levels, rgb_indices=colors, rgb_table=1, /fill,/over )
 
 stop
 end

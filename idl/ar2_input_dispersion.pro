@@ -44,7 +44,7 @@ pro ar2_input_dispersion, wrf, amu, AtomicZ, nn, nPhi, nSpec, nR, nZ, Density_m3
 				(nuSpec1*AtomicZ[Spec1]*(AtomicZ[Spec2]/amu[Spec2])+nuSpec2*AtomicZ[Spec2]*(AtomicZ[Spec1]/amu[Spec1])) $
 				/ (nuSpec1*AtomicZ[Spec1]*(amu[Spec2]/AtomicZ[Spec2])+nuSpec2*AtomicZ[Spec2]*(amu[Spec1]/AtomicZ[Spec1]))
 		IonIonHybrid_cut = nuSpec1*AtomicZ[Spec1]*(AtomicZ[Spec2]/amu[Spec2])+nuSpec2*AtomicZ[Spec2]*(AtomicZ[Spec1]/amu[Spec1])
-		wc_H2 = (e*bMag/mi)^2
+		wc_H2 = (_e*bMag/_mi)^2
 		IonIonHybrid_res_freq = sqrt(IonIonHybrid_res * wc_H2)
 		IonIonHybrid_cut_freq = IonIonHybrid_cut * sqrt(wc_H2)
 	endif

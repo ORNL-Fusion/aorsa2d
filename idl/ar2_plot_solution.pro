@@ -478,8 +478,8 @@ pro ar2_plot_solution, full = full, $
 
         scale = 0.4
 
-		thisField = ealpha[*,*]
-        ;scale = max(abs(real_part(thisField)))*scaleFac
+		thisField = e_r[*,*]
+        scale = max(abs(real_part(thisField)))*scaleFac
         print, 'E_r scale: ', scale
         title = 'E_r'
 		levels = fIndGen(nLevs)/(nLevs-1)*scale
@@ -496,8 +496,8 @@ pro ar2_plot_solution, full = full, $
         ++PlotPos
         p.Save, "Er.png", border=0, height=600
 
-		thisField = ebeta[*,*]
-        ;scale = max(abs(real_part(thisField)))*scaleFac
+		thisField = e_t[*,*]
+        scale = max(abs(real_part(thisField)))*scaleFac
         title = 'E_t'
         print, 'E_t scale: ', scale
 		levels = fIndGen(nLevs)/(nLevs-1)*scale
@@ -514,8 +514,8 @@ pro ar2_plot_solution, full = full, $
         ++PlotPos
         p.Save, "Et.png", border=0, height=600
 
-		thisField = eb[*,*]
-        ;scale = max(abs(real_part(thisField)))*scaleFac
+		thisField = e_z[*,*]
+        scale = max(abs(real_part(thisField)))*scaleFac
         print, 'E_z scale: ', scale
         title = 'E_z'
 		levels = fIndGen(nLevs)/(nLevs-1)*scale

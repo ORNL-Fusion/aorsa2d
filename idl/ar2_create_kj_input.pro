@@ -1,4 +1,6 @@
-pro ar2_create_kj_input
+pro ar2_create_kj_input, cartesian_offset = _cartesian_offset
+
+    if keyword_set(_cartesian_offset) then cartesian_offset = _cartesian_offset else cartesian_offset = 0
 
     runFolderName = './'
     RHS = 1
@@ -67,7 +69,7 @@ pro ar2_create_kj_input
 
 	nCdf_varPut, nc_id, freq_id, ar2['freq']
 
-	nCdf_varPut, nc_id, r_id, data.r
+	nCdf_varPut, nc_id, r_id, data.r - cartesian_offset
 
 	nCdf_varPut, nc_id, z_id, data.z
 

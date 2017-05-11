@@ -195,9 +195,9 @@ function ar2_read_solution, runFolderName, RHS
                 ealphak: ealphak, $
                 ebetak: ebetak, $
                 ebk: ebk, $
-                ;b1_r: b_r, $
-                ;b1_t: b_t, $
-                ;b1_z: b_z, $
+                b1_r: b_r, $
+                b1_t: b_t, $
+                b1_z: b_z, $
                 jA_r: complex(jr_re,jr_im), $
                 jA_t: complex(jt_re,jt_im), $
                 jA_z: complex(jz_re,jz_im) }
