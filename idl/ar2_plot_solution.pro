@@ -429,9 +429,9 @@ pro ar2_plot_solution, full = full, $
 
         endfor
 
-        h_r = h_r / (II*wRFc*_u0)
-        h_t = h_t / (II*wRFc*_u0)
-        h_z = h_z / (II*wRFc*_u0)
+        h_r = h_r / (_II*wRFc*_u0)
+        h_t = h_t / (_II*wRFc*_u0)
+        h_z = h_z / (_II*wRFc*_u0)
 
         p=plot(r,h_r,layout=[1,3,1],title='h_r',window_title='aorsa')
         p=plot(r,imaginary(h_r),/over,color='r')
@@ -476,7 +476,7 @@ pro ar2_plot_solution, full = full, $
 
 		nLevs = 10
 
-        scale = 0.4
+        scale = 0.1
 
 		thisField = e_r[*,*]
         scale = max(abs(real_part(thisField)))*scaleFac
