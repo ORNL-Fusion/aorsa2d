@@ -14,7 +14,7 @@ function ar2_read_solution, runFolderName, RHS
 	GridNoStr = string(ThisGridNo,format='(i3.3)')
 	ThisNPhi = ar2Input['nPhi']
     ThisRHS = RHS
-	nPhiStr = string(ThisNPhi,format='(i+4.3)')
+	nPhiStr = string(ThisNPhi,format='(i+7.6)')
 	rhsStr = string(ThisRHS,format='(i6.6)')
 
 	SolutionFile = expand_path(RunFolderName)+'/output/solution_'+GridNoStr+'_'+nPhiStr+'_'+rhsStr+'.nc'

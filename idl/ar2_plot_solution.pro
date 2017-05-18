@@ -15,7 +15,7 @@ pro ar2_plot_solution, full = full, $
 
 	if keyword_set(_nPhi) then ThisNPhi = _nPhi else ThisNPhi = ar2Input['nPhi']
 
-	nPhiStr = string(ThisNPhi,format='(i+4.3)')
+	nPhiStr = string(ThisNPhi,format='(i+7.6)')
 	rhsStr = string(ThisRHS,format='(i6.6)')
 
 	SolutionFile = 'output/solution_'+GridNoStr+'_'+nPhiStr+'_'+rhsStr+'.nc'
@@ -217,7 +217,7 @@ pro ar2_plot_solution, full = full, $
 
     for s=0,nSpec-1 do begin
         print, 'amu: ',round(ar2.amu[s]),' Z: ',round(ar2.atomicZ[s]),' Total(jDotE)['+string(s,format='(i1.1)')+']: ',$
-            string(total(real_part(jDotE_s[*,*,s]))/total(real_part(jDotE_s))*100,format='(f4.1)')+'%'
+            string( total(real_part(jDotE_s[*,*,s])) / total(real_part(jDotE_s)) *100,format='(f15.4)')+'%'
     endfor
 
 
@@ -351,7 +351,7 @@ pro ar2_plot_solution, full = full, $
     		    		name='Jp_re',font_size=10,/over)
             endfor
     
-            p=plot(r,jP_a,layout=[1,3,1], title='jP_rtz (summed over species)')
+            p=plot(r,jP_r,layout=[1,3,1], title='jP_rtz (summed over species)')
             p=plot(r,imaginary(jP_r),color='r',/over)
     
             p=plot(r,jP_t,layout=[1,3,2], /current)

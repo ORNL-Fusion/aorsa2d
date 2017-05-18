@@ -117,7 +117,7 @@ contains
         endif
        
         if(useJpFromFile)then
-            get_jA = get_jA - (/g%file_JpR(i,j),g%file_JpT(i,j),g%file_JpZ(i,j)/)
+            get_jA = get_jA - (/g%file_JpR(i,1),g%file_JpT(i,1),g%file_JpZ(i,1)/)
         endif
 
 

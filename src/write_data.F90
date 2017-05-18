@@ -24,7 +24,7 @@ contains
         character(len=100) :: fName 
         character(len=20) :: rid
         character(len=6) :: rhs_string
-        character(len=4) :: nPhi_string
+        character(len=7) :: nPhi_string
 
         integer :: nc_id, nX_id, nY_id, nc_stat, NRHS_id
         integer :: nModesX_id, nModesY_id, nSpec_id
@@ -58,7 +58,7 @@ contains
         integer :: p,i,j,s
         integer, allocatable :: Cnt(:,:)
 
-        write(nPhi_string,'(sp,i4.3)'), int(nPhi)
+        write(nPhi_string,'(sp,i7.6)'), int(nPhi)
         write(rhs_string,'(i6.6)'), rhs
 
         fName = trim(rid)//'output/runData_'//g%fNumber//'_'//nPhi_string//'_'//rhs_string//'.nc'
@@ -431,7 +431,7 @@ contains
         character(len=100) :: fName 
         character(len=20) :: rid
         character(len=6) :: rhs_string
-        character(len=4) :: nPhi_string
+        character(len=7) :: nPhi_string
 
         integer :: nc_id, nX_id, nY_id, nModesX_id, nModesY_id, nSpec_id, NRHS_id, nR_id
         integer :: &
@@ -459,7 +459,7 @@ contains
 
         integer :: jouleHeating_id
 
-        write(nPhi_string,'(sp,i4.3)'), int(nPhi)
+        write(nPhi_string,'(sp,i7.6)'), int(nPhi)
         write(rhs_string,'(i6.6)'), rhs
 
         fName = trim(rid)//'output/solution_'//g%fNumber//'_'//nPhi_string//'_'//rhs_string//'.nc'
