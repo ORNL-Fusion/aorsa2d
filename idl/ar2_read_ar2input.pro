@@ -1,6 +1,8 @@
-pro ar2_read_ar2input, ar2InFileName, $
-		rLim=rLim, zLim=zLim, LimMask=LimMask, ar2 = ar2, $
+function ar2_read_ar2input, runFolderName, $
+		rLim=rLim, zLim=zLim, LimMask=LimMask, $
         rlcfs=rlcfs, zlcfs=zlcfs
+
+    ar2InFileName = runFolderName + '/input/ar2Input.nc'
 
 	cdfId = ncdf_open ( ar2InFileName, /noWrite ) 
 	nCdf_varGet, cdfid, 'rMin', rMin
@@ -51,7 +53,7 @@ pro ar2_read_ar2input, ar2InFileName, $
 	;	nCdf_varGet, cdfid, 'LimMask', LimMask
 	;ncdf_close, cdfId
 
-    ar2 = { $
+    return, ar2 = { $
             rMin: rMin, $
             rMax: rMax, $
             zMin: zMin, $

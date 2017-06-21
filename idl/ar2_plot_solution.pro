@@ -25,9 +25,13 @@ pro ar2_plot_solution, full = full, $
 	print, 'SolutionFile: ', SolutionFile
 	print, 'RunDataFile: ', RunDataFile
 
-	ar2_read_ar2input, ar2InputFile, $
-			rLim=rLim,zLim=zLim,LimMask=LimMask,ar2=ar2,$
-            rlcfs=rlcfs, zlcfs=zlcfs
+;	ar2_read_ar2input, ar2InputFile, $
+;			rLim=rLim,zLim=zLim,LimMask=LimMask,ar2=ar2,$
+;            rlcfs=rlcfs, zlcfs=zlcfs
+	ar2 = ar2_read_ar2input( './', $
+			rLim=rLim,zLim=zLim,LimMask=LimMask,$
+            rlcfs=rlcfs, zlcfs=zlcfs)
+
 
 	@constants
 
