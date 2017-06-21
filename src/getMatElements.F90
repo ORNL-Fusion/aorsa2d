@@ -276,21 +276,21 @@ function get3by3Block( g, w)!, r, z)
             endif
         endif
 
-        if(useJpFromFile)then
+        !if(useJpFromFile)then
 
-            sigAlpAlp = 0
-            sigAlpBet = 0
-            sigAlpPrl = 0
-                     
-            sigBetAlp = 0
-            sigBetBet = 0
-            sigBetPrl = 0
-                     
-            sigPrlAlp = 0
-            sigPrlBet = 0
-            sigPrlPrl = 0
+        !    sigAlpAlp = 0
+        !    sigAlpBet = 0
+        !    sigAlpPrl = 0
+        !             
+        !    sigBetAlp = 0
+        !    sigBetBet = 0
+        !    sigBetPrl = 0
+        !             
+        !    sigPrlAlp = 0
+        !    sigPrlBet = 0
+        !    sigPrlPrl = 0
 
-        endif
+        !endif
 
         kAlpAlp = 1.0 + zi / (eps0 * omgrf) * sigAlpAlp
         kAlpBet =       zi / (eps0 * omgrf) * sigAlpBet
