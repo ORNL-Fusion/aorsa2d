@@ -326,33 +326,35 @@ pro ar2_plot_solution, full = full, $
     	yRange = max(abs(jp_r))
 
         plotJp_rtz = 1
+        current = 0
     	if plotJp_rtz then begin
     
             nS = n_elements(jP_r_s[0,0,*])
-   
-            p=plot([0,0],[0,0],/noData, layout=[nS,3,1],window_title='aorsa_1d - jP_rtz',dimensions=[1200,800])
-    
+  
+
             for s=0,nS-1 do begin
                 This_amu_str = ', amu: '+string(ar2.amu[s],format='(i1.1)')
                 This_Z_str = ', Z: '+string(ar2.atomicZ[s],format='(i+2.1)')
 
-    		    p_re = plot (r,jP_r_s[*,0,s],thick=2,$
+    		    p_re = plot (r,jP_r_s[*,0,s],thick=2,window_title='aorsa_1d - jP_rtz',dimensions=[1200,800],$
     		    		title='jP_r'+This_amu_str+This_Z_str,name='Jp_re',font_size=10,$
-    		    		layout=[nS,3,1+s],yRange=yRange,transparency=50,/current)
+    		    		layout=[nS,3,1+s],yRange=yRange,transparency=50,current=current<1)
     		    p_im = plot (r,imaginary(jP_r_s[*,0,s]),color='r',thick=2,transparency=50,$
     		    		name='Ja_re',font_size=10,/over)
-    
+
+                current++
     		    p_re = plot (r,jP_t_s[*,0,s],thick=2,$
     		    		title='jP_t',name='Jp_re',font_size=10,$
-    		    		layout=[nS,3,1+1*nS+s],/current,yRange=yRange,transparency=50)
+    		    		layout=[nS,3,1+1*nS+s],current=current<1,yRange=yRange,transparency=50)
     		    p_im = plot (r,imaginary(jP_t_s[*,0,s]),color='r',thick=2,transparency=50,$
     		    		name='Jp_re',font_size=10,/over)
     
     		    p_re = plot (r,jP_z_s[*,0,s],thick=2,$
     		    		title='jP_z',name='Jp_re',font_size=10,$
-    		    		layout=[nS,3,1+2*nS+s],/current,yRange=yRange,transparency=50)
+    		    		layout=[nS,3,1+2*nS+s],current=current<1,yRange=yRange,transparency=50)
     		    p_im = plot (r,imaginary(jP_z_s[*,0,s]),color='r',thick=2,transparency=50,$
     		    		name='Jp_re',font_size=10,/over)
+
             endfor
     
             p=plot(r,jP_r,layout=[1,3,1], title='jP_rtz (summed over species)')
