@@ -1,8 +1,12 @@
 function ar2_read_ar2input, runFolderName, $
 		rLim=rLim, zLim=zLim, LimMask=LimMask, $
-        rlcfs=rlcfs, zlcfs=zlcfs
+        rlcfs=rlcfs, zlcfs=zlcfs, fileName = _fileName
 
-    ar2InFileName = runFolderName + '/input/ar2Input.nc'
+    if keyword_set(_fileName) then begin
+        ar2InFileName = _fileName 
+    endif else begin
+        ar2InFileName = runFolderName + '/input/ar2Input.nc'
+    endelse
 
 	cdfId = ncdf_open ( ar2InFileName, /noWrite ) 
 	nCdf_varGet, cdfid, 'rMin', rMin
