@@ -70,6 +70,7 @@ function ar2_read_rundata, runFolderName, RHS
         jA_t : complex(jt_re,jt_im), $ 
         jA_z : complex(jz_re,jz_im), $
         densitySpec : densitySpec, $
+        tempSpec : tempSpec, $
         nuOmg : nuOmg, $
         br : brU * bmod, $
         bt : btU * bmod, $

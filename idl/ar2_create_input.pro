@@ -228,6 +228,7 @@ pro ar2_create_input, _r1=_r1, _z1=_z1, _angle=_angle, doPlots = _doPlots, _len=
 	ScreenSize = get_screen_size()
 	dimensions = ScreenSize*0.8
     plotpos = 1
+
 if doPlots then begin
 	p=plot(r,bt[*,nZ/2],layout=[layout,plotpos], title='bField',dimensions=dimensions)
 	p=plot(r,br[*,nZ/2],/over,color='b')
@@ -387,6 +388,9 @@ endif
 		endfor
 
 	endif
+
+    Density_m3 = Density_m3 > DensityMin
+    Temp_eV = Temp_eV > TempMin
 
     yRange = [zMin,zMax]
     xRange = [rMin,rMax]
@@ -571,6 +575,8 @@ endif
 	kPer_S_2D = sqrt(kPerpSq_S)
 	kPer_F = kPer_F_2D[*,nZ/2]
 	kPer_S = kPer_S_2D[*,nZ/2]
+	kPer_F_2 = kPer_F_2D[nR/2,*]
+	kPer_S_2 = kPer_S_2D[nR/2,*]
 
     ;; plot up the ion cyclortron resonances
 
@@ -583,10 +589,20 @@ if doPlots then begin
     ;++PlotPos
 
 	p = plot(r,kPer_F, title='kPer_F',layout=[layout,PlotPos],/current)
+    p = plot(r,imaginary(kPer_F), /over, color='r')
     ++PlotPos
 
 	p = plot(r,kPer_S, title='kPer_S',layout=[layout,PlotPos],/current)
+    p = plot(r,imaginary(kPer_S), /over, color='r')
     ++PlotPos
+
+	;p = plot(z,kPer_F_2, title='kPer_F',layout=[2,1,1])
+    ;p = plot(z,imaginary(kPer_F_2), /over, color='r')
+    ;++PlotPos
+
+	;p = plot(z,kPer_S_2, title='kPer_S',layout=[2,1,2],/current)
+    ;p = plot(z,imaginary(kPer_S_2), /over, color='r')
+    ;++PlotPos
 
     PlotPos = PlotPos+3
 
@@ -599,7 +615,7 @@ if doPlots then begin
     if nZ gt 1 then begin
 	    c = contour(kPer_F_2D,r,z,layout=[layout,plotpos],$
 			c_value=levels,rgb_indices=colors,rgb_table=1,$
-            /fill,aspect_ratio=1.0, title='kPer Fast Branch',/current, xRange=xRange, yRange=yRange )
+            /fill, title='kPer Fast Branch',/current, xRange=xRange, yRange=yRange )
             ++plotpos
             c_zero_set = contour(kPerpSq_F,r,z,/over,c_value=0.001,color='r',C_LABEL_SHOW=0,c_thick=2)
     endif 
@@ -615,7 +631,7 @@ if doPlots then begin
     if nZ gt 1 then begin
 	    c = contour(kPer_S_2D,r,z,layout=[layout,plotpos],/current,$
 			c_value=levels,rgb_indices=colors,rgb_table=3,$
-            /fill,aspect_ratio=1.0, title='kPer Slow Branch', xRange=xRange, yRange=yRange)
+            /fill, title='kPer Slow Branch', xRange=xRange, yRange=yRange)
         ++PlotPos
 		;c.save, plotFile, /append, /close
     endif 

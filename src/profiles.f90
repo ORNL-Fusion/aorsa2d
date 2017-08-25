@@ -226,7 +226,7 @@ contains
             write(*,*) '    amuSpec: ', amuSpec
         endif
 
-        mSpec       = amuSpec * xmh
+        mSpec       = amuSpec * const_amu
         qSpec       = zSpec * q 
 
         ! Interpolate the ar2Input data to the grid.
