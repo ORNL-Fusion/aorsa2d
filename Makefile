@@ -8,7 +8,7 @@ MOD_DIR = mod
 CPP_DIR = cpp
 
 COMPILER := GNU# GNU, PGI
-PARALLEL := 1# 0, 1
+PARALLEL := 0# 0, 1
 GPU := 0# 0, 1
 DDT := 0# 0, 1
 
@@ -84,10 +84,10 @@ ifeq (${COMPILER},PGI)
     FORMAT:=
 else
 	FORMAT := -ffree-line-length-none
-	BOUNDS := #-fbounds-check 
+	BOUNDS := -fbounds-check 
 	WARN := -Wall
-	DEBUG := #-pg -g -fbacktrace -fsignaling-nans -ffpe-trap=zero,invalid#,overflow#,underflow
-	OPTIMIZATION := -O3
+	DEBUG := -pg -g -fbacktrace -fsignaling-nans -ffpe-trap=zero,invalid#,overflow#,underflow
+	OPTIMIZATION := #-O3
 	DOUBLE := -fdefault-real-8
 	MOD_LOC := -Jmod
 endif

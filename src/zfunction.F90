@@ -3,7 +3,134 @@
 
 module zfunction_mod
 
+integer :: table_N
+real*4, allocatable :: table_arg(:) 
+complex, allocatable :: table_Z(:), table_Zp(:)
+real*4, allocatable :: table_Z_re(:), table_Z_im(:), &
+        table_Zp_re(:), table_Zp_im(:)
+real*4, allocatable :: fitpack_yp_Z_re(:), fitpack_yp_Z_im(:), &
+    fitpack_yp_Zp_re(:), fitpack_yp_Zp_im(:)
+real*4 :: fitpack_sigma 
+
 contains
+
+subroutine z_from_table(arg, Z, Zp, argZp)
+
+    use fitpack
+
+    implicit none
+
+    real, intent(in) :: arg
+    complex, intent(out) :: Z, Zp, argZp
+    real :: Z_re, Z_im, Zp_re, Zp_im
+
+    Z_re = curv2( real(arg,4), table_N, table_arg, table_Z_re, &
+        fitpack_yp_Z_re, fitpack_sigma ) 
+
+    Z_im = curv2( real(arg,4), table_N, table_arg, table_Z_im, &
+        fitpack_yp_Z_im, fitpack_sigma ) 
+
+    Zp_re = curv2( real(arg,4), table_N, table_arg, table_Zp_re, &
+        fitpack_yp_Zp_re, fitpack_sigma ) 
+
+    Zp_im = curv2( real(arg,4), table_N, table_arg, table_Zp_im, &
+        fitpack_yp_Zp_im, fitpack_sigma ) 
+
+    Z = cmplx(Z_re,Z_im)
+    Zp = cmplx(Zp_re,Zp_im)
+    argZp = arg * Zp 
+
+end subroutine z_from_table
+
+
+subroutine z_load_table(fileName)
+
+    use netcdf
+    use check_mod
+    use fitpack
+
+    implicit none
+
+    character(len=*), intent(IN) :: fileName
+    integer :: stat
+    integer :: nc_id, arg_re_id, &
+        Z_re_id, Z_im_id, Zp_re_id, Zp_im_id, &
+        N_id
+
+    logical :: file_exists
+
+    ! FITPACK variables
+
+    integer islpsw, ierr
+    real*4, allocatable :: temp(:)
+    real*4 :: slp1, slpn 
+
+    ! -------
+
+    inquire( file=trim(fileName), exist=file_exists )
+
+    if ( file_exists ) then
+
+        call check( nf90_open(path=fileName,mode=nf90_nowrite,ncid=nc_id) )
+
+        call check( nf90_inq_varId(nc_id,'arg_re',arg_re_id) )
+        call check( nf90_inq_varId(nc_id,'Z_re',Z_re_id) )
+        call check( nf90_inq_varId(nc_id,'Z_im',Z_im_id) )
+        call check( nf90_inq_varId(nc_id,'Zp_re',Zp_re_id) )
+        call check( nf90_inq_varId(nc_id,'Zp_im',Zp_im_id) )
+
+        call check( nf90_inq_dimId(nc_id,'arg_reDim1',N_id) )
+        call check( nf90_inquire_dimension(nc_id,N_id,len=table_N) )
+
+        allocate( table_arg(table_N),table_Z_re(table_N),&
+            table_Z_im(table_N),&
+            table_Zp_re(table_N),table_Zp_im(table_N), &
+            table_Z(table_N), table_Zp(table_N) )
+
+        call check( nf90_get_var(nc_id,arg_re_id,table_arg) )
+        call check( nf90_get_var(nc_id,Z_re_id,table_Z_re) )
+        call check( nf90_get_var(nc_id,Z_im_id,table_Z_im) )
+        call check( nf90_get_var(nc_id,Zp_re_id,table_Zp_re) )
+        call check( nf90_get_var(nc_id,Zp_im_id,table_Zp_im) )
+
+        call check( nf90_close(nc_id) )
+
+        table_Z = cmplx(table_Z_re,table_Z_im) 
+        table_Zp = cmplx(table_Zp_re,table_Zp_im) 
+
+        ! Use FITPACK to setup the interplants
+
+        islpsw = 3 
+        fitpack_sigma = 1.0
+        allocate(&
+            fitpack_yp_Z_re(table_N),&
+            fitpack_yp_Z_im(table_N),&
+            fitpack_yp_Zp_re(table_N),&
+            fitpack_yp_Zp_im(table_N),&
+            temp(table_N))
+
+        temp(:) = 0
+        call curv1( table_N, table_arg, table_Z_re, slp1, slpn, islpsw, &
+            fitpack_yp_Z_re, temp, fitpack_sigma, ierr )
+
+        temp(:) = 0
+        call curv1( table_N, table_arg, table_Z_im, slp1, slpn, islpsw, &
+            fitpack_yp_Z_im, temp, fitpack_sigma, ierr )
+
+        temp(:) = 0
+        call curv1( table_N, table_arg, table_Zp_re, slp1, slpn, islpsw, &
+            fitpack_yp_Zp_re, temp, fitpack_sigma, ierr )
+
+        temp(:) = 0
+        call curv1( table_N, table_arg, table_Zp_im, slp1, slpn, islpsw, &
+            fitpack_yp_Zp_im, temp, fitpack_sigma, ierr )
+
+    else
+        write(*,*) 'File not found: ',fileName
+        stop
+    end if
+
+end subroutine z_load_table
 
 
 !

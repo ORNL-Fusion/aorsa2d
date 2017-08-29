@@ -23,6 +23,7 @@ program aorsa2dMain
     use AR2SourceLocationsInput, NRHS_FromInputFile=>NRHS
     use Performance
     use read_jp_from_file
+    use zfunction_mod
 
     implicit none
 
@@ -299,22 +300,18 @@ program aorsa2dMain
         enddo
 
     else 
-
-        !call init_profiles (nSpec)
-
-        !do i=1,nGrid
-
-        !    if (useFluxProfiles) then
-        !        call flux_profiles ( allGrids(i) )
-        !    elseif (useCircularProfiles) then
-        !        call circular_profiles ( allGrids(i) )
-        !    else
-        !        call flat_profiles ( allGrids(i), parabolic = parabolic )
-        !    endif
-
-        !enddo
         stop
     endif
+
+!   load Z function file 
+!   --------------------
+
+    if (iAm==0) &
+    write(*,*) 'Loading Z function file'
+  
+    call z_load_table(zFunctionFileName)
+
+    write(*,*) '    DONE'
 
 #ifdef par
     call blacs_barrier ( ICTXT, 'All' ) 

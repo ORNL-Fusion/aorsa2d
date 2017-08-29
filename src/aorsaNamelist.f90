@@ -83,6 +83,7 @@ implicit none
       real :: ZeroJp_rMax = 100.0
       real :: ZeroJp_zMin = -100.0
       real :: ZeroJp_zMax = 100.00
+      character(len=100) :: zFunctionFileName = 'input/zFunction.nc'
       character(len=100) :: AR2InputFileName = 'ar2Input.nc'
       character(len=100) :: JpInputFileName = 'jp.nc'
       character(len=100) :: AR2SourceLocationsFileName = 'AR2SourceLocations.nc'
@@ -494,7 +495,7 @@ implicit none
      &    noPoloidalField, rhoScale, rhoWidth, rhoPower, useCircular, &
      &    bPol_frac, useCircularProfiles, lsWeightFac, xkx_cutOff, xky_cutOff, &
      &    chebyshevX, chebyshevY, magma, rhoAnt, antSigRho, toroidalBroadening,&
-     &    kPrlEffLimit, nGrid, useAr2Input, AR2InputFileName, &
+     &    kPrlEffLimit, nGrid, useAr2Input, AR2InputFileName, zFunctionFileName, &
      &    nRAll, nZAll, rMinAll, rMaxAll, zMinAll, zMaxAll, &
      &    overlap, parabolic, cosX, cosY, nZ_1D, fracOfModesInSolution, &
      &    AntennaJ_R, AntennaJ_T, AntennaJ_Z, AR2SourceLocationsFileName, &
