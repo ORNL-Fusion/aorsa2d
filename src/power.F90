@@ -44,6 +44,23 @@ subroutine current ( g, rhs )
         g%jBeta(g%nR,g%nZ,nSpec), &
         g%jB(g%nR,g%nZ,nSpec) )
 
+#if WRITE_SIGMA_TO_OUTPUT > 0 
+
+     if (.not.allocated(g%sig11)) allocate ( &
+        g%sig11(g%nR,g%nMin:g%nMax,nSpec), &
+        g%sig12(g%nR,g%nMin:g%nMax,nSpec), &
+        g%sig13(g%nR,g%nMin:g%nMax,nSpec), &
+        g%sig21(g%nR,g%nMin:g%nMax,nSpec), &
+        g%sig22(g%nR,g%nMin:g%nMax,nSpec), &
+        g%sig23(g%nR,g%nMin:g%nMax,nSpec), &
+        g%sig31(g%nR,g%nMin:g%nMax,nSpec), &
+        g%sig32(g%nR,g%nMin:g%nMax,nSpec), &
+        g%sig33(g%nR,g%nMin:g%nMax,nSpec) )
+
+    if (.not.allocated(g%kr)) allocate( &
+        g%kr(g%nMin:g%nMax,g%mMin:g%mMax), g%kz(g%nMin:g%nMax,g%mMin:g%mMax) )
+#endif
+
     allocate ( jAlphaTmp(g%nR,g%nZ), jBetaTmp(g%nR,g%nZ), jBTmp(g%nR,g%nZ) )
 
     g%jAlpha = 0
@@ -188,8 +205,25 @@ subroutine current ( g, rhs )
                             write(*,*) thisSigma(3,1), thisSigma(3,2), thisSigma(3,3)
                         endif
 #endif
-                        jVec = matMul ( thisSigma, ek_nm ) 
+
+#if WRITE_SIGMA_TO_OUTPUT > 0
+
+                        g%kr(g%wl(w)%n,g%wl(w)%m) = kr
+                        g%kz(g%wl(w)%n,g%wl(w)%m) = kz
+
+                        g%sig11(g%wl(w)%i,g%wl(w)%n,s) = thisSigma(1,1)
+                        g%sig12(g%wl(w)%i,g%wl(w)%n,s) = thisSigma(1,2)
+                        g%sig13(g%wl(w)%i,g%wl(w)%n,s) = thisSigma(1,3)
+                        g%sig21(g%wl(w)%i,g%wl(w)%n,s) = thisSigma(2,1)
+                        g%sig22(g%wl(w)%i,g%wl(w)%n,s) = thisSigma(2,2)
+                        g%sig23(g%wl(w)%i,g%wl(w)%n,s) = thisSigma(2,3)
+                        g%sig31(g%wl(w)%i,g%wl(w)%n,s) = thisSigma(3,1)
+                        g%sig32(g%wl(w)%i,g%wl(w)%n,s) = thisSigma(3,2)
+                        g%sig33(g%wl(w)%i,g%wl(w)%n,s) = thisSigma(3,3)
+#endif
+
                         !thisSigma = transpose(thisSigma)
+                        jVec = matMul ( thisSigma, ek_nm ) 
                         !jVec(1) = thisSigma(1,1)*ek_nm(1)+thisSigma(2,1)*ek_nm(2)+thisSigma(3,1)*ek_nm(3)
                         !jVec(2) = thisSigma(1,2)*ek_nm(1)+thisSigma(2,2)*ek_nm(2)+thisSigma(3,2)*ek_nm(3)
                         !jVec(3) = thisSigma(1,3)*ek_nm(1)+thisSigma(2,3)*ek_nm(2)+thisSigma(3,3)*ek_nm(3)

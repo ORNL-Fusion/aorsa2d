@@ -304,7 +304,7 @@ function get3by3Block( g, w)!, r, z)
         kPrlBet =       zi / (eps0 * omgrf) * sigPrlBet
         kPrlPrl = 1.0 + zi / (eps0 * omgrf) * sigPrlPrl
 
-        ! These ARE used below bitch.
+        ! These ARE used below.
         d%n = g%wl(w)%n
         d%m = g%wl(w)%m
         ! FIX: Also, these may require some interpolation.

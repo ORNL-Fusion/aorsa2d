@@ -454,6 +454,18 @@ contains
             jP_r_re_id, jP_r_im_id, &
             jP_t_re_id, jP_t_im_id, &
             jP_z_re_id, jP_z_im_id
+        integer :: &
+            sig11_re_id, sig11_im_id, &
+            sig12_re_id, sig12_im_id, &
+            sig13_re_id, sig13_im_id, &
+            sig21_re_id, sig21_im_id, &
+            sig22_re_id, sig22_im_id, &
+            sig23_re_id, sig23_im_id, &
+            sig31_re_id, sig31_im_id, &
+            sig32_re_id, sig32_im_id, &
+            sig33_re_id, sig33_im_id, &
+            kr_id, kz_id    
+
         integer :: r_id, z_id,nPhi_id,freq_id,scalar_id
         integer :: stat
 
@@ -538,7 +550,54 @@ contains
             (/nX_id,nY_id,nSpec_id/), jP_z_re_id ) ) 
         call check ( nf90_def_var ( nc_id, "jP_z_im", NF90_REAL, &
             (/nX_id,nY_id,nSpec_id/), jP_z_im_id ) ) 
- 
+
+#if WRITE_SIGMA_TO_OUTPUT
+
+         call check ( nf90_def_var ( nc_id, "kr", NF90_REAL, &
+            (/nModesX_id,nModesY_id/), kr_id ) ) 
+         call check ( nf90_def_var ( nc_id, "kz", NF90_REAL, &
+            (/nModesX_id,nModesY_id/), kz_id ) ) 
+
+         call check ( nf90_def_var ( nc_id, "sig11_re", NF90_REAL, &
+            (/nX_id,nModesX_id,nSpec_id/), sig11_re_id ) ) 
+         call check ( nf90_def_var ( nc_id, "sig11_im", NF90_REAL, &
+            (/nX_id,nModesX_id,nSpec_id/), sig11_im_id ) ) 
+         call check ( nf90_def_var ( nc_id, "sig12_re", NF90_REAL, &
+            (/nX_id,nModesX_id,nSpec_id/), sig12_re_id ) ) 
+         call check ( nf90_def_var ( nc_id, "sig12_im", NF90_REAL, &
+            (/nX_id,nModesX_id,nSpec_id/), sig12_im_id ) ) 
+         call check ( nf90_def_var ( nc_id, "sig13_re", NF90_REAL, &
+            (/nX_id,nModesX_id,nSpec_id/), sig13_re_id ) ) 
+         call check ( nf90_def_var ( nc_id, "sig13_im", NF90_REAL, &
+            (/nX_id,nModesX_id,nSpec_id/), sig13_im_id ) ) 
+
+         call check ( nf90_def_var ( nc_id, "sig21_re", NF90_REAL, &
+            (/nX_id,nModesX_id,nSpec_id/), sig21_re_id ) ) 
+         call check ( nf90_def_var ( nc_id, "sig21_im", NF90_REAL, &
+            (/nX_id,nModesX_id,nSpec_id/), sig21_im_id ) ) 
+         call check ( nf90_def_var ( nc_id, "sig22_re", NF90_REAL, &
+            (/nX_id,nModesX_id,nSpec_id/), sig22_re_id ) ) 
+         call check ( nf90_def_var ( nc_id, "sig22_im", NF90_REAL, &
+            (/nX_id,nModesX_id,nSpec_id/), sig22_im_id ) ) 
+         call check ( nf90_def_var ( nc_id, "sig23_re", NF90_REAL, &
+            (/nX_id,nModesX_id,nSpec_id/), sig23_re_id ) ) 
+         call check ( nf90_def_var ( nc_id, "sig23_im", NF90_REAL, &
+            (/nX_id,nModesX_id,nSpec_id/), sig23_im_id ) ) 
+
+         call check ( nf90_def_var ( nc_id, "sig31_re", NF90_REAL, &
+            (/nX_id,nModesX_id,nSpec_id/), sig31_re_id ) ) 
+         call check ( nf90_def_var ( nc_id, "sig31_im", NF90_REAL, &
+            (/nX_id,nModesX_id,nSpec_id/), sig31_im_id ) ) 
+         call check ( nf90_def_var ( nc_id, "sig32_re", NF90_REAL, &
+            (/nX_id,nModesX_id,nSpec_id/), sig32_re_id ) ) 
+         call check ( nf90_def_var ( nc_id, "sig32_im", NF90_REAL, &
+            (/nX_id,nModesX_id,nSpec_id/), sig32_im_id ) ) 
+         call check ( nf90_def_var ( nc_id, "sig33_re", NF90_REAL, &
+            (/nX_id,nModesX_id,nSpec_id/), sig33_re_id ) ) 
+         call check ( nf90_def_var ( nc_id, "sig33_im", NF90_REAL, &
+            (/nX_id,nModesX_id,nSpec_id/), sig33_im_id ) ) 
+#endif 
+
         call check ( nf90_def_var ( nc_id, "jouleHeating", NF90_REAL, &
             (/nX_id,nY_id,nSpec_id/), jouleHeating_id ) ) 
  
@@ -583,6 +642,33 @@ contains
         call check ( nf90_put_var ( nc_id, jP_t_im_id, real(aimag(g%jP_t)) ) )
         call check ( nf90_put_var ( nc_id, jP_z_re_id, real(real(g%jP_z)) ) )
         call check ( nf90_put_var ( nc_id, jP_z_im_id, real(aimag(g%jP_z)) ) )
+
+#if WRITE_SIGMA_TO_OUTPUT > 0
+
+        call check ( nf90_put_var ( nc_id, kr_id, real( g%kr) ) )
+        call check ( nf90_put_var ( nc_id, kz_id, real( g%kz) ) )
+
+        call check ( nf90_put_var ( nc_id, sig11_re_id, real( real(g%sig11)) ) )
+        call check ( nf90_put_var ( nc_id, sig11_im_id, real(aimag(g%sig11)) ) )
+        call check ( nf90_put_var ( nc_id, sig12_re_id, real( real(g%sig12)) ) )
+        call check ( nf90_put_var ( nc_id, sig12_im_id, real(aimag(g%sig12)) ) )
+        call check ( nf90_put_var ( nc_id, sig13_re_id, real( real(g%sig13)) ) )
+        call check ( nf90_put_var ( nc_id, sig13_im_id, real(aimag(g%sig13)) ) )
+
+        call check ( nf90_put_var ( nc_id, sig21_re_id, real( real(g%sig21)) ) )
+        call check ( nf90_put_var ( nc_id, sig21_im_id, real(aimag(g%sig21)) ) )
+        call check ( nf90_put_var ( nc_id, sig22_re_id, real( real(g%sig22)) ) )
+        call check ( nf90_put_var ( nc_id, sig22_im_id, real(aimag(g%sig22)) ) )
+        call check ( nf90_put_var ( nc_id, sig23_re_id, real( real(g%sig23)) ) )
+        call check ( nf90_put_var ( nc_id, sig23_im_id, real(aimag(g%sig23)) ) )
+
+        call check ( nf90_put_var ( nc_id, sig31_re_id, real( real(g%sig31)) ) )
+        call check ( nf90_put_var ( nc_id, sig31_im_id, real(aimag(g%sig31)) ) )
+        call check ( nf90_put_var ( nc_id, sig32_re_id, real( real(g%sig32)) ) )
+        call check ( nf90_put_var ( nc_id, sig32_im_id, real(aimag(g%sig32)) ) )
+        call check ( nf90_put_var ( nc_id, sig33_re_id, real( real(g%sig33)) ) )
+        call check ( nf90_put_var ( nc_id, sig33_im_id, real(aimag(g%sig33)) ) )
+#endif
 
         call check ( nf90_put_var ( nc_id, jouleHeating_id, g%jouleHeating ) )
 

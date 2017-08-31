@@ -124,6 +124,70 @@ function ar2_read_solution, runFolderName, RHS
 		jPBeta = complex ( jBeta_re, jBeta_im )
 		jPB = complex ( jB_re, jB_im )
 
+        sig = 0
+        kr = 0
+        kz = 0
+        fileHasSigmas = ncdf_varInq(cdfId,'sig11_re')
+        if size(fileHasSigmas,/type) eq 8 then begin
+
+            nCdf_varGet, cdfId, 'kr', kr 
+            nCdf_varGet, cdfId, 'kz', kz 
+
+            nCdf_varGet, cdfId, 'sig11_re', sig11_re
+            nCdf_varGet, cdfId, 'sig11_im', sig11_im
+            nCdf_varGet, cdfId, 'sig12_re', sig12_re
+            nCdf_varGet, cdfId, 'sig12_im', sig12_im
+            nCdf_varGet, cdfId, 'sig13_re', sig13_re
+            nCdf_varGet, cdfId, 'sig13_im', sig13_im
+
+            nCdf_varGet, cdfId, 'sig21_re', sig21_re
+            nCdf_varGet, cdfId, 'sig21_im', sig21_im
+            nCdf_varGet, cdfId, 'sig22_re', sig22_re
+            nCdf_varGet, cdfId, 'sig22_im', sig22_im
+            nCdf_varGet, cdfId, 'sig23_re', sig23_re
+            nCdf_varGet, cdfId, 'sig23_im', sig23_im
+
+            nCdf_varGet, cdfId, 'sig31_re', sig31_re
+            nCdf_varGet, cdfId, 'sig31_im', sig31_im
+            nCdf_varGet, cdfId, 'sig32_re', sig32_re
+            nCdf_varGet, cdfId, 'sig32_im', sig32_im
+            nCdf_varGet, cdfId, 'sig33_re', sig33_re
+            nCdf_varGet, cdfId, 'sig33_im', sig33_im
+ 
+            sig11 = complex(sig11_re,sig11_im) 
+            sig12 = complex(sig12_re,sig12_im) 
+            sig13 = complex(sig13_re,sig13_im) 
+
+            sig21 = complex(sig21_re,sig21_im) 
+            sig22 = complex(sig22_re,sig22_im) 
+            sig23 = complex(sig23_re,sig23_im) 
+
+            sig31 = complex(sig31_re,sig31_im) 
+            sig32 = complex(sig32_re,sig32_im) 
+            sig33 = complex(sig33_re,sig33_im) 
+
+            _nS = n_elements(sig11[0,0,*])
+            _nX = n_elements(sig11[*,0,0])
+            _nN = n_elements(sig11[0,*,0])
+
+            sig = complexArr(3,3,_nX,_nN,_nS)
+
+            for s=0,_nS-1 do begin
+                sig[0,0,*,*,s] = (sig11[*,*,s])[*]
+                sig[0,1,*,*,s] = (sig12[*,*,s])[*]
+                sig[0,2,*,*,s] = (sig13[*,*,s])[*]
+
+                sig[1,0,*,*,s] = (sig21[*,*,s])[*]
+                sig[1,1,*,*,s] = (sig22[*,*,s])[*]
+                sig[1,2,*,*,s] = (sig23[*,*,s])[*]
+
+                sig[2,0,*,*,s] = (sig31[*,*,s])[*]
+                sig[2,1,*,*,s] = (sig32[*,*,s])[*]
+                sig[2,2,*,*,s] = (sig33[*,*,s])[*]
+            endfor
+
+        endif
+
 	ncdf_close, cdfId
 
 	x = r
@@ -192,15 +256,18 @@ function ar2_read_solution, runFolderName, RHS
                 e_r: e_r, $
                 e_t: e_t, $
                 e_z: e_z, $
-                ealphak: ealphak, $
-                ebetak: ebetak, $
-                ebk: ebk, $
+                ealpk: ealphak, $
+                ebetk: ebetak, $
+                eprlk: ebk, $
                 b1_r: b_r, $
                 b1_t: b_t, $
                 b1_z: b_z, $
                 jA_r: complex(jr_re,jr_im), $
                 jA_t: complex(jt_re,jt_im), $
-                jA_z: complex(jz_re,jz_im) }
+                jA_z: complex(jz_re,jz_im), $
+                sig: sig, $
+                kr : kr, $
+                kz : kz }
 
     return, solution
 

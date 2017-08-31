@@ -49,6 +49,7 @@ type :: gridBlock
     ! -----------
     integer :: nR, nZ, nModesR, nModesZ
     real, allocatable, dimension(:) :: rNorm, zNorm, R, z, kPhi
+    real, allocatable, dimension(:,:) :: kr, kz
     real :: rMin, rMax, zMin, zMax, rRange, zRange
     real :: rMinIn, rMaxIn, zMinIn, zMaxIn
     real :: normFacR, normFacZ
@@ -154,6 +155,12 @@ type :: gridBlock
         drzUrr, drzUrt, drzUrz, &
         drzUtr, drzUtt, drzUtz, &
         drzUzr, drzUzt, drzUzz
+
+    ! Sigma terms
+    complex, allocatable, dimension(:,:,:) :: &
+        sig11, sig12, sig13, &
+        sig21, sig22, sig23, &
+        sig31, sig32, sig33
 
     ! workList
     type(workListEntry), allocatable :: wl(:)

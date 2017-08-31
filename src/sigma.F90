@@ -91,7 +91,8 @@ contains
         complex(kind=dbl) :: g1_swan, g2_swan
         integer :: ii,jj
 
-        real :: atomicZ, amu
+        real :: atomicZ, amu, nuOmgTmp
+        logical :: compareSigmas 
 
         zeta_l_bram = 0
         Zeta_l_swan = 0
@@ -99,7 +100,10 @@ contains
         zieps0 = zi * eps0
         vTh = sqrt(2. * kt / xm)
         rhol = vTh / omgc
-        omgrfc = omgrf !* (1d0 + zi * nuOmg)
+        write(*,*) 'nuOmg is set to zero'
+        nuOmgTmp = nuOmg 
+        nuOmgTmp = 0
+        omgrfc = omgrf * (1d0 + zi * nuOmgTmp)
         omgC_swan = abs(omgC)
 
         ! k in Stix frame
@@ -111,7 +115,7 @@ contains
 
         kPer = sqrt(kAlp**2 + kBet**2)
 
-        if (kPrl  == 0.0) kPrl  = 1.0e-05
+        if (kPrl == 0.0) kPrl = 1.0e-05
         if (kPer == 0.0) kPer = 1.0e-05
 
         sgn_kPrl    = sign ( 1d0, kPrl )
@@ -175,12 +179,7 @@ contains
             endif
 
             zeta_l_bram(l)  = (omgrfc-l*omgC)/(kPrlEff*vTh) 
-
-            ! Note the discrepancy between the sign here and the Swanson text. 
-            ! I'm not convinced that Swanson has his stuff correct. As with the IDL
-            ! code, this means a flip on the sign of the Swanson K2 to match Brambilla. 
-
-            zeta_l_swan(l)  = (omgrfc-l*omgC_swan)/(kPrlEff*vTh)
+            zeta_l_swan(l)  = (omgrfc+l*omgC_swan)/(kPrlEff*vTh)
 
         enddo
 
@@ -345,7 +344,7 @@ contains
 
         K0_swan = 2 * g1_swan * K0_HarmSum 
         K1_swan = 1 + g1_swan * K1_HarmSum
-        K2_swan = -zi * eps_swan * g1_swan * K2_HarmSum
+        K2_swan = zi * eps_swan * g1_swan * K2_HarmSum
         K3_swan = 1 - g1_swan * K3_HarmSum
         K4_swan = g2_swan * K4_HarmSum
         K5_swan = zi * eps_swan * g2_swan * K5_HarmSum
@@ -364,9 +363,6 @@ contains
         EpsilonHotMaxwellian_swan(3,2) = +K5_Swan
         EpsilonHotMaxwellian_swan(3,3) = +K3_Swan 
 
-
-        !EpsilonHotMaxwellian_swan = transpose(EpsilonHotMaxwellian_swan)
-
         ! Convert dielectrics to conductivities
         ! -------------------------------------
 
@@ -376,69 +372,54 @@ contains
         IdentMat(3,3) = 1
 
         SigmaHotMaxwellian_swan = -(EpsilonHotMaxwellian_swan-IdentMat)*omgrfc*eps0*zi
+        !SigmaHotMaxwellian_swan = transpose( SigmaHotMaxwellian_swan )
 
         !scIn = SpatialSigmaInput_cold(omgc,omgp2,omgrf,nuOmg)
         !sc = SigmaCold_stix(scIn)
 
         !sigmahot_maxwellian = sc
-        
-        !write(*,*)
-        !write(*,*) 'bram 1,1', sigmaHot_Maxwellian(1,1)
-        !write(*,*) 'swan 1,1', sigmaHotMaxwellian_swan(1,1)
+     
+        compareSigmas = 0 
+        if (compareSigmas) then 
 
-        !write(*,*)
-        !write(*,*) 'bram 2,2', sigmaHot_Maxwellian(2,2)
-        !write(*,*) 'swan 2,2', sigmaHotMaxwellian_swan(2,2)
+            write(*,*)
+            write(*,*) 'f= ', real(omgrfc/(2*pi))
+            amu = xm / const_amu
+            atomicZ = omgC * xm / bMod / q
+            write(*,*) 'amu= ', amu 
+            write(*,*) 'Z= ', atomicZ 
+            write(*,*) 'B= ', bMod
+            write(*,*) 'density= ', omgP2 / (atomicZ*q)**2 * xm * eps0
+            write(*,*) 'harm= ', lMax
+            write(*,*) 'kper= ', kPer 
+            write(*,*) 'kpar= ', kPrl
+            write(*,*) 'T_eV= ', kt/q
+            write(*,*) 'nuOmg= ', nuOmgTmp
 
-        !write(*,*)
-        !write(*,*) 'bram 3,1', sigmaHot_Maxwellian(3,1)
-        !write(*,*) 'swan 3,1', sigmaHotMaxwellian_swan(3,1)
+            write(*,*) ''
+            write(*,*) 'bram '
+            do ii=1,3
+                write(*,'(3("(",f12.5,", ",f12.5,")",4x))') &
+                    real(sigmaHot_Maxwellian(ii,1)),&
+                    aimag(sigmaHot_Maxwellian(ii,1)),&
+                    real(sigmaHot_Maxwellian(ii,2)),&
+                    aimag(sigmaHot_Maxwellian(ii,2)),&
+                    real(sigmaHot_Maxwellian(ii,3)),&
+                    aimag(sigmaHot_Maxwellian(ii,3))
+            enddo
+            write(*,*) 'swan '
+            do ii=1,3
+                write(*,'(3("(",f12.5,", ",f12.5,")",4x))') &
+                    real(sigmaHotMaxwellian_swan(ii,1)),&
+                    aimag(sigmaHotMaxwellian_swan(ii,1)),&
+                    real(sigmaHotMaxwellian_swan(ii,2)),&
+                    aimag(sigmaHotMaxwellian_swan(ii,2)),&
+                    real(sigmaHotMaxwellian_swan(ii,3)),&
+                    aimag(sigmaHotMaxwellian_swan(ii,3))
+            enddo
 
-        !write(*,*)
-        !write(*,*) 'bram 3,2', sigmaHot_Maxwellian(3,2)
-        !write(*,*) 'swan 3,2', sigmaHotMaxwellian_swan(3,2)
+        endif 
 
-        !write(*,*)
-        !write(*,*) 'bram 3,3', sigmaHot_Maxwellian(3,3)
-        !write(*,*) 'swan 3,3', sigmaHotMaxwellian_swan(3,3)
-
-
-
-        write(*,*)
-        write(*,*) 'f= ', real(omgrfc/(2*pi))
-        amu = xm / const_amu
-        atomicZ = omgC * xm / bMod / q
-        write(*,*) 'amu= ', amu 
-        write(*,*) 'Z= ', atomicZ 
-        write(*,*) 'B= ', bMod
-        write(*,*) 'density= ', omgP2 / (atomicZ*q)**2 * xm * eps0
-        write(*,*) 'harm= ', lMax
-        write(*,*) 'kper= ', kPer 
-        write(*,*) 'kpar= ', kPrl
-        write(*,*) 'T_eV= ', kt/q
-
-        write(*,*) ''
-        write(*,*) 'bram '
-        do ii=1,3
-            write(*,'(3("(",f12.5,", ",f12.5,")",4x))') &
-                real(sigmaHot_Maxwellian(ii,1)),&
-                aimag(sigmaHot_Maxwellian(ii,1)),&
-                real(sigmaHot_Maxwellian(ii,2)),&
-                aimag(sigmaHot_Maxwellian(ii,2)),&
-                real(sigmaHot_Maxwellian(ii,3)),&
-                aimag(sigmaHot_Maxwellian(ii,3))
-        enddo
-        write(*,*) 'swan '
-        do ii=1,3
-            write(*,'(3("(",f12.5,", ",f12.5,")",4x))') &
-                real(sigmaHotMaxwellian_swan(ii,1)),&
-                aimag(sigmaHotMaxwellian_swan(ii,1)),&
-                real(sigmaHotMaxwellian_swan(ii,2)),&
-                aimag(sigmaHotMaxwellian_swan(ii,2)),&
-                real(sigmaHotMaxwellian_swan(ii,3)),&
-                aimag(sigmaHotMaxwellian_swan(ii,3))
-        enddo
- 
         SigmaHot_Maxwellian = SigmaHotMaxwellian_swan 
 
         return
