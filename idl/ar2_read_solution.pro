@@ -247,9 +247,9 @@ function ar2_read_solution, runFolderName, RHS
                 y: y, $
                 x2d: x2d, $
                 y2d: y2d, $
-                jPAlpha: jPAlpha, $
-                jPBeta: jPBeta, $
-                jPB: jPB, $
+                jPAlp: jPAlpha, $
+                jPBet: jPBeta, $
+                jPPrl: jPB, $
                 jP_r: jP_r, $
                 jP_t: jP_t, $
                 jP_z: jP_z, $
@@ -259,6 +259,9 @@ function ar2_read_solution, runFolderName, RHS
                 ealpk: ealphak, $
                 ebetk: ebetak, $
                 eprlk: ebk, $
+                ealp: ealpha, $
+                ebet: ebeta, $
+                eprl: eb, $
                 b1_r: b_r, $
                 b1_t: b_t, $
                 b1_z: b_z, $
