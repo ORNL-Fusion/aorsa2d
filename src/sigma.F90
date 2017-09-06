@@ -446,7 +446,7 @@ contains
         complex :: sigmaCold_stix(3,3)
         complex :: zieps0
 
-        complex :: K1_HarmSum,K2_HarmSum,K3_HarmSum
+        complex :: K1,K2,K3
         real(kind=DBL) :: e_swan
         complex :: sigmaCold_swan(3,3),epsilonCold_swan(3,3)
         integer :: IdentMat(3,3)
@@ -474,16 +474,16 @@ contains
         ! Swanson version
 
         e_swan = sign(1d0,a%omgC) ! this is q/|q|
-        K1_HarmSum = 1d0 - a%omgP2*(a%omgRF+zi*nu) / ( a%omgRF * ( a%omgRF * (a%omgRF+zi*nu)**2-a%omgC**2) )
-        K2_HarmSum = e_swan*a%omgC*a%omgP2 / ( a%omgRF * ( (a%omgRF+zi*nu)**2 - a%omgC**2 ) ) / zi
-        K3_HarmSum = 1d0 - a%omgP2/(a%omgRF*(a%omgRF+zi*nu))
+        K1 = 1d0 - a%omgP2*(a%omgRF+zi*nu) / ( a%omgRF * ( a%omgRF * (a%omgRF+zi*nu)**2-a%omgC**2) )
+        K2 = e_swan*a%omgC*a%omgP2 / ( a%omgRF * ( (a%omgRF+zi*nu)**2 - a%omgC**2 ) ) / zi
+        K3 = 1d0 - a%omgP2/(a%omgRF*(a%omgRF+zi*nu))
 
         EpsilonCold_swan = (0,0)
-        EpsilonCold_swan(1,1) = +K1_HarmSum
-        EpsilonCold_swan(1,2) = +K2_HarmSum
-        EpsilonCold_swan(2,1) = -K2_HarmSum
-        EpsilonCold_swan(2,2) = +K1_HarmSum
-        EpsilonCold_swan(3,3) = +K3_HarmSum
+        EpsilonCold_swan(1,1) = +K1
+        EpsilonCold_swan(1,2) = +K2
+        EpsilonCold_swan(2,1) = -K2
+        EpsilonCold_swan(2,2) = +K1
+        EpsilonCold_swan(3,3) = +K3
 
         IdentMat = 0
         IdentMat(1,1) = 1
@@ -493,10 +493,11 @@ contains
         SigmaCold_swan = -(EpsilonCold_swan-IdentMat)*a%omgRF*eps0*zi
         SigmaCold_stix = SigmaCold_swan
 
-!        write(*,*) '1,1  ', SigmaCold_stix(1,1), SigmaCold_swan(1,1)
-!        write(*,*) '2,2  ', SigmaCold_stix(2,2), SigmaCold_swan(2,2)
-!        write(*,*) '3,3  ', SigmaCold_stix(3,3), SigmaCold_swan(3,3)
-!
+        !write(*,*)
+        !write(*,*) '1,1  ', SigmaCold_stix(1,1), SigmaCold_swan(1,1)
+        !write(*,*) '2,2  ', SigmaCold_stix(2,2), SigmaCold_swan(2,2)
+        !write(*,*) '3,3  ', SigmaCold_stix(3,3), SigmaCold_swan(3,3)
+
         return
 
     end function sigmaCold_stix
