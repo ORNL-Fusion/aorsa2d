@@ -118,8 +118,8 @@ function ar2_read_solution, runFolderName, RHS
         sig = 0
         kr = 0
         kz = 0
-        fileHasSigmas = ncdf_varInq(cdfId,'sig11_re')
-        if size(fileHasSigmas,/type) eq 8 then begin
+        fileHasSigmas = ncdf_varId(cdfId,'sig11_re')
+        if fileHasSigmas ne -1 then begin
 
             nCdf_varGet, cdfId, 'kr', kr 
             nCdf_varGet, cdfId, 'kz', kz 

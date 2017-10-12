@@ -311,7 +311,7 @@ program aorsa2dMain
   
     call z_load_table(zFunctionFileName)
 
-    write(*,*) '    DONE'
+    if(iAm==0) write(*,*) '    DONE'
 
 #ifdef par
     call blacs_barrier ( ICTXT, 'All' ) 

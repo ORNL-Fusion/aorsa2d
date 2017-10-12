@@ -50,8 +50,8 @@ contains
 
         use read_jp_from_file, only: &
             file_nS=>nS, file_nR=>nR, file_nZ=>nZ, file_r=>r, file_z=>z, &
-            file_Jp_r=>Jp_r, file_Jp_t=>Jp_t, file_Jp_z=>Jp_z, &
-            file_Jp_r_s=>Jp_r_s, file_Jp_t_s=>Jp_t_s, file_Jp_z_s=>Jp_z_s
+            file_Jp_r=>Jp_r, file_Jp_t=>Jp_t, file_Jp_z=>Jp_z!, &
+            !file_Jp_r_s=>Jp_r_s, file_Jp_t_s=>Jp_t_s, file_Jp_z_s=>Jp_z_s
 
         use aorsaNameList, only: nSpec
         use grid
@@ -84,10 +84,10 @@ contains
             g%file_JpT(g%nR,g%nZ), &
             g%file_JpZ(g%nR,g%nZ) )
 
-        if(.not.allocated(g%file_JpR_s))allocate ( &
-            g%file_JpR_s(g%nR,g%nZ,nSpec), &
-            g%file_JpT_s(g%nR,g%nZ,nSpec), &
-            g%file_JpZ_s(g%nR,g%nZ,nSpec) )
+        !if(.not.allocated(g%file_JpR_s))allocate ( &
+        !    g%file_JpR_s(g%nR,g%nZ,nSpec), &
+        !    g%file_JpT_s(g%nR,g%nZ,nSpec), &
+        !    g%file_JpZ_s(g%nR,g%nZ,nSpec) )
     
         if(file_nZ.gt.1)then
 
@@ -146,11 +146,11 @@ contains
                     g%file_JpT(i,1) = interp1d(file_r,file_Jp_t(:,1),ThisR)
                     g%file_JpZ(i,1) = interp1d(file_r,file_Jp_z(:,1),ThisR)
 
-                    do s=1,nSpec
-                        g%file_JpR_s(i,1,s) = interp1d(file_r,file_Jp_r_s(:,1,s),ThisR)
-                        g%file_JpT_s(i,1,s) = interp1d(file_r,file_Jp_t_s(:,1,s),ThisR)
-                        g%file_JpZ_s(i,1,s) = interp1d(file_r,file_Jp_z_s(:,1,s),ThisR)
-                    enddo
+                    !do s=1,nSpec
+                    !    g%file_JpR_s(i,1,s) = interp1d(file_r,file_Jp_r_s(:,1,s),ThisR)
+                    !    g%file_JpT_s(i,1,s) = interp1d(file_r,file_Jp_t_s(:,1,s),ThisR)
+                    !    g%file_JpZ_s(i,1,s) = interp1d(file_r,file_Jp_z_s(:,1,s),ThisR)
+                    !enddo
       
             enddo
 

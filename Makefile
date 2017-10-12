@@ -8,7 +8,7 @@ MOD_DIR = mod
 CPP_DIR = cpp
 
 COMPILER := GNU# GNU, PGI
-PARALLEL := 0# 0, 1
+PARALLEL := 1# 0, 1
 GPU := 0# 0, 1
 DDT := 0# 0, 1
 
@@ -67,10 +67,10 @@ CPP_DIRECTIVES += -D__DebugBField__=0
 CPP_DIRECTIVES += -D_DEBUG_ROTATION=0
 CPP_DIRECTIVES += -DPRINT_SIGMA_ABP=0
 CPP_DIRECTIVES += -DPRINT_SIGMA=0
-CPP_DIRECTIVES += -Dwriteserialmatrix=1
+CPP_DIRECTIVES += -Dwriteserialmatrix=0
 CPP_DIRECTIVES += -DUSE_ROW_SCALING
 CPP_DIRECTIVES += -DUSE_RCOND
-CPP_DIRECTIVES += -DWRITE_SIGMA_TO_OUTPUT=1
+CPP_DIRECTIVES += -DWRITE_SIGMA_TO_OUTPUT=0
 
 # compile flags
 # -------------
@@ -87,8 +87,8 @@ else
 	FORMAT := -ffree-line-length-none
 	BOUNDS := -fbounds-check 
 	WARN := -Wall
-	DEBUG := -pg -g -fbacktrace -fsignaling-nans -ffpe-trap=zero,invalid#,overflow#,underflow
-	OPTIMIZATION := #-O3
+	DEBUG := #-pg -g -fbacktrace -fsignaling-nans -ffpe-trap=zero,invalid#,overflow#,underflow
+	OPTIMIZATION := -O3
 	DOUBLE := -fdefault-real-8
 	MOD_LOC := -Jmod
 endif

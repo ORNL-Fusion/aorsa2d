@@ -17,8 +17,8 @@ subroutine current ( g, rhs )
     use constants
     use read_jp_from_file, only: &
         file_nS=>nS, file_nR=>nR, file_nZ=>nZ, file_r=>r, file_z=>z, &
-        file_Jp_r=>Jp_r, file_Jp_t=>Jp_t, file_Jp_z=>Jp_z, &
-        file_Jp_r_s=>Jp_r_s, file_Jp_t_s=>Jp_t_s, file_Jp_z_s=>Jp_z_s
+        file_Jp_r=>Jp_r, file_Jp_t=>Jp_t, file_Jp_z=>Jp_z!, &
+        !file_Jp_r_s=>Jp_r_s, file_Jp_t_s=>Jp_t_s, file_Jp_z_s=>Jp_z_s
 
     implicit none
    
@@ -87,10 +87,10 @@ subroutine current ( g, rhs )
 
             k0  = g%k0(g%wl(w)%iPt)
 
-            ReplaceWithJpFromFile: &
-            if(useJpFromFile)then
+            !ReplaceWithJpFromFile: &
+            !if(useJpFromFile)then
 
-            else
+            !else
 
                 twoThirdsRule: &
                 if(g%wl(w)%m >= g%mMin*fracOfModesInSolution .and. g%wl(w)%m <= g%mMax*fracOfModesInSolution &
@@ -231,7 +231,7 @@ subroutine current ( g, rhs )
 
                     endif twoThirdsRule
 
-            endif ReplaceWithJpFromFile
+            !endif ReplaceWithJpFromFile
 
             ! Where E=0 at the boundary, also set J=0 to avoid
             ! tiny E values combining with sigma to give anomolous

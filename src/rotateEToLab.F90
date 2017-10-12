@@ -12,8 +12,8 @@ subroutine rotate_E_to_lab ( g, rhs )
     use interp, only: dlg_interpB 
     use read_jp_from_file, only: &
         file_nS=>nS, file_nR=>nR, file_nZ=>nZ, file_r=>r, file_z=>z, &
-        file_Jp_r=>Jp_r, file_Jp_t=>Jp_t, file_Jp_z=>Jp_z, &
-        file_Jp_r_s=>Jp_r_s, file_Jp_t_s=>Jp_t_s, file_Jp_z_s=>Jp_z_s
+        file_Jp_r=>Jp_r, file_Jp_t=>Jp_t, file_Jp_z=>Jp_z!, &
+        !file_Jp_r_s=>Jp_r_s, file_Jp_t_s=>Jp_t_s, file_Jp_z_s=>Jp_z_s
 
     implicit none
 
@@ -68,20 +68,20 @@ subroutine rotate_E_to_lab ( g, rhs )
                     matMul ( R_abp_to_rtz, (/ g%jAlpha(i,j,s), g%jBeta(i,j,s), g%jb(i,j,s) /) )
 #endif 
 
-                ReplaceWithJpFromFile: &
-                if(UseJpFromFile)then
+                !ReplaceWithJpFromFile: &
+                !if(UseJpFromFile)then
 
-                    g%jP_r(i,j,s) = g%file_JpR_s(i,j,s)
-                    g%jP_t(i,j,s) = g%file_JpT_s(i,j,s)
-                    g%jP_z(i,j,s) = g%file_JpZ_s(i,j,s)
+                !    g%jP_r(i,j,s) = g%file_JpR_s(i,j,s)
+                !    g%jP_t(i,j,s) = g%file_JpT_s(i,j,s)
+                !    g%jP_z(i,j,s) = g%file_JpZ_s(i,j,s)
 
-                else
+                !else
 
-                    g%jP_r(i,j,s) = jPLab_RTZ(1)
-                    g%jP_t(i,j,s) = jPLab_RTZ(2)
-                    g%jP_z(i,j,s) = jPLab_RTZ(3)
+                g%jP_r(i,j,s) = jPLab_RTZ(1)
+                g%jP_t(i,j,s) = jPLab_RTZ(2)
+                g%jP_z(i,j,s) = jPLab_RTZ(3)
 
-                endif ReplaceWithJpFromFile
+                !endif ReplaceWithJpFromFile
 
             enddo    
 
