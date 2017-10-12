@@ -2,13 +2,6 @@ function ar2_read_solution, runFolderName, RHS
    
     @constants
 
-	;; This is just to ensure we get consistent files, i.e., not
-	;; relying on the order of the list of a file read.
-	;SolutionFiles = file_search(runFolderName+'/output/solution*.nc')
-	;SolutionStr = StrMid(file_basename(SolutionFiles[0]),0,18)
-	;RHS_Str = string(RHS,format='(i6.6)')
-    ;SolutionFile = File_DirName(SolutionFiles[0])+'/'+SolutionStr+RHS_STr+'.nc'
-
 	ar2Input = ar2_read_namelist( RunFolderName = RunFolderName)
 	ThisGridNo = 1
 	GridNoStr = string(ThisGridNo,format='(i3.3)')
@@ -19,8 +12,6 @@ function ar2_read_solution, runFolderName, RHS
 
 	SolutionFile = expand_path(RunFolderName)+'/output/solution_'+GridNoStr+'_'+nPhiStr+'_'+rhsStr+'.nc'
 	RunDataFile = expand_path(RunFolderName)+'/output/runData_'+GridNoStr+'_'+nPhiStr+'_'+rhsStr+'.nc'
-
-	;print, SolutionFile
 
 	cdfId = ncdf_open ( RunDataFile, /noWrite ) 
 		nCdf_varGet, cdfId, 'nPhi', nPhi 

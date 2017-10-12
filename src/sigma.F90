@@ -100,7 +100,7 @@ contains
         zieps0 = zi * eps0
         vTh = sqrt(2. * kt / xm)
         rhol = vTh / omgc
-        write(*,*) 'nuOmg is set to zero'
+        !write(*,*) 'nuOmg is set to zero'
         nuOmgTmp = nuOmg 
         nuOmgTmp = 0
         omgrfc = omgrf * (1d0 + zi * nuOmgTmp)
