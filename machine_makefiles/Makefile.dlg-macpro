@@ -1,14 +1,15 @@
-BLAS := /opt/local/lib -pthread
-LIBS += -L ${BLAS} -latlas -lblas
+BLAS := /usr/local/opt/openblas
+INC_DIR += -I${BLAS}/include
+LIBS += -L ${BLAS}/lib -lblas 
 
-LAPACK := /opt/local/lib 
+LAPACK := /usr/local/opt
 LIBS += -L ${LAPACK} -llapack
 
-HDF_DIR := /opt/local
-LIBS += -L ${HDF_DIR}/lib -lhdf5 -lhdf5_hl
-INC_DIR += -I ${HDF_DIR}/include
+#HDF_DIR := /opt/local
+#LIBS += -L ${HDF_DIR}/lib -lhdf5 -lhdf5_hl
+#INC_DIR += -I ${HDF_DIR}/include
 
-NETCDF_DIR := /opt/local
+NETCDF_DIR := /usr/local/Cellar/netcdf/4.5.0
 LIBS +=-L ${NETCDF_DIR}/lib -lnetcdf -lnetcdff
 INC_DIR += -I ${NETCDF_DIR}/include 
 
@@ -18,15 +19,9 @@ ifeq (${PARALLEL},1)
 	#	${HOME}/code/blacs/blacs_gnu64/LIB/blacsF77init_MPI-LINUX-0.a \
 	#	${HOME}/code/blacs/blacs_gnu64/LIB/blacs_MPI-LINUX-0.a
 	#SCALAPACK = ${HOME}/code/scalapack/scalapack_gnu64/libscalapack.a
-    SCALAPACK = -L /opt/local/lib -lscalapack
+    SCALAPACK = -L/usr/local/opt/scalapack/lib  -lscalapack
 	LIBS := ${SCALAPACK} ${BLACS} ${LIBS}
 endif
-
-#PAPI_DIR := /Users/dg6/code/papi/gnu-4.8.2
-#PAPI_INC := -I${PAPI_DIR}/include/
-#PAPI_LINK := ${PAPI_DIR}/lib/libpapi.a
-#LIBS += ${PAPI_LINK}
-#INC_DIR += ${PAPI_INC}
 
 ifeq (${PARALLEL},1)
 		F90 := mpif90

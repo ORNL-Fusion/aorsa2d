@@ -71,7 +71,7 @@ pro ar2_create_input, _r1=_r1, _z1=_z1, _angle=_angle, doPlots = _doPlots, _len=
 
     generate_vorpal_input = 0
 
-	@constants
+	@dlg_constants
     @'input/ar2run.pro'
 
 	wrf	= freq * 2d0 * !dpi

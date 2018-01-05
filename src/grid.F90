@@ -200,7 +200,7 @@ contains
         use aorsaNamelist, &
             only : nPhi, xkPerp_cutOff, overlap, &
             rMinAll, rMaxAll, zMinAll, zMaxAll, nGrid, &
-            nZ_1D
+            kz_1d
         use parallel, only : iAm
 
         implicit none
@@ -329,7 +329,7 @@ contains
                 enddo
             else
                 grid%z(1)    = (zMax-zMin)/2.0+zMin
-                grid%zNorm(1) = 0
+                grid%zNorm(1) = 1
             endif
 
             if(nZ>1) &
@@ -399,8 +399,8 @@ contains
             endif
 
             if(nZ==1)then 
-                grid%mMin = nZ_1d
-                grid%mMax = nZ_1d
+                grid%mMin = kz_1d
+                grid%mMax = kz_1d
             endif
 
             if (iAm==0) then

@@ -66,7 +66,7 @@ implicit none
     real, dimension(nGridMax) :: zMinAll = -1.0
     real, dimension(nGridMax) :: zMaxAll =  1.0
 
-    integer :: nZ_1D = 0
+    integer :: kz_1D = 0
 
 
 !     --------------------------------------------------------
@@ -497,7 +497,7 @@ implicit none
      &    chebyshevX, chebyshevY, magma, rhoAnt, antSigRho, toroidalBroadening,&
      &    kPrlEffLimit, nGrid, useAr2Input, AR2InputFileName, zFunctionFileName, &
      &    nRAll, nZAll, rMinAll, rMaxAll, zMinAll, zMaxAll, &
-     &    overlap, parabolic, cosX, cosY, nZ_1D, fracOfModesInSolution, &
+     &    overlap, parabolic, cosX, cosY, kz_1D, fracOfModesInSolution, &
      &    AntennaJ_R, AntennaJ_T, AntennaJ_Z, AR2SourceLocationsFileName, &
      &    useAR2SourceLocationsFile, useAllRHSsSource, ZeroJp, &
      &    ZeroJp_rMin, ZeroJp_rMax, ZeroJp_zMin, ZeroJp_zMax, useAntennaFromAR2Input, &
