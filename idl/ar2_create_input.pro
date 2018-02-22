@@ -71,7 +71,7 @@ pro ar2_create_input, _r1=_r1, _z1=_z1, _angle=_angle, doPlots = _doPlots, _len=
 
     generate_vorpal_input = 0
 
-	@constants
+	@dlg_constants
     @'input/ar2run.pro'
 
 	wrf	= freq * 2d0 * !dpi
@@ -413,7 +413,7 @@ if doPlots then begin
 
     plotPos = plotPos+1
     _c = ['b','g','r','c','m','y','k']
-	densityRange=[min(Density_m3),max(Density_m3)]
+	densityRange=[min(Density_m3)*0.9,max(Density_m3)*1.1]
 	p=plot(r,Density_m3[*,nZ/2,0],$
 			title='Density [1/m3]',thick=2,$
 			layout=[layout,plotpos],/current,yRange=densityRange,/yLog)
@@ -424,8 +424,6 @@ if doPlots then begin
     endfor
     plotpos++	
 
-    _c = ['b','g','r','c','m','y','k']
-	densityRange=[min(Density_m3),max(Density_m3)]
 	p=plot(r,Density_m3[*,nZ/2,0],$
 			title='Density [1/m3]',thick=2,$
 			layout=[layout,plotpos],/current,yRange=densityRange)

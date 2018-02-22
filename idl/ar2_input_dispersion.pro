@@ -8,7 +8,7 @@ pro ar2_input_dispersion, wrf, amu, AtomicZ, nn, nPhi, nSpec, nR, nZ, Density_m3
 
     nu_omg = 0.5
 
-	@constants
+	@dlg_constants
 
 	StixP = 1d0
 	StixL = 1d0

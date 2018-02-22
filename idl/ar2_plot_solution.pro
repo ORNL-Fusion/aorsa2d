@@ -33,7 +33,7 @@ pro ar2_plot_solution, full = full, $
             rlcfs=rlcfs, zlcfs=zlcfs)
 
 
-	@constants
+	@dlg_constants
 
 	xAll = 0.0
 	yAll = 0.0
