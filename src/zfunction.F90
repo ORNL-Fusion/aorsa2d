@@ -49,12 +49,18 @@ subroutine z_from_table(arg, Z, Zp, argZp)
 
     else 
 
-        write(*,*) 'Argument to Z function outside range of table'
-        write(*,*) 'arg: ', arg
-        write(*,*) 'min(table_arg): ', minval(table_arg)
-        write(*,*) 'max(table_arg): ', maxval(table_arg)
+        ! Analytic limits off the end of the table
 
-        call exit
+        Z  = cmplx(-1/arg,0)
+        Zp = cmplx(1/arg**2,0)
+        argZp = arg * Zp
+
+        !write(*,*) 'Argument to Z function outside range of table'
+        !write(*,*) 'arg: ', arg
+        !write(*,*) 'min(table_arg): ', minval(table_arg)
+        !write(*,*) 'max(table_arg): ', maxval(table_arg)
+
+        !call exit
 
     endif
 
