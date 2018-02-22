@@ -9,7 +9,7 @@ contains
     subroutine write_runData ( g, rid, rhs )
  
         use aorsaNamelist, &
-        only: nSpec, nPhi, freq=>freqcy, nZ_1D
+        only: nSpec, nPhi, freq=>freqcy, kz_1d
         use bField
         use grid
         use constants
@@ -38,7 +38,7 @@ contains
         integer :: &
             xx_re_id, yy_re_id, xx_im_id, yy_im_id, &
             drBfn_re_id, dzBfn_re_id, drbFn_im_id, dzbFn_im_id, &
-            LimMask_id, nZ_1D_id
+            LimMask_id, kz_1d_id
 
         integer :: drUrrid, drUrtid, drUrzid
         integer :: drUtrid, drUttid, drUtzid
@@ -77,13 +77,13 @@ contains
                 scalar_id, nPhi_id ) )
             call check ( nf90_def_var ( nc_id, "freq", NF90_REAL, &
                 scalar_id, freq_id ) )
-            call check ( nf90_def_var ( nc_id, "nZ_1D", NF90_REAL, &
-                scalar_id, nZ_1D_id ) )
+            call check ( nf90_def_var ( nc_id, "kz_1d", NF90_REAL, &
+                scalar_id, kz_1d_id ) )
 
 
-            call check ( nf90_def_var ( nc_id, "capR", NF90_REAL, &
+            call check ( nf90_def_var ( nc_id, "r", NF90_REAL, &
                 (/nX_id/), x_id ) ) 
-            call check ( nf90_def_var ( nc_id, "y", NF90_REAL, &
+            call check ( nf90_def_var ( nc_id, "z", NF90_REAL, &
                 (/nY_id/), y_id ) ) 
 
             call check ( nf90_def_var ( nc_id, "brU", NF90_REAL, &
@@ -95,17 +95,17 @@ contains
             call check ( nf90_def_var ( nc_id, "bmod", NF90_REAL, &
                 (/nX_id,nY_id/), bmod_id ) ) 
 
-            call check ( nf90_def_var ( nc_id, "jr_re", NF90_REAL, &
+            call check ( nf90_def_var ( nc_id, "jA_r_re", NF90_REAL, &
                 (/nX_id,nY_id/), jr_re_id ) ) 
-            call check ( nf90_def_var ( nc_id, "jr_im", NF90_REAL, &
+            call check ( nf90_def_var ( nc_id, "jA_r_im", NF90_REAL, &
                 (/nX_id,nY_id/), jr_im_id ) ) 
-            call check ( nf90_def_var ( nc_id, "jt_re", NF90_REAL, &
+            call check ( nf90_def_var ( nc_id, "jA_t_re", NF90_REAL, &
                 (/nX_id,nY_id/), jt_re_id ) ) 
-            call check ( nf90_def_var ( nc_id, "jt_im", NF90_REAL, &
+            call check ( nf90_def_var ( nc_id, "jA_t_im", NF90_REAL, &
                 (/nX_id,nY_id/), jt_im_id ) ) 
-            call check ( nf90_def_var ( nc_id, "jz_re", NF90_REAL, &
+            call check ( nf90_def_var ( nc_id, "jA_z_re", NF90_REAL, &
                 (/nX_id,nY_id/), jz_re_id ) ) 
-            call check ( nf90_def_var ( nc_id, "jz_im", NF90_REAL, &
+            call check ( nf90_def_var ( nc_id, "jA_z_im", NF90_REAL, &
                 (/nX_id,nY_id/), jz_im_id ) ) 
 
 
@@ -184,7 +184,7 @@ contains
             nc_stat = nf90_put_var ( nc_id, freq_id, freq ) 
             nc_stat = nf90_put_var ( nc_id, x_id, g%R ) 
             nc_stat = nf90_put_var ( nc_id, y_id, g%Z )    
-            nc_stat = nf90_put_var ( nc_id, nZ_1D_id, nZ_1D )    
+            nc_stat = nf90_put_var ( nc_id, kz_1d_id, kz_1d )    
 
         endif
 
@@ -486,56 +486,56 @@ contains
         call check ( nf90_def_dim ( nc_id, "nSpec", nSpec, nSpec_id ) )
         call check ( nf90_def_dim ( nc_id, "NRHS", NRHS, NRHS_id ) )
 
-        call check ( nf90_def_var ( nc_id, "ealpha_re", NF90_REAL, &
+        call check ( nf90_def_var ( nc_id, "E_alp_re", NF90_REAL, &
             (/nX_id,nY_id/), e1_re_id ) ) 
-        call check ( nf90_def_var ( nc_id, "ealpha_im", NF90_REAL, &
+        call check ( nf90_def_var ( nc_id, "E_alp_im", NF90_REAL, &
             (/nX_id,nY_id/), e1_im_id ) ) 
-        call check ( nf90_def_var ( nc_id, "ebeta_re", NF90_REAL, &
+        call check ( nf90_def_var ( nc_id, "E_bet_re", NF90_REAL, &
             (/nX_id,nY_id/), e2_re_id ) ) 
-        call check ( nf90_def_var ( nc_id, "ebeta_im", NF90_REAL, &
+        call check ( nf90_def_var ( nc_id, "E_bet_im", NF90_REAL, &
             (/nX_id,nY_id/), e2_im_id ) ) 
-        call check ( nf90_def_var ( nc_id, "eB_re", NF90_REAL, &
+        call check ( nf90_def_var ( nc_id, "E_prl_re", NF90_REAL, &
             (/nX_id,nY_id/), e3_re_id ) ) 
-        call check ( nf90_def_var ( nc_id, "eB_im", NF90_REAL, &
+        call check ( nf90_def_var ( nc_id, "E_prl_im", NF90_REAL, &
             (/nX_id,nY_id/), e3_im_id ) ) 
  
-        call check ( nf90_def_var ( nc_id, "ealphak_re", NF90_REAL, &
+        call check ( nf90_def_var ( nc_id, "Ek_alp_re", NF90_REAL, &
             (/nModesX_id,nModesY_id/), e1k_re_id ) ) 
-        call check ( nf90_def_var ( nc_id, "ealphak_im", NF90_REAL, &
+        call check ( nf90_def_var ( nc_id, "Ek_alp_im", NF90_REAL, &
             (/nModesX_id,nModesY_id/), e1k_im_id ) ) 
-        call check ( nf90_def_var ( nc_id, "ebetak_re", NF90_REAL, &
+        call check ( nf90_def_var ( nc_id, "Ek_bet_re", NF90_REAL, &
             (/nModesX_id,nModesY_id/), e2k_re_id ) ) 
-        call check ( nf90_def_var ( nc_id, "ebetak_im", NF90_REAL, &
+        call check ( nf90_def_var ( nc_id, "Ek_bet_im", NF90_REAL, &
             (/nModesX_id,nModesY_id/), e2k_im_id ) ) 
-        call check ( nf90_def_var ( nc_id, "eBk_re", NF90_REAL, &
+        call check ( nf90_def_var ( nc_id, "Ek_prl_re", NF90_REAL, &
             (/nModesX_id,nModesY_id/), e3k_re_id ) ) 
-        call check ( nf90_def_var ( nc_id, "eBk_im", NF90_REAL, &
+        call check ( nf90_def_var ( nc_id, "Ek_prl_im", NF90_REAL, &
             (/nModesX_id,nModesY_id/), e3k_im_id ) ) 
 
-        call check ( nf90_def_var ( nc_id, "er_re", NF90_REAL, &
+        call check ( nf90_def_var ( nc_id, "E_r_re", NF90_REAL, &
             (/nX_id,nY_id/), er_re_id ) ) 
-        call check ( nf90_def_var ( nc_id, "er_im", NF90_REAL, &
+        call check ( nf90_def_var ( nc_id, "E_r_im", NF90_REAL, &
             (/nX_id,nY_id/), er_im_id ) ) 
-        call check ( nf90_def_var ( nc_id, "et_re", NF90_REAL, &
+        call check ( nf90_def_var ( nc_id, "E_t_re", NF90_REAL, &
             (/nX_id,nY_id/), et_re_id ) ) 
-        call check ( nf90_def_var ( nc_id, "et_im", NF90_REAL, &
+        call check ( nf90_def_var ( nc_id, "E_t_im", NF90_REAL, &
             (/nX_id,nY_id/), et_im_id ) ) 
-        call check ( nf90_def_var ( nc_id, "ez_re", NF90_REAL, &
+        call check ( nf90_def_var ( nc_id, "E_z_re", NF90_REAL, &
             (/nX_id,nY_id/), ez_re_id ) ) 
-        call check ( nf90_def_var ( nc_id, "ez_im", NF90_REAL, &
+        call check ( nf90_def_var ( nc_id, "E_z_im", NF90_REAL, &
             (/nX_id,nY_id/), ez_im_id ) ) 
 
-        call check ( nf90_def_var ( nc_id, "jalpha_re", NF90_REAL, &
+        call check ( nf90_def_var ( nc_id, "jP_alp_re", NF90_REAL, &
             (/nX_id,nY_id,nSpec_id/), j1_re_id ) ) 
-        call check ( nf90_def_var ( nc_id, "jalpha_im", NF90_REAL, &
+        call check ( nf90_def_var ( nc_id, "jP_alp_im", NF90_REAL, &
             (/nX_id,nY_id,nSpec_id/), j1_im_id ) ) 
-        call check ( nf90_def_var ( nc_id, "jbeta_re", NF90_REAL, &
+        call check ( nf90_def_var ( nc_id, "jP_bet_re", NF90_REAL, &
             (/nX_id,nY_id,nSpec_id/), j2_re_id ) ) 
-        call check ( nf90_def_var ( nc_id, "jbeta_im", NF90_REAL, &
+        call check ( nf90_def_var ( nc_id, "jP_bet_im", NF90_REAL, &
             (/nX_id,nY_id,nSpec_id/), j2_im_id ) ) 
-        call check ( nf90_def_var ( nc_id, "jB_re", NF90_REAL, &
+        call check ( nf90_def_var ( nc_id, "jP_prl_re", NF90_REAL, &
             (/nX_id,nY_id,nSpec_id/), j3_re_id ) ) 
-        call check ( nf90_def_var ( nc_id, "jB_im", NF90_REAL, &
+        call check ( nf90_def_var ( nc_id, "jP_prl_im", NF90_REAL, &
             (/nX_id,nY_id,nSpec_id/), j3_im_id ) ) 
 
         call check ( nf90_def_var ( nc_id, "jP_r_re", NF90_REAL, &
