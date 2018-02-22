@@ -77,7 +77,7 @@ contains
                 scalar_id, nPhi_id ) )
             call check ( nf90_def_var ( nc_id, "freq", NF90_REAL, &
                 scalar_id, freq_id ) )
-            call check ( nf90_def_var ( nc_id, "kz_1d", NF90_REAL, &
+            call check ( nf90_def_var ( nc_id, "kz", NF90_REAL, &
                 scalar_id, kz_1d_id ) )
 
 

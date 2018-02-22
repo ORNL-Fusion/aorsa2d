@@ -51,7 +51,7 @@ pro ar2_create_input, _r1=_r1, _z1=_z1, _angle=_angle, doPlots = _doPlots, _len=
 
     if keyword_set(_doPlots) then doPlots = _doPlots else doPlots = 1
 
-	bField_eqdsk = 1
+	bField_eqdsk = 0
 	bField_gaussian = 0
     bField_flat = 0
     bField_linear = 0
@@ -61,7 +61,7 @@ pro ar2_create_input, _r1=_r1, _z1=_z1, _angle=_angle, doPlots = _doPlots, _len=
     parabolic_profiles = 0
     flux_profiles = 0
 	fred_namelist_input = 0
-	flat_profiles = 1
+	flat_profiles = 0
     numeric_profiles = 0
     mpex_profiles = 0
 
@@ -162,10 +162,6 @@ pro ar2_create_input, _r1=_r1, _z1=_z1, _angle=_angle, doPlots = _doPlots, _len=
 		bz = bzLeft + (r2D-r[0]) * bzSlope 
 
 	endif else if bField_numeric eq 1 then begin
-
-		;br = reform(interpol(bField_br,bField_r,r2d[*]),nr,nz)
-		;bt = br*0 
-		;bz = br*0
 
 		br = br2D_numeric
 		bt = bt2D_numeric
@@ -281,21 +277,18 @@ endif
 		print, 'amu: ', amu
 		print, 'Z: ', atomicZ
 
-	endif else begin
-    
-		for n=1,nSpec-1 do begin
-			nn[0,0]	+= atomicZ[n]*nn[0,n] 
-			nn[1,0]	+= atomicZ[n]*nn[1,n] 
-		endfor
-
-	endelse
-
+	endif 
 
 	Density_m3	= fltArr ( nR, nZ, nSpec )
 	Temp_eV	= fltArr ( nR, nZ, nSpec )
     nuOmg = fltArr ( nR, nZ, nSpec )
 
 	if flux_profiles eq 1 then begin
+
+		    for n=1,nSpec-1 do begin
+		    	nn[0,0]	+= atomicZ[n]*nn[0,n] 
+		    	nn[1,0]	+= atomicZ[n]*nn[1,n] 
+		    endfor
 
 	        oversample_boundary, rbbbs, zbbbs, rbbbs_os, zbbbs_os 
 
@@ -336,7 +329,6 @@ endif
 
 			Density_m3[*,*,s] = nn[1,s]*exp(-((x2d-x0)^2/Density_xsig^2+(y2d-y0)^2/Density_ysig^2 ))
 			Density_m3[*,*,s] = Density_m3[*,*,s]>DensityMin[s]
-			;Density_m3[*,*,s] = Smooth(Density_m3[*,*,s],SmoothWidth,/edge_mirror)
 
 			Density_m3[*,*,0] = Density_m3[*,*,0]+Density_m3[*,*,s]*atomicZ[s]
 
@@ -375,10 +367,16 @@ endif
 
 	endif else if numeric_profiles eq 1 then begin
 
-		for s=0,nSpec-1 do begin
-            radius = sqrt((r2d-r0)^2 + (z2d)^2)
-		    Density_m3[*,*,s] = reform(interpol(numeric_ne,numeric_r,radius[*]),nr,nz)
-        endfor
+        if (size(density_m3_2D_numeric,/dim))[0] ne nR then stop
+        if (size(density_m3_2D_numeric,/dim))[1] ne nZ then stop
+        if (size(density_m3_2D_numeric,/dim))[2] ne nSpec then stop
+
+        if (size(temp_eV_2D_numeric,/dim))[0] ne nR then stop
+        if (size(temp_eV_2D_numeric,/dim))[1] ne nZ then stop
+        if (size(temp_eV_2D_numeric,/dim))[2] ne nSpec then stop
+
+		Density_m3  = density_m3_2D_numeric 
+		Temp_eV     = temp_eV_2D_numeric 
 
 	endif else if flat_profiles then begin
 
@@ -395,50 +393,59 @@ endif
     yRange = [zMin,zMax]
     xRange = [rMin,rMax]
 
-	if not flat_profiles then begin 
+    densFlatFuzz = 0
+    if max(Density_m3)-min(Density_m3) lt 1e-5 then begin
+        densFlatFuzz = randomu(0,nR,nz)*densityMin*1e-5
+        densRange=[min(density_m3)+densFlatFuzz,max(density_m3)+densFlatFuzz]
+    endif
+	
+    tempFlatFuzz = 0
+    if max(temp_eV)-max(temp_eV) lt 1e-5 then begin
+        tempFlatFuzz = randomu(0,nR,nz)*tempMin*1e-5
+        tempRange=[min(temp_eV)+tempFlatFuzz,max(temp_eV)+tempFlatFuzz]
+    endif
+
 if doPlots then begin
-    s_ne = contour(density_m3[*,*,0],r,z, layout=[layout,plotpos],$
+    s_ne = contour(density_m3[*,*,0]+densFlatFuzz,r,z, layout=[layout,plotpos],$
             /current,title='density',aspect_ratio=1.0, xRange=xRange, yRange=yRange )
     if bField_eqdsk then p=plot(rLim,zLim,/over)
     ++plotpos
 
-   	s_te = contour(temp_eV[*,*,0],r,z, layout=[layout,plotpos],$
+   	s_te = contour(temp_eV[*,*,0]+tempFlatFuzz,r,z, layout=[layout,plotpos],$
             /current,title='temp',aspect_ratio=1.0, xRange=xRange, yRange=yRange)
     if bField_eqdsk then p=plot(rLim,zLim,/over)
     ++plotpos
 endif
-	endif
 
 if doPlots then begin
 
-    plotPos = plotPos+1
     _c = ['b','g','r','c','m','y','k']
-	densityRange=[min(Density_m3),max(Density_m3)]
-	p=plot(r,Density_m3[*,nZ/2,0],$
+    
+	p=plot(r,Density_m3[*,nZ/2,0]+densFlatFuzz,$
 			title='Density [1/m3]',thick=2,$
 			layout=[layout,plotpos],/current,yRange=densityRange,/yLog)
     _p = [p]
     for s=1,nSpec-1 do begin
-		p=plot(r,Density_m3[*,nZ/2,s],/over,color=_c[s-1])
+		p=plot(r,Density_m3[*,nZ/2,s]+densFlatFuzz,/over,color=_c[s-1])
         _p = [_p,p]
     endfor
     plotpos++	
 
     _c = ['b','g','r','c','m','y','k']
-	densityRange=[min(Density_m3),max(Density_m3)]
-	p=plot(r,Density_m3[*,nZ/2,0],$
+	p=plot(r,Density_m3[*,nZ/2,0]+densFlatFuzz,$
 			title='Density [1/m3]',thick=2,$
 			layout=[layout,plotpos],/current,yRange=densityRange)
     _p = [p]
     for s=1,nSpec-1 do begin
-		p=plot(r,Density_m3[*,nZ/2,s],/over,color=_c[s-1])
+		p=plot(r,Density_m3[*,nZ/2,s]+densFlatFuzz,/over,color=_c[s-1])
         _p = [_p,p]
     endfor
     plotpos++	
 
-	p=plot(r,Temp_eV[*,nZ/2,0],title='Temp [eV]', thick=2,layout=[layout,plotpos],/current)
+	p=plot(r,Temp_eV[*,nZ/2,0]+tempFlatFuzz,title='Temp [eV]', thick=2,$
+            layout=[layout,plotpos],/current,yRange=tempRange)
     for s=1,nSpec-1 do begin
-	    p=plot(r,Temp_eV[*,nZ/2,s],/over)
+	    p=plot(r,Temp_eV[*,nZ/2,s]+tempFlatFuzz,/over)
     endfor
     plotpos++	
 
@@ -484,7 +491,6 @@ endif
 		jAnt_z = jAnt*Ju_z
 
     endif else if fancy_antenna then begin
-
 
 		if bField_eqdsk then begin	
 			rCenter = g.rcentr
@@ -581,30 +587,14 @@ endif
     ;; plot up the ion cyclortron resonances
 
 if doPlots then begin
-    ;for s=0,nSpec-1 do begin
-    ;    if s eq 0 then p=plot(r,resonances[*,nZ/2,s], $
-    ;            title='Cyclotron resonsances',layout=[layout,PlotPos],/current,yRange=[-10,10]) $
-    ;            else p=plot(r,resonances[*,nZ/2,s],/over)
-    ;endfor
-    ;++PlotPos
 
-	p = plot(r,kPer_F, title='kPer_F',layout=[layout,PlotPos],/current)
+	p = plot(r,kPer_F, title='kPer_F',layout=[layout,PlotPos],/current,thick=3)
     p = plot(r,imaginary(kPer_F), /over, color='r')
     ++PlotPos
 
-	p = plot(r,kPer_S, title='kPer_S',layout=[layout,PlotPos],/current)
+	p = plot(r,kPer_S, title='kPer_S',layout=[layout,PlotPos],/current,thick=3)
     p = plot(r,imaginary(kPer_S), /over, color='r')
     ++PlotPos
-
-	;p = plot(z,kPer_F_2, title='kPer_F',layout=[2,1,1])
-    ;p = plot(z,imaginary(kPer_F_2), /over, color='r')
-    ;++PlotPos
-
-	;p = plot(z,kPer_S_2, title='kPer_S',layout=[2,1,2],/current)
-    ;p = plot(z,imaginary(kPer_S_2), /over, color='r')
-    ;++PlotPos
-
-    PlotPos = PlotPos+3
 
 	nLevs=31
 	range=20
@@ -633,7 +623,6 @@ if doPlots then begin
 			c_value=levels,rgb_indices=colors,rgb_table=3,$
             /fill, title='kPer Slow Branch', xRange=xRange, yRange=yRange)
         ++PlotPos
-		;c.save, plotFile, /append, /close
     endif 
 
     if bfield_eqdsk eq 0 and size(rLim,/type) eq 0 then begin
