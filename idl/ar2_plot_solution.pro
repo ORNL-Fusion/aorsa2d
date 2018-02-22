@@ -15,7 +15,7 @@ pro ar2_plot_solution, full = full, $
 
 	if keyword_set(_nPhi) then ThisNPhi = _nPhi else ThisNPhi = ar2Input['nPhi']
 
-	nPhiStr = string(ThisNPhi,format='(i+4.3)')
+	nPhiStr = string(ThisNPhi,format='(i+7.6)')
 	rhsStr = string(ThisRHS,format='(i6.6)')
 
 	SolutionFile = 'output/solution_'+GridNoStr+'_'+nPhiStr+'_'+rhsStr+'.nc'
@@ -25,164 +25,44 @@ pro ar2_plot_solution, full = full, $
 	print, 'SolutionFile: ', SolutionFile
 	print, 'RunDataFile: ', RunDataFile
 
-	ar2_read_ar2input, ar2InputFile, $
-			rLim=rLim,zLim=zLim,LimMask=LimMask,ar2=ar2,$
-            rlcfs=rlcfs, zlcfs=zlcfs
+	ar2 = ar2_read_ar2input( './', $
+			rLim=rLim,zLim=zLim,LimMask=LimMask,$
+            rlcfs=rlcfs, zlcfs=zlcfs)
 
-	@constants
+
+	@dlg_constants
 
 	xAll = 0.0
 	yAll = 0.0
 	nAll = 0
-	eAlphaAll = complex (0,0)
-	eBetaAll = complex (0,0)
-	eBAll = complex (0,0)
-	
-	cdfId = ncdf_open ( RunDataFile, /noWrite ) 
-		nCdf_varGet, cdfId, 'nPhi', nPhi 
-		nCdf_varGet, cdfId, 'freq', freq 
-		nCdf_varGet, cdfId, 'capR', x 
-		nCdf_varGet, cdfId, 'y', y 
-		nCdf_varGet, cdfId, 'jr_re', jr_re 
-		nCdf_varGet, cdfId, 'jr_im', jr_im 
-		nCdf_varGet, cdfId, 'jt_re', jt_re 
-		nCdf_varGet, cdfId, 'jt_im', jt_im 
-		nCdf_varGet, cdfId, 'jz_re', jz_re 
-		nCdf_varGet, cdfId, 'jz_im', jz_im 
-		nCdf_varGet, cdfId, 'bmod', bmod
-		nCdf_varGet, cdfId, 'brU', brU
-		nCdf_varGet, cdfId, 'btU', btU
-		nCdf_varGet, cdfId, 'bzU', bzU
-		nCdf_varGet, cdfId, 'densitySpec', densitySpec
-		nCdf_varGet, cdfId, 'tempSpec', tempSpec
-		nCdf_varGet, cdfId, 'xx_re', xx_re 
-		nCdf_varGet, cdfId, 'xx_im', xx_im
-		nCdf_varGet, cdfId, 'yy_re', yy_re 
-		nCdf_varGet, cdfId, 'yy_im', yy_im
-		nCdf_varGet, cdfId, 'drBfn_re', dRbFn_bFn_re
-		nCdf_varGet, cdfId, 'drBfn_im', dRbFn_bFn_im
-		nCdf_varGet, cdfId, 'dzBfn_re', dzbFn_bFn_re
-		nCdf_varGet, cdfId, 'dzBfn_im', dzbFn_bFn_im
-		nCdf_varGet, cdfId, 'nuOmg', nuOmg
-		nCdf_varGet, cdfId, 'LimMask', LimMask
-        nCdf_varGet, cdfId, 'nZ_1D', nz_1D
-	ncdf_close, cdfId
+	E_alpAll = complex (0,0)
+	E_betAll = complex (0,0)
+	E_prlAll = complex (0,0)
 
-	xx	= complex ( xx_re, xx_im )
-	yy	= complex ( yy_re, yy_im )
+    arR = dlg_read_netcdf( RunDataFile )
 
-	jA_r = complex ( jr_re[*,*], jr_im[*,*] )
-	jA_t = complex ( jt_re[*,*], jt_im[*,*] )
-	jA_z = complex ( jz_re[*,*], jz_im[*,*] )
+	nN	= n_elements ( (arR['xx'])[*,0] )
+	nM	= n_elements ( (arR['yy'])[*,0] )
 
-	dRbFn_bFn	= complex ( dRbFn_bFn_re, dRbFn_bFn_im )
-	dZbFn_bFn	= complex ( dZbFn_bFn_re, dZbFn_bFn_im )
+    arS = dlg_read_netcdf( SolutionFile )
 
-	nN	= n_elements ( xx[*,0] )
-	nM	= n_elements ( yy[*,0] )
+    arS['jP_r_sum'] = total(arS['jP_r'],3)
+    arS['jP_t_sum'] = total(arS['jP_t'],3)
+    arS['jP_z_sum'] = total(arS['jP_z'],3)
 
-	cdfId = ncdf_open ( SolutionFile, /noWrite ) 
+    arS['jP_alp_sum'] = total(arS['jP_alp'],3)
+    arS['jP_bet_sum'] = total(arS['jP_bet'],3)
+    arS['jP_prl_sum'] = total(arS['jP_prl'],3)
 
-		nCdf_varGet, cdfId, 'r', r
-		nCdf_varGet, cdfId, 'z', z
-		nCdf_varGet, cdfId, 'nPhi', nPhi 
-		nCdf_varGet, cdfId, 'freq', freq 
-	
-		nCdf_varGet, cdfId, 'ealpha_re', ealpha_re 
-		ealpha_re = temporary(ealpha_re[*,*])
-		nCdf_varGet, cdfId, 'ebeta_re', ebeta_re 
-		ebeta_re = temporary(ebeta_re[*,*])
-		nCdf_varGet, cdfId, 'eB_re', eB_re 
-		eb_re = temporary(eb_re[*,*])
-
-		nCdf_varGet, cdfId, 'ealpha_im', ealpha_im 
-		ealpha_im = temporary(ealpha_im[*,*])
-		nCdf_varGet, cdfId, 'ebeta_im', ebeta_im 
-		ebeta_im = temporary(ebeta_im[*,*])
-		nCdf_varGet, cdfId, 'eB_im', eB_im 
-		eb_im = temporary(eb_im[*,*])
-
-		nCdf_varGet, cdfId, 'ealphak_re', ealphak_re 
-		ealphak_re = temporary(ealphak_re[*,*])
-		nCdf_varGet, cdfId, 'ebetak_re', ebetak_re 
-		ebetak_re = temporary(ebetak_re[*,*])
-		nCdf_varGet, cdfId, 'eBk_re', eBk_re 
-		ebk_re = temporary(ebk_re[*,*])
-
-		nCdf_varGet, cdfId, 'ealphak_im', ealphak_im 
-		ealphak_im = temporary(ealphak_im[*,*])
-		nCdf_varGet, cdfId, 'ebetak_im', ebetak_im 
-		ebetak_im = temporary(ebetak_im[*,*])
-		nCdf_varGet, cdfId, 'eBk_im', eBk_im 
-		ebk_im = temporary(ebk_im[*,*])
-
-		nCdf_varGet, cdfId, 'er_re', er_re 
-		er_re = temporary(er_re[*,*])
-		nCdf_varGet, cdfId, 'et_re', et_re 
-		et_re = temporary(et_re[*,*])
-		nCdf_varGet, cdfId, 'ez_re', ez_re 
-		ez_re = temporary(ez_re[*,*])
-
-		nCdf_varGet, cdfId, 'er_im', er_im 
-		er_im = temporary(er_im[*,*])
-		nCdf_varGet, cdfId, 'et_im', et_im 
-		et_im = temporary(et_im[*,*])
-		nCdf_varGet, cdfId, 'ez_im', ez_im 
-		ez_im = temporary(ez_im[*,*])
-
-		nCdf_varGet, cdfId, 'jalpha_re', jalpha_re 
-		nCdf_varGet, cdfId, 'jbeta_re', jbeta_re 
-		nCdf_varGet, cdfId, 'jB_re', jB_re 
-
-		nCdf_varGet, cdfId, 'jalpha_im', jalpha_im 
-		nCdf_varGet, cdfId, 'jbeta_im', jbeta_im 
-		nCdf_varGet, cdfId, 'jB_im', jB_im 
-
-		nCdf_varGet, cdfId, 'jP_r_re', jPr_re 
-		nCdf_varGet, cdfId, 'jP_t_re', jPt_re 
-		nCdf_varGet, cdfId, 'jP_z_re', jPz_re 
-	
-		nCdf_varGet, cdfId, 'jP_r_im', jPr_im 
-		nCdf_varGet, cdfId, 'jP_t_im', jPt_im 
-		nCdf_varGet, cdfId, 'jP_z_im', jPz_im 
-	
-		nCdf_varGet, cdfId, 'jouleHeating', jouleHeating 
-
-		ealpha	= complex ( ealpha_re, ealpha_im )
-		ebeta	= complex ( ebeta_re, ebeta_im )
-		eb	= complex ( eb_re, eb_im )
-
-		ealphak	= complex ( ealphak_re, ealphak_im )
-		ebetak	= complex ( ebetak_re, ebetak_im )
-		ebk	= complex ( ebk_re, ebk_im )
-
-		e_r	= complex ( er_re, er_im )
-		e_t	= complex ( et_re, et_im )
-		e_z	= complex ( ez_re, ez_im )
-
-		jP_r_s	= complex ( jPr_re, jPr_im )
-		jP_t_s	= complex ( jPt_re, jPt_im )
-		jP_z_s	= complex ( jPz_re, jPz_im )
-
-        jP_r = total(jP_r_s,3)
-        jP_t = total(jP_t_s,3)
-        jP_z = total(jP_z_s,3)
-
-		jP_a_s = complex ( jAlpha_re, jAlpha_im )
-		jP_b_s = complex ( jBeta_re, jBeta_im )
-		jP_p_s = complex ( jB_re, jB_im )
-
-        jP_a = total(jP_a_s,3)
-        jP_b = total(jP_b_s,3)
-        jP_p = total(jP_p_s,3)
-        
-	ncdf_close, cdfId
-
+    nuOmg = arR['nuOmg']
+    freq = arS['freq']
 
     w = 2*!pi*freq
     wRFc = complex(w+nuOmg*0,w*nuOmg)
-	x = r
-	y = z
+	x = arS['r']
+	y = arS['z']
+    r = x
+    z = y
     dr = r[1]-r[0]
 	nx = n_elements(r)
 	ny = n_elements(z)
@@ -193,23 +73,54 @@ pro ar2_plot_solution, full = full, $
 		y2D = fltArr(1)+z
 	endelse
 
-	nSpec	= n_elements ( jp_r_s[0,0,*] )
+	nSpec	= n_elements ( (arS['jP_r'])[0,0,*] )
 
 	; jDotE
 	; -----
 
-	this_jDotE	= jp_r_s[*,*,0] * conj(e_r) $
-				+ jp_t_s[*,*,0] * conj(e_t) $
-				+ jp_z_s[*,*,0] * conj(e_z)
+    jP_r = arS['jP_r']
+    jP_t = arS['jP_t']
+    jP_z = arS['jP_z']
 
-    jDotE_s = jP_r_s*0
+    jP_alp = arS['jP_alp']
+    jP_bet = arS['jP_bet']
+    jP_prl = arS['jP_prl']
+
+    jP_r_sum = arS['jP_r_sum']
+    jP_t_sum = arS['jP_t_sum']
+    jP_z_sum = arS['jP_z_sum']
+
+    jP_alp_sum = arS['jP_alp_sum']
+    jP_bet_sum = arS['jP_bet_sum']
+    jP_prl_sum = arS['jP_prl_sum']
+
+    jA_r = arR['jA_r']
+    jA_t = arR['jA_t']
+    jA_z = arR['jA_z']
+    
+    E_r = arS['E_r']
+    E_t = arS['E_t']
+    E_z = arS['E_z']
+
+    E_alp = arS['E_alp']
+    E_bet = arS['E_bet']
+    E_prl = arS['E_prl']
+
+
+    jouleHeating = arS['jouleHeating']
+
+	this_jDotE	= jP_r[*,*,0] * conj(E_r) $
+				+ jP_t[*,*,0] * conj(E_t) $
+				+ jP_z[*,*,0] * conj(E_z)
+
+    jDotE_s = arS['jP_r']*0
     jDotE_s[*,*,0] = this_jDotE
 
 	for s=1,nSpec-1 do begin
 
-		this_jDotE	= jp_r_s[*,*,s] * conj(e_r) $
-				+ jp_t_s[*,*,s] * conj(e_t) $
-				+ jp_z_s[*,*,s] * conj(e_z)
+		this_jDotE	= jp_r[*,*,s] * conj(e_r) $
+				+ jp_t[*,*,s] * conj(e_t) $
+				+ jp_z[*,*,s] * conj(e_z)
 
         jDotE_s[*,*,s] = this_jDotE
 
@@ -217,7 +128,7 @@ pro ar2_plot_solution, full = full, $
 
     for s=0,nSpec-1 do begin
         print, 'amu: ',round(ar2.amu[s]),' Z: ',round(ar2.atomicZ[s]),' Total(jDotE)['+string(s,format='(i1.1)')+']: ',$
-            string(total(real_part(jDotE_s[*,*,s]))/total(real_part(jDotE_s))*100,format='(f4.1)')+'%'
+            string( total(real_part(jDotE_s[*,*,s])) / total(real_part(jDotE_s)) *100,format='(f15.4)')+'%'
     endfor
 
 
@@ -229,7 +140,12 @@ pro ar2_plot_solution, full = full, $
 	; Plot all grid solutions
 	; -----------------------
 
+    
+
 	if size(y,/dim) eq 0 then begin
+
+        margin = [0.2,0.2,0.1,0.2]
+        thick = 2
 
 		iix = n_elements(x)/2
 		wrf = freq * 2 * !pi
@@ -240,28 +156,55 @@ pro ar2_plot_solution, full = full, $
                 yRange=[-eRange,eRange],$
                 ytitle='Er [V/m]',$
                 name='Re',$
-                window_title='aorsa')
-		p_i = plot ( x, imaginary(e_r), color='red',/over,name='Im')
+                window_title='aorsa',margin=margin,thick=thick)
+		p_i = plot ( x, imaginary(e_r), color='red',/over,name='Im',thick=thick)
 
 		eRange = max(abs([e_t]))
 		p_r = plot ( x, e_t, layout=[1,3,2],/current,$
 				title='Et',$
                 yRange=[-eRange,eRange],$
                 ytitle='Et [V/m]',$
-                name='Re')
-		p_i = plot ( x, imaginary(e_t), color='red',/over,name='Im')
+                name='Re',margin=margin,thick=thick)
+		p_i = plot ( x, imaginary(e_t), color='red',/over,name='Im',thick=thick)
 
     	eRange = max(abs([e_z]))
 		p_r = plot ( x, e_z, layout=[1,3,3],/current,$
 				title='Ez',$
                 yRange=[-eRange,eRange],$
                 ytitle='Ez [V/m]',$
-                name='Re')
-		p_i = plot ( x, imaginary(e_z), color='red',/over,name='Im')
+                name='Re',margin=margin,thick=thick,xtitle="r [m]")
+		p_i = plot ( x, imaginary(e_z), color='red',/over,name='Im',thick=thick)
+
+		p_r = plot ( x, E_alp, layout=[1,3,1],$
+				title='E_alp',$
+                yRange=[-eRange,eRange],$
+                ytitle='E_alp [V/m]',$
+                name='Re',$
+                window_title='aorsa',margin=margin,thick=thick)
+		p_i = plot ( x, imaginary(E_alp), color='red',/over,name='Im',thick=thick)
+
+		eRange = max(abs([E_bet]))
+		p_r = plot ( x, E_bet, layout=[1,3,2],/current,$
+				title='E_bet',$
+                yRange=[-eRange,eRange],$
+                ytitle='E_bet [V/m]',$
+                name='Re',margin=margin,thick=thick)
+		p_i = plot ( x, imaginary(E_bet), color='red',/over,name='Im',thick=thick)
+
+    	eRange = max(abs([E_prl]))
+		p_r = plot ( x, E_prl, layout=[1,3,3],/current,$
+				title='E_prl',$
+                yRange=[-eRange,eRange],$
+                ytitle='E_prl [V/m]',$
+                name='Re',margin=margin,thick=thick,xtitle="r [m]")
+		p_i = plot ( x, imaginary(E_prl), color='red',/over,name='Im',thick=thick)
+
+        p_r.save, 'plot1.png', res=300
+
 
 		p = plot (x,(total(JouleHeating,3))[*],color='b',thick=1,$
 				title='J dot E',name='jP . E (Total)',font_size=10,$
-				layout=[1,3,1],window_title='aorsa')
+				layout=[1,3,1],window_title='aorsa',xtitle="r [m]")
 		colorArr = ['b','g','r','c','m','y','k']
         for s=0,n_elements(JouleHeating[0,0,*])-1 do begin
             p = plot(x,JouleHeating[*,0,s],color=colorArr[s],/over,thick=3,linestyle='--',transparency=50)
@@ -292,43 +235,45 @@ pro ar2_plot_solution, full = full, $
     	yRange = max(abs(jp_r))
 
         plotJp_rtz = 1
+        current = 0
     	if plotJp_rtz then begin
     
-            nS = n_elements(jP_r_s[0,0,*])
-   
-            p=plot([0,0],[0,0],/noData, layout=[nS,3,1],window_title='aorsa_1d - jP_rtz',dimensions=[1200,800])
-    
+            nS = n_elements(jP_r[0,0,*])
+  
+
             for s=0,nS-1 do begin
                 This_amu_str = ', amu: '+string(ar2.amu[s],format='(i1.1)')
                 This_Z_str = ', Z: '+string(ar2.atomicZ[s],format='(i+2.1)')
 
-    		    p_re = plot (r,jP_r_s[*,0,s],thick=2,$
+    		    p_re = plot (r,jP_r[*,0,s],thick=2,window_title='aorsa_1d - jP_rtz',dimensions=[1200,800],$
     		    		title='jP_r'+This_amu_str+This_Z_str,name='Jp_re',font_size=10,$
-    		    		layout=[nS,3,1+s],yRange=yRange,transparency=50,/current)
-    		    p_im = plot (r,imaginary(jP_r_s[*,0,s]),color='r',thick=2,transparency=50,$
+    		    		layout=[nS,3,1+s],yRange=yRange,transparency=50,current=current<1)
+    		    p_im = plot (r,imaginary(jP_r[*,0,s]),color='r',thick=2,transparency=50,$
     		    		name='Ja_re',font_size=10,/over)
-    
-    		    p_re = plot (r,jP_t_s[*,0,s],thick=2,$
+
+                current++
+    		    p_re = plot (r,jP_t[*,0,s],thick=2,$
     		    		title='jP_t',name='Jp_re',font_size=10,$
-    		    		layout=[nS,3,1+1*nS+s],/current,yRange=yRange,transparency=50)
-    		    p_im = plot (r,imaginary(jP_t_s[*,0,s]),color='r',thick=2,transparency=50,$
+    		    		layout=[nS,3,1+1*nS+s],current=current<1,yRange=yRange,transparency=50)
+    		    p_im = plot (r,imaginary(jP_t[*,0,s]),color='r',thick=2,transparency=50,$
     		    		name='Jp_re',font_size=10,/over)
     
-    		    p_re = plot (r,jP_z_s[*,0,s],thick=2,$
+    		    p_re = plot (r,jP_z[*,0,s],thick=2,$
     		    		title='jP_z',name='Jp_re',font_size=10,$
-    		    		layout=[nS,3,1+2*nS+s],/current,yRange=yRange,transparency=50)
-    		    p_im = plot (r,imaginary(jP_z_s[*,0,s]),color='r',thick=2,transparency=50,$
+    		    		layout=[nS,3,1+2*nS+s],current=current<1,yRange=yRange,transparency=50)
+    		    p_im = plot (r,imaginary(jP_z[*,0,s]),color='r',thick=2,transparency=50,$
     		    		name='Jp_re',font_size=10,/over)
+
             endfor
     
-            p=plot(r,jP_a,layout=[1,3,1], title='jP_rtz (summed over species)')
-            p=plot(r,imaginary(jP_r),color='r',/over)
+            p=plot(r,jP_r_sum,layout=[1,3,1], title='jP_rtz (summed over species)')
+            p=plot(r,imaginary(jP_r_sum),color='r',/over)
     
-            p=plot(r,jP_t,layout=[1,3,2], /current)
-            p=plot(r,imaginary(jP_t),color='r',/over)
+            p=plot(r,jP_t_sum,layout=[1,3,2], /current)
+            p=plot(r,imaginary(jP_t_sum),color='r',/over)
     
-            p=plot(r,jP_z,layout=[1,3,3], /current)
-            p=plot(r,imaginary(jP_z),color='r',/over)
+            p=plot(r,jP_z_sum,layout=[1,3,3], /current)
+            p=plot(r,imaginary(jP_z_sum),color='r',/over)
     
     	endif
 
@@ -336,7 +281,7 @@ pro ar2_plot_solution, full = full, $
         plotJp_abp = 1
     	if plotJp_abp then begin
     
-            nS = n_elements(jP_r_s[0,0,*])
+            nS = n_elements(jP_r[0,0,*])
    
             p=plot([0,0],[0,0],/noData, layout=[nS,3,1],window_title='aorsa_1d - jP_abp',dimensions=[1200,800])
     
@@ -344,33 +289,33 @@ pro ar2_plot_solution, full = full, $
                 This_amu_str = ', amu: '+string(ar2.amu[s],format='(i1.1)')
                 This_Z_str = ', Z: '+string(ar2.atomicZ[s],format='(i+2.1)')
 
-    		    p_re = plot (r,jP_a_s[*,0,s],thick=2,$
-    		    		title='jP_a'+This_amu_str+This_Z_str,name='Jp_re',font_size=10,$
+    		    p_re = plot (r,jP_alp[*,0,s],thick=2,$
+    		    		title='jP_alp'+This_amu_str+This_Z_str,name='Jp_re',font_size=10,$
     		    		layout=[nS,3,1+s],yRange=yRange,transparency=50,/current)
-    		    p_im = plot (r,imaginary(jP_a_s[*,0,s]),color='r',thick=2,transparency=50,$
+    		    p_im = plot (r,imaginary(jP_alp[*,0,s]),color='r',thick=2,transparency=50,$
     		    		name='Ja_re',font_size=10,/over)
     
-    		    p_re = plot (r,jP_b_s[*,0,s],thick=2,$
-    		    		title='jP_b',name='Jp_re',font_size=10,$
+    		    p_re = plot (r,jP_bet[*,0,s],thick=2,$
+    		    		title='jP_bet',name='Jp_re',font_size=10,$
     		    		layout=[nS,3,1+1*nS+s],/current,yRange=yRange,transparency=50)
-    		    p_im = plot (r,imaginary(jP_b_s[*,0,s]),color='r',thick=2,transparency=50,$
+    		    p_im = plot (r,imaginary(jP_bet[*,0,s]),color='r',thick=2,transparency=50,$
     		    		name='Jp_re',font_size=10,/over)
     
-    		    p_re = plot (r,jP_p_s[*,0,s],thick=2,$
-    		    		title='jP_p',name='Jp_re',font_size=10,$
+    		    p_re = plot (r,jP_prl[*,0,s],thick=2,$
+    		    		title='jP_prl',name='Jp_re',font_size=10,$
     		    		layout=[nS,3,1+2*nS+s],/current,yRange=yRange,transparency=50)
-    		    p_im = plot (r,imaginary(jP_p_s[*,0,s]),color='r',thick=2,transparency=50,$
+    		    p_im = plot (r,imaginary(jP_prl[*,0,s]),color='r',thick=2,transparency=50,$
     		    		name='Jp_re',font_size=10,/over)
             endfor
     
-            p=plot(r,jP_a,layout=[1,3,1], title='jP_abp (summed over species)')
-            p=plot(r,imaginary(jP_a),color='r',/over)
+            p=plot(r,jP_alp_sum,layout=[1,3,1], title='jP_abp (summed over species)')
+            p=plot(r,imaginary(jP_alp_sum),color='r',/over)
     
-            p=plot(r,jP_t,layout=[1,3,2], /current)
-            p=plot(r,imaginary(jP_b),color='r',/over)
+            p=plot(r,jP_bet_sum,layout=[1,3,2], /current)
+            p=plot(r,imaginary(jP_bet_sum),color='r',/over)
     
-            p=plot(r,jP_z,layout=[1,3,3], /current)
-            p=plot(r,imaginary(jP_p),color='r',/over)
+            p=plot(r,jP_prl_sum,layout=[1,3,3], /current)
+            p=plot(r,imaginary(jP_prl_sum),color='r',/over)
     
     	endif
 
@@ -384,7 +329,9 @@ pro ar2_plot_solution, full = full, $
         h_t = complexArr(nX)
         h_z = complexArr(nX)
 
-        k_z = nZ_1D*0 ; this is NOT right, fix for non-zero nZ
+        kz_1D = arR['kz_1d']
+        nPhi = arS['nPhi']
+        k_z = kz_1D*0 ; this is NOT right, fix for non-zero nZ
 
         for i=2,nX-3 do begin
 
@@ -399,9 +346,9 @@ pro ar2_plot_solution, full = full, $
 
         endfor
 
-        h_r = h_r / (II*wRFc*u0)
-        h_t = h_t / (II*wRFc*u0)
-        h_z = h_z / (II*wRFc*u0)
+        h_r = h_r / (_II*wRFc*_u0)
+        h_t = h_t / (_II*wRFc*_u0)
+        h_z = h_z / (_II*wRFc*_u0)
 
         p=plot(r,h_r,layout=[1,3,1],title='h_r',window_title='aorsa')
         p=plot(r,imaginary(h_r),/over,color='r')
@@ -431,7 +378,7 @@ pro ar2_plot_solution, full = full, $
         !y.margin = !y.margin / 2
         dimensions = get_screen_size()*0.8
         plotpos = 1
-        Layout = [3,2]
+        Layout = [3,3]
         aspect = 0
         xRange = [min(r),max(r)]
         yRange = [min(z),max(z)]
@@ -446,12 +393,16 @@ pro ar2_plot_solution, full = full, $
 
 		nLevs = 10
 
+        scale = 0.1
+
 		thisField = e_r[*,*]
-        scale = max(abs(thisField))*scaleFac
+        scale = max(abs(real_part(thisField)))*scaleFac
+        print, 'E_r scale: ', scale
         title = 'E_r'
 		levels = fIndGen(nLevs)/(nLevs-1)*scale
 		colors = reverse(bytScl(levels, top=253)+1)
 		PlotField = (real_part(thisField)<max(levels))>min(-levels)
+        aspect = 1.0
 		c = contour ( PlotField, x, y, c_value=levels, rgb_indices=colors, rgb_table=3, /fill, $
             aspect_ratio=aspect, dimensions=dimensions, title=title, xRange=xRange, yRange=yRange, layout=[[Layout,PlotPos]] )
 		c = contour ( -PlotField, x, y, c_value=levels, rgb_indices=colors, rgb_table=1, /fill,/over )
@@ -462,8 +413,44 @@ pro ar2_plot_solution, full = full, $
         ++PlotPos
         p.Save, "Er.png", border=0, height=600
 
+		thisField = e_t[*,*]
+        scale = max(abs(real_part(thisField)))*scaleFac
+        title = 'E_t'
+        print, 'E_t scale: ', scale
+		levels = fIndGen(nLevs)/(nLevs-1)*scale
+		colors = reverse(bytScl(levels, top=253)+1)
+		PlotField = (real_part(thisField)<max(levels))>min(-levels)
+        aspect = 1.0
+		c = contour ( PlotField, x, y, c_value=levels, rgb_indices=colors, rgb_table=3, /fill, $
+            aspect_ratio=aspect, dimensions=dimensions, title=title, xRange=xRange, yRange=yRange, layout=[[Layout,PlotPos]], /current )
+		c = contour ( -PlotField, x, y, c_value=levels, rgb_indices=colors, rgb_table=1, /fill,/over )
+        p = plot ( rlim, zlim, /over, thick = 3, color=LimColor)
+        p = plot ( rlcfs, zlcfs, /over, thick = 4, color=lcfsColor )
+        c_zero_set = contour(ar2.kPerSq_F,ar2.r,ar2.z,/over,c_value=0.001,color=cutoffColor,C_LABEL_SHOW=0,c_thick=3)
+        c_jant = contour(jA_z, x, y, /over, c_value = AntCLevel, color=AntColor, C_LABEL_SHOW=0, c_thick=5)
+        ++PlotPos
+        p.Save, "Et.png", border=0, height=600
+
+		thisField = e_z[*,*]
+        scale = max(abs(real_part(thisField)))*scaleFac
+        print, 'E_z scale: ', scale
+        title = 'E_z'
+		levels = fIndGen(nLevs)/(nLevs-1)*scale
+		colors = reverse(bytScl(levels, top=253)+1)
+		PlotField = (real_part(thisField)<max(levels))>min(-levels)
+        aspect = 1.0
+		c = contour ( PlotField, x, y, c_value=levels, rgb_indices=colors, rgb_table=3, /fill, $
+            aspect_ratio=aspect, dimensions=dimensions, title=title, xRange=xRange, yRange=yRange, layout=[[Layout,PlotPos]], /current )
+		c = contour ( -PlotField, x, y, c_value=levels, rgb_indices=colors, rgb_table=1, /fill,/over )
+        p = plot ( rlim, zlim, /over, thick = 3, color=LimColor)
+        p = plot ( rlcfs, zlcfs, /over, thick = 4, color=lcfsColor )
+        c_zero_set = contour(ar2.kPerSq_F,ar2.r,ar2.z,/over,c_value=0.001,color=cutoffColor,C_LABEL_SHOW=0,c_thick=3)
+        c_jant = contour(jA_z, x, y, /over, c_value = AntCLevel, color=AntColor, C_LABEL_SHOW=0, c_thick=5)
+        ++PlotPos
+        p.Save, "Ez.png", border=0, height=600
+
 		thisField = abs(e_r[*,*])
-        scale = max(abs(thisField))*scaleFac
+        ;scale = max(abs(thisField))*scaleFac
         title = 'abs(E_r)'
 		levels = fIndGen(nLevs)/(nLevs-1)*scale
 		colors = reverse(bytScl(levels, top=253)+1)
@@ -478,6 +465,40 @@ pro ar2_plot_solution, full = full, $
         c_jant = contour(jA_r, x, y, /over, c_value = AntCLevel, color=AntColor, C_LABEL_SHOW=0, c_thick=5)
         ++PlotPos
         p.Save, "absEr.png",  border=0, height=600
+
+		thisField = abs(e_t[*,*])
+        ;scale = max(abs(thisField))*scaleFac
+        title = 'abs(E_t)'
+		levels = fIndGen(nLevs)/(nLevs-1)*scale
+		colors = reverse(bytScl(levels, top=253)+1)
+		PlotField = (real_part(thisField)<max(levels))>min(-levels)
+		c = contour ( PlotField, x, y, c_value=levels, rgb_indices=colors, rgb_table=3, /fill, $
+            aspect_ratio=aspect, title=title, xRange=xRange, yRange=yRange, $
+            layout=[[Layout,PlotPos]],/current)
+		c = contour ( -PlotField, x, y, c_value=levels, rgb_indices=colors, rgb_table=1, /fill,/over )
+        p = plot ( rlim, zlim, /over, thick = 3, color=LimColor)
+        p = plot ( rlcfs, zlcfs, /over, thick = 4, color=lcfsColor )
+        c_zero_set = contour(ar2.kPerSq_F,ar2.r,ar2.z,/over,c_value=0.001,color=cutoffColor,C_LABEL_SHOW=0,c_thick=3)
+        c_jant = contour(jA_r, x, y, /over, c_value = AntCLevel, color=AntColor, C_LABEL_SHOW=0, c_thick=5)
+        ++PlotPos
+        p.Save, "absEt.png",  border=0, height=600
+
+		thisField = abs(e_z[*,*])
+        ;scale = max(abs(thisField))*scaleFac
+        title = 'abs(E_z)'
+		levels = fIndGen(nLevs)/(nLevs-1)*scale
+		colors = reverse(bytScl(levels, top=253)+1)
+		PlotField = (real_part(thisField)<max(levels))>min(-levels)
+		c = contour ( PlotField, x, y, c_value=levels, rgb_indices=colors, rgb_table=3, /fill, $
+            aspect_ratio=aspect, title=title, xRange=xRange, yRange=yRange, $
+            layout=[[Layout,PlotPos]],/current)
+		c = contour ( -PlotField, x, y, c_value=levels, rgb_indices=colors, rgb_table=1, /fill,/over )
+        p = plot ( rlim, zlim, /over, thick = 3, color=LimColor)
+        p = plot ( rlcfs, zlcfs, /over, thick = 4, color=lcfsColor )
+        c_zero_set = contour(ar2.kPerSq_F,ar2.r,ar2.z,/over,c_value=0.001,color=cutoffColor,C_LABEL_SHOW=0,c_thick=3)
+        c_jant = contour(jA_r, x, y, /over, c_value = AntCLevel, color=AntColor, C_LABEL_SHOW=0, c_thick=5)
+        ++PlotPos
+        p.Save, "absEz.png",  border=0, height=600
 
 		nLevs = 50
 
@@ -515,17 +536,16 @@ pro ar2_plot_solution, full = full, $
         ++PlotPos
         p.Save, "nuOmg_e.png",  border=0, height=600
 
-
 	endelse
 
 	if keyword_set(sav) then begin
 
 		xorig = x
-		eAlphaOrig = eAlpha
-		eBetaOrig = eBeta
-		eBOrig = eB
+		E_alpOrig = E_alp
+		E_betOrig = E_bet
+		E_prlOrig = E_prl 
 
-		save, xorig, eAlphaOrig, eBetaOrig, eBOrig, $
+		save, xorig, E_alpOrig, E_betOrig, E_prlOrig, $
 				file = 'soln.sav'
 	endif
 

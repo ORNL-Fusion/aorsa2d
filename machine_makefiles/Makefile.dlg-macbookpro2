@@ -1,0 +1,36 @@
+BLAS := 
+LIBS += -pthread #-L ${BLAS} -latlas -lblas
+
+LAPACK := /opt/local/lib 
+LIBS += -L ${LAPACK} -llapack
+
+HDF_DIR := /opt/local
+LIBS += -L ${HDF_DIR}/lib -lhdf5 -lhdf5_hl
+INC_DIR += -I ${HDF_DIR}/include
+
+NETCDF_DIR := /usr/local/Cellar/netcdf/4.4.1.1_5
+LIBS +=-L ${NETCDF_DIR}/lib -lnetcdf -lnetcdff
+INC_DIR += -I ${NETCDF_DIR}/include 
+
+ifeq (${PARALLEL},1)
+	#BLACS = \
+	#	${HOME}/code/blacs/blacs_gnu64/LIB/blacs_MPI-LINUX-0.a \
+	#	${HOME}/code/blacs/blacs_gnu64/LIB/blacsF77init_MPI-LINUX-0.a \
+	#	${HOME}/code/blacs/blacs_gnu64/LIB/blacs_MPI-LINUX-0.a
+    SCALAPACK := -L /usr/local/Cellar/scalapack/2.0.2_8/lib -L /usr/local/Cellar/veclibfort/0.4.2_4/lib -lvecLibFort -lscalapack
+	LIBS := ${SCALAPACK} ${BLACS} ${LIBS}
+endif
+
+#PAPI_DIR := /Users/dg6/code/papi/gnu-4.8.2
+#PAPI_INC := -I${PAPI_DIR}/include/
+#PAPI_LINK := ${PAPI_DIR}/lib/libpapi.a
+#LIBS += ${PAPI_LINK}
+#INC_DIR += ${PAPI_INC}
+
+ifeq (${PARALLEL},1)
+		F90 := mpif90
+else
+		F90 := gfortran
+endif
+
+

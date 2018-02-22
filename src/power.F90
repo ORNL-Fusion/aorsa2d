@@ -8,12 +8,17 @@ subroutine current ( g, rhs )
     use read_data
     use aorsaNamelist, &
         only: nSpec, iSigma, fracOfModesInSolution, ZeroJp, &
-        ZeroJp_rMin, ZeroJp_rMax, ZeroJp_zMin, ZeroJp_zMax
+        ZeroJp_rMin, ZeroJp_rMax, ZeroJp_zMin, ZeroJp_zMax, &
+        useJpFromFile, ColdIons
     use sigma
     use parallel
     use profiles, &
-        only: k0, omgrf, mSpec
+        only: omgrf, mSpec
     use constants
+    use read_jp_from_file, only: &
+        file_nS=>nS, file_nR=>nR, file_nZ=>nZ, file_r=>r, file_z=>z, &
+        file_Jp_r=>Jp_r, file_Jp_t=>Jp_t, file_Jp_z=>Jp_z!, &
+        !file_Jp_r_s=>Jp_r_s, file_Jp_t_s=>Jp_t_s, file_Jp_z_s=>Jp_z_s
 
     implicit none
    
@@ -32,11 +37,29 @@ subroutine current ( g, rhs )
     real :: R_(3,3)
 #endif
     real :: R, z
+    complex(kind=dbl) :: k0
 
     if (.not.allocated(g%jAlpha)) allocate ( &
         g%jAlpha(g%nR,g%nZ,nSpec), &
         g%jBeta(g%nR,g%nZ,nSpec), &
         g%jB(g%nR,g%nZ,nSpec) )
+
+#if WRITE_SIGMA_TO_OUTPUT > 0 
+
+     if (.not.allocated(g%sig11)) allocate ( &
+        g%sig11(g%nR,g%nMin:g%nMax,nSpec), &
+        g%sig12(g%nR,g%nMin:g%nMax,nSpec), &
+        g%sig13(g%nR,g%nMin:g%nMax,nSpec), &
+        g%sig21(g%nR,g%nMin:g%nMax,nSpec), &
+        g%sig22(g%nR,g%nMin:g%nMax,nSpec), &
+        g%sig23(g%nR,g%nMin:g%nMax,nSpec), &
+        g%sig31(g%nR,g%nMin:g%nMax,nSpec), &
+        g%sig32(g%nR,g%nMin:g%nMax,nSpec), &
+        g%sig33(g%nR,g%nMin:g%nMax,nSpec) )
+
+    if (.not.allocated(g%kr)) allocate( &
+        g%kr(g%nMin:g%nMax,g%mMin:g%mMax), g%kz(g%nMin:g%nMax,g%mMin:g%mMax) )
+#endif
 
     allocate ( jAlphaTmp(g%nR,g%nZ), jBetaTmp(g%nR,g%nZ), jBTmp(g%nR,g%nZ) )
 
@@ -62,11 +85,18 @@ subroutine current ( g, rhs )
         workList: &
         do w=1,size(g%wl)
 
-            twoThirdsRule: &
-            if(g%wl(w)%m >= g%mMin*fracOfModesInSolution .and. g%wl(w)%m <= g%mMax*fracOfModesInSolution &
-                .and. g%wl(w)%n >= g%nMin*fracOfModesInSolution .and. g%wl(w)%n <= g%nMax*fracOfModesInSolution ) then
+            k0  = g%k0(g%wl(w)%iPt)
 
-            
+            !ReplaceWithJpFromFile: &
+            !if(useJpFromFile)then
+
+            !else
+
+                twoThirdsRule: &
+                if(g%wl(w)%m >= g%mMin*fracOfModesInSolution .and. g%wl(w)%m <= g%mMax*fracOfModesInSolution &
+                    .and. g%wl(w)%n >= g%nMin*fracOfModesInSolution .and. g%wl(w)%n <= g%nMax*fracOfModesInSolution ) then
+
+                
                         bFn = g%xx(g%wl(w)%n,g%wl(w)%i) * g%yy(g%wl(w)%m,g%wl(w)%j)
 
 #if __sigma__ != 2
@@ -113,7 +143,7 @@ subroutine current ( g, rhs )
                                 g%nuOmg(g%wl(w)%iPt,s) )
 
                         endif hotPlasma
-
+    
                         coldPlasma: &
                         if (iSigma==0 .and. (.not. g%isMetal(g%wl(w)%iPt)) ) then 
 
@@ -124,7 +154,6 @@ subroutine current ( g, rhs )
                                 g%nuOmg(g%wl(w)%iPt,s) )
 
                             thisSigma = sigmaCold_stix ( sigmaIn_cold )
-
 
                         endif coldPlasma
 #if __noU__==1
@@ -162,8 +191,6 @@ subroutine current ( g, rhs )
                             endif
                         endif
 
-
-#endif
                         ek_nm(1) = g%eAlphak(g%wl(w)%n,g%wl(w)%m,rhs)
                         ek_nm(2) = g%eBetak(g%wl(w)%n,g%wl(w)%m,rhs)
                         ek_nm(3) = g%eBk(g%wl(w)%n,g%wl(w)%m,rhs) 
@@ -178,18 +205,33 @@ subroutine current ( g, rhs )
                             write(*,*) thisSigma(3,1), thisSigma(3,2), thisSigma(3,3)
                         endif
 #endif
+
+#if WRITE_SIGMA_TO_OUTPUT > 0
+
+                        g%kr(g%wl(w)%n,g%wl(w)%m) = kr
+                        g%kz(g%wl(w)%n,g%wl(w)%m) = kz
+
+                        g%sig11(g%wl(w)%i,g%wl(w)%n,s) = thisSigma(1,1)
+                        g%sig12(g%wl(w)%i,g%wl(w)%n,s) = thisSigma(1,2)
+                        g%sig13(g%wl(w)%i,g%wl(w)%n,s) = thisSigma(1,3)
+                        g%sig21(g%wl(w)%i,g%wl(w)%n,s) = thisSigma(2,1)
+                        g%sig22(g%wl(w)%i,g%wl(w)%n,s) = thisSigma(2,2)
+                        g%sig23(g%wl(w)%i,g%wl(w)%n,s) = thisSigma(2,3)
+                        g%sig31(g%wl(w)%i,g%wl(w)%n,s) = thisSigma(3,1)
+                        g%sig32(g%wl(w)%i,g%wl(w)%n,s) = thisSigma(3,2)
+                        g%sig33(g%wl(w)%i,g%wl(w)%n,s) = thisSigma(3,3)
+#endif
+
+                        thisSigma = transpose(thisSigma) ! this gives consistency with KJ and RS. 
                         jVec = matMul ( thisSigma, ek_nm ) 
-                        !thisSigma = transpose(thisSigma)
-                        !jVec(1) = thisSigma(1,1)*ek_nm(1)+thisSigma(2,1)*ek_nm(2)+thisSigma(3,1)*ek_nm(3)
-                        !jVec(2) = thisSigma(1,2)*ek_nm(1)+thisSigma(2,2)*ek_nm(2)+thisSigma(3,2)*ek_nm(3)
-                        !jVec(3) = thisSigma(1,3)*ek_nm(1)+thisSigma(2,3)*ek_nm(2)+thisSigma(3,3)*ek_nm(3)
 
                         g%jAlpha(g%wl(w)%i,g%wl(w)%j,s) = g%jAlpha(g%wl(w)%i,g%wl(w)%j,s) + jVec(1) * bFn
                         g%jBeta(g%wl(w)%i,g%wl(w)%j,s) = g%jBeta(g%wl(w)%i,g%wl(w)%j,s) + jVec(2) * bFn
                         g%jB(g%wl(w)%i,g%wl(w)%j,s) = g%jB(g%wl(w)%i,g%wl(w)%j,s) + jVec(3) * bFn
 
-            endif twoThirdsRule
+                    endif twoThirdsRule
 
+            !endif ReplaceWithJpFromFile
 
             ! Where E=0 at the boundary, also set J=0 to avoid
             ! tiny E values combining with sigma to give anomolous
@@ -207,9 +249,6 @@ subroutine current ( g, rhs )
 
     enddo species
 
-#if __sigma__ != 2
-    deallocate ( sigmaAll )
-#else
 #ifdef par
 
     ! Switch to individual 2D arrays for the sum over processors
@@ -220,11 +259,11 @@ subroutine current ( g, rhs )
         jBetaTmp = g%jBeta(:,:,s)
         jBTmp = g%jB(:,:,s)
 
-        call cGSUM2D ( iContext, 'All', ' ', g%nR, g%nZ, jAlphaTmp, g%nR, -1, -1 )
-        call cGSUM2D ( iContext, 'All', ' ', g%nR, g%nZ, jBetaTmp, g%nR, -1, -1 )
-        call cGSUM2D ( iContext, 'All', ' ', g%nR, g%nZ, jBTmp, g%nR, -1, -1 )
+        call cGSUM2D ( ICTXT, 'All', ' ', g%nR, g%nZ, jAlphaTmp, g%nR, -1, -1 )
+        call cGSUM2D ( ICTXT, 'All', ' ', g%nR, g%nZ, jBetaTmp, g%nR, -1, -1 )
+        call cGSUM2D ( ICTXT, 'All', ' ', g%nR, g%nZ, jBTmp, g%nR, -1, -1 )
 
-        call blacs_barrier ( iContext, 'All' ) 
+        call blacs_barrier ( ICTXT, 'All' ) 
 
         g%jAlpha(:,:,s) = jAlphaTmp
         g%jBeta(:,:,s) = jBetaTmp

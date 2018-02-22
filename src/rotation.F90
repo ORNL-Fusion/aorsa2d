@@ -250,6 +250,8 @@ contains
         g%Uzt = g%U_RTZ_to_ABb(:,3,2) 
         g%Uzz = g%U_RTZ_to_ABb(:,3,3)
 
+        !write(*,*) g%U_RTZ_to_ABb(1,:,:)
+
     end sUbroUtine init_rotation
 
 

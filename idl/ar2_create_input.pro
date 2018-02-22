@@ -47,17 +47,23 @@ function MakePeriodic, Arr, MaskIn, look = look
 
 end
 
-pro ar2_create_input
+pro ar2_create_input, _r1=_r1, _z1=_z1, _angle=_angle, doPlots = _doPlots, _len=_len
 
-	bField_eqdsk = 1
+    if keyword_set(_doPlots) then doPlots = _doPlots else doPlots = 1
+
+	bField_eqdsk = 0
 	bField_gaussian = 0
     bField_flat = 0
+    bField_linear = 0
+    bField_numeric = 0
 
     gaussian_profiles = 0
     parabolic_profiles = 0
     flux_profiles = 0
 	fred_namelist_input = 0
-	flat_profiles = 1
+	flat_profiles = 0
+    numeric_profiles = 0
+    mpex_profiles = 0
 
 	br_flat = 0.0
 	bt_flat = 1.0
@@ -65,8 +71,8 @@ pro ar2_create_input
 
     generate_vorpal_input = 0
 
-	@constants
-    @ar2run
+	@dlg_constants
+    @'input/ar2run.pro'
 
 	wrf	= freq * 2d0 * !dpi
 
@@ -106,7 +112,7 @@ pro ar2_create_input
 
         rlim = g.rlim[*]
         zlim = g.zlim[*]
-	    
+
         oversample_boundary, rbbbs, zbbbs, rbbbs_os, zbbbs_os 
         oversample_boundary, rlim, zlim, rlim_os, zlim_os 
 
@@ -149,6 +155,18 @@ pro ar2_create_input
 		bt = fltArr(nR,nZ)+bt_flat
 		bz = fltArr(nR,nZ)+bz_flat
 
+	endif else if bField_linear eq 1 then begin
+
+		br = brLeft + (r2D-r[0]) * brSlope 
+		bt = btLeft + (r2D-r[0]) * btSlope 
+		bz = bzLeft + (r2D-r[0]) * bzSlope 
+
+	endif else if bField_numeric eq 1 then begin
+
+		br = br2D_numeric
+		bt = bt2D_numeric
+		bz = bz2D_numeric
+
 	endif else if bField_gaussian eq 1 then begin
 
 		bt = r0 * b0 / r2d
@@ -176,7 +194,11 @@ pro ar2_create_input
 
 	endif else begin
 
-		bt = r0 * b0 / r2d
+        if size(cartesian_offset,/type) ne 0 then begin
+		    bt = (r0-cartesian_offset) * b0 / (r2d-cartesian_offset)
+        endif else begin
+		    bt = r0 * b0 / r2d
+        endelse
 		br = bt * br_frac
 		bz = bt * bz_frac
 
@@ -202,11 +224,13 @@ pro ar2_create_input
 	ScreenSize = get_screen_size()
 	dimensions = ScreenSize*0.8
     plotpos = 1
+
+if doPlots then begin
 	p=plot(r,bt[*,nZ/2],layout=[layout,plotpos], title='bField',dimensions=dimensions)
 	p=plot(r,br[*,nZ/2],/over,color='b')
 	p=plot(r,bz[*,nZ/2],/over,color='r')
     ++plotpos
-	plotFile = 'inputCreationPlots.pdf'
+endif
 
 	bMag = sqrt ( br^2 + bt^2 + bz^2 )
 	nSpec = n_elements ( amu )
@@ -215,7 +239,7 @@ pro ar2_create_input
 
 	if fred_namelist_input then begin
 
-		@aorsa2d.in.ejf.idl
+		@'input/aorsa2d.in.ejf.idl'
 		
 		_nRho = fred.s_nRho_n
 		_nRhoFile = n_elements(fred.s_rho_n_grid)
@@ -253,21 +277,18 @@ pro ar2_create_input
 		print, 'amu: ', amu
 		print, 'Z: ', atomicZ
 
-	endif else begin
-    
-		for n=1,nSpec-1 do begin
-			nn[0,0]	+= atomicZ[n]*nn[0,n] 
-			nn[1,0]	+= atomicZ[n]*nn[1,n] 
-		endfor
-
-	endelse
-
+	endif 
 
 	Density_m3	= fltArr ( nR, nZ, nSpec )
 	Temp_eV	= fltArr ( nR, nZ, nSpec )
     nuOmg = fltArr ( nR, nZ, nSpec )
 
 	if flux_profiles eq 1 then begin
+
+		    for n=1,nSpec-1 do begin
+		    	nn[0,0]	+= atomicZ[n]*nn[0,n] 
+		    	nn[1,0]	+= atomicZ[n]*nn[1,n] 
+		    endfor
 
 	        oversample_boundary, rbbbs, zbbbs, rbbbs_os, zbbbs_os 
 
@@ -282,6 +303,23 @@ pro ar2_create_input
             NumericProfiles = Numeric_flux_profiles, NumericData_n_m3 = NumericData_n_m3, $
             NumericData_T_eV = NumericData_T_eV, r2d=r2d, z2d=z2d
 
+	endif else if mpex_profiles eq 1 then begin
+
+		Density_m3[*] = 0
+
+		for s=1,nSpec-1 do begin
+
+			Density_m3[*,*,s] = neMPEX
+			Density_m3[*,*,0] = Density_m3[*,*,0]+Density_m3[*,*,s]*atomicZ[s]
+
+		endfor
+
+		for s=0,nSpec-1 do begin
+
+			Temp_eV[*,*,s] = teMPEX 
+
+		endfor
+
 	endif else if gaussian_profiles eq 1 then begin
 
 		Density_m3[*] = 0
@@ -290,8 +328,7 @@ pro ar2_create_input
 		for s=1,nSpec-1 do begin
 
 			Density_m3[*,*,s] = nn[1,s]*exp(-((x2d-x0)^2/Density_xsig^2+(y2d-y0)^2/Density_ysig^2 ))
-			Density_m3[*,*,s] = Density_m3[*,*,s]>DensityMin
-			Density_m3[*,*,s] = Smooth(Density_m3[*,*,s],SmoothWidth,/edge_mirror)
+			Density_m3[*,*,s] = Density_m3[*,*,s]>DensityMin[s]
 
 			Density_m3[*,*,0] = Density_m3[*,*,0]+Density_m3[*,*,s]*atomicZ[s]
 
@@ -328,6 +365,19 @@ pro ar2_create_input
 			Temp_eV[*,*,s] = Smooth(Temp_eV[*,*,s],SmoothWidth,/edge_mirror)
         endfor
 
+	endif else if numeric_profiles eq 1 then begin
+
+        if (size(density_m3_2D_numeric,/dim))[0] ne nR then stop
+        if (size(density_m3_2D_numeric,/dim))[1] ne nZ then stop
+        if (size(density_m3_2D_numeric,/dim))[2] ne nSpec then stop
+
+        if (size(temp_eV_2D_numeric,/dim))[0] ne nR then stop
+        if (size(temp_eV_2D_numeric,/dim))[1] ne nZ then stop
+        if (size(temp_eV_2D_numeric,/dim))[2] ne nSpec then stop
+
+		Density_m3  = density_m3_2D_numeric 
+		Temp_eV     = temp_eV_2D_numeric 
+
 	endif else if flat_profiles then begin
 
 		for s=0,nSpec-1 do begin
@@ -337,63 +387,109 @@ pro ar2_create_input
 
 	endif
 
+    Density_m3 = Density_m3 > DensityMin
+    Temp_eV = Temp_eV > TempMin
+
     yRange = [zMin,zMax]
     xRange = [rMin,rMax]
 
-	if not flat_profiles then begin 
-    s_ne = contour(density_m3[*,*,0],r,z, layout=[layout,plotpos],$
+    densFlatFuzz = 0
+    if max(Density_m3)-min(Density_m3) lt 1e-5 then begin
+        densFlatFuzz = randomu(0,nR,nz)*densityMin*1e-5
+        densRange=[min(density_m3)+densFlatFuzz,max(density_m3)+densFlatFuzz]
+    endif
+	
+    tempFlatFuzz = 0
+    if max(temp_eV)-max(temp_eV) lt 1e-5 then begin
+        tempFlatFuzz = randomu(0,nR,nz)*tempMin*1e-5
+        tempRange=[min(temp_eV)+tempFlatFuzz,max(temp_eV)+tempFlatFuzz]
+    endif
+
+if doPlots then begin
+    s_ne = contour(density_m3[*,*,0]+densFlatFuzz,r,z, layout=[layout,plotpos],$
             /current,title='density',aspect_ratio=1.0, xRange=xRange, yRange=yRange )
     if bField_eqdsk then p=plot(rLim,zLim,/over)
     ++plotpos
 
-   	s_te = contour(temp_eV[*,*,0],r,z, layout=[layout,plotpos],$
+   	s_te = contour(temp_eV[*,*,0]+tempFlatFuzz,r,z, layout=[layout,plotpos],$
             /current,title='temp',aspect_ratio=1.0, xRange=xRange, yRange=yRange)
     if bField_eqdsk then p=plot(rLim,zLim,/over)
     ++plotpos
-	endif
+endif
+
+if doPlots then begin
 
     _c = ['b','g','r','c','m','y','k']
-	densityRange=[min(Density_m3),max(Density_m3)]
-	p=plot(r,Density_m3[*,nZ/2,0],$
+	p=plot(r,Density_m3[*,nZ/2,0]+densFlatFuzz,$
 			title='Density [1/m3]',thick=2,$
 			layout=[layout,plotpos],/current,yRange=densityRange,/yLog)
     _p = [p]
     for s=1,nSpec-1 do begin
-		p=plot(r,Density_m3[*,nZ/2,s],/over,color=_c[s-1])
+		p=plot(r,Density_m3[*,nZ/2,s]+densFlatFuzz,/over,color=_c[s-1])
         _p = [_p,p]
     endfor
     plotpos++	
 
     _c = ['b','g','r','c','m','y','k']
-	densityRange=[min(Density_m3),max(Density_m3)]
-	p=plot(r,Density_m3[*,nZ/2,0],$
+	p=plot(r,Density_m3[*,nZ/2,0]+densFlatFuzz,$
 			title='Density [1/m3]',thick=2,$
 			layout=[layout,plotpos],/current,yRange=densityRange)
     _p = [p]
     for s=1,nSpec-1 do begin
-		p=plot(r,Density_m3[*,nZ/2,s],/over,color=_c[s-1])
+		p=plot(r,Density_m3[*,nZ/2,s]+densFlatFuzz,/over,color=_c[s-1])
         _p = [_p,p]
     endfor
     plotpos++	
 
-	p=plot(r,Temp_eV[*,nZ/2,0],title='Temp [eV]', thick=2,layout=[layout,plotpos],/current)
+	p=plot(r,Temp_eV[*,nZ/2,0]+tempFlatFuzz,title='Temp [eV]', thick=2,$
+            layout=[layout,plotpos],/current,yRange=tempRange)
     for s=1,nSpec-1 do begin
-	    p=plot(r,Temp_eV[*,nZ/2,s],/over)
+	    p=plot(r,Temp_eV[*,nZ/2,s]+tempFlatFuzz,/over)
     endfor
     plotpos++	
 
+endif
+
     ; Create nuOmg profiles
 
-    @ar2nuomg
+    @'input/ar2nuomg.pro'
 
+if doPlots then begin
     p=plot(r,nuOmg[*,nZ/2,0],title='nuOmg [electrons]',layout=[layout,plotpos],/current)
     ++plotpos
+endif
 
-   	@ar2jant
+    fancy_antenna = 0
+    line_antenna = 0
+
+   	@'input/ar2jant.pro'
 
 	; Set the jAnt 2-D function
 
-	if fancy_antenna then begin
+    if line_antenna then begin
+
+        n_ant = 40
+
+        antr = fIndGen(n_ant)/(n_ant-1)*(line1X-line0X)+line0X
+        antz = fIndGen(n_ant)/(n_ant-1)*(line1Y-line0Y)+line0Y
+
+		; Get antenna current: A Guassian peaked at the antenna
+
+		_d = FltArr(nR,nZ,n_ant)
+		for k=0,n_ant-1 do begin
+		  _d[*,*,k] = sqrt ( ( r2d - antr(k) )^2 + ( z2d - antz(k) )^2 )
+		endfor
+		d = min(_d,dim=3)
+		jAnt =  exp(-(d^2)/(sigma_ant^2))
+
+        iiZeroOut = where(jAnt lt 0.05,iiZeroOutCnt)
+        if iiZeroOutCnt gt 0 then jAnt[iiZeroOut] = 0
+
+		jAnt_r = jAnt*Ju_r
+		jAnt_t = jAnt*Ju_t
+		jAnt_z = jAnt*Ju_z
+
+    endif else if fancy_antenna then begin
 
 		if bField_eqdsk then begin	
 			rCenter = g.rcentr
@@ -403,7 +499,12 @@ pro ar2_create_input
 
 		;get angular points on LCFS with respect to center core
 
-		theta = atan(zlcfs-zCenter, rlcfs-rCenter)*!radeg	
+        normr = (rlcfs-rCenter)
+        normr = normr / max(abs(normr))
+        normz = (zlcfs-zCenter)
+        normz = normz / max(abs(normz))
+	
+		theta = atan(normz, normr)*!radeg	
 
 		; Get antenna location on LCFS, the shift away from LCFS
 		ii = where(theta gt theta_ant1 and theta le theta_ant2, iiCnt)
@@ -424,13 +525,16 @@ pro ar2_create_input
 		endfor
 		d = min(_d,dim=3)
 		jAnt =  exp(-(d^2)/(sigma_ant^2))
-		
+
+        iiZeroOut = where(jAnt lt 0.05,iiZeroOutCnt)
+        if iiZeroOutCnt gt 0 then jAnt[iiZeroOut] = 0
+
 		n = floor(n_ant/2)
 		Ju_r = (antr(n) - antr(n+1))/norm([antr(n+1), antz(n+1)] - [antr(n), antz(n)])
 		Ju_z = (antz(n) - antz(n+1))/norm([antr(n+1), antz(n+1)] - [antr(n), antz(n)])
 		
-		jAnt_r = jAnt*Ju_r
-		jAnt_z = jAnt*Ju_z
+		jAnt_r = jAnt*Ju_z
+		jAnt_z = jAnt*Ju_r
 		jAnt_t = jAnt*0.0
 
 	endif else begin
@@ -441,8 +545,17 @@ pro ar2_create_input
 		jAnt_t = jAnt*jTMag
 		jAnt_z = jAnt*jZMag
 
+        jAThreshold = 0.01
+        iiZero = where(jAnt_r lt jRmag * jAThreshold,iiCnt)
+        if iiCnt gt 0 then jAnt_r[iiZero] = 0
+        iiZero = where(jAnt_t lt jTmag * jAThreshold,iiCnt)
+        if iiCnt gt 0 then jAnt_t[iiZero] = 0
+        iiZero = where(jAnt_z lt jZmag * jAThreshold,iiCnt)
+        if iiCnt gt 0 then jAnt_z[iiZero] = 0
+
 	endelse
 
+if doPlots then begin
    nlevs=10
    scale = 1.1
    levels = (fIndGen(nlevs)+1)/nlevs*scale
@@ -454,6 +567,7 @@ pro ar2_create_input
    p1 = plot(rlim, zlim,/over)
    if fancy_antenna then p1 = plot(antr, antz,/over)
    ++plotpos
+endif
 
 	; Get dispersion solution for some nPhi 
 	ar2_input_dispersion, wrf, amu, atomicZ, nn, nPhi, nSpec, nR, nZ, $
@@ -466,40 +580,17 @@ pro ar2_create_input
 	kPer_S_2D = sqrt(kPerpSq_S)
 	kPer_F = kPer_F_2D[*,nZ/2]
 	kPer_S = kPer_S_2D[*,nZ/2]
+	kPer_F_2 = kPer_F_2D[nR/2,*]
+	kPer_S_2 = kPer_S_2D[nR/2,*]
 
-	; Calculate the vTh
+if doPlots then begin
 
-	_kT_joule = Temp_eV * _e
-	__m0 = amu * _mi
-	__m0 = transpose(rebin(__m0,nS,nR,nZ),[1,2,0])
-	__Z = transpose(rebin(atomicZ,nS,nR,nZ),[1,2,0])
-	__vTh0 = sqrt ( 2.0*_kT_joule / __m0)
-	_lambdaD = sqrt((e0 * _kB / _e^2) / (Density_m3[*,*,0]/Temp_eV[*,*,0] $
-			+ total(__Z[*,*,1:-1]^2*Density_m3[*,*,1:-1]/Temp_eV[*,*,1:-1],3) ))
-
-	; Estimate the vPhsPar/vTh_e
-	print, 'Estimating vPhsPar/vTh_e'
-
-	_kPar_2D = nPhi/r2D
-	vPhasePar = wrf / _kPar_2D
-
-	p=plot(r,vPhasePar[*,nZ/2]/__vTh0[*,nZ/2,0],$
-			title='vPhsPar/vTh_e',layout=[layout,PlotPos],/current)
-	++PlotPos
-
-    ; plot up the ion cyclortron resonances
-
-    for s=1,nSpec-1 do begin
-        if s eq 1 then p=plot(r,resonances[*,nZ/2,s], $
-                title='Ion cyclotron resonsances',layout=[layout,PlotPos],/current) $
-                else p=plot(r,resonances[*,nZ/2,s],/over)
-    endfor
+	p = plot(r,kPer_F, title='kPer_F',layout=[layout,PlotPos],/current,thick=3)
+    p = plot(r,imaginary(kPer_F), /over, color='r')
     ++PlotPos
 
-	p = plot(r,kPer_F, title='kPer_F',layout=[layout,PlotPos],/current)
-    ++PlotPos
-
-	p = plot(r,kPer_S, title='kPer_S',layout=[layout,PlotPos],/current)
+	p = plot(r,kPer_S, title='kPer_S',layout=[layout,PlotPos],/current,thick=3)
+    p = plot(r,imaginary(kPer_S), /over, color='r')
     ++PlotPos
 
 	nLevs=31
@@ -511,7 +602,7 @@ pro ar2_create_input
     if nZ gt 1 then begin
 	    c = contour(kPer_F_2D,r,z,layout=[layout,plotpos],$
 			c_value=levels,rgb_indices=colors,rgb_table=1,$
-            /fill,aspect_ratio=1.0, title='kPer Fast Branch',/current, xRange=xRange, yRange=yRange )
+            /fill, title='kPer Fast Branch',/current, xRange=xRange, yRange=yRange )
             ++plotpos
             c_zero_set = contour(kPerpSq_F,r,z,/over,c_value=0.001,color='r',C_LABEL_SHOW=0,c_thick=2)
     endif 
@@ -527,9 +618,8 @@ pro ar2_create_input
     if nZ gt 1 then begin
 	    c = contour(kPer_S_2D,r,z,layout=[layout,plotpos],/current,$
 			c_value=levels,rgb_indices=colors,rgb_table=3,$
-            /fill,aspect_ratio=1.0, title='kPer Slow Branch', xRange=xRange, yRange=yRange)
+            /fill, title='kPer Slow Branch', xRange=xRange, yRange=yRange)
         ++PlotPos
-		;c.save, plotFile, /append, /close
     endif 
 
     if bfield_eqdsk eq 0 and size(rLim,/type) eq 0 then begin
@@ -576,12 +666,14 @@ pro ar2_create_input
 
     endif
 
+endif
+
 	; Write netCdf file
 
 	;save, freq, nphi, bField_eqdsk, eqdskFileName, flux_profiles, atomicZ, amu, $
 	;		nn, tt, nR, nZ, rMin, rMax, zMin, zMax, fileName = 'ar2RunCreationParameters.sav'
 
-	outFileName	= 'ar2Input.nc'
+	outFileName	= 'input/ar2Input.nc'
 	nc_id	= nCdf_create ( outFileName, /clobber )
 	nCdf_control, nc_id, /fill
 	
@@ -740,7 +832,13 @@ pro ar2_create_input
 	endfor
 
     endif
+
+if doPlots then begin
+	plotFile = 'inputs.pdf'
 	p.save, plotFile
-	stop
-exit ; this is here for OMFit - don't remove
+
+	plotFile = 'inputs.png'
+	p.save, plotFile
+endif
+
 end

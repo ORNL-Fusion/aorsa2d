@@ -9,7 +9,7 @@ contains
     subroutine write_runData ( g, rid, rhs )
  
         use aorsaNamelist, &
-        only: nSpec, nPhi, freq=>freqcy, nZ_1D
+        only: nSpec, nPhi, freq=>freqcy, kz_1d
         use bField
         use grid
         use constants
@@ -24,7 +24,7 @@ contains
         character(len=100) :: fName 
         character(len=20) :: rid
         character(len=6) :: rhs_string
-        character(len=4) :: nPhi_string
+        character(len=7) :: nPhi_string
 
         integer :: nc_id, nX_id, nY_id, nc_stat, NRHS_id
         integer :: nModesX_id, nModesY_id, nSpec_id
@@ -38,7 +38,7 @@ contains
         integer :: &
             xx_re_id, yy_re_id, xx_im_id, yy_im_id, &
             drBfn_re_id, dzBfn_re_id, drbFn_im_id, dzbFn_im_id, &
-            LimMask_id, nZ_1D_id
+            LimMask_id, kz_1d_id
 
         integer :: drUrrid, drUrtid, drUrzid
         integer :: drUtrid, drUttid, drUtzid
@@ -58,7 +58,7 @@ contains
         integer :: p,i,j,s
         integer, allocatable :: Cnt(:,:)
 
-        write(nPhi_string,'(sp,i4.3)'), int(nPhi)
+        write(nPhi_string,'(sp,i7.6)'), int(nPhi)
         write(rhs_string,'(i6.6)'), rhs
 
         fName = trim(rid)//'output/runData_'//g%fNumber//'_'//nPhi_string//'_'//rhs_string//'.nc'
@@ -77,13 +77,13 @@ contains
                 scalar_id, nPhi_id ) )
             call check ( nf90_def_var ( nc_id, "freq", NF90_REAL, &
                 scalar_id, freq_id ) )
-            call check ( nf90_def_var ( nc_id, "nZ_1D", NF90_REAL, &
-                scalar_id, nZ_1D_id ) )
+            call check ( nf90_def_var ( nc_id, "kz", NF90_REAL, &
+                scalar_id, kz_1d_id ) )
 
 
-            call check ( nf90_def_var ( nc_id, "capR", NF90_REAL, &
+            call check ( nf90_def_var ( nc_id, "r", NF90_REAL, &
                 (/nX_id/), x_id ) ) 
-            call check ( nf90_def_var ( nc_id, "y", NF90_REAL, &
+            call check ( nf90_def_var ( nc_id, "z", NF90_REAL, &
                 (/nY_id/), y_id ) ) 
 
             call check ( nf90_def_var ( nc_id, "brU", NF90_REAL, &
@@ -95,17 +95,17 @@ contains
             call check ( nf90_def_var ( nc_id, "bmod", NF90_REAL, &
                 (/nX_id,nY_id/), bmod_id ) ) 
 
-            call check ( nf90_def_var ( nc_id, "jr_re", NF90_REAL, &
+            call check ( nf90_def_var ( nc_id, "jA_r_re", NF90_REAL, &
                 (/nX_id,nY_id/), jr_re_id ) ) 
-            call check ( nf90_def_var ( nc_id, "jr_im", NF90_REAL, &
+            call check ( nf90_def_var ( nc_id, "jA_r_im", NF90_REAL, &
                 (/nX_id,nY_id/), jr_im_id ) ) 
-            call check ( nf90_def_var ( nc_id, "jt_re", NF90_REAL, &
+            call check ( nf90_def_var ( nc_id, "jA_t_re", NF90_REAL, &
                 (/nX_id,nY_id/), jt_re_id ) ) 
-            call check ( nf90_def_var ( nc_id, "jt_im", NF90_REAL, &
+            call check ( nf90_def_var ( nc_id, "jA_t_im", NF90_REAL, &
                 (/nX_id,nY_id/), jt_im_id ) ) 
-            call check ( nf90_def_var ( nc_id, "jz_re", NF90_REAL, &
+            call check ( nf90_def_var ( nc_id, "jA_z_re", NF90_REAL, &
                 (/nX_id,nY_id/), jz_re_id ) ) 
-            call check ( nf90_def_var ( nc_id, "jz_im", NF90_REAL, &
+            call check ( nf90_def_var ( nc_id, "jA_z_im", NF90_REAL, &
                 (/nX_id,nY_id/), jz_im_id ) ) 
 
 
@@ -184,7 +184,7 @@ contains
             nc_stat = nf90_put_var ( nc_id, freq_id, freq ) 
             nc_stat = nf90_put_var ( nc_id, x_id, g%R ) 
             nc_stat = nf90_put_var ( nc_id, y_id, g%Z )    
-            nc_stat = nf90_put_var ( nc_id, nZ_1D_id, nZ_1D )    
+            nc_stat = nf90_put_var ( nc_id, kz_1d_id, kz_1d )    
 
         endif
 
@@ -201,8 +201,8 @@ contains
         enddo
         
 #ifdef par
-        call iGSUM2D ( iContext, 'All', ' ', g%nR, g%nZ, IntTmp, g%nR, -1, -1 )
-        call iGSUM2D ( iContext, 'All', ' ', g%nR, g%nZ, Cnt, g%nR, -1, -1 )
+        call iGSUM2D ( ICTXT, 'All', ' ', g%nR, g%nZ, IntTmp, g%nR, -1, -1 )
+        call iGSUM2D ( ICTXT, 'All', ' ', g%nR, g%nZ, Cnt, g%nR, -1, -1 )
 #endif
         IntTmp = IntTmp/Cnt
         IntTmp = abs(IntTmp-1)
@@ -230,8 +230,8 @@ contains
             Cnt(i,j) = Cnt(i,j)+1
         enddo
 #ifdef par
-        call sGSUM2D ( iContext, 'All', ' ', g%nR, g%nZ, RealTmp, g%nR, -1, -1 )
-        call sGSUM2D ( iContext, 'All', ' ', g%nR, g%nZ, Cnt, g%nR, -1, -1 )
+        call sGSUM2D ( ICTXT, 'All', ' ', g%nR, g%nZ, RealTmp, g%nR, -1, -1 )
+        call sGSUM2D ( ICTXT, 'All', ' ', g%nR, g%nZ, Cnt, g%nR, -1, -1 )
 #endif
         if(iAm==0)nc_stat = nf90_put_var ( nc_id, brU_id, RealTmp/Cnt )
         RealTmp = 0
@@ -247,8 +247,8 @@ contains
             Cnt(i,j) = Cnt(i,j)+1
         enddo
 #ifdef par
-        call sGSUM2D ( iContext, 'All', ' ', g%nR, g%nZ, RealTmp, g%nR, -1, -1 )
-        call sGSUM2D ( iContext, 'All', ' ', g%nR, g%nZ, Cnt, g%nR, -1, -1 )
+        call sGSUM2D ( ICTXT, 'All', ' ', g%nR, g%nZ, RealTmp, g%nR, -1, -1 )
+        call sGSUM2D ( ICTXT, 'All', ' ', g%nR, g%nZ, Cnt, g%nR, -1, -1 )
 #endif
         if(iAm==0)nc_stat = nf90_put_var ( nc_id, btU_id, RealTmp/Cnt )
         RealTmp = 0
@@ -264,8 +264,8 @@ contains
             Cnt(i,j) = Cnt(i,j)+1
         enddo
 #ifdef par
-        call sGSUM2D ( iContext, 'All', ' ', g%nR, g%nZ, RealTmp, g%nR, -1, -1 )
-        call sGSUM2D ( iContext, 'All', ' ', g%nR, g%nZ, Cnt, g%nR, -1, -1 )
+        call sGSUM2D ( ICTXT, 'All', ' ', g%nR, g%nZ, RealTmp, g%nR, -1, -1 )
+        call sGSUM2D ( ICTXT, 'All', ' ', g%nR, g%nZ, Cnt, g%nR, -1, -1 )
 #endif
         if(iAm==0)nc_stat = nf90_put_var ( nc_id, bzU_id, RealTmp/Cnt )
         RealTmp = 0
@@ -281,8 +281,8 @@ contains
             Cnt(i,j) = Cnt(i,j)+1
         enddo
 #ifdef par
-        call sGSUM2D ( iContext, 'All', ' ', g%nR, g%nZ, RealTmp, g%nR, -1, -1 )
-        call sGSUM2D ( iContext, 'All', ' ', g%nR, g%nZ, Cnt, g%nR, -1, -1 )
+        call sGSUM2D ( ICTXT, 'All', ' ', g%nR, g%nZ, RealTmp, g%nR, -1, -1 )
+        call sGSUM2D ( ICTXT, 'All', ' ', g%nR, g%nZ, Cnt, g%nR, -1, -1 )
 #endif
         if(iAm==0)nc_stat = nf90_put_var ( nc_id, bmod_id, RealTmp/Cnt )
         RealTmp = 0
@@ -302,8 +302,8 @@ contains
                 Cnt(i,j) = Cnt(i,j)+1
             enddo
 #ifdef par
-            call sGSUM2D ( iContext, 'All', ' ', g%nR, g%nZ, RealTmp, g%nR, -1, -1 )
-            call sGSUM2D ( iContext, 'All', ' ', g%nR, g%nZ, Cnt, g%nR, -1, -1 )
+            call sGSUM2D ( ICTXT, 'All', ' ', g%nR, g%nZ, RealTmp, g%nR, -1, -1 )
+            call sGSUM2D ( ICTXT, 'All', ' ', g%nR, g%nZ, Cnt, g%nR, -1, -1 )
 #endif
             RealTmp3(:,:,s) = RealTmp/Cnt
             RealTmp = 0
@@ -324,8 +324,8 @@ contains
                 Cnt(i,j) = Cnt(i,j)+1
             enddo
 #ifdef par
-            call sGSUM2D ( iContext, 'All', ' ', g%nR, g%nZ, RealTmp, g%nR, -1, -1 )
-            call sGSUM2D ( iContext, 'All', ' ', g%nR, g%nZ, Cnt, g%nR, -1, -1 )
+            call sGSUM2D ( ICTXT, 'All', ' ', g%nR, g%nZ, RealTmp, g%nR, -1, -1 )
+            call sGSUM2D ( ICTXT, 'All', ' ', g%nR, g%nZ, Cnt, g%nR, -1, -1 )
 #endif
             RealTmp3(:,:,s) = RealTmp/Cnt
             RealTmp = 0
@@ -346,8 +346,8 @@ contains
                 Cnt(i,j) = Cnt(i,j)+1
             enddo
 #ifdef par
-            call sGSUM2D ( iContext, 'All', ' ', g%nR, g%nZ, RealTmp, g%nR, -1, -1 )
-            call sGSUM2D ( iContext, 'All', ' ', g%nR, g%nZ, Cnt, g%nR, -1, -1 )
+            call sGSUM2D ( ICTXT, 'All', ' ', g%nR, g%nZ, RealTmp, g%nR, -1, -1 )
+            call sGSUM2D ( ICTXT, 'All', ' ', g%nR, g%nZ, Cnt, g%nR, -1, -1 )
 #endif
             RealTmp3(:,:,s) = RealTmp/Cnt
             RealTmp = 0
@@ -369,8 +369,8 @@ contains
                 Cnt(i,j) = Cnt(i,j)+1
             enddo
 #ifdef par
-            call sGSUM2D ( iContext, 'All', ' ', g%nR, g%nZ, RealTmp, g%nR, -1, -1 )
-            call sGSUM2D ( iContext, 'All', ' ', g%nR, g%nZ, Cnt, g%nR, -1, -1 )
+            call sGSUM2D ( ICTXT, 'All', ' ', g%nR, g%nZ, RealTmp, g%nR, -1, -1 )
+            call sGSUM2D ( ICTXT, 'All', ' ', g%nR, g%nZ, Cnt, g%nR, -1, -1 )
 #endif
             RealTmp3(:,:,s) = RealTmp/Cnt
             RealTmp = 0
@@ -391,8 +391,8 @@ contains
                 Cnt(i,j) = Cnt(i,j)+1
             enddo
 #ifdef par
-            call sGSUM2D ( iContext, 'All', ' ', g%nR, g%nZ, RealTmp, g%nR, -1, -1 )
-            call sGSUM2D ( iContext, 'All', ' ', g%nR, g%nZ, Cnt, g%nR, -1, -1 )
+            call sGSUM2D ( ICTXT, 'All', ' ', g%nR, g%nZ, RealTmp, g%nR, -1, -1 )
+            call sGSUM2D ( ICTXT, 'All', ' ', g%nR, g%nZ, Cnt, g%nR, -1, -1 )
 #endif
             RealTmp3(:,:,s) = RealTmp/Cnt
             RealTmp = 0
@@ -421,7 +421,7 @@ contains
         use grid
         use aorsaNamelist, &
             only: nSpec, nPhi, freq=>freqcy
-        use parallel
+        use parallel, only : iAm, ICTXT, NRHS
 
         implicit none
 
@@ -431,7 +431,7 @@ contains
         character(len=100) :: fName 
         character(len=20) :: rid
         character(len=6) :: rhs_string
-        character(len=4) :: nPhi_string
+        character(len=7) :: nPhi_string
 
         integer :: nc_id, nX_id, nY_id, nModesX_id, nModesY_id, nSpec_id, NRHS_id, nR_id
         integer :: &
@@ -454,12 +454,24 @@ contains
             jP_r_re_id, jP_r_im_id, &
             jP_t_re_id, jP_t_im_id, &
             jP_z_re_id, jP_z_im_id
+        integer :: &
+            sig11_re_id, sig11_im_id, &
+            sig12_re_id, sig12_im_id, &
+            sig13_re_id, sig13_im_id, &
+            sig21_re_id, sig21_im_id, &
+            sig22_re_id, sig22_im_id, &
+            sig23_re_id, sig23_im_id, &
+            sig31_re_id, sig31_im_id, &
+            sig32_re_id, sig32_im_id, &
+            sig33_re_id, sig33_im_id, &
+            kr_id, kz_id    
+
         integer :: r_id, z_id,nPhi_id,freq_id,scalar_id
         integer :: stat
 
         integer :: jouleHeating_id
 
-        write(nPhi_string,'(sp,i4.3)'), int(nPhi)
+        write(nPhi_string,'(sp,i7.6)'), int(nPhi)
         write(rhs_string,'(i6.6)'), rhs
 
         fName = trim(rid)//'output/solution_'//g%fNumber//'_'//nPhi_string//'_'//rhs_string//'.nc'
@@ -474,56 +486,56 @@ contains
         call check ( nf90_def_dim ( nc_id, "nSpec", nSpec, nSpec_id ) )
         call check ( nf90_def_dim ( nc_id, "NRHS", NRHS, NRHS_id ) )
 
-        call check ( nf90_def_var ( nc_id, "ealpha_re", NF90_REAL, &
+        call check ( nf90_def_var ( nc_id, "E_alp_re", NF90_REAL, &
             (/nX_id,nY_id/), e1_re_id ) ) 
-        call check ( nf90_def_var ( nc_id, "ealpha_im", NF90_REAL, &
+        call check ( nf90_def_var ( nc_id, "E_alp_im", NF90_REAL, &
             (/nX_id,nY_id/), e1_im_id ) ) 
-        call check ( nf90_def_var ( nc_id, "ebeta_re", NF90_REAL, &
+        call check ( nf90_def_var ( nc_id, "E_bet_re", NF90_REAL, &
             (/nX_id,nY_id/), e2_re_id ) ) 
-        call check ( nf90_def_var ( nc_id, "ebeta_im", NF90_REAL, &
+        call check ( nf90_def_var ( nc_id, "E_bet_im", NF90_REAL, &
             (/nX_id,nY_id/), e2_im_id ) ) 
-        call check ( nf90_def_var ( nc_id, "eB_re", NF90_REAL, &
+        call check ( nf90_def_var ( nc_id, "E_prl_re", NF90_REAL, &
             (/nX_id,nY_id/), e3_re_id ) ) 
-        call check ( nf90_def_var ( nc_id, "eB_im", NF90_REAL, &
+        call check ( nf90_def_var ( nc_id, "E_prl_im", NF90_REAL, &
             (/nX_id,nY_id/), e3_im_id ) ) 
  
-        call check ( nf90_def_var ( nc_id, "ealphak_re", NF90_REAL, &
+        call check ( nf90_def_var ( nc_id, "Ek_alp_re", NF90_REAL, &
             (/nModesX_id,nModesY_id/), e1k_re_id ) ) 
-        call check ( nf90_def_var ( nc_id, "ealphak_im", NF90_REAL, &
+        call check ( nf90_def_var ( nc_id, "Ek_alp_im", NF90_REAL, &
             (/nModesX_id,nModesY_id/), e1k_im_id ) ) 
-        call check ( nf90_def_var ( nc_id, "ebetak_re", NF90_REAL, &
+        call check ( nf90_def_var ( nc_id, "Ek_bet_re", NF90_REAL, &
             (/nModesX_id,nModesY_id/), e2k_re_id ) ) 
-        call check ( nf90_def_var ( nc_id, "ebetak_im", NF90_REAL, &
+        call check ( nf90_def_var ( nc_id, "Ek_bet_im", NF90_REAL, &
             (/nModesX_id,nModesY_id/), e2k_im_id ) ) 
-        call check ( nf90_def_var ( nc_id, "eBk_re", NF90_REAL, &
+        call check ( nf90_def_var ( nc_id, "Ek_prl_re", NF90_REAL, &
             (/nModesX_id,nModesY_id/), e3k_re_id ) ) 
-        call check ( nf90_def_var ( nc_id, "eBk_im", NF90_REAL, &
+        call check ( nf90_def_var ( nc_id, "Ek_prl_im", NF90_REAL, &
             (/nModesX_id,nModesY_id/), e3k_im_id ) ) 
 
-        call check ( nf90_def_var ( nc_id, "er_re", NF90_REAL, &
+        call check ( nf90_def_var ( nc_id, "E_r_re", NF90_REAL, &
             (/nX_id,nY_id/), er_re_id ) ) 
-        call check ( nf90_def_var ( nc_id, "er_im", NF90_REAL, &
+        call check ( nf90_def_var ( nc_id, "E_r_im", NF90_REAL, &
             (/nX_id,nY_id/), er_im_id ) ) 
-        call check ( nf90_def_var ( nc_id, "et_re", NF90_REAL, &
+        call check ( nf90_def_var ( nc_id, "E_t_re", NF90_REAL, &
             (/nX_id,nY_id/), et_re_id ) ) 
-        call check ( nf90_def_var ( nc_id, "et_im", NF90_REAL, &
+        call check ( nf90_def_var ( nc_id, "E_t_im", NF90_REAL, &
             (/nX_id,nY_id/), et_im_id ) ) 
-        call check ( nf90_def_var ( nc_id, "ez_re", NF90_REAL, &
+        call check ( nf90_def_var ( nc_id, "E_z_re", NF90_REAL, &
             (/nX_id,nY_id/), ez_re_id ) ) 
-        call check ( nf90_def_var ( nc_id, "ez_im", NF90_REAL, &
+        call check ( nf90_def_var ( nc_id, "E_z_im", NF90_REAL, &
             (/nX_id,nY_id/), ez_im_id ) ) 
 
-        call check ( nf90_def_var ( nc_id, "jalpha_re", NF90_REAL, &
+        call check ( nf90_def_var ( nc_id, "jP_alp_re", NF90_REAL, &
             (/nX_id,nY_id,nSpec_id/), j1_re_id ) ) 
-        call check ( nf90_def_var ( nc_id, "jalpha_im", NF90_REAL, &
+        call check ( nf90_def_var ( nc_id, "jP_alp_im", NF90_REAL, &
             (/nX_id,nY_id,nSpec_id/), j1_im_id ) ) 
-        call check ( nf90_def_var ( nc_id, "jbeta_re", NF90_REAL, &
+        call check ( nf90_def_var ( nc_id, "jP_bet_re", NF90_REAL, &
             (/nX_id,nY_id,nSpec_id/), j2_re_id ) ) 
-        call check ( nf90_def_var ( nc_id, "jbeta_im", NF90_REAL, &
+        call check ( nf90_def_var ( nc_id, "jP_bet_im", NF90_REAL, &
             (/nX_id,nY_id,nSpec_id/), j2_im_id ) ) 
-        call check ( nf90_def_var ( nc_id, "jB_re", NF90_REAL, &
+        call check ( nf90_def_var ( nc_id, "jP_prl_re", NF90_REAL, &
             (/nX_id,nY_id,nSpec_id/), j3_re_id ) ) 
-        call check ( nf90_def_var ( nc_id, "jB_im", NF90_REAL, &
+        call check ( nf90_def_var ( nc_id, "jP_prl_im", NF90_REAL, &
             (/nX_id,nY_id,nSpec_id/), j3_im_id ) ) 
 
         call check ( nf90_def_var ( nc_id, "jP_r_re", NF90_REAL, &
@@ -538,7 +550,54 @@ contains
             (/nX_id,nY_id,nSpec_id/), jP_z_re_id ) ) 
         call check ( nf90_def_var ( nc_id, "jP_z_im", NF90_REAL, &
             (/nX_id,nY_id,nSpec_id/), jP_z_im_id ) ) 
- 
+
+#if WRITE_SIGMA_TO_OUTPUT
+
+         call check ( nf90_def_var ( nc_id, "kr", NF90_REAL, &
+            (/nModesX_id,nModesY_id/), kr_id ) ) 
+         call check ( nf90_def_var ( nc_id, "kz", NF90_REAL, &
+            (/nModesX_id,nModesY_id/), kz_id ) ) 
+
+         call check ( nf90_def_var ( nc_id, "sig11_re", NF90_REAL, &
+            (/nX_id,nModesX_id,nSpec_id/), sig11_re_id ) ) 
+         call check ( nf90_def_var ( nc_id, "sig11_im", NF90_REAL, &
+            (/nX_id,nModesX_id,nSpec_id/), sig11_im_id ) ) 
+         call check ( nf90_def_var ( nc_id, "sig12_re", NF90_REAL, &
+            (/nX_id,nModesX_id,nSpec_id/), sig12_re_id ) ) 
+         call check ( nf90_def_var ( nc_id, "sig12_im", NF90_REAL, &
+            (/nX_id,nModesX_id,nSpec_id/), sig12_im_id ) ) 
+         call check ( nf90_def_var ( nc_id, "sig13_re", NF90_REAL, &
+            (/nX_id,nModesX_id,nSpec_id/), sig13_re_id ) ) 
+         call check ( nf90_def_var ( nc_id, "sig13_im", NF90_REAL, &
+            (/nX_id,nModesX_id,nSpec_id/), sig13_im_id ) ) 
+
+         call check ( nf90_def_var ( nc_id, "sig21_re", NF90_REAL, &
+            (/nX_id,nModesX_id,nSpec_id/), sig21_re_id ) ) 
+         call check ( nf90_def_var ( nc_id, "sig21_im", NF90_REAL, &
+            (/nX_id,nModesX_id,nSpec_id/), sig21_im_id ) ) 
+         call check ( nf90_def_var ( nc_id, "sig22_re", NF90_REAL, &
+            (/nX_id,nModesX_id,nSpec_id/), sig22_re_id ) ) 
+         call check ( nf90_def_var ( nc_id, "sig22_im", NF90_REAL, &
+            (/nX_id,nModesX_id,nSpec_id/), sig22_im_id ) ) 
+         call check ( nf90_def_var ( nc_id, "sig23_re", NF90_REAL, &
+            (/nX_id,nModesX_id,nSpec_id/), sig23_re_id ) ) 
+         call check ( nf90_def_var ( nc_id, "sig23_im", NF90_REAL, &
+            (/nX_id,nModesX_id,nSpec_id/), sig23_im_id ) ) 
+
+         call check ( nf90_def_var ( nc_id, "sig31_re", NF90_REAL, &
+            (/nX_id,nModesX_id,nSpec_id/), sig31_re_id ) ) 
+         call check ( nf90_def_var ( nc_id, "sig31_im", NF90_REAL, &
+            (/nX_id,nModesX_id,nSpec_id/), sig31_im_id ) ) 
+         call check ( nf90_def_var ( nc_id, "sig32_re", NF90_REAL, &
+            (/nX_id,nModesX_id,nSpec_id/), sig32_re_id ) ) 
+         call check ( nf90_def_var ( nc_id, "sig32_im", NF90_REAL, &
+            (/nX_id,nModesX_id,nSpec_id/), sig32_im_id ) ) 
+         call check ( nf90_def_var ( nc_id, "sig33_re", NF90_REAL, &
+            (/nX_id,nModesX_id,nSpec_id/), sig33_re_id ) ) 
+         call check ( nf90_def_var ( nc_id, "sig33_im", NF90_REAL, &
+            (/nX_id,nModesX_id,nSpec_id/), sig33_im_id ) ) 
+#endif 
+
         call check ( nf90_def_var ( nc_id, "jouleHeating", NF90_REAL, &
             (/nX_id,nY_id,nSpec_id/), jouleHeating_id ) ) 
  
@@ -583,6 +642,33 @@ contains
         call check ( nf90_put_var ( nc_id, jP_t_im_id, real(aimag(g%jP_t)) ) )
         call check ( nf90_put_var ( nc_id, jP_z_re_id, real(real(g%jP_z)) ) )
         call check ( nf90_put_var ( nc_id, jP_z_im_id, real(aimag(g%jP_z)) ) )
+
+#if WRITE_SIGMA_TO_OUTPUT > 0
+
+        call check ( nf90_put_var ( nc_id, kr_id, real( g%kr) ) )
+        call check ( nf90_put_var ( nc_id, kz_id, real( g%kz) ) )
+
+        call check ( nf90_put_var ( nc_id, sig11_re_id, real( real(g%sig11)) ) )
+        call check ( nf90_put_var ( nc_id, sig11_im_id, real(aimag(g%sig11)) ) )
+        call check ( nf90_put_var ( nc_id, sig12_re_id, real( real(g%sig12)) ) )
+        call check ( nf90_put_var ( nc_id, sig12_im_id, real(aimag(g%sig12)) ) )
+        call check ( nf90_put_var ( nc_id, sig13_re_id, real( real(g%sig13)) ) )
+        call check ( nf90_put_var ( nc_id, sig13_im_id, real(aimag(g%sig13)) ) )
+
+        call check ( nf90_put_var ( nc_id, sig21_re_id, real( real(g%sig21)) ) )
+        call check ( nf90_put_var ( nc_id, sig21_im_id, real(aimag(g%sig21)) ) )
+        call check ( nf90_put_var ( nc_id, sig22_re_id, real( real(g%sig22)) ) )
+        call check ( nf90_put_var ( nc_id, sig22_im_id, real(aimag(g%sig22)) ) )
+        call check ( nf90_put_var ( nc_id, sig23_re_id, real( real(g%sig23)) ) )
+        call check ( nf90_put_var ( nc_id, sig23_im_id, real(aimag(g%sig23)) ) )
+
+        call check ( nf90_put_var ( nc_id, sig31_re_id, real( real(g%sig31)) ) )
+        call check ( nf90_put_var ( nc_id, sig31_im_id, real(aimag(g%sig31)) ) )
+        call check ( nf90_put_var ( nc_id, sig32_re_id, real( real(g%sig32)) ) )
+        call check ( nf90_put_var ( nc_id, sig32_im_id, real(aimag(g%sig32)) ) )
+        call check ( nf90_put_var ( nc_id, sig33_re_id, real( real(g%sig33)) ) )
+        call check ( nf90_put_var ( nc_id, sig33_im_id, real(aimag(g%sig33)) ) )
+#endif
 
         call check ( nf90_put_var ( nc_id, jouleHeating_id, g%jouleHeating ) )
 

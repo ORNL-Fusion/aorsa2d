@@ -1,0 +1,27 @@
+LIBS += -L${LAPACK_DIR} -llapack -L${BLASDIR} -lblas  
+
+LIBS += -L ${HDF5DIR} -lhdf5 -lhdf5_hl
+INC_DIR += -I${HDF5INCLUDE}
+
+LIBS +=-L${NETCDFDIR} -L${NETCDFFDIR} -lnetcdf -lnetcdff
+INC_DIR += -I ${NETCDFFINCLUDE}
+
+ifeq (${PARALLEL},1)
+    BLACS = -L${BLACS_HOME}/lib64 -lblacsF77init -lblacs 
+    SCALAPACK = -L${SCALAPACK_HOME} -lscalapack
+    LIBS := ${SCALAPACK} ${LIBS} ${BLACS} ${SCALAPACK} 
+endif
+
+#PAPI_DIR := /Users/dg6/code/papi/gnu-4.8.2
+#PAPI_INC := -I${PAPI_DIR}/include/
+#PAPI_LINK := ${PAPI_DIR}/lib/libpapi.a
+#LIBS += ${PAPI_LINK}
+#INC_DIR += ${PAPI_INC}
+
+ifeq (${PARALLEL},1)
+		F90 := mpif90
+else
+		F90 := gfortran
+endif
+
+

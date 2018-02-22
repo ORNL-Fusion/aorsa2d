@@ -49,6 +49,7 @@ type :: gridBlock
     ! -----------
     integer :: nR, nZ, nModesR, nModesZ
     real, allocatable, dimension(:) :: rNorm, zNorm, R, z, kPhi
+    real, allocatable, dimension(:,:) :: kr, kz
     real :: rMin, rMax, zMin, zMax, rRange, zRange
     real :: rMinIn, rMaxIn, zMinIn, zMaxIn
     real :: normFacR, normFacZ
@@ -73,8 +74,9 @@ type :: gridBlock
     real, allocatable, dimension(:) :: bR_unit, bT_unit, bZ_unit, bMag, rho
     logical, allocatable, dimension(:) :: mask
     real, allocatable :: nuOmg(:,:)
+    complex(kind=dbl), allocatable :: k0(:)
     real(kind=dbl), allocatable, dimension(:,:) :: densitySpec, ktSpec
-    real(kind=dbl), allocatable, dimension(:,:) :: omgc, omgp2
+    real(kind=dbl), allocatable, dimension(:,:) :: omgC, omgP2
 
     ! Toroidal broadening variables
     ! -----------------------------
@@ -106,6 +108,13 @@ type :: gridBlock
     complex, allocatable, dimension(:,:,:) :: &
         jAlpha, jBeta, jB, &
         jP_r, jP_t, jP_z
+
+    ! From file additional Jp (ala Kinetic-J) 
+    ! ---------------------------------------
+    complex, allocatable, dimension(:,:) :: &
+        file_JpR, file_JpT, file_JpZ
+    complex, allocatable, dimension(:,:,:) :: &
+        file_JpR_s, file_JpT_s, file_JpZ_s
 
     ! Power absorption
     ! ----------------
@@ -147,6 +156,12 @@ type :: gridBlock
         drzUtr, drzUtt, drzUtz, &
         drzUzr, drzUzt, drzUzz
 
+    ! Sigma terms
+    complex, allocatable, dimension(:,:,:) :: &
+        sig11, sig12, sig13, &
+        sig21, sig22, sig23, &
+        sig31, sig32, sig33
+
     ! workList
     type(workListEntry), allocatable :: wl(:)
     type(SpatialRow), allocatable :: pt(:)
@@ -185,8 +200,8 @@ contains
         use aorsaNamelist, &
             only : nPhi, xkPerp_cutOff, overlap, &
             rMinAll, rMaxAll, zMinAll, zMaxAll, nGrid, &
-            nZ_1D
-        use parallel
+            kz_1d
+        use parallel, only : iAm
 
         implicit none
 
@@ -314,7 +329,7 @@ contains
                 enddo
             else
                 grid%z(1)    = (zMax-zMin)/2.0+zMin
-                grid%zNorm(1) = 0
+                grid%zNorm(1) = 1
             endif
 
             if(nZ>1) &
@@ -384,8 +399,8 @@ contains
             endif
 
             if(nZ==1)then 
-                grid%mMin = nZ_1d
-                grid%mMax = nZ_1d
+                grid%mMin = kz_1d
+                grid%mMax = kz_1d
             endif
 
             if (iAm==0) then

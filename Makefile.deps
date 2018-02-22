@@ -20,7 +20,9 @@ ${AORSA2D}: \
 		${OBJ_DIR}/power.o \
 		${OBJ_DIR}/setMetal.o \
 		${OBJ_DIR}/ar2Input.o \
-		${OBJ_DIR}/Performance.o
+		${OBJ_DIR}/Performance.o \
+        ${OBJ_DIR}/read_jp_from_file.o \
+        ${OBJ_DIR}/zfunction.o
 
 ${OBJ_DIR}/ar2Input.o: \
 		${OBJ_DIR}/check_mod.o
@@ -59,7 +61,9 @@ ${OBJ_DIR}/zfunction.o: \
 		${OBJ_DIR}/ztable.o \
 		${OBJ_DIR}/zfunHammett.o \
 		${OBJ_DIR}/zfunOriginal.o \
-		${OBJ_DIR}/constants.o
+		${OBJ_DIR}/constants.o \
+		${OBJ_DIR}/check_mod.o
+
 
 ${OBJ_DIR}/interp.o: \
 		${OBJ_DIR}/fitpack.o \
@@ -80,7 +84,8 @@ ${OBJ_DIR}/profiles.o: \
 		${OBJ_DIR}/constants.o \
 		${OBJ_DIR}/aorsaNamelist.o \
 		${OBJ_DIR}/fitpack_dp.o \
-		${OBJ_DIR}/parallel.o
+		${OBJ_DIR}/parallel.o \
+        ${OBJ_DIR}/read_jp_from_file.o
 
 ${OBJ_DIR}/rotation.o: \
 		${OBJ_DIR}/bField.o \
@@ -179,14 +184,16 @@ ${OBJ_DIR}/rotateEToLab.o: \
 		${OBJ_DIR}/solve.o \
 		${OBJ_DIR}/aorsaNamelist.o \
 		${OBJ_DIR}/rotation.o \
-		${OBJ_DIR}/interp.o
+		${OBJ_DIR}/interp.o \
+        ${OBJ_DIR}/read_jp_from_file.o
 
 ${OBJ_DIR}/power.o: \
 		${OBJ_DIR}/read_data.o \
 		${OBJ_DIR}/sigma.o \
 		${OBJ_DIR}/parallel.o \
 		${OBJ_DIR}/profiles.o \
-		${OBJ_DIR}/constants.o
+		${OBJ_DIR}/constants.o \
+        ${OBJ_DIR}/read_jp_from_file.o
 
 ${OBJ_DIR}/scalapack_mod.o: \
 		${OBJ_DIR}/t4_mod_tprof.o \

@@ -1,161 +1,121 @@
 function ar2_read_solution, runFolderName, RHS
-    
-	;; This is just to ensure we get consistent files, i.e., not
-	;; relying on the order of the list of a file read.
-	;SolutionFiles = file_search(runFolderName+'/output/solution*.nc')
-	;SolutionStr = StrMid(file_basename(SolutionFiles[0]),0,18)
-	;RHS_Str = string(RHS,format='(i6.6)')
-    ;SolutionFile = File_DirName(SolutionFiles[0])+'/'+SolutionStr+RHS_STr+'.nc'
+   
+    @dlg_constants
 
 	ar2Input = ar2_read_namelist( RunFolderName = RunFolderName)
 	ThisGridNo = 1
 	GridNoStr = string(ThisGridNo,format='(i3.3)')
 	ThisNPhi = ar2Input['nPhi']
     ThisRHS = RHS
-	nPhiStr = string(ThisNPhi,format='(i+4.3)')
+	nPhiStr = string(ThisNPhi,format='(i+7.6)')
 	rhsStr = string(ThisRHS,format='(i6.6)')
 
 	SolutionFile = expand_path(RunFolderName)+'/output/solution_'+GridNoStr+'_'+nPhiStr+'_'+rhsStr+'.nc'
 	RunDataFile = expand_path(RunFolderName)+'/output/runData_'+GridNoStr+'_'+nPhiStr+'_'+rhsStr+'.nc'
 
-	;print, SolutionFile
+    arR = dlg_read_netcdf(RunDataFile)
 
-	cdfId = ncdf_open ( RunDataFile, /noWrite ) 
-		nCdf_varGet, cdfId, 'nPhi', nPhi 
-		nCdf_varGet, cdfId, 'freq', freq 
-		nCdf_varGet, cdfId, 'capR', x 
-		nCdf_varGet, cdfId, 'y', y 
-		nCdf_varGet, cdfId, 'jr_re', jr_re 
-		nCdf_varGet, cdfId, 'jr_im', jr_im 
-		nCdf_varGet, cdfId, 'jt_re', jt_re 
-		nCdf_varGet, cdfId, 'jt_im', jt_im 
-		nCdf_varGet, cdfId, 'jz_re', jz_re 
-		nCdf_varGet, cdfId, 'jz_im', jz_im 
-        nCdf_varGet, cdfId, 'nZ_1D', nz_1D
-	ncdf_close, cdfId
+    arS = dlg_read_netcdf(SolutionFile)
 
+    return, arS
 
-	cdfId = ncdf_open ( SolutionFile, /noWrite ) 
+    ;r = arS['r']
+    ;z = arS['z']
 
-		nCdf_varGet, cdfId, 'r', r
-		nCdf_varGet, cdfId, 'z', z
-		nCdf_varGet, cdfId, 'nPhi', nPhi 
-		nCdf_varGet, cdfId, 'freqcy', freq 
-	
-		nCdf_varGet, cdfId, 'ealpha_re', ealpha_re 
-		ealpha_re = temporary(ealpha_re[*,*])
-		nCdf_varGet, cdfId, 'ebeta_re', ebeta_re 
-		ebeta_re = temporary(ebeta_re[*,*])
-		nCdf_varGet, cdfId, 'eB_re', eB_re 
-		eb_re = temporary(eb_re[*,*])
+    ;E_r = arS['E_r']
+    ;E_t = arS['E_t']
+    ;E_z = arS['E_z']
 
-		nCdf_varGet, cdfId, 'ealpha_im', ealpha_im 
-		ealpha_im = temporary(ealpha_im[*,*])
-		nCdf_varGet, cdfId, 'ebeta_im', ebeta_im 
-		ebeta_im = temporary(ebeta_im[*,*])
-		nCdf_varGet, cdfId, 'eB_im', eB_im 
-		eb_im = temporary(eb_im[*,*])
+    ;nPhi = arS['nPhi']
+    ;freq = arS['freq']
 
-		nCdf_varGet, cdfId, 'ealphak_re', ealphak_re 
-		ealphak_re = temporary(ealphak_re[*,*])
-		nCdf_varGet, cdfId, 'ebetak_re', ebetak_re 
-		ebetak_re = temporary(ebetak_re[*,*])
-		nCdf_varGet, cdfId, 'eBk_re', eBk_re 
-		ebk_re = temporary(ebk_re[*,*])
+    ;kz_1d = arR['kz_1d']
 
-		nCdf_varGet, cdfId, 'ealphak_im', ealphak_im 
-		ealphak_im = temporary(ealphak_im[*,*])
-		nCdf_varGet, cdfId, 'ebetak_im', ebetak_im 
-		ebetak_im = temporary(ebetak_im[*,*])
-		nCdf_varGet, cdfId, 'eBk_im', eBk_im 
-		ebk_im = temporary(ebk_im[*,*])
+	;x = r
+	;y = z
+	;nx = n_elements(r)
+	;ny = n_elements(z)
+	;x2D	= rebin ( r, nX, nY )
+	;if nY gt 1 then begin
+	;	y2D = transpose(rebin ( z, nY, nX ))
+	;endif else begin
+	;	y2D = fltArr(1)+z
+	;endelse
 
-		nCdf_varGet, cdfId, 'er_re', er_re 
-		er_re = temporary(er_re[*,*])
-		nCdf_varGet, cdfId, 'et_re', et_re 
-		et_re = temporary(et_re[*,*])
-		nCdf_varGet, cdfId, 'ez_re', ez_re 
-		ez_re = temporary(ez_re[*,*])
+    ;if nY gt 1 then begin
+    ;        print, 'NOT CALCULATING B1 ... yet to implement in 2-D'
+    ;endif else begin
 
-		nCdf_varGet, cdfId, 'er_im', er_im 
-		er_im = temporary(er_im[*,*])
-		nCdf_varGet, cdfId, 'et_im', et_im 
-		et_im = temporary(et_im[*,*])
-		nCdf_varGet, cdfId, 'ez_im', ez_im 
-		ez_im = temporary(ez_im[*,*])
+    ;    ; Calculate the H vector & the Poynting vector
 
-		nCdf_varGet, cdfId, 'jalpha_re', jalpha_re 
-		nCdf_varGet, cdfId, 'jbeta_re', jbeta_re 
-		nCdf_varGet, cdfId, 'jB_re', jB_re 
+    ;     
+    ;    h_r = complexArr(nX)
+    ;    h_t = complexArr(nX)
+    ;    h_z = complexArr(nX)
 
-		nCdf_varGet, cdfId, 'jalpha_im', jalpha_im 
-		nCdf_varGet, cdfId, 'jbeta_im', jbeta_im 
-		nCdf_varGet, cdfId, 'jB_im', jB_im 
+    ;    k_z = kz_1d; this is NOT right, fix for non-zero nZ
 
-		nCdf_varGet, cdfId, 'jP_r_re', jPr_re 
-		nCdf_varGet, cdfId, 'jP_t_re', jPt_re 
-		nCdf_varGet, cdfId, 'jP_z_re', jPz_re 
+    ;    dr = r[1]-r[0]
+    ;    for i=2,nX-3 do begin
 
-		nCdf_varGet, cdfId, 'jP_r_im', jPr_im 
-		nCdf_varGet, cdfId, 'jP_t_im', jPt_im 
-		nCdf_varGet, cdfId, 'jP_z_im', jPz_im 
+    ;        dEz_dr = (1.0/12.0*e_z[i-2] - 2.0/3.0*e_z[i-1]$
+    ;                +2.0/3.0*e_z[i+1] - 1.0/12.0*e_z[i+2])/dr
+    ;        drEt_dr = (1.0/12.0*r[i-2]*e_t[i-2] - 2.0/3.0*r[i-1]*e_t[i-1]$
+    ;                +2.0/3.0*r[i+1]*e_t[i+1] - 1.0/12.0*r[i+2]*e_t[i+2])/dr
 
-		nCdf_varGet, cdfId, 'jouleHeating', jouleHeating 
+    ;        h_r[i] = -_ii*k_z*e_t[i] + _ii*nPhi*e_z[i]/r[i]
+    ;        h_t[i] = _ii*k_z*e_r[i] - dEz_dr 
+    ;        h_z[i] = (-_ii*nPhi*e_r[i] + drEt_dr )/r[i]
 
-		ealpha	= complex ( ealpha_re, ealpha_im )
-		ebeta	= complex ( ebeta_re, ebeta_im )
-		eb	= complex ( eb_re, eb_im )
+    ;    endfor
 
-		ealphak	= complex ( ealphak_re, ealphak_im )
-		ebetak	= complex ( ebetak_re, ebetak_im )
-		ebk	= complex ( ebk_re, ebk_im )
+    ;    wrf = 2 * !pi * freq
+    ;    
+    ;    h_r = h_r / (_ii*wRF*_u0)
+    ;    h_t = h_t / (_ii*wRF*_u0)
+    ;    h_z = h_z / (_ii*wRF*_u0)
 
-		e_r	= complex ( er_re, er_im )
-		e_t	= complex ( et_re, et_im )
-		e_z	= complex ( ez_re, ez_im )
+    ;    b_r = _u0 * h_r
+    ;    b_t = _u0 * h_t
+    ;    b_z = _u0 * h_z
 
-		jP_r	= complex ( jPr_re, jPr_im )
-		jP_t	= complex ( jPt_re, jPt_im )
-		jP_z	= complex ( jPz_re, jPz_im )
+    ;endelse
 
-		jPAlpha = complex ( jAlpha_re, jAlpha_im )
-		jPBeta = complex ( jBeta_re, jBeta_im )
-		jPB = complex ( jB_re, jB_im )
+    ;return, arS
 
-	ncdf_close, cdfId
-
-	x = r
-	y = z
-	nx = n_elements(r)
-	ny = n_elements(z)
-	x2D	= rebin ( r, nX, nY )
-	if nY gt 1 then begin
-		y2D = transpose(rebin ( z, nY, nX ))
-	endif else begin
-		y2D = fltArr(1)+z
-	endelse
-
-    solution = { $
-                r: r, $
-                z: z, $
-                x: x, $
-                y: y, $
-                x2d: x2d, $
-                y2d: y2d, $
-                jPAlpha: jPAlpha, $
-                jPBeta: jPBeta, $
-                jPB: jPB, $
-                jP_r: jP_r, $
-                jP_t: jP_t, $
-                jP_z: jP_z, $
-                e_r: e_r, $
-                e_t: e_t, $
-                e_z: e_z, $
-                jA_r: complex(jr_re,jr_im), $
-                jA_t: complex(jt_re,jt_im), $
-                jA_z: complex(jz_re,jz_im) }
-
-    return, solution
+    ;;solution = { $
+    ;;            r: r, $
+    ;;            z: z, $
+    ;;            x: x, $
+    ;;            y: y, $
+    ;;            x2d: x2d, $
+    ;;            y2d: y2d, $
+    ;;            jPAlp: jPAlpha, $
+    ;;            jPBet: jPBeta, $
+    ;;            jPPrl: jPB, $
+    ;;            jP_r: jP_r, $
+    ;;            jP_t: jP_t, $
+    ;;            jP_z: jP_z, $
+    ;;            e_r: e_r, $
+    ;;            e_t: e_t, $
+    ;;            e_z: e_z, $
+    ;;            ealpk: ealphak, $
+    ;;            ebetk: ebetak, $
+    ;;            eprlk: ebk, $
+    ;;            ealp: ealpha, $
+    ;;            ebet: ebeta, $
+    ;;            eprl: eb, $
+    ;;            b1_r: b_r, $
+    ;;            b1_t: b_t, $
+    ;;            b1_z: b_z, $
+    ;;            jA_r: complex(jr_re,jr_im), $
+    ;;            jA_t: complex(jt_re,jt_im), $
+    ;;            jA_z: complex(jz_re,jz_im), $
+    ;;            sig: sig, $
+    ;;            kr : kr, $
+    ;;            kz : kz }
+    ;;
+    ;;return, solution
 
 end
 

@@ -1,4 +1,6 @@
-pro ar2_create_kj_input
+pro ar2_create_kj_input, cartesian_offset = _cartesian_offset
+
+    if keyword_set(_cartesian_offset) then cartesian_offset = _cartesian_offset else cartesian_offset = 0
 
     runFolderName = './'
     RHS = 1
@@ -67,7 +69,7 @@ pro ar2_create_kj_input
 
 	nCdf_varPut, nc_id, freq_id, ar2['freq']
 
-	nCdf_varPut, nc_id, r_id, data.r
+	nCdf_varPut, nc_id, r_id, data.r - cartesian_offset
 
 	nCdf_varPut, nc_id, z_id, data.z
 
@@ -82,12 +84,12 @@ pro ar2_create_kj_input
 	nCdf_varPut, nc_id, e_z_re_id, real_part(s.e_z) 
 	nCdf_varPut, nc_id, e_z_im_id, imaginary(s.e_z) 
 
-	nCdf_varPut, nc_id, b_r_re_id, real_part(s.e_r*0) 
-	nCdf_varPut, nc_id, b_r_im_id, imaginary(s.e_r*0) 
-	nCdf_varPut, nc_id, b_p_re_id, real_part(s.e_t*0) 
-	nCdf_varPut, nc_id, b_p_im_id, imaginary(s.e_t*0) 
-	nCdf_varPut, nc_id, b_z_re_id, real_part(s.e_z*0) 
-	nCdf_varPut, nc_id, b_z_im_id, imaginary(s.e_z*0) 
+	nCdf_varPut, nc_id, b_r_re_id, real_part(s.b1_r) 
+	nCdf_varPut, nc_id, b_r_im_id, imaginary(s.b1_r) 
+	nCdf_varPut, nc_id, b_p_re_id, real_part(s.b1_t) 
+	nCdf_varPut, nc_id, b_p_im_id, imaginary(s.b1_t) 
+	nCdf_varPut, nc_id, b_z_re_id, real_part(s.b1_z) 
+	nCdf_varPut, nc_id, b_z_im_id, imaginary(s.b1_z) 
 
 	nCdf_varPut, nc_id, jP_r_re_id, real_part(total(s.jP_r,3))
 	nCdf_varPut, nc_id, jP_r_im_id, imaginary(total(s.jP_r,3)) 
@@ -120,5 +122,4 @@ pro ar2_create_kj_input
 
 	nCdf_close, nc_id
 
-    stop
 end

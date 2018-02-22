@@ -10,6 +10,7 @@ module constants
     real(kind=dbl), parameter :: q = 1.60217646d-19 
     real(kind=dbl), parameter :: xme = 9.10938188d-31
     real(kind=dbl), parameter :: xmh = 1.67262158d-27
+    real(kind=dbl), parameter :: const_amu = 1.66053904d-27 
     real(kind=dbl), parameter :: eps0 = 8.854187817d-12
     complex, parameter :: zi = cmplx ( 0.0, 1.0 )
     real(kind=dbl), parameter :: mu0 = 1.2566370614d-06

@@ -7,22 +7,22 @@ function get3by3Block( g, w)!, r, z)
     use grid
     use aorsaNamelist, only: &
        chebyshevX, chebyshevY, iSigma, nSpec, nPhi, ZeroJp, &
-       ZeroJp_rMin, ZeroJp_rMax, ZeroJp_zMin, ZeroJp_zMax
+       ZeroJp_rMin, ZeroJp_rMax, ZeroJp_zMin, ZeroJp_zMax, &
+       useJpFromFile, coldIons
 
     use constants
-    use profiles, only: k0, omgrf, mSpec
+    use profiles, only: omgrf, mSpec
     use sigma
-    !use sigmaInputGeneration, only: getSigmaInputHere
     use generic_biLinearInterp
 
     implicit none
 
     type(gridBlock), intent(in) :: g
     integer, intent(in) :: w
-    !real, intent(in) :: r, z
-    
+
+    logical :: HotSpecies
+
     complex :: get3by3Block(3,3)
-    complex(kind=dbl) :: omgRFc
 
     complex(kind=dbl) :: &
         sigAlpAlp, sigAlpBet, sigAlpPrl, &
@@ -79,11 +79,12 @@ function get3by3Block( g, w)!, r, z)
 
     type(spatialSigmaInput_cold) :: sigmaIn_cold
     real :: R_(3,3)
+    complex(kind=dbl) :: k0
 
     z   = g%z(g%wl(w)%j)
     r   = g%R(g%wl(w)%i)
+    k0  = g%k0(g%wl(w)%iPt)
     kt  = nPhi!g%kPhi(i)
-    omgRFc = omgRF * (1d0 + zi * g%nuOmg(g%wl(w)%iPt,1))
 
         !   interior plasma region:
         !   ----------------------
@@ -100,7 +101,7 @@ function get3by3Block( g, w)!, r, z)
         
         if(chebyshevX) then
             if(g%wl(w)%n>1) then
-                kr = g%wl(w)%n / sqrt ( sin ( pi * (g%rNorm(g%wl(w)%i)+1)/2  ) ) * g%normFacR 
+                kr = g%wl(w)%n / sqrt ( sin ( real(pi) * (g%rNorm(g%wl(w)%i)+1)/2  ) ) * g%normFacR 
             else
                 kr = g%wl(w)%n * g%normFacR
             endif
@@ -110,7 +111,7 @@ function get3by3Block( g, w)!, r, z)
         
         if(chebyshevY) then
             if(g%wl(w)%m>1) then
-                kz = g%wl(w)%m / sqrt ( sin ( pi * (g%zNorm(g%wl(w)%j)+1)/2 ) ) * g%normFacZ 
+                kz = g%wl(w)%m / sqrt ( sin ( real(pi) * (g%zNorm(g%wl(w)%j)+1)/2 ) ) * g%normFacZ 
             else
                 kz = g%wl(w)%m * g%normFacZ
             endif
@@ -118,15 +119,20 @@ function get3by3Block( g, w)!, r, z)
             kz = g%wl(w)%m * g%normFacZ
         endif
         
-        
 #if __sigma__ == 2
 
         sigmaHere = 0
 
         do s=1,nSpec
 
+            if(coldIons.and.s>1) then
+                HotSpecies = .false. 
+            else
+                HotSpecies = iSigma
+            endif
+
             hotPlasma:& 
-            if (iSigma==1 .and. (.not. g%isMetal(g%wl(w)%iPt)) ) then        
+            if (HotSpecies .and. (.not. g%isMetal(g%wl(w)%iPt)) ) then        
 
                 kVec_stix = matMul( g%U_RTZ_to_ABb(g%wl(w)%iPt,:,:), &
                     (/ kr, g%kPhi(g%wl(w)%i), kz /) ) 
@@ -146,7 +152,7 @@ function get3by3Block( g, w)!, r, z)
             endif hotPlasma
 
             coldPlasma: &
-            if (iSigma==0 .and. (.not. g%isMetal(g%wl(w)%iPt)) ) then 
+            if ((.not.HotSpecies) .and. (.not. g%isMetal(g%wl(w)%iPt)) ) then 
 
                 sigmaIn_cold = spatialSigmaInput_cold( &
                     g%omgc(g%wl(w)%iPt,s), &
@@ -157,21 +163,23 @@ function get3by3Block( g, w)!, r, z)
                 sigma_tmp = sigmaCold_stix ( sigmaIn_cold )
 
 #if PRINT_SIGMA==1
-                if(g%wl(w)%i==256)then 
+                if(g%wl(w)%i==5)then 
 
                     R_ = transpose(g%U_RTZ_to_ABb(g%wl(w)%iPt,:,:))
                     sigma_tmp2 = sigma_tmp
                     sigma_tmp3 = matmul(R_,matmul(sigma_tmp,transpose(R_)))
                     write(*,*) 'Species: ', s
                     write(*,*) 'r: ', g%R(g%wl(w)%i)
+
                     write(*,*) 'abp :'
-                    write(*,'(3(f11.5,2x,f11.5,5x))') sigma_tmp2(:,1)
-                    write(*,'(3(f11.5,2x,f11.5,5x))') sigma_tmp2(:,2)
-                    write(*,'(3(f11.5,2x,f11.5,5x))') sigma_tmp2(:,3)
+                    write(*,'(3(e11.5,2x,e11.5,5x))') sigma_tmp2(:,1)
+                    write(*,'(3(e11.5,2x,e11.5,5x))') sigma_tmp2(:,2)
+                    write(*,'(3(e11.5,2x,e11.5,5x))') sigma_tmp2(:,3)
+
                     write(*,*) 'rtz :'
-                    write(*,'(3(f11.5,2x,f11.5,5x))') sigma_tmp3(:,1)
-                    write(*,'(3(f11.5,2x,f11.5,5x))') sigma_tmp3(:,2)
-                    write(*,'(3(f11.5,2x,f11.5,5x))') sigma_tmp3(:,3)
+                    write(*,'(3(e11.5,2x,e11.5,5x))') sigma_tmp3(:,1)
+                    write(*,'(3(e11.5,2x,e11.5,5x))') sigma_tmp3(:,2)
+                    write(*,'(3(e11.5,2x,e11.5,5x))') sigma_tmp3(:,3)
                     write(*,*)
 
                 endif
@@ -268,6 +276,22 @@ function get3by3Block( g, w)!, r, z)
             endif
         endif
 
+        !if(useJpFromFile)then
+
+        !    sigAlpAlp = 0
+        !    sigAlpBet = 0
+        !    sigAlpPrl = 0
+        !             
+        !    sigBetAlp = 0
+        !    sigBetBet = 0
+        !    sigBetPrl = 0
+        !             
+        !    sigPrlAlp = 0
+        !    sigPrlBet = 0
+        !    sigPrlPrl = 0
+
+        !endif
+
         kAlpAlp = 1.0 + zi / (eps0 * omgrf) * sigAlpAlp
         kAlpBet =       zi / (eps0 * omgrf) * sigAlpBet
         kAlpPrl =       zi / (eps0 * omgrf) * sigAlpPrl
@@ -280,7 +304,7 @@ function get3by3Block( g, w)!, r, z)
         kPrlBet =       zi / (eps0 * omgrf) * sigPrlBet
         kPrlPrl = 1.0 + zi / (eps0 * omgrf) * sigPrlPrl
 
-        ! These ARE used below bitch.
+        ! These ARE used below.
         d%n = g%wl(w)%n
         d%m = g%wl(w)%m
         ! FIX: Also, these may require some interpolation.

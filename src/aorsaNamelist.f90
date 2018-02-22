@@ -8,11 +8,14 @@ implicit none
     ! -----
     ! Electrons must be the first species 
 
+    logical :: dampVacuumWave = .false.
+    logical :: coldIons = .false.
     logical :: useMetalBox = .false.
     logical :: AntennaJ_R = .false.
     logical :: AntennaJ_T = .false.
     logical :: AntennaJ_Z = .true.
     logical :: useAntennaFromAR2Input = .true.
+    logical :: useJpFromFile = .false.
     integer, parameter :: nSpecMax  = 5 
     integer :: zSpecIn(nSpecMax)    = (/ -1, 2, 0, 0, 0 /)
     integer :: amuSpecIn(nSpecMax)  = (/  0, 4, 0, 0, 0 /) 
@@ -63,7 +66,7 @@ implicit none
     real, dimension(nGridMax) :: zMinAll = -1.0
     real, dimension(nGridMax) :: zMaxAll =  1.0
 
-    integer :: nZ_1D = 0
+    integer :: kz_1D = 0
 
 
 !     --------------------------------------------------------
@@ -80,7 +83,9 @@ implicit none
       real :: ZeroJp_rMax = 100.0
       real :: ZeroJp_zMin = -100.0
       real :: ZeroJp_zMax = 100.00
+      character(len=100) :: zFunctionFileName = 'input/zFunction.nc'
       character(len=100) :: AR2InputFileName = 'ar2Input.nc'
+      character(len=100) :: JpInputFileName = 'jp.nc'
       character(len=100) :: AR2SourceLocationsFileName = 'AR2SourceLocations.nc'
       CHARACTER*128 :: netCDF_file1 = 'phillips_nstx3.5.2.nc'  !cql3d distribution file name 1
       CHARACTER*128 :: netCDF_file2 = 'phillips_nstx3.5.2.nc'  !cql3d distribution file name 2
@@ -428,7 +433,6 @@ implicit none
       real :: nphi = 0.0          !-----toroidal mode number     
       
       real phase, zmin, zmax, phi0, amplt(20) 
-      !common / stpcom / xlt, wd, nstrap, phase, zmin, zmax, phi0, amplt
                    
       namelist/aorsa2din/ nwdot, lmax, ibessel, &
      &    ti01, xnuead, xnu1ad, xnu2ad, rant, te0, zAnt,  &
@@ -490,13 +494,13 @@ implicit none
      &    noPoloidalField, rhoScale, rhoWidth, rhoPower, useCircular, &
      &    bPol_frac, useCircularProfiles, lsWeightFac, xkx_cutOff, xky_cutOff, &
      &    chebyshevX, chebyshevY, magma, rhoAnt, antSigRho, toroidalBroadening,&
-     &    kPrlEffLimit, nGrid, useAr2Input, AR2InputFileName, &
+     &    kPrlEffLimit, nGrid, useAr2Input, AR2InputFileName, zFunctionFileName, &
      &    nRAll, nZAll, rMinAll, rMaxAll, zMinAll, zMaxAll, &
-     &    overlap, parabolic, cosX, cosY, nZ_1D, fracOfModesInSolution, &
+     &    overlap, parabolic, cosX, cosY, kz_1D, fracOfModesInSolution, &
      &    AntennaJ_R, AntennaJ_T, AntennaJ_Z, AR2SourceLocationsFileName, &
      &    useAR2SourceLocationsFile, useAllRHSsSource, ZeroJp, &
      &    ZeroJp_rMin, ZeroJp_rMax, ZeroJp_zMin, ZeroJp_zMax, useAntennaFromAR2Input, &
-     &    useMetalBox
+     &    useMetalBox, useJpFromFile, JpInputFileName, coldIons, dampVacuumWave
 
                 
 contains

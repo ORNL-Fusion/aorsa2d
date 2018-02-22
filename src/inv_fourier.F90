@@ -9,7 +9,7 @@ contains
         use aorsaNamelist, &
             only: chebyshevX, chebyshevY, cosX, cosY, fracOfModesInSolution
         use grid
-        use parallel
+        use parallel, only : iAm, ICTXT
  
         implicit none
 
@@ -81,13 +81,13 @@ contains
         enddo
 
 #ifdef par
-        call blacs_barrier ( iContext, 'All' ) 
+        call blacs_barrier ( ICTXT, 'All' ) 
 
-        call cGSUM2D ( iContext, 'All', ' ', g%nR, g%nZ, g%eAlpha(:,:), g%nR, -1, -1 )
-        call cGSUM2D ( iContext, 'All', ' ', g%nR, g%nZ, g%eBeta(:,:), g%nR, -1, -1 )
-        call cGSUM2D ( iContext, 'All', ' ', g%nR, g%nZ, g%eB(:,:), g%nR, -1, -1 )
+        call cGSUM2D ( ICTXT, 'All', ' ', g%nR, g%nZ, g%eAlpha(:,:), g%nR, -1, -1 )
+        call cGSUM2D ( ICTXT, 'All', ' ', g%nR, g%nZ, g%eBeta(:,:), g%nR, -1, -1 )
+        call cGSUM2D ( ICTXT, 'All', ' ', g%nR, g%nZ, g%eB(:,:), g%nR, -1, -1 )
 
-        call blacs_barrier ( iContext, 'All' ) 
+        call blacs_barrier ( ICTXT, 'All' ) 
 #endif
     end subroutine sftinv2d
 

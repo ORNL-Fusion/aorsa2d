@@ -13,10 +13,13 @@ BOUNDS = -fbounds-check
 DEBUG = -g -fbacktrace -fsignaling-nans -ffpe-trap=zero,invalid#,underflow,overflow
 DOUBLE = -fdefault-real-8
 F90FLAGS = ${MOD_LOC} ${BOUNDS} ${DEBUG} ${WARN}
-F77FLAGS = ${MOD_LOC} ${BOUNDS} ${DEBUG} ${WARN}
+F77FLAGS = ${MOD_LOC} ${BOUNDS} ${DEBUG} ${WARN} 
 
 NETCDF_DIR = ${HOME}/code/netcdf/gnu_4.3.2
 NETCDF = -I ${NETCDF_DIR}/include -L ${NETCDF_DIR}/lib -lnetcdf -lnetcdff
+
+NETCDF_DIR := /opt/local
+NETCDF +=-I ${NETCDF_DIR}/include -L ${NETCDF_DIR}/lib -lnetcdf -lnetcdff
 
 CPP_DIRECTIVES = -DcylXYZ -DzFunHammett
 

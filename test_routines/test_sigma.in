@@ -1,7 +1,6 @@
 &aorsa2din
 
 upshift = 1,
-xnuomg = 0.00, 
 damping = 0.0, 
 xkPerp_cutOff = 1.0,
 delta0 = 0.0,

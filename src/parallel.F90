@@ -4,19 +4,19 @@ use constants, only: long
 
 implicit none
 
-integer :: iContext, nProcs, iAm, myRow, myCol
+integer :: ICTXT, nProcs, iAm, MYROW, MYCOL
 integer :: NRHS
 
 ! Global 
-integer :: M_A, N_A, MB_A, NB_A, IA, JA, LLD_A, RSRC_A, CSRC_A
-integer :: M_B, N_B, MB_B, NB_B, IB, JB, LLD_B, RSRC_B, CSRC_B
+integer :: M, N, IA, JA, LLD_A, RSRC, CSRC
+integer :: MB, NB, NBRHS, IB, JB, LLD_B
 
 ! Local
 integer :: LM_A, LN_A
 integer :: LM_B, LN_B
 
 ! Descriptors
-integer :: desc_A(9), desc_B(9)
+integer :: DESCA(9), DESCB(9)
 
 contains
 
@@ -25,17 +25,17 @@ contains
     subroutine init_procGrid ( nPts_tot )
 
         use aorsaNamelist, &
-            only: npRow, npCol
+            only: NPROW, NPCOL
 
         implicit none
 
         integer, intent(in) :: nPts_tot
         integer :: rowBlockSize, colBlockSize, rhsBlockSize
         integer :: rowStartProc, colStartProc
-        integer :: nRow, nCol, nRowLocal, nColLocal
+        integer :: nRow, nCol
         integer :: nRHSLocal
-        integer, external :: numRoC
-        integer :: info
+        integer, external :: NUMROC
+        integer :: INFO
 
         if(huge(nPts_tot) < 2147483647)then
                 write(*,*) 'ERROR: 32 bit machine?'
@@ -45,11 +45,8 @@ contains
         nRow    = nPts_tot*3
         nCol    = nPts_tot*3
 
-        M_A = nRow
-        N_A = nCol
-
-        M_B = nCol
-        N_B = NRHS
+        M = nRow
+        N = nCol
 
         if(NRHS==0)then
             write(*,*) 'ERROR: NRHS = ', NRHS
@@ -61,26 +58,14 @@ contains
         ! Keep this a multiple of 3 such that each 3 rows of a spatial point
         ! is confined to a single processor
 
-        rowBlockSize = 3*32
-        colBlockSize = 3*32
-        rhsBlockSize = 3*16
-
-        MB_A = rowBlockSize
-        NB_A = colBlockSize
-
-        MB_B = colBlockSize
-        NB_B = rhsBlocksize
+        MB = 3*32
+        NB = 3*32
+        NBRHS = NB 
 
         ! proc grid starting locations
 
-        rowStartProc    = 0
-        colStartProc    = 0
-
-        RSRC_A = rowStartProc
-        CSRC_A = colStartProc
-
-        RSRC_B = 0
-        CSRC_B = 0
+        RSRC = 0
+        CSRC = 0
 
         IA = 1
         JA = 1
@@ -88,73 +73,51 @@ contains
         IB = 1
         JB = 1
 
-        call blacs_pInfo ( iAm, nProcs )
+        ! Initialize the processor grid
 
-        !write(*,*) 'proc id: ', iAm, nProcs
+        call SL_INIT( ICTXT, NPROW, NPCOL )
+        call blacs_pINFO ( iAM, NPROCS )
+        call blacs_gridINFO ( ICTXT, NPROW, NPCOL, MYROW, MYCOL )
 
-        if ( nProcs <= 1 ) then 
-
-            write(*,*) 'blacs_pInfo backup needed'
-
-            if ( iAm == 0 ) nProcs = npRow * npCol
-            call blacs_setup ( iAm, nProcs )
-
-        endif
-
-        if ( nProcs /= npRow*npCol ) then 
+        if ( nProcs /= NPROW*NPCOL ) then 
 
             write(*,*)
-            write(*,*)
-            write(*,*) 'CONFIG ERROR:'
-            write(*,*) '-------------'
-            write(*,*) '    nProcs /= npRow * npCol'
-            write(*,*) '    Please correct and re-run'
-            write(*,*) '    Have a nice day :)'
-            write(*,*)
-            write(*,*)
- 
+            write(*,*) 'ERROR:'
+            write(*,*) '------'
+            write(*,*) '    nProcs /= NPROW * NPCOL, please correct and re-run'
+            write(*,*) '    nProcs : ', nProcs 
+            write(*,*) '    NPROW : ', NPROW 
+            write(*,*) '    NPCOL : ', NPCOL 
             return  
-                    
+
         endif
 
-        call blacs_get ( -1, 0, iContext )
-        call blacs_gridInit ( iContext, 'Row-major', npRow, npCol )
-        call blacs_gridInfo ( iContext, npRow, npCol, myRow, myCol )
+        ! local array sizes as determined by scalapack routine NUMROC
 
-        ! local array sizes as determined by scalapack routine 
-        ! numRoC
+        LM_A = NUMROC( M, MB, MYROW, RSRC, NPROW )
+        LN_A = NUMROC( N, NB, MYCOL, CSRC, NPCOL )
 
-        nRowLocal   = numRoC ( nRow, rowBlockSize, myRow, rowStartProc, npRow )
-        nColLocal   = numRoC ( nCol, colBlockSize, myCol, colStartProc, npCol )
-        nRHSLocal   = numRoC ( NRHS, rhsBlockSize, myCol, colStartProc, npCol )
+        LM_B = NUMROC( N, NB, MYROW, RSRC, NPROW )
+        LN_B = NUMROC( NRHS, NBRHS, MYCOL, CSRC, NPCOL )
 
-        LM_A = NumRoc(M_A,MB_A,myRow,RSRC_A,npRow) 
-        LN_A = NumRoc(N_A,NB_A,myCol,CSRC_A,npCol) 
+        LLD_A = max( 1, LM_A )
+        LLD_B = max( 1, LM_B )
 
-        LM_B = NumRoc(M_B,MB_B,myRow,RSRC_B,npRow) 
-        LN_B = NumRoc(N_B,NB_B,myCol,CSRC_B,npCol) 
-
-        write(*,*) N_B, NB_B, myCol, CSRC_B, npCol
-
-        LLD_A = max(1,numroc(M_A,MB_A,myRow,RSRC_A,npRow))
-        LLD_B = max(1,numroc(M_B,MB_B,myRow,RSRC_B,npRow))
-
-        call descInit ( desc_A, M_A, N_A, MB_A, NB_A, RSRC_A, CSRC_A, iContext, LLD_A, info )
-        if (info.ne.0) then 
-            write(*,*) 'ERROR: init desc amat status: ', info
+        call descInit ( DESCA, M, N, MB, NB, RSRC, CSRC, ICTXT, LLD_A, INFO )
+        if (INFO.ne.0) then 
+            write(*,*) 'ERROR: init desc amat status: ', INFO
             stop
         endif
 
-        call descInit ( desc_B, M_B, N_B, MB_B, NB_B, RSRC_B, CSRC_B, iContext, LLD_B, info )
-        if (info.ne.0) then 
-            write(*,*) 'ERROR: init desc brhs status: ', info
+        call descInit ( DESCB, N, NRHS, NB, NBRHS, RSRC, CSRC, ICTXT, LLD_B, INFO )
+        if (INFO.ne.0) then 
+            write(*,*) 'ERROR: init desc brhs status: ', INFO
             write(*,*) nCol, NRHS, colBlockSize, rowBlockSize, rowStartProc, colStartProc
-            write(*,*) desc_B
+            write(*,*) DESCB
             stop
         endif
 
-
-        if ( myRow == -1 ) then 
+        if ( MYROW == -1 ) then 
 
             write(*,*) 'init_procGrid: ERROR - some sort of problem?'
             stop
@@ -162,57 +125,21 @@ contains
         endif
 
         if (iAm==0) then 
-            write(*,*) 'Parallel info:'
-            write(*,*) '    nRow, nCol:      ', nRow, nCol
-            write(*,*) '    npRow, npCol:    ', npRow, npCol
-            write(*,*) '    myRow, myCol:    ', myRow, myCol
-            write(*,*) '    block size:      ', rowBlockSize, colBlockSize 
-            write(*,*) '    local amat size: ', nRowLocal, nColLocal
+            write(*,*) 'Parallel INFO:'
+            write(*,*) '    nRow, nCol:      ', M, N 
+            write(*,*) '    NPROW, NPCOL:    ', NPROW, NPCOL
+            write(*,*) '    MYROW, MYCOL:    ', MYROW, MYCOL
+            write(*,*) '    block size:      ', MB, NB 
         endif
 
     end subroutine init_procGrid
-
-
-!    subroutine init_parallel_aMat (NRHS)
-!
-!        use aorsaNamelist, &
-!            only: npRow, npCol
-!        use scalapack_mod, only: numroc
-!
-!        implicit none
-!
-!        integer, intent(in) :: NRHS
-!        integer :: info
-!
-!        call descInit ( descriptor_aMat, &
-!            nRow, nCol, rowBlockSize, colBlockSize, &
-!            rowStartProc, colStartProc, iContext, lld, info )
-!
-!        if (info.ne.0) then 
-!            write(*,*) 'ERROR: init desc amat status: ', info
-!            stop
-!        endif
-!
-!        call descInit ( descriptor_brhs, &
-!            nCol, NRHS, colBlockSize, rhsBlockSize, rowStartProc, colStartProc, &
-!            iContext, lld, info )
-!
-!        if (info.ne.0) then 
-!            write(*,*) 'ERROR: init desc brhs status: ', info
-!            write(*,*) nCol, NRHS, colBlockSize, rowBlockSize, rowStartProc, colStartProc
-!            write(*,*) descriptor_brhs
-!            stop
-!        endif
-!
-!
-!    end subroutine init_parallel_aMat 
 
 
     subroutine release_grid ()
 
         implicit none
 
-        call blacs_gridExit ( iContext )
+        call blacs_gridExit ( ICTXT )
         call blacs_exit ( 0 )
 
     end subroutine release_grid

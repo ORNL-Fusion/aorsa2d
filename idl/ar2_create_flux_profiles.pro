@@ -70,8 +70,8 @@ pro ar2_create_flux_profiles, nSpec, nn, tt, nR, nZ, PsiNorm, Mask_bbb, d_bbb, D
 	                n_ant = densityMin[s]
 	                t_ant = tempMin
 
-					;eta = -d_bbb[i,j]/l_sol
-                    eta = -(psiNorm[i,j]-1)/l_sol
+					eta = -d_bbb[i,j]/l_sol
+                    ;eta = -(psiNorm[i,j]-1)/l_sol
 					density_m3[i,j,s] = n_ant + (_n - n_ant) * exp (eta)
 					temp_eV[i,j,s] = t_ant + (_t - t_ant) * exp (eta)
 					;density_m3[i,j,s] = _n * exp (eta) > _n/maxDecay
@@ -133,7 +133,7 @@ pro ar2_create_flux_profiles, nSpec, nn, tt, nR, nZ, PsiNorm, Mask_bbb, d_bbb, D
 		stop
 	endif
 
-	iiBad = where(temp_eV*e lt 0,iiBadCnt)
+	iiBad = where(temp_eV*_e lt 0,iiBadCnt)
 	if iiBadCnt gt 0 then begin
 		print, 'ERROR: temp*q failed sanity check'
 		stop
