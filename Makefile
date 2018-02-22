@@ -71,7 +71,7 @@ CPP_DIRECTIVES += -Dwriteserialmatrix=1
 CPP_DIRECTIVES += -DUSE_ROW_SCALING
 CPP_DIRECTIVES += -DUSE_RCOND
 CPP_DIRECTIVES += -DWRITE_SIGMA_TO_OUTPUT=0
-CPP_DIRECTIVES += -Dcheck_zfunction_bounds=0
+CPP_DIRECTIVES += -Dcheck_zfunction_bounds=1
 
 # compile flags
 # -------------

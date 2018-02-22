@@ -50,6 +50,10 @@ subroutine z_from_table(arg, Z, Zp, argZp)
     else 
 
         write(*,*) 'Argument to Z function outside range of table'
+        write(*,*) 'arg: ', arg
+        write(*,*) 'min(table_arg): ', minval(table_arg)
+        write(*,*) 'max(table_arg): ', maxval(table_arg)
+
         call exit
 
     endif
