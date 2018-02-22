@@ -59,6 +59,17 @@ contains
         real(kind=dbl) :: a_rtz(0:2), b_rtz(0:2), p_rtz(0:2)
         real(kind=dbl) :: rotDir_rtz(0:2), testVec(0:2)
 
+! Catch for field aligned with Z coord
+if(abs(bZ_unit).eq.1)then 
+
+        RotMatHere = 0
+
+        RotMatHere(1,1) = 1
+        RotMatHere(2,2) = 1
+        RotMatHere(3,3) = 1
+
+else
+
         ! Vectors are:
         ! ------------
         ! a,b,p: alpha, beta, parallel
@@ -86,6 +97,7 @@ contains
 
         b_rtz = Cross(pu_rtz,au_rtz)
         bu_rtz = b_rtz/Mag(b_rtz)
+
 #if _DEBUG_ROTATION > 0
         write(*,*) 'au_rtz: ', au_rtz(0), au_rtz(1), au_rtz(2)
         write(*,*) 'bu_rtz: ', bu_rtz(0), bu_rtz(1), bu_rtz(2)
@@ -184,6 +196,7 @@ contains
         write(*,*) 'tu_abp: ', MatMul(RotMatHere,(/0d0,1d0,0d0/))
         write(*,*) 'zu_abp: ', MatMul(RotMatHere,(/0d0,0d0,1d0/))
 #endif
+endif
 
     end function RotMatHere
 
@@ -199,6 +212,9 @@ contains
         real :: RotQ(3,3)
         real :: det
 
+        write(*,*) 'in init_rotation'
+        write(*,*) 'size(g%pt): ', size(g%pt)
+
         allocate ( &
             g%Urr( size(g%pt) ), & 
             g%Urt( size(g%pt) ), &
@@ -212,6 +228,8 @@ contains
 
         allocate ( g%U_RTZ_to_ABb(size(g%pt),3,3) )
 
+        write(*,*) 'post allocation'
+
         ! OK, build the rotation matrix a different way.
         ! Remember, this is the rotation to and from 
         ! alp,bet,prl and r,t,z
@@ -223,16 +241,20 @@ contains
         ! bet - alp x prl
 
         do w=1,size(g%pt)
+            write(*,*) 'w:', w
+            write(*,*) 'br: ', g%bR_unit(w)
+            write(*,*) 'bt: ', g%bT_unit(w)
+            write(*,*) 'bz: ', g%bZ_unit(w)
 
             RotQ = RotMatHere (g%bR_unit(w),g%bT_unit(w),g%bZ_unit(w))
 
-            !det = RotQ(1,1) * RotQ(2,2) * RotQ(3,3) &
-            !    + RotQ(1,2) * RotQ(2,3) * RotQ(3,1) &
-            !    + RotQ(1,3) * RotQ(2,1) * RotQ(3,2) &
-            !    - RotQ(1,1) * RotQ(2,3) * RotQ(3,2) &
-            !    - RotQ(1,2) * RotQ(2,1) * RotQ(3,3) &
-            !    - RotQ(1,3) * RotQ(2,2) * RotQ(3,1)
-            !write(*,*) det
+            det = RotQ(1,1) * RotQ(2,2) * RotQ(3,3) &
+                + RotQ(1,2) * RotQ(2,3) * RotQ(3,1) &
+                + RotQ(1,3) * RotQ(2,1) * RotQ(3,2) &
+                - RotQ(1,1) * RotQ(2,3) * RotQ(3,2) &
+                - RotQ(1,2) * RotQ(2,1) * RotQ(3,3) &
+                - RotQ(1,3) * RotQ(2,2) * RotQ(3,1)
+            write(*,*) det
 
             g%U_RTZ_to_ABb(w,1:3,1:3)  = RotQ
 
@@ -250,7 +272,7 @@ contains
         g%Uzt = g%U_RTZ_to_ABb(:,3,2) 
         g%Uzz = g%U_RTZ_to_ABb(:,3,3)
 
-        !write(*,*) g%U_RTZ_to_ABb(1,:,:)
+        write(*,*) g%U_RTZ_to_ABb(1,:,:)
 
     end sUbroUtine init_rotation
 

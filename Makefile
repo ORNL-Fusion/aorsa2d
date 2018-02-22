@@ -63,8 +63,8 @@ CPP_DIRECTIVES += -D__noU__=0
 CPP_DIRECTIVES += -D__CheckParallelLocation__=0# Double check that myRow==pr_sp .and. myCol==pc_sp
 CPP_DIRECTIVES += -D__debugSigma__=0
 CPP_DIRECTIVES += -D__DebugSetMetal__=0
-CPP_DIRECTIVES += -D__DebugBField__=0
-CPP_DIRECTIVES += -D_DEBUG_ROTATION=0
+CPP_DIRECTIVES += -D__DebugBField__=1
+CPP_DIRECTIVES += -D_DEBUG_ROTATION=1
 CPP_DIRECTIVES += -DPRINT_SIGMA_ABP=0
 CPP_DIRECTIVES += -DPRINT_SIGMA=0
 CPP_DIRECTIVES += -Dwriteserialmatrix=1
@@ -86,10 +86,10 @@ ifeq (${COMPILER},PGI)
     FORMAT:=
 else
 	FORMAT := -ffree-line-length-none
-	BOUNDS := #-fbounds-check 
+	BOUNDS := -fbounds-check 
 	WARN := -Wall
-	DEBUG := #-pg -g -fbacktrace -fsignaling-nans -ffpe-trap=zero,invalid#,overflow#,underflow
-	OPTIMIZATION := -O3
+	DEBUG := -pg -g -fbacktrace -fsignaling-nans -ffpe-trap=zero,invalid#,overflow#,underflow
+	OPTIMIZATION := #-O3
 	DOUBLE := -fdefault-real-8
 	MOD_LOC := -Jmod
 endif

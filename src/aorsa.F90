@@ -18,7 +18,6 @@ program aorsa2dMain
     use E_to_lab
     use power
     use setMetal
-    !use sigmaInputGeneration
     use ar2Input, ar2_rMin=>rMin, ar2_rMax=>rMax, ar2_zMin=>zMin, ar2_zMax=>zMax
     use AR2SourceLocationsInput, NRHS_FromInputFile=>NRHS
     use Performance
@@ -188,6 +187,13 @@ program aorsa2dMain
             rMaxAll(i) = ar2_rMax
             zMinAll(i) = ar2_zMin
             zMaxAll(i) = ar2_zMax
+
+            if(iAm==0)then
+                write(*,*) 'rMin: ', rMinAll(i)
+                write(*,*) 'rMax: ', rMaxAll(i)
+                write(*,*) 'zMin: ', zMinAll(i)
+                write(*,*) 'zMax: ', zMaxAll(i)
+            endif
 
         endif
 

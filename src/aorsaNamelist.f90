@@ -512,7 +512,7 @@ contains
         character(len=*), intent(in), optional :: fileName
 
         if(present(fileName)) then
-                nml_fileName = fileName
+            nml_fileName = fileName
         else
             nml_fileName    = 'aorsa2d.in'
         endif

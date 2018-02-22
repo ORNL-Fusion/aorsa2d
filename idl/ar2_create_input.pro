@@ -654,9 +654,6 @@ if doPlots then begin
 		c=contour(1/(abs(IonIonHybrid_res_freq mod wrf)/wrf),r,z,c_value=fIndGen(25)*10,/over)
 
 	endif else if nZ gt 1 then begin
-		;for s=1,nSpec-1 do begin
-		;	p = plot(r,resonances[*,0,s],/over)
-		;endfor
         for s=1,nSpec-1 do begin
 			c=contour(resonances[*,*,s],r,z,c_value=fIndGen(5)/4.0*0.01,/over)
 		endfor
@@ -669,9 +666,6 @@ if doPlots then begin
 endif
 
 	; Write netCdf file
-
-	;save, freq, nphi, bField_eqdsk, eqdskFileName, flux_profiles, atomicZ, amu, $
-	;		nn, tt, nR, nZ, rMin, rMax, zMin, zMax, fileName = 'ar2RunCreationParameters.sav'
 
 	outFileName	= 'input/ar2Input.nc'
 	nc_id	= nCdf_create ( outFileName, /clobber )
@@ -752,86 +746,7 @@ endif
 	nCdf_varPut, nc_id, Lim_r_id, rlim
 	nCdf_varPut, nc_id, Lim_z_id, zlim
 
-	nCdf_varPut, nc_id, LCFS_r_id, rbbbs
-	nCdf_varPut, nc_id, LCFS_z_id, zbbbs
-
 	nCdf_close, nc_id
-
-	; Write VORPAL-AORSA Coupling text file
-
-    if generate_vorpal_input then begin
-
-	for s=0,nSpec-1 do begin
-
-		VorpalFileName = 'VorpalProfiles_'+string(s,format='(i1)')+'.txt'
-
-		Vorpal_nX = 64
-		Vorpal_nY = 36 
-		Vorpal_nZ = 64
-
-		Vorpal_xDim = rMax-rMin
-		Vorpal_yDim = 0.1 * Vorpal_xDim
-		Vorpal_zDim = zMax-zMin
-
-		Vorpal_xMin = rMin
-		Vorpal_xMax = rMax
-		Vorpal_x_grid = fIndGen(Vorpal_nX)*(Vorpal_xMax-Vorpal_xMin)/(Vorpal_nX-1)+Vorpal_xMin
-
-		Vorpal_yMin = -Vorpal_yDim/2.0
-		Vorpal_yMax = +Vorpal_yDim/2.0
-		Vorpal_y_grid = fIndGen(Vorpal_nY)*(Vorpal_yMax-Vorpal_yMin)/(Vorpal_nY-1)+Vorpal_yMin
-
-		Vorpal_zMin = zMin
-		Vorpal_zMax = zMax
-		Vorpal_z_grid = fIndGen(Vorpal_nZ)*(Vorpal_zMax-Vorpal_zMin)/(Vorpal_nz-1)+Vorpal_zMin
-
-		openw, lun, VorpalFileName, /get_lun
-
-		printf, lun, 'nX: '+string(Vorpal_nX, format='(i4.4)')
-		printf, lun, 'nY: '+string(Vorpal_nY, format='(i4.4)')
-		printf, lun, 'nZ: '+string(Vorpal_nZ, format='(i4.4)')
-		printf, lun, 'amu: '+string(amu[s],format='(f12.10)')
-		printf, lun, 'AtomicZ: ',+string(AtomicZ[s],format='(f+6.2)')
-
-		printf, lun, 'X, Y, Z, Bx[T], By[T], Bz[T], T[eV], n[m^-3], nuOmg'
-
-		for i=0,Vorpal_nX-1 do begin
-			for j=0,Vorpal_nY-1 do begin
-				for k=0,Vorpal_nZ-1 do begin
-
-                    thisX = Vorpal_x_grid[i]
-                    thisY = Vorpal_y_grid[j]
-                    thisZ = Vorpal_z_grid[k]
-
-                    thisI = (thisX-rMin)/(rMax-rMin)*(nR-1)
-                    thisJ = (thisZ-zMin)/(zMax-zMin)*(nZ-1)
-
-		            this_Br = interpolate(br,thisI,thisJ,cubic=-0.5)
-		            this_Bt = interpolate(bt,thisI,thisJ,cubic=-0.5)
-		            this_Bz = interpolate(bz,thisI,thisJ,cubic=-0.5)
-
-                    this_Bx = this_Br
-                    this_By = this_Bt
-                    this_Bz = this_Bz
-
-		            this_nuOmg = interpolate(nuOmg[*,*,s],thisI,thisJ,cubic=-0.5)
-		            this_T_eV = interpolate(Temp_eV[*,*,s],thisI,thisJ,cubic=-0.5)
-		            this_n_m3 = interpolate(density_m3[*,*,s],thisI,thisJ,cubic=-0.5)
-
-					printf, lun, thisX, thisY, thisZ, $
-						this_Bx, this_By, this_Bz, this_T_eV, this_n_m3, this_nuOmg, $
-                        format='(7(f10.3,1x),2(e12.3,1x))';, $
-						;V_T[i,j,k], V_n[i,j,k], format='(7(f10.3,1x),e12.3)'
-
-				endfor
-			endfor
-		endfor
-
-		close, lun
-
-	endfor
-
-    endif
 
 if doPlots then begin
 	plotFile = 'inputs.pdf'
