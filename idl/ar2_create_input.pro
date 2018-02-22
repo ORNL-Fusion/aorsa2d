@@ -420,7 +420,6 @@ endif
 if doPlots then begin
 
     _c = ['b','g','r','c','m','y','k']
-    
 	p=plot(r,Density_m3[*,nZ/2,0]+densFlatFuzz,$
 			title='Density [1/m3]',thick=2,$
 			layout=[layout,plotpos],/current,yRange=densityRange,/yLog)

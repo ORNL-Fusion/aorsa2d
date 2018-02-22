@@ -24,21 +24,37 @@ subroutine z_from_table(arg, Z, Zp, argZp)
     complex, intent(out) :: Z, Zp, argZp
     real :: Z_re, Z_im, Zp_re, Zp_im
 
-    Z_re = curv2( real(arg,4), table_N, table_arg, table_Z_re, &
-        fitpack_yp_Z_re, fitpack_sigma ) 
+#if check_zfunction_bounds > 0 
 
-    Z_im = curv2( real(arg,4), table_N, table_arg, table_Z_im, &
-        fitpack_yp_Z_im, fitpack_sigma ) 
+    if(arg.ge.minval(table_arg).and.arg.le.maxval(table_arg)) then
 
-    Zp_re = curv2( real(arg,4), table_N, table_arg, table_Zp_re, &
-        fitpack_yp_Zp_re, fitpack_sigma ) 
+#endif
+        Z_re = curv2( real(arg,4), table_N, table_arg, table_Z_re, &
+            fitpack_yp_Z_re, fitpack_sigma ) 
 
-    Zp_im = curv2( real(arg,4), table_N, table_arg, table_Zp_im, &
-        fitpack_yp_Zp_im, fitpack_sigma ) 
+        Z_im = curv2( real(arg,4), table_N, table_arg, table_Z_im, &
+            fitpack_yp_Z_im, fitpack_sigma ) 
 
-    Z = cmplx(Z_re,Z_im)
-    Zp = cmplx(Zp_re,Zp_im)
-    argZp = arg * Zp 
+        Zp_re = curv2( real(arg,4), table_N, table_arg, table_Zp_re, &
+            fitpack_yp_Zp_re, fitpack_sigma ) 
+
+        Zp_im = curv2( real(arg,4), table_N, table_arg, table_Zp_im, &
+            fitpack_yp_Zp_im, fitpack_sigma ) 
+
+        Z = cmplx(Z_re,Z_im)
+        Zp = cmplx(Zp_re,Zp_im)
+        argZp = arg * Zp 
+
+#if check_zfunction_bounds > 0 
+
+    else 
+
+        write(*,*) 'Argument to Z function outside range of table'
+        call exit
+
+    endif
+
+#endif
 
 end subroutine z_from_table
 

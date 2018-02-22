@@ -19,7 +19,7 @@ program aorsa2dMain
     use power
     use setMetal
     !use sigmaInputGeneration
-    use ar2Input
+    use ar2Input, ar2_rMin=>rMin, ar2_rMax=>rMax, ar2_zMin=>zMin, ar2_zMax=>zMax
     use AR2SourceLocationsInput, NRHS_FromInputFile=>NRHS
     use Performance
     use read_jp_from_file
@@ -133,7 +133,14 @@ program aorsa2dMain
         NRHS = 1
     endif
 
-    if(iAm==0) &
+    if(useAr2Input)then
+        if(iAm==0) write(*,*) '    Reading ar2 input file ...'
+        call ReadAr2Input (AR2InputFileName)
+        if(iAm==0) write(*,*) '    DONE'
+        if(iAm==0) write(*,*) '    Initializing bField interpolations ...'
+        call init_interp ()
+        if(iAm==0) write(*,*) '    DONE'
+    endif
 
 !   initialise the parallel env
 !   ---------------------------
@@ -174,6 +181,15 @@ program aorsa2dMain
     allocate ( allGrids ( nGrid ) )
 
     do i=1,nGrid 
+
+        if(useAR2Input)then
+    
+            rMinAll(i) = ar2_rMin
+            rMaxAll(i) = ar2_rMax
+            zMinAll(i) = ar2_zMin
+            zMaxAll(i) = ar2_zMax
+
+        endif
 
         allGrids(i) = init_GridBlock ( &
             nRAll(i), nZAll(i), &
@@ -228,15 +244,6 @@ program aorsa2dMain
         !call read_geqdsk ( eqdsk, plot = .false. )
         !call init_interp ()
         stop
-    endif
-
-    if(useAr2Input)then
-        if(iAm==0) write(*,*) '    Reading ar2 input file ...'
-        call ReadAr2Input (AR2InputFileName)
-        if(iAm==0) write(*,*) '    DONE'
-        if(iAm==0) write(*,*) '    Initializing bField interpolations ...'
-        call init_interp ()
-        if(iAm==0) write(*,*) '    DONE'
     endif
 
     do i=1,nGrid

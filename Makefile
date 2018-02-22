@@ -71,6 +71,7 @@ CPP_DIRECTIVES += -Dwriteserialmatrix=1
 CPP_DIRECTIVES += -DUSE_ROW_SCALING
 CPP_DIRECTIVES += -DUSE_RCOND
 CPP_DIRECTIVES += -DWRITE_SIGMA_TO_OUTPUT=0
+CPP_DIRECTIVES += -Dcheck_zfunction_bounds=0
 
 # compile flags
 # -------------
@@ -85,7 +86,7 @@ ifeq (${COMPILER},PGI)
     FORMAT:=
 else
 	FORMAT := -ffree-line-length-none
-	BOUNDS := -fbounds-check 
+	BOUNDS := #-fbounds-check 
 	WARN := -Wall
 	DEBUG := #-pg -g -fbacktrace -fsignaling-nans -ffpe-trap=zero,invalid#,overflow#,underflow
 	OPTIMIZATION := -O3
