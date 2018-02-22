@@ -433,7 +433,6 @@ implicit none
       real :: nphi = 0.0          !-----toroidal mode number     
       
       real phase, zmin, zmax, phi0, amplt(20) 
-      !common / stpcom / xlt, wd, nstrap, phase, zmin, zmax, phi0, amplt
                    
       namelist/aorsa2din/ nwdot, lmax, ibessel, &
      &    ti01, xnuead, xnu1ad, xnu2ad, rant, te0, zAnt,  &
