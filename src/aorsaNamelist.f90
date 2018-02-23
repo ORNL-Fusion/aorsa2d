@@ -66,7 +66,7 @@ implicit none
     real, dimension(nGridMax) :: zMinAll = -1.0
     real, dimension(nGridMax) :: zMaxAll =  1.0
 
-    integer :: kz_1D = 0
+    real :: kz_1D = 0
 
 
 !     --------------------------------------------------------

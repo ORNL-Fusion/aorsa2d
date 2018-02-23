@@ -241,10 +241,6 @@ endif
         ! bet - alp x prl
 
         do w=1,size(g%pt)
-            write(*,*) 'w:', w
-            write(*,*) 'br: ', g%bR_unit(w)
-            write(*,*) 'bt: ', g%bT_unit(w)
-            write(*,*) 'bz: ', g%bZ_unit(w)
 
             RotQ = RotMatHere (g%bR_unit(w),g%bT_unit(w),g%bZ_unit(w))
 
@@ -254,7 +250,6 @@ endif
                 - RotQ(1,1) * RotQ(2,3) * RotQ(3,2) &
                 - RotQ(1,2) * RotQ(2,1) * RotQ(3,3) &
                 - RotQ(1,3) * RotQ(2,2) * RotQ(3,1)
-            write(*,*) det
 
             g%U_RTZ_to_ABb(w,1:3,1:3)  = RotQ
 
