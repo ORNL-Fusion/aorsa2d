@@ -72,6 +72,8 @@ CPP_DIRECTIVES += -DUSE_ROW_SCALING
 CPP_DIRECTIVES += -DUSE_RCOND
 CPP_DIRECTIVES += -DWRITE_SIGMA_TO_OUTPUT=0
 CPP_DIRECTIVES += -Dcheck_zfunction_bounds=1
+CPP_DIRECTIVES += -DuseSwansonSigma=0
+CPP_DIRECTIVES += -DcompareSigmas=0
 
 # compile flags
 # -------------

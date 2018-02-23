@@ -92,7 +92,6 @@ contains
         integer :: ii,jj
 
         real :: atomicZ, amu, nuOmgTmp
-        logical :: compareSigmas 
 
         zeta_l_bram = 0
         Zeta_l_swan = 0
@@ -100,7 +99,6 @@ contains
         zieps0 = zi * eps0
         vTh = sqrt(2. * kt / xm)
         rhol = vTh / omgc
-        !write(*,*) 'nuOmg is set to zero'
         nuOmgTmp = nuOmg 
         nuOmgTmp = 0
         omgrfc = omgrf * (1d0 + zi * nuOmgTmp)
@@ -203,14 +201,19 @@ contains
             lMaxTmp = lMax
             call besIExp    ( gamma_, lMaxTmp, expBesselI, expBesselIPrime, expBesselIOverGam )
             lMaxTmp = lMax
+#if useSwansonSigma==1
             call besic ( gamma_, lMaxTmp, In_, ier )
+#endif
         else
             lMaxTmp = lMax
             call bes_expand ( gamma_, lMaxTmp, expBesselI, expBesselIPrime, expBesselIOverGam )
             lMaxTmp = lMax
+#if useSwansonSigma==1
             call besic ( gamma_, lMaxTmp, In_, ier )
+#endif
         endif
 
+#if useSwansonSigma==1
         do l=0,lMax
 
             if (l==0) then 
@@ -220,13 +223,7 @@ contains
             endif 
 
         enddo
-
-        !write(*,*)
-        !write(*,*) expBesselI
-        !write(*,*) exp(-lambda)*In_
-        !write(*,*) expBesselIPrime
-        !write(*,*) exp(-lambda)*Inp
-
+#endif
 
         ! Z function
         ! ----------
@@ -239,22 +236,6 @@ contains
             call z_from_table ( real(zeta_l_swan(l)), z_swan(l), Zp_swan(l), zeta_Zp_swan(l) )
         enddo
 
-        !write(*,*)
-        !write(*,*) omgC, omgC_swan
-
-        !write(*,*)
-        !write(*,*) zeta_l_bram
-        !write(*,*) zeta_l_swan
-
-        !write(*,*)
-        !write(*,*) z_bram
-        !write(*,*) z_swan
-
-        !write(*,*)
-        !write(*,*) zp_bram
-        !write(*,*) zp_swan
-
- 
         ! Brambilla
         ! ---------
 
@@ -314,6 +295,7 @@ contains
         sigmaHot_maxwellian(3,2) = sig4 * sinPsi + sig5 * cosPsi
         sigmaHot_maxwellian(3,3) = sig3
 
+#if useSwansonSigma==1
 
         ! Swanson Dielectric 
         ! ------------------
@@ -378,49 +360,50 @@ contains
         !sc = SigmaCold_stix(scIn)
 
         !sigmahot_maxwellian = sc
-     
-        compareSigmas = 0 
-        if (compareSigmas) then 
 
-            write(*,*)
-            write(*,*) 'f= ', real(omgrfc/(2*pi))
-            amu = xm / const_amu
-            atomicZ = omgC * xm / bMod / q
-            write(*,*) 'amu= ', amu 
-            write(*,*) 'Z= ', atomicZ 
-            write(*,*) 'B= ', bMod
-            write(*,*) 'density= ', omgP2 / (atomicZ*q)**2 * xm * eps0
-            write(*,*) 'harm= ', lMax
-            write(*,*) 'kper= ', kPer 
-            write(*,*) 'kpar= ', kPrl
-            write(*,*) 'T_eV= ', kt/q
-            write(*,*) 'nuOmg= ', nuOmgTmp
+#if compareSigmas==1
 
-            write(*,*) ''
-            write(*,*) 'bram '
-            do ii=1,3
-                write(*,'(3("(",f12.5,", ",f12.5,")",4x))') &
-                    real(sigmaHot_Maxwellian(ii,1)),&
-                    aimag(sigmaHot_Maxwellian(ii,1)),&
-                    real(sigmaHot_Maxwellian(ii,2)),&
-                    aimag(sigmaHot_Maxwellian(ii,2)),&
-                    real(sigmaHot_Maxwellian(ii,3)),&
-                    aimag(sigmaHot_Maxwellian(ii,3))
-            enddo
-            write(*,*) 'swan '
-            do ii=1,3
-                write(*,'(3("(",f12.5,", ",f12.5,")",4x))') &
-                    real(sigmaHotMaxwellian_swan(ii,1)),&
-                    aimag(sigmaHotMaxwellian_swan(ii,1)),&
-                    real(sigmaHotMaxwellian_swan(ii,2)),&
-                    aimag(sigmaHotMaxwellian_swan(ii,2)),&
-                    real(sigmaHotMaxwellian_swan(ii,3)),&
-                    aimag(sigmaHotMaxwellian_swan(ii,3))
-            enddo
+        write(*,*)
+        write(*,*) 'f= ', real(omgrfc/(2*pi))
+        amu = xm / const_amu
+        atomicZ = omgC * xm / bMod / q
+        write(*,*) 'amu= ', amu 
+        write(*,*) 'Z= ', atomicZ 
+        write(*,*) 'B= ', bMod
+        write(*,*) 'density= ', omgP2 / (atomicZ*q)**2 * xm * eps0
+        write(*,*) 'harm= ', lMax
+        write(*,*) 'kper= ', kPer 
+        write(*,*) 'kpar= ', kPrl
+        write(*,*) 'T_eV= ', kt/q
+        write(*,*) 'nuOmg= ', nuOmgTmp
 
-        endif 
+        write(*,*) ''
+        write(*,*) 'bram '
+        do ii=1,3
+            write(*,'(3("(",f12.5,", ",f12.5,")",4x))') &
+                real(sigmaHot_Maxwellian(ii,1)),&
+                aimag(sigmaHot_Maxwellian(ii,1)),&
+                real(sigmaHot_Maxwellian(ii,2)),&
+                aimag(sigmaHot_Maxwellian(ii,2)),&
+                real(sigmaHot_Maxwellian(ii,3)),&
+                aimag(sigmaHot_Maxwellian(ii,3))
+        enddo
+        write(*,*) 'swan '
+        do ii=1,3
+            write(*,'(3("(",f12.5,", ",f12.5,")",4x))') &
+                real(sigmaHotMaxwellian_swan(ii,1)),&
+                aimag(sigmaHotMaxwellian_swan(ii,1)),&
+                real(sigmaHotMaxwellian_swan(ii,2)),&
+                aimag(sigmaHotMaxwellian_swan(ii,2)),&
+                real(sigmaHotMaxwellian_swan(ii,3)),&
+                aimag(sigmaHotMaxwellian_swan(ii,3))
+        enddo
+
+#endif
 
         SigmaHot_Maxwellian = SigmaHotMaxwellian_swan 
+
+#endif
 
         return
 
