@@ -33,6 +33,7 @@ contains
                g%bR_unit(w) = br_ar2(i,j) / bMag_ar2(i,j)
                g%bT_unit(w) = bt_ar2(i,j) / bMag_ar2(i,j)
                g%bZ_unit(w) = bz_ar2(i,j) / bMag_ar2(i,j)
+               g%bMag(w) = bMag_ar2(i,j)
 
         enddo
 
