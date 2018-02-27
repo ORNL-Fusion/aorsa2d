@@ -9,7 +9,7 @@ subroutine current ( g, rhs )
     use aorsaNamelist, &
         only: nSpec, iSigma, fracOfModesInSolution, ZeroJp, &
         ZeroJp_rMin, ZeroJp_rMax, ZeroJp_zMin, ZeroJp_zMax, &
-        useJpFromFile, ColdIons
+        useJpFromFile, ColdIons, nRAll, nZAll, kz_1D
     use sigma
     use parallel
     use profiles, &
@@ -119,7 +119,13 @@ subroutine current ( g, rhs )
                                 kz = g%wl(w)%m * g%normFacZ
                             endif
                         else
-                            kz = g%wl(w)%m * g%normFacZ
+
+                            if(g%nZ.gt.1)then
+                                kz = g%wl(w)%m * g%normFacZ
+                            else
+                                kz = kz_1D
+                            endif
+
                         endif
 
 

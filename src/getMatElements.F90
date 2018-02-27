@@ -2,13 +2,13 @@ module getMatElements
 
 contains
 
-function get3by3Block( g, w)!, r, z)
+function get3by3Block( g, w)
 
     use grid
     use aorsaNamelist, only: &
        chebyshevX, chebyshevY, iSigma, nSpec, nPhi, ZeroJp, &
        ZeroJp_rMin, ZeroJp_rMax, ZeroJp_zMin, ZeroJp_zMax, &
-       useJpFromFile, coldIons
+       useJpFromFile, coldIons, kz_1D
 
     use constants
     use profiles, only: omgrf, mSpec
@@ -84,7 +84,7 @@ function get3by3Block( g, w)!, r, z)
     z   = g%z(g%wl(w)%j)
     r   = g%R(g%wl(w)%i)
     k0  = g%k0(g%wl(w)%iPt)
-    kt  = nPhi!g%kPhi(i)
+    kt  = nPhi
 
         !   interior plasma region:
         !   ----------------------
@@ -116,7 +116,13 @@ function get3by3Block( g, w)!, r, z)
                 kz = g%wl(w)%m * g%normFacZ
             endif
         else
-            kz = g%wl(w)%m * g%normFacZ
+        
+            if(g%nZ.gt.1)then
+                kz = g%wl(w)%m * g%normFacZ
+            else
+                kz = kz_1D
+            endif
+
         endif
         
 #if __sigma__ == 2

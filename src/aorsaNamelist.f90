@@ -255,7 +255,6 @@ implicit none
       real :: ti6_rho2lim = 10E+00      
  
       real :: dfreq = 0.0000E+00        !-----dfreq not used   
-      real :: dkz = 0.0000E+00          !-----dkz not used
       real :: xnudip = 2.5000E+00       !-----xnudip is not used
       real :: adip = 0.0000E+00         !-----adip is not used                          
       real :: efold = 0.0000E+00        !-----efold is not used
@@ -409,7 +408,6 @@ implicit none
       integer :: iabsorb = 2              !-----iabsorb not used
       integer :: itemp = 0                !-----itemp not used
       integer :: nfreqm = 1               !-----nfreqm not used
-      integer :: nkzm = 1                 !-----nkzm not used
       integer :: idens = 0                !-----idens not used
       integer :: ibackground = 1          !-----ibackground is not used
       integer :: idiag = 5
@@ -450,7 +448,7 @@ implicit none
      &    xn4, xn5, xn6, curdnz,  &
      &    nstep, nabs, xnuabs, xbnch, xleft, xright,  &
      &    isigma, itemp, telim, tilim,  &
-     &    nfreqm, dfreq, nkzm, dkz,  &
+     &    nfreqm, dfreq, &
      &    idens, xnudip, adip, efold,  &
      &    amu3, z3, eta3, xnu3ad,  &
      &    amu4, z4, eta4, xnu4ad,  &

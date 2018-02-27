@@ -18,8 +18,8 @@ implicit none
 type :: workListEntry
         integer :: i
         integer :: j
-        integer :: m
-        integer :: n
+        real :: m
+        real :: n
         integer :: iPt
 end type workListEntry
 
@@ -49,7 +49,6 @@ type :: gridBlock
     ! -----------
     integer :: nR, nZ, nModesR, nModesZ
     real, allocatable, dimension(:) :: rNorm, zNorm, R, z, kPhi
-    real, allocatable, dimension(:,:) :: kr, kz
     real :: rMin, rMax, zMin, zMax, rRange, zRange
     real :: rMinIn, rMaxIn, zMinIn, zMaxIn
     real :: normFacR, normFacZ
@@ -199,8 +198,7 @@ contains
 
         use aorsaNamelist, &
             only : nPhi, xkPerp_cutOff, overlap, &
-            rMinAll, rMaxAll, zMinAll, zMaxAll, nGrid, &
-            kz_1d
+            rMinAll, rMaxAll, zMinAll, zMaxAll, nGrid
         use parallel, only : iAm
 
         implicit none
@@ -399,8 +397,8 @@ contains
             endif
 
             if(nZ==1)then 
-                grid%mMin = kz_1d
-                grid%mMax = kz_1d
+                grid%mMin = 0
+                grid%mMax = 0 
             endif
 
             if (iAm==0) then

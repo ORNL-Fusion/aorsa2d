@@ -349,7 +349,7 @@ contains
         type(dBfnArg) :: d
         integer :: iRow, iCol, i, j, n, m, p, s, ii, jj, iOL, jOL
         integer :: localRow, localCol
-        real :: kr, kt, kz, r, z, kVec_stix(3)
+        real :: kr, kt, r, z, kVec_stix(3)
 
         complex :: mat3by3Block(3,3)
 
