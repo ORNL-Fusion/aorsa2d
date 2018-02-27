@@ -30,7 +30,6 @@ implicit none
     logical :: useCircular = .false.
     logical :: useCircularProfiles = .false.
     logical :: parabolic = .false.
-    logical :: noPoloidalField = .false.
     logical :: toroidalBroadening = .true.
     real(kind=dbl) :: kPrlEffLimit = 1d-08
     real :: fracOfModesInSolution = 0.66
@@ -489,7 +488,7 @@ implicit none
      &    tSpecIn, dSpecIn, tLimIn, dLimIn, &
      &    tAlphaIn, tBetaIn, dAlphaIn, dBetaIn, useFluxProfiles, square, &
      &    metalLeft, metalRight, metalTop, metalBot, useSoloviev, a, psiExp, &
-     &    noPoloidalField, rhoScale, rhoWidth, rhoPower, useCircular, &
+     &    rhoScale, rhoWidth, rhoPower, useCircular, &
      &    bPol_frac, useCircularProfiles, lsWeightFac, xkx_cutOff, xky_cutOff, &
      &    chebyshevX, chebyshevY, magma, rhoAnt, antSigRho, toroidalBroadening,&
      &    kPrlEffLimit, nGrid, useAr2Input, AR2InputFileName, zFunctionFileName, &

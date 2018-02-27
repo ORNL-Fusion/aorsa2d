@@ -19,7 +19,7 @@ subroutine ReadAr2Input (AR2FileName)
 
     use netcdf
     use check_mod
-    use aorsaNamelist, only: noPoloidalField, useAntennaFromAR2Input, &
+    use aorsaNamelist, only: useAntennaFromAR2Input, &
             nSpec, nRAll, nZAll, freqcy
     use parallel, only: iAm
 
@@ -110,10 +110,6 @@ subroutine ReadAr2Input (AR2FileName)
 
     call check( nf90_close(nc_id) )
 
-    if(noPoloidalField)then
-        br = br*0
-        bz = bz*0
-    endif
 
     ! Overwrite some nameList varibles with those from 
     ! the ar2Input file.

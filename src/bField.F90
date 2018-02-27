@@ -6,7 +6,7 @@ contains
 
     subroutine bFieldAR2 ( g )
 
-        use aorsaNamelist, only: r0, noPoloidalField
+        use aorsaNamelist, only: r0
         use grid
         use AR2Input, &
             only:r_ar2=>r,z_ar2=>z,br_ar2=>br,bt_ar2=>bt,bz_ar2=>bz,bMag_ar2=>bMag

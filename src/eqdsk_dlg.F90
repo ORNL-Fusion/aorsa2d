@@ -25,8 +25,6 @@ contains
 
         use dlg
         use fitpack
-        use aorsaNamelist, &
-            only: noPoloidalField
 #ifdef par 
         use parallel, only: iAm
 #define MSG(X) if (iAm==0) write(*,*) X 
@@ -178,13 +176,6 @@ contains
 !                curv2 ( fluxGrid(i), nw, fluxGrid, fpol, yp_c, 0.0 )
 !         
 !        end do
-
-        if(noPoloidalField) then
-        
-            bz__    = 0
-            bR      = 0
-
-        endif
 
         bMag__    = sqrt ( bR**2 + bPhi**2 + bz__**2 )
 
