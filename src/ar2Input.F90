@@ -19,7 +19,9 @@ subroutine ReadAr2Input (AR2FileName)
 
     use netcdf
     use check_mod
-    use aorsaNamelist, only: noPoloidalField, useAntennaFromAR2Input
+    use aorsaNamelist, only: noPoloidalField, useAntennaFromAR2Input, &
+            nSpec, nRAll, nZAll, freqcy
+    use parallel, only: iAm
 
     implicit none
 
@@ -65,7 +67,7 @@ subroutine ReadAr2Input (AR2FileName)
     call check( nf90_inq_varId(nc_id,'Temp_eV',Temp_id) )
     call check( nf90_inq_varId(nc_id,'nuOmg',nuOmg_id) )
 
-    allocate(br(nR,nZ),bt(nR,nZ),bz(nR,nZ))
+    allocate(br(nR,nZ),bt(nR,nZ),bz(nR,nZ),bMag(nR,nZ))
     allocate(jant(nR,nZ),jant_r(nR,nZ),jant_t(nR,nZ),jant_z(nR,nZ))
     allocate(r(nR),z(nZ))
     allocate(AtomicZ(nS),amu(nS))
@@ -85,6 +87,8 @@ subroutine ReadAr2Input (AR2FileName)
     call check( nf90_get_var(nc_id,br_id,br) )
     call check( nf90_get_var(nc_id,bt_id,bt) )
     call check( nf90_get_var(nc_id,bz_id,bz) )
+
+    bMag = sqrt(br**2+bt**2+bz**2)
 
     if(useAntennaFromAR2Input)then
     call check( nf90_get_var(nc_id,jant_r_id,jant_r) )
@@ -109,6 +113,22 @@ subroutine ReadAr2Input (AR2FileName)
     if(noPoloidalField)then
         br = br*0
         bz = bz*0
+    endif
+
+    ! Overwrite some nameList varibles with those from 
+    ! the ar2Input file.
+
+    nSpec = nS
+    nRAll(1) = nR
+    nZAll(1) = nZ
+
+    if(iAm==0)then
+        write(*,*) 'Overwriting namelist inputs for nSpec and profiles'
+        write(*,*) '    nSpec: ', nSpec
+        write(*,*) '    zSpec: ', AtomicZ
+        write(*,*) '    amu ', amu
+        write(*,*) '    nR: ', nRAll(1)
+        write(*,*) '    nZ: ', nZAll(1)
     endif
 
 end subroutine ReadAr2Input

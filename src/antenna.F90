@@ -112,10 +112,6 @@ contains
         
         endif
 
-        if(useAntennaFromAR2Input)then 
-                ! nothing to do since these data are read in with the profile read :) 
-        endif
-       
         if(useJpFromFile)then
             get_jA = get_jA - (/g%file_JpR(i,1),g%file_JpT(i,1),g%file_JpZ(i,1)/)
         endif
@@ -155,8 +151,13 @@ contains
             g%jT(g%nR,g%nZ), &
             g%jZ(g%nR,g%nZ) )
 
-        ! overwrite jA from ar2Input.nc if required 
-        if(.not.useAntennaFromAR2Input)then 
+        if(useAntennaFromAR2Input)then 
+
+            ! Nothing to do 
+
+        else
+
+            ! overwrite jA from ar2Input.nc if required 
 
             g%jR = 0
             g%jT = 0
@@ -215,12 +216,6 @@ contains
             g%jT(g%nR,g%nZ), &
             g%jZ(g%nR,g%nZ) )
 
-        if(.not.useAntennaFromAR2Input)then
-            g%jR = 0
-            g%jT = 0
-            g%jZ = 0
-        endif
- 
 #ifndef par
         do ii = 1,nPts_tot*3,3
             do rhs = 1,NRHS 
@@ -228,11 +223,7 @@ contains
                 i = (ii-1)/(3*g%nZ)+1
                 j = (mod(ii-1,3*g%nZ)+1-1)/3+1
 
-                if(.not.useAntennaFromAR2Input)then  
-                    This_jA = get_jA( g, i, j, rhs )
-                else
-                    This_jA = (/g%jR(i,j),g%jT(i,j),g%jZ(i,j)/)
-                endif
+                This_jA = (/g%jR(i,j),g%jT(i,j),g%jZ(i,j)/)
 
                 brhs(ii+0,rhs) = zi*omgrf*mu0*This_jA(1)
                 brhs(ii+1,rhs) = zi*omgrf*mu0*This_jA(2)
@@ -252,25 +243,11 @@ contains
                 i = (iRow-1)/(3*g%nZ)+1
                 j = (mod(iRow-1,3*g%nZ)+1-1)/3+1
 
-                if(.not.useAntennaFromAR2Input)then  
-                    This_jA = get_jA( g, i, j, rhs )
-                else
-                    This_jA = (/g%jR(i,j),g%jT(i,j),g%jZ(i,j)/)
-                endif
+                This_jA = (/g%jR(i,j),g%jT(i,j),g%jZ(i,j)/)
 
                 brhs(ii+0,jj) =  zi*omgrf*mu0*This_jA(1)
                 brhs(ii+1,jj) =  zi*omgrf*mu0*This_jA(2)
                 brhs(ii+2,jj) =  zi*omgrf*mu0*This_jA(3)
-
-!#ifdef __GFORTRAN__
-!                if(ISNAN(REAL(brhs(ii+0,jj)))) stop '"re brhs(ii+0,jj)" is a NaN'
-!                if(ISNAN(REAL(brhs(ii+1,jj)))) stop '"re brhs(ii+1,jj)" is a NaN'
-!                if(ISNAN(REAL(brhs(ii+2,jj)))) stop '"re brhs(ii+2,jj)" is a NaN'
-!
-!                if(ISNAN(AIMAG(brhs(ii+0,jj)))) stop '"im brhs(ii+0,jj)" is a NaN'
-!                if(ISNAN(AIMAG(brhs(ii+1,jj)))) stop '"im brhs(ii+1,jj)" is a NaN'
-!                if(ISNAN(AIMAG(brhs(ii+2,jj)))) stop '"im brhs(ii+2,jj)" is a NaN'
-!#endif
 
             enddo
         enddo

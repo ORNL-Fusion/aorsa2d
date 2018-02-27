@@ -17,8 +17,6 @@ implicit none
     logical :: useAntennaFromAR2Input = .true.
     logical :: useJpFromFile = .false.
     integer, parameter :: nSpecMax  = 5 
-    integer :: zSpecIn(nSpecMax)    = (/ -1, 2, 0, 0, 0 /)
-    integer :: amuSpecIn(nSpecMax)  = (/  0, 4, 0, 0, 0 /) 
     real :: tSpecIn(nSpecMax)       = (/ 400.0, 400.0, 0.0, 0.0, 0.0/) ! [ev]
     real :: dSpecIn(nSpecMax)       = (/ 0.6e18, 0.3e18, 0.0, 0.0, 0.0 /)
     real :: tLimIn(nSpecMax)        = (/ 400.0, 400.0, 0.0, 0.0, 0.0/) ! [ev]
@@ -487,7 +485,7 @@ implicit none
      &    ti4_rho2lim, ti5_rho2lim, ti6_rho2lim, eqdsk_zRange, &
      &    gradient, bbbsMask, dlgAnt, eqdsk_rRange, &
      &    dlgAntFileName, dlgProfileFileName, antGridMatch, domainMask, &
-     &    use_dlg_bField, edgeCollisions, nSpec, zSpecIn, amuSpecIn, &
+     &    use_dlg_bField, edgeCollisions, nSpec, &
      &    tSpecIn, dSpecIn, tLimIn, dLimIn, &
      &    tAlphaIn, tBetaIn, dAlphaIn, dBetaIn, useFluxProfiles, square, &
      &    metalLeft, metalRight, metalTop, metalBot, useSoloviev, a, psiExp, &

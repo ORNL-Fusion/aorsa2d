@@ -125,12 +125,8 @@ program aorsa2dMain
     InputFileName = 'aorsa2d.in'
     call read_nameList (trim(rid)//trim(InputFileName))
 
-    if(useAR2SourceLocationsFile)then
-        call ReadAR2SourceLocations(AR2SourceLocationsFileName) 
-        NRHS = NRHS_FromInputFile
-    else 
-        NRHS = 1
-    endif
+!   read ar2Input file
+!   ------------------
 
     if(useAr2Input)then
         if(iAm==0) write(*,*) '    Reading ar2 input file ...'
@@ -139,6 +135,14 @@ program aorsa2dMain
         if(iAm==0) write(*,*) '    Initializing bField interpolations ...'
         call init_interp ()
         if(iAm==0) write(*,*) '    DONE'
+    endif
+
+
+    if(useAR2SourceLocationsFile)then
+        call ReadAR2SourceLocations(AR2SourceLocationsFileName) 
+        NRHS = NRHS_FromInputFile
+    else 
+        NRHS = 1
     endif
 
 !   initialise the parallel env
@@ -246,30 +250,12 @@ program aorsa2dMain
     if (iAm==0) &
     write(*,*) 'Reading magnetic field data'
 
-    if(useEqdsk)then
-        !call read_geqdsk ( eqdsk, plot = .false. )
-        !call init_interp ()
-        stop
-    endif
-
     do i=1,nGrid
 
-        if (useEqdsk) then
-            !call bFieldEqdsk ( allGrids(i) )
-            stop
-        elseif(useAR2Input)then
+        if(useAR2Input)then
             if(iAm==0) write(*,*) '    Interpolating bField to grid ...'
             call bFieldAR2 ( allGrids(i) )
             if(iAm==0) write(*,*) '    DONE' 
-        elseif (useSoloviev) then
-            !call soloviev ( allGrids(i) )
-            stop
-        elseif (useCircular) then
-            !call bFieldCircular ( allGrids(i) )
-            stop
-        else
-            !call bFieldAnalytical ( allGrids(i) )
-            stop
         endif
 
     enddo
@@ -415,6 +401,25 @@ program aorsa2dMain
     if (iAm==0) &
     write(*,*) 'Building antenna current (brhs)'
 
+    if(iAm==0) &
+    write(*,*) 'Initialized jA'
+
+    RHS_PreProcessing_loop: &
+    do rhs=1,NRHS
+
+#ifdef par
+        call blacs_barrier ( ICTXT, 'All' ) 
+#endif
+    
+        do i=1,nGrid
+            call fill_jA ( allGrids(i), rhs )
+        enddo
+
+#ifdef par
+        call blacs_barrier ( ICTXT, 'All' ) 
+#endif
+   
+    enddo RHS_PreProcessing_loop
 
     call alloc_total_brhs ( nPts_tot )
 
@@ -427,11 +432,7 @@ program aorsa2dMain
 
     if(iAm==0.and.NRHS<=1) &
     write(*,*) '    Time to build RHS: ', end_timer ( tRHS ),  'seconds'
- 
-    if(iAm==0) &
-    write(*,*) 'Initialized jA'
 
-    RHS_PreProcessing_loop: &
     do rhs=1,NRHS
 
 #ifdef par
@@ -442,7 +443,6 @@ program aorsa2dMain
         write(*,*) 'Writing run input data to file'
     
         do i=1,nGrid
-            call fill_jA ( allGrids(i), rhs )
             call write_runData ( allGrids(i), rid, rhs )
         enddo
 
@@ -450,7 +450,8 @@ program aorsa2dMain
         call blacs_barrier ( ICTXT, 'All' ) 
 #endif
    
-    enddo RHS_PreProcessing_loop
+    enddo 
+
 
 !   Allocate the matrix
 !   -------------------
@@ -494,21 +495,6 @@ program aorsa2dMain
     enddo
 
     call amat_boundaries ( allGrids, nPts_tot )
-
-    !where(abs(aMat)/=0)
-    !        aMat = 11
-    !endwhere
-    !write(*,*) shape(amat)
-    
-    !write(*,'(3x,48(1x,i3.2))') (/ (i,i=1,48) /)
-    !write(*,*) '   --------------------------------------------------'
-    !do i=1,48
-    !write(*,'(i2.2,x,48(1x,i3.2),4x,i2.2)') i,int((aMat(i,:))),int((brhs(i)))
-    !enddo
-
-    !do i=1,nGrid
-    !    write(*,*) allGrids(i)%label
-    !enddo
 
 #ifdef usepapi
     call PAPIF_flops ( papi_rTime, papi_pTime, papi_flpins, papi_mflops, papi_irc )

@@ -72,11 +72,12 @@ pro ar2_create_input, _r1=_r1, _z1=_z1, _angle=_angle, doPlots = _doPlots, _len=
     generate_vorpal_input = 0
 
 	@dlg_constants
-    @'input/ar2run.pro'
 
-	wrf	= freq * 2d0 * !dpi
+    @'input/ar2grid.pro'
 
 	r = fIndGen(nR)/(nR-1)*(rMax-rMin)+rMin
+    z = [0]
+    if nZ gt 1 then $ 
 	z = fIndGen(nZ)/(nZ-1)*(zMax-zMin)+zMin
 
 	r2d = rebin ( r, nR, nZ )
@@ -84,6 +85,11 @@ pro ar2_create_input, _r1=_r1, _z1=_z1, _angle=_angle, doPlots = _doPlots, _len=
 
 	x2d = r2d
 	y2d = z2d
+
+    @'input/ar2run.pro'
+
+	wrf	= freq * 2d0 * !dpi
+
     if gaussian_profiles or parabolic_profiles or bField_gaussian then x0 = r0
 
 	if bField_eqdsk eq 1 then begin
@@ -406,6 +412,7 @@ endif
     endif
 
 if doPlots then begin
+if nZ gt 1 then begin
     s_ne = contour(density_m3[*,*,0]+densFlatFuzz,r,z, layout=[layout,plotpos],$
             /current,title='density',aspect_ratio=1.0, xRange=xRange, yRange=yRange )
     if bField_eqdsk then p=plot(rLim,zLim,/over)
@@ -415,6 +422,7 @@ if doPlots then begin
             /current,title='temp',aspect_ratio=1.0, xRange=xRange, yRange=yRange)
     if bField_eqdsk then p=plot(rLim,zLim,/over)
     ++plotpos
+endif
 endif
 
 if doPlots then begin
@@ -556,6 +564,7 @@ endif
 	endelse
 
 if doPlots then begin
+if nZ gt 1 then begin
    nlevs=10
    scale = 1.1
    levels = (fIndGen(nlevs)+1)/nlevs*scale
@@ -569,28 +578,38 @@ if doPlots then begin
    ++plotpos
 endif
 
-	; Get dispersion solution for some nPhi 
-	ar2_input_dispersion, wrf, amu, atomicZ, nn, nPhi, nSpec, nR, nZ, $
-			Density_m3, bMag, r2D, resonances = resonances, $
-			IonIonHybrid_res_freq=IonIonHybrid_res_freq, Spec1=1.0,Spec2=2.0, $
-			kPerSq_F=kPerpSq_F,kPerSq_S=kPerpSq_S, $
-			StixP=StixP,StixL=StixL,StixR=StixR,StixS=StixS
+    p=plot(r,jAnt_r,layout=[layout,plotpos],/current,title='jA components')
+    p=plot(r,jAnt_t,/over,color='b')
+    p=plot(r,jAnt_z,/over,color='g')
+    ++plotpos
+endif
+
+	; Get dispersion solution for some kPar2D 
+	ar2_input_dispersion, wrf, amu, atomicZ, nn, nSpec, nR, nZ, $
+			Density_m3, bMag, r2D, nuOmg, kPar2D, $ 
+			kPerSq_F=kPerpSq_F,kPerSq_S=kPerpSq_S
 	
 	kPer_F_2D = sqrt(kPerpSq_F)
 	kPer_S_2D = sqrt(kPerpSq_S)
-	kPer_F = kPer_F_2D[*,nZ/2]
-	kPer_S = kPer_S_2D[*,nZ/2]
-	kPer_F_2 = kPer_F_2D[nR/2,*]
-	kPer_S_2 = kPer_S_2D[nR/2,*]
+	kPer_F1 = +kPer_F_2D[*,nZ/2]
+	kPer_S1 = +kPer_S_2D[*,nZ/2]
+	kPer_F2 = -kPer_F_2D[*,nZ/2]
+	kPer_S2 = -kPer_S_2D[*,nZ/2]
 
 if doPlots then begin
 
-	p = plot(r,kPer_F, title='kPer_F',layout=[layout,PlotPos],/current,thick=3)
-    p = plot(r,imaginary(kPer_F), /over, color='r')
+    sym_size = 0.3
+
+	p = plot(r,kPer_F1, title='kPer_F',layout=[layout,PlotPos],/current,symbol="o",lineStyle=' ',sym_size=sym_size)
+    p = plot(r,imaginary(kPer_F1), /over, color='r',symbol="o",lineStyle=' ',sym_size=sym_size)
+    p = plot(r,kPer_F2, /over,symbol="o",lineStyle=' ',sym_size=sym_size)
+    p = plot(r,imaginary(kPer_F2), /over, color='r',symbol="o",lineStyle=' ',sym_size=sym_size)
     ++PlotPos
 
-	p = plot(r,kPer_S, title='kPer_S',layout=[layout,PlotPos],/current,thick=3)
-    p = plot(r,imaginary(kPer_S), /over, color='r')
+	p = plot(r,kPer_S1, title='kPer_S',layout=[layout,PlotPos],/current,symbol="o",lineStyle=' ',sym_size=sym_size)
+    p = plot(r,imaginary(kPer_S1), /over, color='r',symbol="o",lineStyle=' ',sym_size=sym_size)
+    p = plot(r,kPer_S2, /over,symbol="o",lineStyle=' ',sym_size=sym_size)
+    p = plot(r,imaginary(kPer_S2), /over, color='r',symbol="o",lineStyle=' ',sym_size=sym_size)
     ++PlotPos
 
 	nLevs=31
@@ -646,7 +665,6 @@ if doPlots then begin
 
 		c=contour(psinorm,r,z,aspect_ratio=1.0, title='psi', xRange=xRange, yRange=yRange)	
 		p=plot(rlim,zlim,/over,thick=2)
-		;p=plot(VorpalBox_r,VorpalBox_z,/over,thick=2,color='b')
 		for s=1,nSpec-1 do begin
 			c=contour(resonances[*,*,s],r,z,c_value=fIndGen(5)/4.0*0.01,/over)
 		endfor
@@ -654,12 +672,6 @@ if doPlots then begin
 		c=contour(1/(abs(IonIonHybrid_res_freq mod wrf)/wrf),r,z,c_value=fIndGen(25)*10,/over)
 
 	endif else if nZ gt 1 then begin
-        for s=1,nSpec-1 do begin
-			c=contour(resonances[*,*,s],r,z,c_value=fIndGen(5)/4.0*0.01,/over)
-		endfor
-		if nSpec gt 2 then $
-		c=contour(1/(abs(IonIonHybrid_res_freq mod wrf)/wrf),r,z,c_value=fIndGen(25)*10,/over)
-
 
     endif
 
@@ -755,5 +767,5 @@ if doPlots then begin
 	plotFile = 'inputs.png'
 	p.save, plotFile
 endif
-
+stop
 end
