@@ -108,9 +108,6 @@ ThisMachine := $(shell uname -n)
 ifneq (,$(findstring titan,$(ThisMachine)))
 ThisMachine := titan
 endif
-ifneq (,$(findstring hopper,$(ThisMachine)))
-ThisMachine := hopper
-endif
 ifneq (,$(findstring edison,$(ThisMachine)))
 ThisMachine := edison
 endif

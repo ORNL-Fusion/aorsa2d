@@ -460,7 +460,59 @@ endif
 
     ; Create nuOmg profiles
 
-    @'input/ar2nuomg.pro'
+    global_nuOmg = r2D*0
+
+    _width_r = (max(r)-min(r))*absorberWidthPercentage
+    
+    _rMin = min(r) 
+    _rMax = min(r)+_width_r
+    
+    if left_absorber then begin
+    	cos_arg_2D = -(r2D - _rMax)/(_rMax-_rMin)*!pi-!pi
+    	iiNuOmgSet1 = where(r2D lt _rMax,iiNuOmgSetCnt) 
+    	global_nuOmg[iiNuOmgSet1] = (cos(cos_arg_2D[iiNuOmgSet1])+1)*0.5*absorbingNuOmg
+    	iiNuOmgSet2 = where(r2D lt _rMin,iiNuOmgSetCnt) 
+    	global_nuOmg[iiNuOmgSet2] = absorbingNuOmg
+    endif
+    
+    _rMin = max(r)-_width_r
+    _rMax = max(r)
+    
+    if right_absorber then begin
+    	cos_arg_2D = -(r2D - _rMax)/(_rMax-_rMin)*!pi
+    	iiNuOmgSet1 = where(r2D gt _rMin,iiNuOmgSetCnt) 
+    	global_nuOmg[iiNuOmgSet1] = (cos(cos_arg_2D[iiNuOmgSet1])+1)*0.5*absorbingNuOmg
+    	iiNuOmgSet2 = where(r2D gt _rMax,iiNuOmgSetCnt) 
+    	global_nuOmg[iiNuOmgSet2] = absorbingNuOmg
+    endif
+    
+    _zMin = -0.18 
+    _zMax = +0.00 
+    
+    if lower_absorber then begin
+    	cos_arg_2D = -(z2D - _zMax)/(_zMax-_zMin)*!pi-!pi
+    	iiNuOmgSet1 = where(z2D lt _zMax,iiNuOmgSetCnt) 
+    	global_nuOmg[iiNuOmgSet1] = global_nuOmg[iiNuOmgSet1] + (cos(cos_arg_2D[iiNuOmgSet1])+1)*0.5*absorbingNuOmg
+    	iiNuOmgSet2 = where(z2D lt _zMin,iiNuOmgSetCnt) 
+    	global_nuOmg[iiNuOmgSet2] = global_nuOmg[iiNuOmgSet2] + absorbingNuOmg
+    endif
+    
+    _zMin = +0.1 
+    _zMax = +0.12
+    
+    if upper_absorber then begin
+    	cos_arg_2D = -(z2D - _zMax)/(_zMax-_zMin)*!pi
+    	iiNuOmgSet1 = where(z2D gt _zMin,iiNuOmgSetCnt) 
+    	global_nuOmg[iiNuOmgSet1] = global_nuOmg[iiNuOmgSet1] + (cos(cos_arg_2D[iiNuOmgSet1])+1)*0.5*absorbingNuOmg
+    	iiNuOmgSet2 = where(z2D gt _zMax,iiNuOmgSetCnt) 
+    	global_nuOmg[iiNuOmgSet2] = global_nuOmg[iiNuOmgSet2] + absorbingNuOmg
+    endif
+    
+    for s=0,nSpec-1 do begin
+        nuOmg[*,*,s] = global_nuOmg>MinNuOmg
+    endfor
+
+
 
 if doPlots then begin
     p=plot(r,nuOmg[*,nZ/2,0],title='nuOmg [electrons]',layout=[layout,plotpos],/current)
@@ -718,9 +770,6 @@ endif
 
 	Lim_r_id = nCdf_varDef ( nc_id, 'Lim_r', [nlim_id], /float )
 	Lim_z_id = nCdf_varDef ( nc_id, 'Lim_z', [nlim_id], /float )
-
-	LCFS_r_id = nCdf_varDef ( nc_id, 'LCFS_r', [nLCFS_id], /float )
-	LCFS_z_id = nCdf_varDef ( nc_id, 'LCFS_z', [nLCFS_id], /float )
 
 	kPerSq_F_id = nCdf_varDef ( nc_id, 'kPerSq_F', [nR_id, nz_id], /float )
 	kPerSq_S_id = nCdf_varDef ( nc_id, 'kPerSq_S', [nR_id, nz_id], /float )
